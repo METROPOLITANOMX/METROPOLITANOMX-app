@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://regions-associations-writes-nitrogen.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://victorian-journalism-vitamins-riverside.trycloudflare.com" };
