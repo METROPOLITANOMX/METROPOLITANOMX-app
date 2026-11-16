@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -78,7 +78,7 @@
       <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
-  <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
+  <div id="bannerEstadoRed" class="estado-red">Perfil listo â€” Consultando estado de pista...</div>
   <div id="panelEnVivo" class="panel-vivo">
     <div class="vivo-header"><span class="badge-vivo">EN PISTA AHORA</span><span style="font-size:12px; color:#ffc107; font-weight:bold;">Manga Activa</span></div>
     <div class="grid-vivo">
@@ -116,7 +116,7 @@
         </div>
       </div>
       <div id="formNuevaMoto" class="form-nueva-moto">
-        <div style="font-size:12px; font-weight:bold; color:#ffc107; margin-bottom:8px;">AÑADIR MOTO AL GARAJE</div>
+        <div style="font-size:12px; font-weight:bold; color:#ffc107; margin-bottom:8px;">AÃ‘ADIR MOTO AL GARAJE</div>
         <input type="text" id="inpModeloMoto" placeholder="Modelo (ej. Losi Promoto-MX FXR)" style="margin-bottom:6px;">
         <input type="text" id="inpDorsalMoto" placeholder="Dorsal (ej. 46)" style="margin-bottom:6px;">
         <input type="file" id="inpFotoMoto" accept="image/*" style="margin-bottom:8px;">
@@ -244,7 +244,7 @@
   }
 
   function resetearMantenimiento(i) {
-    if (garajeMotos[i] && confirm("¿Marcar mantenimiento realizado y poner a 0?")) {
+    if (garajeMotos[i] && confirm("Â¿Marcar mantenimiento realizado y poner a 0?")) {
       garajeMotos[i].vueltasMant = 0;
       guardarGarajeStorage();
       renderizarGaraje();
@@ -260,7 +260,7 @@
   }
 
   function borrarMotoGaraje(i) {
-    if (confirm("¿Eliminar esta moto del garaje?")) {
+    if (confirm("Â¿Eliminar esta moto del garaje?")) {
       garajeMotos.splice(i, 1);
       guardarGarajeStorage();
       renderizarGaraje();
@@ -288,14 +288,14 @@
     if (!m) return;
     guardarSettingsMoto(i);
     var s = m.settings || {};
-    var txt = "*SETUP LOSI PROMOTO-MX — METROPOLITANO*\nPiloto: " + datosPerfil.nombre + " (#" + m.dorsal + ")\nMoto: " + m.modelo + "\nTerreno: " + (s.terreno || "-") + "\n• Aceite Horquilla: " + (s.horquilla || "-") + "\n• Muelles Horquilla: " + (s.muellesHorquilla || "-") + "\n• Amortiguador: " + (s.amortiguador || "-") + "\n• Piñon/Corona: " + (s.desarrollo || "-") + "\n• Neumaticos: " + (s.neumaticos || "-") + "\n• Gyro/Pesos/Bat: " + (s.giroscopio || "-") + "\n• Notas: " + (s.notas || "-");
+    var txt = "*SETUP LOSI PROMOTO-MX â€” METROPOLITANO*\nPiloto: " + datosPerfil.nombre + " (#" + m.dorsal + ")\nMoto: " + m.modelo + "\nTerreno: " + (s.terreno || "-") + "\nâ€¢ Aceite Horquilla: " + (s.horquilla || "-") + "\nâ€¢ Muelles Horquilla: " + (s.muellesHorquilla || "-") + "\nâ€¢ Amortiguador: " + (s.amortiguador || "-") + "\nâ€¢ PiÃ±on/Corona: " + (s.desarrollo || "-") + "\nâ€¢ Neumaticos: " + (s.neumaticos || "-") + "\nâ€¢ Gyro/Pesos/Bat: " + (s.giroscopio || "-") + "\nâ€¢ Notas: " + (s.notas || "-");
     window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(txt), "_blank");
   }
 
   function renderizarGaraje() {
     var cont = document.getElementById('carruselGaraje');
     if (garajeMotos.length === 0) {
-      cont.innerHTML = '<div style="width:100%; text-align:center; padding:24px; color:#888; font-size:13px;">Pulsa <b>+ Nueva Moto</b> para añadir tu Losi Promoto-MX.</div>';
+      cont.innerHTML = '<div style="width:100%; text-align:center; padding:24px; color:#888; font-size:13px;">Pulsa <b>+ Nueva Moto</b> para aÃ±adir tu Losi Promoto-MX.</div>';
       return;
     }
     var html = "";
@@ -316,7 +316,7 @@
         html += '<div class="slot-foto' + (f === act ? ' activa' : '') + '" onclick="seleccionarFotoVisor(' + i + ',' + f + ')">' + (fotos[f] ? '<img src="' + fotos[f] + '">' : '<span>+ ' + slots[f] + '</span>') + '<div class="btn-edit-slot" onclick="abrirSelectorSlot(' + i + ',' + f + ',event)">Subir</div></div>';
       }
       html += '</div><div class="caja-mant"><div style="display:flex; justify-content:space-between; font-size:11px;"><span style="color:#ccc; font-weight:bold;">USO: ' + vtas + ' vtas (~' + hrs + 'h)</span><span style="color:' + colM + '; font-weight:bold;">' + estM + '</span></div><div class="barra-mant-bg"><div class="barra-mant-fill" style="width:' + pct + '%; background:' + colM + ';"></div></div><div style="display:flex; gap:6px; justify-content:flex-end;"><button style="background:#2a2a2a; color:#ccc; padding:4px 8px; font-size:10px;" onclick="sumarVueltasManual(' + i + ')">+15 Vtas</button><button style="background:#20c997; color:#000; padding:4px 8px; font-size:10px;" onclick="resetearMantenimiento(' + i + ')">Reset Mant.</button></div></div>';
-      html += '<div class="caja-settings"><div class="titulo-settings"><span>Settings Losi Promoto-MX</span><button style="background:#25D366; color:#000; padding:4px 8px; font-size:10px;" onclick="compartirSetupWhatsApp(' + i + ')">WhatsApp</button></div><div class="campo-set" style="margin-bottom:8px;"><label>Perfil Terreno</label><select id="set_terr_' + i + '"><option' + (s.terreno === 'Seco / Suelto' ? ' selected' : '') + '>Seco / Suelto</option><option' + (s.terreno === 'Riego / Agarre Alto' ? ' selected' : '') + '>Riego / Agarre Alto</option><option' + (s.terreno === 'Saltos / Baches Grandes' ? ' selected' : '') + '>Saltos / Baches Grandes</option><option' + (s.terreno === 'Barro / Humedo' ? ' selected' : '') + '>Barro / Humedo</option></select></div><div class="grid-settings"><div class="campo-set"><label>Aceite Horquilla</label><input type="text" id="set_horq_' + i + '" value="' + (s.horquilla || "") + '" placeholder="50wt"></div><div class="campo-set"><label>Muelles Horquilla</label><input type="text" id="set_muelle_' + i + '" value="' + (s.muellesHorquilla || "") + '" placeholder="Duros / Estandar"></div><div class="campo-set"><label>Amortiguador Tras.</label><input type="text" id="set_amort_' + i + '" value="' + (s.amortiguador || "") + '" placeholder="35wt"></div><div class="campo-set"><label>Piñon / Corona</label><input type="text" id="set_des_' + i + '" value="' + (s.desarrollo || "") + '" placeholder="12T / 40T"></div><div class="campo-set"><label>Neumaticos</label><input type="text" id="set_neum_' + i + '" value="' + (s.neumaticos || "") + '" placeholder="Dunlop MX53"></div><div class="campo-set"><label>Gyro / Pesos / Bat</label><input type="text" id="set_giro_' + i + '" value="' + (s.giroscopio || "") + '" placeholder="Gyro 60%"></div><div class="campo-set" style="grid-column:span 2;"><label>Notas Pista</label><textarea id="set_notas_' + i + '" rows="2">' + (s.notas || "") + '</textarea></div></div><button style="width:100%; margin-top:8px; background:#0dcaf0; color:#000; padding:9px;" onclick="guardarSettingsMoto(' + i + ')">Guardar Settings</button></div></div>';
+      html += '<div class="caja-settings"><div class="titulo-settings"><span>Settings Losi Promoto-MX</span><button style="background:#25D366; color:#000; padding:4px 8px; font-size:10px;" onclick="compartirSetupWhatsApp(' + i + ')">WhatsApp</button></div><div class="campo-set" style="margin-bottom:8px;"><label>Perfil Terreno</label><select id="set_terr_' + i + '"><option' + (s.terreno === 'Seco / Suelto' ? ' selected' : '') + '>Seco / Suelto</option><option' + (s.terreno === 'Riego / Agarre Alto' ? ' selected' : '') + '>Riego / Agarre Alto</option><option' + (s.terreno === 'Saltos / Baches Grandes' ? ' selected' : '') + '>Saltos / Baches Grandes</option><option' + (s.terreno === 'Barro / Humedo' ? ' selected' : '') + '>Barro / Humedo</option></select></div><div class="grid-settings"><div class="campo-set"><label>Aceite Horquilla</label><input type="text" id="set_horq_' + i + '" value="' + (s.horquilla || "") + '" placeholder="50wt"></div><div class="campo-set"><label>Muelles Horquilla</label><input type="text" id="set_muelle_' + i + '" value="' + (s.muellesHorquilla || "") + '" placeholder="Duros / Estandar"></div><div class="campo-set"><label>Amortiguador Tras.</label><input type="text" id="set_amort_' + i + '" value="' + (s.amortiguador || "") + '" placeholder="35wt"></div><div class="campo-set"><label>PiÃ±on / Corona</label><input type="text" id="set_des_' + i + '" value="' + (s.desarrollo || "") + '" placeholder="12T / 40T"></div><div class="campo-set"><label>Neumaticos</label><input type="text" id="set_neum_' + i + '" value="' + (s.neumaticos || "") + '" placeholder="Dunlop MX53"></div><div class="campo-set"><label>Gyro / Pesos / Bat</label><input type="text" id="set_giro_' + i + '" value="' + (s.giroscopio || "") + '" placeholder="Gyro 60%"></div><div class="campo-set" style="grid-column:span 2;"><label>Notas Pista</label><textarea id="set_notas_' + i + '" rows="2">' + (s.notas || "") + '</textarea></div></div><button style="width:100%; margin-top:8px; background:#0dcaf0; color:#000; padding:9px;" onclick="guardarSettingsMoto(' + i + ')">Guardar Settings</button></div></div>';
     }
     cont.innerHTML = html;
   }
@@ -358,21 +358,20 @@
     var btn = document.getElementById('btnConfirmarIns');
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
       msg.style.color = "#ff4d5e";
-      msg.textContent = "El circuito está cerrado ahora.";
+      msg.textContent = "El circuito estÃ¡ cerrado ahora.";
       return;
     }
     var moto = garajeMotos[motoSeleccionadaIdx];
     localStorage.setItem('metro_moto_activa_' + uid, String(motoSeleccionadaIdx));
     btn.disabled = true;
     msg.style.color = "#0dcaf0";
-    msg.textContent = "Enviando inscripción...";
+    msg.textContent = "Enviando inscripciÃ³n...";
     var fotoP = (moto.fotos && moto.fotos[0]) ? moto.fotos[0] : (moto.foto || "");
     fetch(est.url.replace(/\/$/, "") + "/inscribir_app", {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
-        "X-Pinggy-No-Screen": "1"
-      },
+        },
       body: JSON.stringify({
         nombre: datosPerfil.nombre,
         dorsal: moto.dorsal || datosPerfil.dorsal,
@@ -386,7 +385,7 @@
       btn.disabled = false;
       if (res && res.ok) {
         msg.style.color = "#20c997";
-        msg.textContent = "¡Inscrito con " + moto.modelo + "!";
+        msg.textContent = "Â¡Inscrito con " + moto.modelo + "!";
       } else {
         msg.style.color = "#ff4d5e";
         msg.textContent = (res && res.error) ? res.error : "Inscripciones cerradas.";
@@ -394,7 +393,7 @@
     }).catch(function(err) {
       btn.disabled = false;
       msg.style.color = "#ff4d5e";
-      msg.textContent = "Error de conexión con pista (" + (err.message || "red") + ").";
+      msg.textContent = "Error de conexiÃ³n con pista (" + (err.message || "red") + ").";
     });
   }
 
@@ -431,7 +430,7 @@
     document.getElementById('contenedorGrafica').innerHTML = gHtml;
     for (var m = hist.length - 1; m >= 0; m--) {
       var reg = hist[m];
-      lHtml += '<div class="item-historial"><div><b>' + (reg.fecha || "Jornada") + '</b> — Pos: <span style="color:#ffc107;">' + (reg.pos || "--") + 'º</span> | Vueltas: <b>' + (reg.vueltas || 0) + '</b><br>Mejor Vuelta: <span style="color:#20c997;">' + fmt(reg.mejor) + '</span> | Vel. Max: <span style="color:#ff4d5e;">' + (reg.kmh || 0) + ' km/h</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta</button></div>';
+      lHtml += '<div class="item-historial"><div><b>' + (reg.fecha || "Jornada") + '</b> â€” Pos: <span style="color:#ffc107;">' + (reg.pos || "--") + 'Âº</span> | Vueltas: <b>' + (reg.vueltas || 0) + '</b><br>Mejor Vuelta: <span style="color:#20c997;">' + fmt(reg.mejor) + '</span> | Vel. Max: <span style="color:#ff4d5e;">' + (reg.kmh || 0) + ' km/h</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta</button></div>';
     }
     document.getElementById('listaHistorial').innerHTML = lHtml;
   }
@@ -443,13 +442,13 @@
     ctx.fillStyle = "#0d0d0d"; ctx.fillRect(0, 0, 720, 900);
     ctx.fillStyle = "#ffc107"; ctx.fillRect(0, 0, 720, 18); ctx.fillRect(0, 882, 720, 18);
     ctx.font = "bold 34px Arial"; ctx.textAlign = "center"; ctx.fillText("METROPOLITANO MX CIRCUIT", 360, 75);
-    ctx.fillStyle = "#aaa"; ctx.font = "bold 20px Arial"; ctx.fillText("TELEMETRIA OFICIAL • " + (reg.fecha || ""), 360, 110);
+    ctx.fillStyle = "#aaa"; ctx.font = "bold 20px Arial"; ctx.fillText("TELEMETRIA OFICIAL â€¢ " + (reg.fecha || ""), 360, 110);
     var fin = function() {
       ctx.fillStyle = "#ffc107"; ctx.fillRect(60, 510, 130, 64);
       ctx.fillStyle = "#000"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center"; ctx.fillText("#" + datosPerfil.dorsal, 125, 555);
       ctx.fillStyle = "#fff"; ctx.font = "bold 36px Arial"; ctx.textAlign = "left"; ctx.fillText(datosPerfil.nombre.toUpperCase(), 210, 555);
       var bxs = [
-        { l: "POSICION", v: (reg.pos || "--") + "º", c: "#ffc107", x: 60, y: 610 },
+        { l: "POSICION", v: (reg.pos || "--") + "Âº", c: "#ffc107", x: 60, y: 610 },
         { l: "MEJOR VUELTA", v: fmt(reg.mejor), c: "#20c997", x: 375, y: 610 },
         { l: "VEL. PUNTA", v: (reg.kmh || 0) + " km/h", c: "#ff4d5e", x: 60, y: 745 },
         { l: "VUELTAS", v: String(reg.vueltas || 0), c: "#0dcaf0", x: 375, y: 745 }
@@ -471,12 +470,12 @@
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
       ban.style.color = "#aaa";
-      ban.textContent = "Circuito cerrado ahora — Mostrando tu historial guardado.";
+      ban.textContent = "Circuito cerrado ahora â€” Mostrando tu historial guardado.";
       pV.style.display = "none";
       return;
     }
     var uP = est.url.replace(/\/$/, "");
-    var hdrs = { "X-Pinggy-No-Screen": "1" };
+    var hdrs = { };
     fetch(uP + "/live_data.json?t=" + Date.now(), { headers: hdrs }).then(function(r) { return r.json(); }).then(function(live) {
       fetch(uP + "/radar_live.json?t=" + Date.now(), { headers: hdrs }).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
         var kmh = (rad && rad.porPiloto) ? (Reflect.get(rad.porPiloto, String(datosPerfil.dorsal)) || 0) : 0;
@@ -484,7 +483,7 @@
         for (var i = 0; i < lista.length; i++) if (String(lista[i].dorsal) === String(datosPerfil.dorsal)) { enc = lista[i]; pos = i + 1; break; }
         if (enc && enc.vueltas !== 0) {
           pV.style.display = "block";
-          document.getElementById('vivoPos').textContent = pos + "º";
+          document.getElementById('vivoPos').textContent = pos + "Âº";
           var ult = enc.ultima || enc.mejor || 0;
           document.getElementById('vivoUltima').textContent = fmt(ult);
           if (enc.mejor && ult) {
@@ -519,7 +518,7 @@
     }).catch(function() {
       pV.style.display = "none";
       ban.style.color = "#aaa";
-      ban.textContent = "Modo Offline — Mostrando historial.";
+      ban.textContent = "Modo Offline â€” Mostrando historial.";
     });
   }
 
