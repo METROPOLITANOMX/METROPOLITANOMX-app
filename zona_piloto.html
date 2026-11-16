@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona Piloto - Metropolitano Circuit</title>
+<style>
+  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; padding:14px; text-align:center; }
+  .cabecera { background:#1a1a1a; border-bottom:3px solid #ffc107; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .nom-piloto { color:#ffc107; font-size:18px; font-weight:bold; text-transform:uppercase; }
+  .badge-dorsal { background:#ffc107; color:#000; padding:3px 9px; border-radius:6px; margin-right:6px; }
+  button { padding:8px 12px; font-size:12px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; }
+  .btn-salir { background:#dc3545; color:#fff; }
+  .btn-sync { background:#20c997; color:#000; }
+  .estado-red { font-size:13px; font-weight:bold; padding:8px; border-radius:8px; margin-bottom:14px; background:#1c1c1c; border:1px solid #333; color:#0dcaf0; }
+  .grid-resumen { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:540px; margin:0 auto 14px auto; }
+  .card-stat { background:#181818; border:1px solid #333; border-radius:12px; padding:12px; }
+  .etiq { font-size:11px; color:#aaa; text-transform:uppercase; }
+  .valor { font-size:22px; font-weight:bold; margin-top:4px; color:#fff; }
+  .caja-seccion { background:#161616; border:1px solid #333; border-radius:14px; padding:14px; max-width:540px; margin:0 auto 14px auto; text-align:left; }
+  .titulo-sec { color:#ffc107; font-size:14px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; border-bottom:1px solid #2a2a2a; padding-bottom:6px; }
+  .grafica-barras { display:flex; align-items:flex-end; gap:8px; height:120px; padding-top:15px; border-bottom:2px solid #444; }
+  .barra-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .barra-fill { width:100%; max-width:34px; background:linear-gradient(180deg, #20c997 0%, #0d6efd 100%); border-radius:6px 6px 0 0; min-height:12px; }
+  .barra-txt { font-size:10px; color:#ccc; margin-top:4px; }
+  .item-historial { background:#202020; border-left:4px solid #0dcaf0; border-radius:8px; padding:10px; margin-bottom:8px; font-size:13px; }
+</style>
+</head>
+<body>
+  <div class="cabecera">
+    <div class="nom-piloto"><span id="txtDorsal" class="badge-dorsal">#--</span><span id="txtNombre">PILOTO</span></div>
+    <div>
+      <button class="btn-sync" onclick="sincronizarConPista()">ACTUALIZAR</button>
+      <button class="btn-salir" onclick="cerrarSesion()">SALIR</button>
+    </div>
+  </div>
+
+  <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
+
+  <div class="grid-resumen">
+    <div class="card-stat"><div class="etiq">Mejor Vuelta Historica</div><div id="statMejor" class="valor" style="color:#20c997;">--</div></div>
+    <div class="card-stat"><div class="etiq">Velocidad Punta Max.</div><div id="statVel" class="valor" style="color:#ff4d5e;">-- km/h</div></div>
+    <div class="card-stat"><div class="etiq">Total Vueltas Registradas</div><div id="statVueltas" class="valor">0</div></div>
+    <div class="card-stat"><div class="etiq">Carreras Guardadas</div><div id="statCarreras" class="valor" style="color:#ffc107;">0</div></div>
+  </div>
+
+  <div class="caja-seccion">
+    <div class="titulo-sec">EVOLUCION DE MEJORES TIEMPOS (GRAFICA)</div>
+    <div id="contenedorGrafica" class="grafica-barras"><p style="color:#777; font-size:12px;">Aun no hay suficientes jornadas para graficar.</p></div>
+  </div>
+
+  <div class="caja-seccion">
+    <div class="titulo-sec">HISTORIAL DE JORNADAS Y TELEMETRIA</div>
+    <div id="listaHistorial"><p style="color:#777; font-size:13px;">Cuando corras en el circuito, tus resultados quedaran guardados aqui.</p></div>
+  </div>
+<script>
+  var sc = document.createElement('script');
+  sc.src = "estado.js?t=" + Date.now();
+  sc.onload = function() { sincronizarConPista(); };
+  sc.onerror = function() { sincronizarConPista(); };
+  document.body.appendChild(sc);
+
+  var uid = localStorage.getItem('metro_uid');
+  var nombreLocal = localStorage.getItem('metro_nombre') || "Piloto";
+  var dorsalLocal = localStorage.getItem('metro_dorsal') || "--";
+  var datosPerfil = { nombre: nombreLocal, dorsal: dorsalLocal, historial: [] };
+
+  if (!uid) { window.location.href = "index.html"; }
+
+  document.getElementById('txtNombre').textContent = datosPerfil.nombre;
+  document.getElementById('txtDorsal').textContent = "#" + datosPerfil.dorsal;
+
+  try {
+    var cacheHist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]");
+    if (Array.isArray(cacheHist)) datosPerfil.historial = cacheHist;
+  } catch (e) {}
+
+  function fmt(ms) { return (!ms || ms === 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+
+  function pintarEstadisticasYGrafica() {
+    var hist = datosPerfil.historial || [];
+    document.getElementById('statCarreras').textContent = hist.length;
+    if (hist.length === 0) return;
+
+    var mejorAbs = 99999999, maxKmh = 0, sumVtas = 0;
+    for (var i = 0; i !== hist.length; i++) {
+      var h = hist.slice(i, i + 1).pop();
+      if (h.mejor && h.mejor !== 0 && Math.min(h.mejor, mejorAbs) === h.mejor) mejorAbs = h.mejor;
+      if (h.kmh && Math.max(h.kmh, maxKmh) === h.kmh) maxKmh = h.kmh;
+      sumVtas += (h.vueltas || 0);
+    }
+    document.getElementById('statMejor').textContent = (mejorAbs !== 99999999) ? fmt(mejorAbs) : "--";
+    document.getElementById('statVel').textContent = (maxKmh !== 0) ? (maxKmh + " km/h") : "-- km/h";
+    document.getElementById('statVueltas').textContent = sumVtas;
+
+    var graf = document.getElementById('contenedorGrafica');
+    var ultimos = hist.slice(-6), maxT = 1;
+    for (var j = 0; j !== ultimos.length; j++) {
+      var uItem = ultimos.slice(j, j + 1).pop();
+      if (uItem.mejor) maxT = Math.max(maxT, uItem.mejor);
+    }
+    var gHtml = "";
+    for (var k = 0; k !== ultimos.length; k++) {
+      var it = ultimos.slice(k, k + 1).pop();
+      var pct = it.mejor ? Math.max(20, Math.round((it.mejor / maxT) * 100)) : 20;
+      gHtml += '<div class="barra-col"><div class="barra-txt">' + fmt(it.mejor) + '</div><div class="barra-fill" style="height:' + pct + '%;"></div><div class="barra-txt">' + (it.fecha || "J" + (k + 1)) + '</div></div>';
+    }
+    graf.innerHTML = gHtml;
+
+    var listaEl = document.getElementById('listaHistorial'), lHtml = "";
+    for (var m = hist.length - 1; m !== -1; m--) {
+      var reg = hist.slice(m, m + 1).pop();
+      lHtml += '<div class="item-historial"><b>' + (reg.fecha || "Jornada") + '</b> — Pos: <span style="color:#ffc107;">' + (reg.pos || "--") + 'º</span> | Vueltas: <b>' + (reg.vueltas || 0) + '</b><br>Mejor Vuelta: <span style="color:#20c997;">' + fmt(reg.mejor) + '</span> | Vel. Max: <span style="color:#ff4d5e;">' + (reg.kmh || 0) + ' km/h</span></div>';
+    }
+    listaEl.innerHTML = lHtml;
+  }
+
+  function sincronizarConPista() {
+    var banner = document.getElementById('bannerEstadoRed');
+    var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
+    if (!est || !est.activo || !est.url || est.url.indexOf("http") !== 0) {
+      banner.style.color = "#aaa";
+      banner.textContent = "Circuito cerrado ahora — Mostrando tu historial guardado.";
+      return;
+    }
+    var urlPista = est.url.replace(/\/$/, "");
+    fetch(urlPista + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(live) {
+      fetch(urlPista + "/radar_live.json?t=" + Date.now()).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
+        var kmhActual = (rad && rad.porPiloto) ? (Reflect.get(rad.porPiloto, String(datosPerfil.dorsal)) || 0) : 0;
+        var lista = live.clasificacionManga || [], encontrado = null, pos = 0;
+        for (var i = 0; i !== lista.length; i++) {
+          var cand = lista.slice(i, i + 1).pop();
+          if (String(cand.dorsal) === String(datosPerfil.dorsal)) { encontrado = cand; pos = i + 1; break; }
+        }
+        if (encontrado && encontrado.vueltas !== 0) {
+          var hoy = new Date().toLocaleDateString('es-ES');
+          var hist = datosPerfil.historial || [];
+          var regHoy = { fecha: hoy, pos: pos, vueltas: encontrado.vueltas, mejor: encontrado.mejor || 0, kmh: kmhActual };
+          if (hist.length !== 0 && hist.slice(-1).pop().fecha === hoy) hist[hist.length - 1] = regHoy;
+          else hist.push(regHoy);
+          datosPerfil.historial = hist;
+          localStorage.setItem('metro_hist_' + uid, JSON.stringify(hist));
+          pintarEstadisticasYGrafica();
+          banner.style.color = "#20c997";
+          banner.textContent = "EN VIVO: Datos de pista sincronizados y guardados.";
+        } else {
+          banner.style.color = "#0dcaf0";
+          banner.textContent = "Conectado al circuito (esperando vueltas del dorsal #" + datosPerfil.dorsal + ").";
+        }
+      });
+    }).catch(function() {
+      banner.style.color = "#aaa";
+      banner.textContent = "Modo Offline — Mostrando tu historial guardado.";
+    });
+  }
+
+  function cerrarSesion() {
+    localStorage.removeItem('metro_uid');
+    window.location.href = "index.html";
+  }
+
+  pintarEstadisticasYGrafica();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metropolitano MX Circuit - App Oficial</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0d">
+<style>
+  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; box-sizing:border-box; }
+  .logo-app { width:160px; max-width:60%; border-radius:16px; margin-bottom:16px; border:2px solid #ffc107; }
+  h1 { color:#ffc107; font-size:24px; margin:0 0 6px 0; text-transform:uppercase; }
+  .sub { color:#aaa; font-size:14px; margin-bottom:26px; }
+  .caja-botones { width:100%; max-width:360px; display:flex; flex-direction:column; gap:14px; }
+  button { width:100%; padding:16px; font-size:17px; font-weight:bold; border:none; border-radius:12px; cursor:pointer; text-transform:uppercase; }
+  .btn-publico { background:#20c997; color:#000; }
+  .btn-piloto { background:#ffc107; color:#000; }
+  .btn-volver { background:#333; color:#fff; font-size:14px; padding:12px; margin-top:8px; }
+  .panel-oculto { display:none; width:100%; max-width:360px; background:#181818; border:2px solid #333; border-radius:14px; padding:20px; box-sizing:border-box; margin-top:10px; }
+  input[type="text"], input[type="password"] { width:100%; padding:12px; margin-bottom:12px; border-radius:8px; border:1px solid #444; background:#000; color:#fff; font-size:15px; box-sizing:border-box; }
+  .fila-check { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#ccc; margin-bottom:14px; }
+  .link-olvido { color:#0dcaf0; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; font-size:13px; width:auto; text-transform:none; font-weight:normal; }
+  .msg-estado { font-size:14px; color:#ffc107; margin-top:12px; font-weight:bold; }
+  .tabs-auth { display:flex; gap:8px; margin-bottom:14px; }
+  .tab-btn { flex:1; padding:10px; font-size:13px; background:#222; color:#aaa; border-radius:8px; }
+  .tab-btn.activa { background:#0d6efd; color:#fff; }
+</style>
+</head>
+<body>
+  <img src="logo.png" alt="Metropolitano Circuit" class="logo-app" onerror="this.style.display='none'">
+  <h1>METROPOLITANO CIRCUIT</h1>
+  <div class="sub">LOSI PROMOTO MX - TELEMETRIA Y RESULTADOS</div>
+
+  <div id="menuPrincipal" class="caja-botones">
+    <button class="btn-publico" onclick="entrarComoPublico()">SOY PUBLICO</button>
+    <button class="btn-piloto" onclick="mostrarLoginPiloto()">SOY PILOTO</button>
+    <div id="estadoConexion" class="msg-estado"></div>
+  </div>
+
+  <div id="panelPilotoAuth" class="panel-oculto">
+    <div class="tabs-auth">
+      <button id="tabEntrar" class="tab-btn activa" onclick="cambiarModoAuth('LOGIN')">ENTRAR</button>
+      <button id="tabRegistro" class="tab-btn" onclick="cambiarModoAuth('REGISTRO')">CREAR CUENTA</button>
+    </div>
+    <input type="text" id="inpUsuario" placeholder="Nombre de Piloto (ej. Carlos22)">
+    <input type="password" id="inpClave" placeholder="Contrasena">
+    <input type="text" id="inpDorsalReg" placeholder="Tu Dorsal en pista (ej. 22)" style="display:none;">
+    <div id="filaOpcionesLogin" class="fila-check">
+      <label><input type="checkbox" id="chkRecordar" checked> Recordar clave</label>
+      <button type="button" class="link-olvido" onclick="mostrarRecuperar()">Olvide mi clave</button>
+    </div>
+    <button id="btnAccionAuth" class="btn-piloto" onclick="procesarAccesoPiloto()">ACCEDER A MI TELEMETRIA</button>
+    <div id="msgAuth" class="msg-estado" style="color:#ff4d5e;"></div>
+    <button class="btn-volver" onclick="volverInicio()">VOLVER</button>
+  </div>
+
+  <div id="panelRecuperar" class="panel-oculto">
+    <h3 style="color:#ffc107; margin:0 0 12px 0; font-size:16px;">RECUPERAR CONTRASENA</h3>
+    <input type="text" id="recUsuario" placeholder="Tu Nombre de Piloto">
+    <input type="text" id="recDorsal" placeholder="Tu Dorsal registrado">
+    <input type="password" id="recNuevaClave" placeholder="Nueva Contrasena">
+    <button class="btn-publico" onclick="procesarRecuperacion()">CAMBIAR CONTRASENA</button>
+    <div id="msgRec" class="msg-estado" style="color:#ff4d5e;"></div>
+    <button class="btn-volver" onclick="volverALogin()">VOLVER A ENTRAR</button>
+  </div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function() {});
+  }
+
+  var sc = document.createElement('script');
+  sc.src = "estado.js?t=" + Date.now();
+  document.body.appendChild(sc);
+
+  var modoAuth = "LOGIN";
+
+  function cargarDatosRecordados() {
+    var recU = localStorage.getItem('metro_rec_user');
+    var recP = localStorage.getItem('metro_rec_pass');
+    if (recU && recP) {
+      document.getElementById('inpUsuario').value = recU;
+      document.getElementById('inpClave').value = recP;
+      document.getElementById('chkRecordar').checked = true;
+    }
+  }
+  cargarDatosRecordados();
+
+  function mostrarLoginPiloto() {
+    document.getElementById('menuPrincipal').style.display = 'none';
+    document.getElementById('panelRecuperar').style.display = 'none';
+    document.getElementById('panelPilotoAuth').style.display = 'block';
+    cargarDatosRecordados();
+  }
+
+  function volverInicio() {
+    document.getElementById('panelPilotoAuth').style.display = 'none';
+    document.getElementById('panelRecuperar').style.display = 'none';
+    document.getElementById('menuPrincipal').style.display = 'flex';
+    document.getElementById('estadoConexion').textContent = "";
+  }
+
+  function mostrarRecuperar() {
+    document.getElementById('panelPilotoAuth').style.display = 'none';
+    document.getElementById('panelRecuperar').style.display = 'block';
+    document.getElementById('msgRec').textContent = "";
+  }
+
+  function volverALogin() {
+    document.getElementById('panelRecuperar').style.display = 'none';
+    document.getElementById('panelPilotoAuth').style.display = 'block';
+  }
+
+  function cambiarModoAuth(modo) {
+    modoAuth = modo;
+    document.getElementById('tabEntrar').className = (modo === 'LOGIN') ? 'tab-btn activa' : 'tab-btn';
+    document.getElementById('tabRegistro').className = (modo === 'REGISTRO') ? 'tab-btn activa' : 'tab-btn';
+    document.getElementById('inpDorsalReg').style.display = (modo === 'REGISTRO') ? 'block' : 'none';
+    document.getElementById('filaOpcionesLogin').style.display = (modo === 'LOGIN') ? 'flex' : 'none';
+    document.getElementById('btnAccionAuth').textContent = (modo === 'LOGIN') ? 'ACCEDER A MI TELEMETRIA' : 'REGISTRARME COMO PILOTO';
+    document.getElementById('msgAuth').textContent = "";
+    if (modo === 'REGISTRO') {
+      document.getElementById('inpUsuario').value = "";
+      document.getElementById('inpClave').value = "";
+    } else {
+      cargarDatosRecordados();
+    }
+  }
+
+  function entrarComoPublico() {
+    var est = document.getElementById('estadoConexion');
+    var info = window.ESTADO_CIRCUITO || { activo: false, url: "" };
+    if (info.activo && info.url && info.url.indexOf("http") === 0) {
+      est.style.color = "#20c997";
+      est.textContent = "Circuito abierto! Entrando...";
+      window.location.href = info.url;
+    } else {
+      est.style.color = "#ffc107";
+      est.textContent = "CIRCUITO CERRADO - Proxima carrera proximamente.";
+    }
+  }
+
+  function procesarAccesoPiloto() {
+    var nomOrig = document.getElementById('inpUsuario').value.trim();
+    var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
+    var clave = document.getElementById('inpClave').value;
+    var dorsal = document.getElementById('inpDorsalReg').value.trim();
+    var recordar = document.getElementById('chkRecordar').checked;
+    var msg = document.getElementById('msgAuth');
+
+    if (!userKey || !clave) {
+      msg.style.color = "#ff4d5e";
+      msg.textContent = "Rellena usuario y contrasena.";
+      return;
+    }
+
+    var cuentas = {};
+    try { cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}"); } catch (e) {}
+
+    if (modoAuth === 'REGISTRO') {
+      if (!dorsal) { msg.style.color = "#ff4d5e"; msg.textContent = "Indica tu numero de dorsal."; return; }
+      if (Reflect.has(cuentas, userKey)) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre de piloto ya existe."; return; }
+      Reflect.set(cuentas, userKey, { nombre: nomOrig, clave: clave, dorsal: dorsal });
+      localStorage.setItem('metro_cuentas', JSON.stringify(cuentas));
+      localStorage.setItem('metro_rec_user', nomOrig);
+      localStorage.setItem('metro_rec_pass', clave);
+      localStorage.setItem('metro_uid', userKey);
+      localStorage.setItem('metro_nombre', nomOrig);
+      localStorage.setItem('metro_dorsal', dorsal);
+      window.location.href = "zona_piloto.html";
+    } else {
+      var perfil = Reflect.get(cuentas, userKey);
+      if (!perfil || perfil.clave !== clave) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = "Usuario o contrasena incorrectos.";
+        return;
+      }
+      if (recordar) {
+        localStorage.setItem('metro_rec_user', nomOrig);
+        localStorage.setItem('metro_rec_pass', clave);
+      } else {
+        localStorage.removeItem('metro_rec_user');
+        localStorage.removeItem('metro_rec_pass');
+      }
+      localStorage.setItem('metro_uid', userKey);
+      localStorage.setItem('metro_nombre', perfil.nombre);
+      localStorage.setItem('metro_dorsal', perfil.dorsal);
+      window.location.href = "zona_piloto.html";
+    }
+  }
+
+  function procesarRecuperacion() {
+    var nomOrig = document.getElementById('recUsuario').value.trim();
+    var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
+    var dorsal = document.getElementById('recDorsal').value.trim();
+    var nuevaClave = document.getElementById('recNuevaClave').value;
+    var msg = document.getElementById('msgRec');
+
+    if (!userKey || !dorsal || !nuevaClave) {
+      msg.style.color = "#ff4d5e";
+      msg.textContent = "Rellena todos los campos.";
+      return;
+    }
+
+    var cuentas = {};
+    try { cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}"); } catch (e) {}
+    var perfil = Reflect.get(cuentas, userKey);
+
+    if (!perfil || String(perfil.dorsal) !== String(dorsal)) {
+      msg.style.color = "#ff4d5e";
+      msg.textContent = "El nombre o el dorsal no coinciden con ninguna cuenta.";
+      return;
+    }
+
+    perfil.clave = nuevaClave;
+    Reflect.set(cuentas, userKey, perfil);
+    localStorage.setItem('metro_cuentas', JSON.stringify(cuentas));
+    localStorage.setItem('metro_rec_user', perfil.nombre);
+    localStorage.setItem('metro_rec_pass', nuevaClave);
+
+    msg.style.color = "#20c997";
+    msg.textContent = "Contrasena cambiada! Ya puedes entrar.";
+    setTimeout(function() {
+      volverALogin();
+      cargarDatosRecordados();
+    }, 1200);
+  }
+</script>
+</body>
+</html>
