@@ -220,7 +220,7 @@
 
     fetch(urlPista + "/inscribir_app", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Pinggy-No-Screen": "true" },
       body: JSON.stringify({
         nombre: datosPerfil.nombre,
         dorsal: motoSel.dorsal,
@@ -233,7 +233,7 @@
         msg.textContent = "INSCRITO! Tu moto #" + motoSel.dorsal + " ya aparece en el panel del Director.";
       } else {
         msg.style.color = "#ff4d5e";
-        msg.textContent = "No se pudo completar la inscripcion.";
+        msg.textContent = res.error || "No se pudo completar la inscripcion.";
       }
     }).catch(function() {
       msg.style.color = "#ff4d5e";
@@ -288,9 +288,10 @@
       return;
     }
     var urlPista = est.url.replace(/\/$/, "");
-    fetch(urlPista + "/ping_usuario?uid=" + encodeURIComponent(uid)).catch(function() {});
-    fetch(urlPista + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(live) {
-      fetch(urlPista + "/radar_live.json?t=" + Date.now()).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
+    var hdrs = { headers: { "X-Pinggy-No-Screen": "true" } };
+    fetch(urlPista + "/ping_usuario?uid=" + encodeURIComponent(uid), hdrs).catch(function() {});
+    fetch(urlPista + "/live_data.json?t=" + Date.now(), hdrs).then(function(r) { return r.json(); }).then(function(live) {
+      fetch(urlPista + "/radar_live.json?t=" + Date.now(), hdrs).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
         var kmhActual = (rad && rad.porPiloto) ? (Reflect.get(rad.porPiloto, String(datosPerfil.dorsal)) || 0) : 0;
         var lista = live.clasificacionManga || [], encontrado = null, pos = 0;
         for (var i = 0; i !== lista.length; i++) {
