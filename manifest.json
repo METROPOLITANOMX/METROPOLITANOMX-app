@@ -1,13 +1,13 @@
 {
   "name": "Metropolitano MX Circuit",
   "short_name": "Metropolitano",
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
