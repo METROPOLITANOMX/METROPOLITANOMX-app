@@ -1,6 +1,6 @@
 {
-  "name": "Metropolitano MX Circuit",
-  "short_name": "METROPOLITANOMX",
+  "name": "METROPOLITANOMX-app",
+  "short_name": "METRO MX",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0d0d0d",
