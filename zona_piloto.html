@@ -5,67 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zona Piloto - Metropolitano Circuit</title>
 <style>
-  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; padding:14px; text-align:center; }
-  .cabecera { background:#1a1a1a; border-bottom:3px solid #ffc107; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
-  .nom-piloto { color:#ffc107; font-size:18px; font-weight:bold; text-transform:uppercase; }
-  .badge-dorsal { background:#ffc107; color:#000; padding:3px 9px; border-radius:6px; margin-right:6px; }
-  button { padding:9px 12px; font-size:12px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; }
-  .btn-salir { background:#dc3545; color:#fff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; padding:12px; text-align:center; }
+  .cabecera { background:#1a1a1a; border-bottom:3px solid #ffc107; padding:10px 12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; max-width:540px; margin-left:auto; margin-right:auto; }
+  .nom-piloto { color:#ffc107; font-size:16px; font-weight:bold; text-transform:uppercase; display:flex; align-items:center; }
+  .badge-dorsal { background:#ffc107; color:#000; padding:3px 8px; border-radius:6px; margin-right:6px; font-size:14px; }
+  .acciones-top { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+  button { padding:7px 10px; font-size:11px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; text-transform:uppercase; }
+  .btn-inscribir { background:#ffc107; color:#000; }
+  .btn-garaje { background:#0dcaf0; color:#000; }
   .btn-sync { background:#20c997; color:#000; }
-  .btn-inscribir { width:100%; padding:14px; font-size:15px; background:#0d6efd; color:#fff; margin-top:8px; text-transform:uppercase; }
-  .btn-add { width:100%; padding:11px; font-size:13px; background:#ffc107; color:#000; margin-top:6px; }
-  .estado-red { font-size:13px; font-weight:bold; padding:8px; border-radius:8px; margin-bottom:14px; background:#1c1c1c; border:1px solid #333; color:#0dcaf0; }
-  .caja-seccion { background:#161616; border:1px solid #333; border-radius:14px; padding:14px; max-width:540px; margin:0 auto 14px auto; text-align:left; }
-  .titulo-sec { color:#ffc107; font-size:14px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; border-bottom:1px solid #2a2a2a; padding-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
-  input, select { width:100%; padding:10px; margin-bottom:8px; border-radius:8px; border:1px solid #444; background:#000; color:#fff; font-size:14px; box-sizing:border-box; }
-  .card-moto { display:flex; align-items:center; gap:10px; background:#202020; border:1px solid #333; border-radius:10px; padding:10px; margin-bottom:8px; }
-  .foto-moto { width:68px; height:68px; object-fit:cover; border-radius:8px; border:2px solid #ffc107; background:#000; }
-  .info-moto { flex:1; font-size:13px; }
+  .btn-salir { background:#dc3545; color:#fff; }
+  .estado-red { font-size:12px; font-weight:bold; padding:8px; border-radius:8px; margin:0 auto 12px auto; max-width:540px; background:#1c1c1c; border:1px solid #333; color:#0dcaf0; }
   .grid-resumen { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:540px; margin:0 auto 14px auto; }
   .card-stat { background:#181818; border:1px solid #333; border-radius:12px; padding:12px; }
   .etiq { font-size:11px; color:#aaa; text-transform:uppercase; }
   .valor { font-size:22px; font-weight:bold; margin-top:4px; color:#fff; }
+  .caja-seccion { background:#161616; border:1px solid #333; border-radius:14px; padding:14px; max-width:540px; margin:0 auto 14px auto; text-align:left; }
+  .titulo-sec { color:#ffc107; font-size:13px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; border-bottom:1px solid #2a2a2a; padding-bottom:6px; }
   .grafica-barras { display:flex; align-items:flex-end; gap:8px; height:120px; padding-top:15px; border-bottom:2px solid #444; }
   .barra-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
   .barra-fill { width:100%; max-width:34px; background:linear-gradient(180deg, #20c997 0%, #0d6efd 100%); border-radius:6px 6px 0 0; min-height:12px; }
   .barra-txt { font-size:10px; color:#ccc; margin-top:4px; }
   .item-historial { background:#202020; border-left:4px solid #0dcaf0; border-radius:8px; padding:10px; margin-bottom:8px; font-size:13px; }
+
+  /* MODALES */
+  .modal-fondo { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.88); z-index:999; overflow-y:auto; padding:12px; }
+  .modal-caja { background:#161616; border:1px solid #444; border-radius:14px; max-width:520px; margin:10px auto; padding:14px; text-align:left; }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:12px; }
+  .modal-titulo { color:#ffc107; font-size:16px; font-weight:bold; text-transform:uppercase; }
+  .btn-cerrar-modal { background:#333; color:#fff; font-size:13px; padding:5px 10px; }
+
+  /* SELECTOR INSCRIPCION */
+  .grid-motos-ins { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .card-moto-ins { background:#222; border:2px solid #333; border-radius:10px; padding:8px; text-align:center; cursor:pointer; transition:0.2s; }
+  .card-moto-ins.seleccionada { border-color:#20c997; background:#142b24; }
+  .card-moto-ins img { width:100%; height:95px; object-fit:cover; border-radius:8px; background:#111; margin-bottom:6px; }
+  .btn-confirmar-ins { width:100%; padding:12px; font-size:14px; background:#20c997; color:#000; border-radius:10px; margin-top:6px; }
+  .btn-confirmar-ins:disabled { background:#444; color:#888; cursor:not-allowed; }
+
+  /* CARRUSEL GARAJE Y SETTINGS LOSI */
+  .carrusel-garaje { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; padding-bottom:10px; -webkit-overflow-scrolling:touch; }
+  .tarjeta-garaje { flex:0 0 94%; scroll-snap-align:center; background:#202020; border:1px solid #3b3b3b; border-radius:12px; padding:12px; }
+  .foto-garaje { width:100%; height:165px; object-fit:cover; border-radius:10px; background:#111; border:1px solid #333; margin-bottom:8px; }
+  .fila-acciones-moto { display:flex; gap:6px; margin-bottom:10px; }
+  .fila-acciones-moto button { flex:1; padding:6px; font-size:11px; }
+  .caja-settings { background:#151515; border:1px solid #2e2e2e; border-radius:10px; padding:10px; margin-top:8px; }
+  .titulo-settings { color:#0dcaf0; font-size:12px; font-weight:bold; text-transform:uppercase; margin-bottom:8px; }
+  .grid-settings { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .campo-set label { display:block; font-size:10px; color:#aaa; margin-bottom:3px; text-transform:uppercase; }
+  .campo-set input, .campo-set textarea, .form-nueva-moto input { width:100%; background:#252525; border:1px solid #444; color:#fff; padding:7px; border-radius:6px; font-size:12px; }
+  .form-nueva-moto { background:#1e1e1e; border:1px dashed #555; border-radius:10px; padding:10px; margin-bottom:12px; display:none; }
 </style>
 </head>
 <body>
   <div class="cabecera">
     <div class="nom-piloto"><span id="txtDorsal" class="badge-dorsal">#--</span><span id="txtNombre">PILOTO</span></div>
-    <div>
-      <button class="btn-sync" onclick="sincronizarConPista()">ACTUALIZAR</button>
-      <button class="btn-salir" onclick="cerrarSesion()">SALIR</button>
+    <div class="acciones-top">
+      <button class="btn-inscribir" onclick="abrirModalInscripcion()">Inscribirse</button>
+      <button class="btn-garaje" onclick="abrirModalGaraje()">Garaje</button>
+      <button class="btn-sync" onclick="sincronizarConPista()">Actualizar</button>
+      <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
 
   <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
-
-  <div class="caja-seccion" style="border-color:#0d6efd;">
-    <div class="titulo-sec" style="color:#0dcaf0;">INSCRIPCION A LA CARRERA DE HOY</div>
-    <label style="font-size:12px; color:#ccc; display:block; margin-bottom:4px;">Elige la moto de tu garaje con la que vas a correr:</label>
-    <select id="selMotoCarrera"></select>
-    <button class="btn-inscribir" onclick="inscribirseCarrera()">INSCRIBIRME A LA CARRERA</button>
-    <div id="msgInscripcion" style="font-size:13px; font-weight:bold; margin-top:8px; text-align:center;"></div>
-  </div>
-
-  <div class="caja-seccion">
-    <div class="titulo-sec">
-      <span>MI GARAJE DE MOTOS (FICHAS)</span>
-      <button style="background:#333; color:#ffc107; padding:5px 9px;" onclick="toggleFormMoto()">+ NUEVA MOTO</button>
-    </div>
-    <div id="formNuevaMoto" style="display:none; background:#1e1e1e; padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #444;">
-      <input type="text" id="inpModeloMoto" placeholder="Modelo o Apodo (ej. Losi Promoto MX #22)">
-      <input type="text" id="inpDorsalMoto" placeholder="Dorsal para esta moto (ej. 22)">
-      <label style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">Foto de la moto (Galeria o Camara):</label>
-      <input type="file" id="inpFotoMoto" accept="image/*" onchange="procesarFotoSubida(this)">
-      <img id="previewMoto" style="display:none; width:90px; height:90px; object-fit:cover; border-radius:8px; margin-bottom:8px; border:2px solid #20c997;">
-      <button class="btn-add" onclick="guardarFichaMoto()">GUARDAR FICHA DE MOTO</button>
-    </div>
-    <div id="listaGaraje"></div>
-  </div>
 
   <div class="grid-resumen">
     <div class="card-stat"><div class="etiq">Mejor Vuelta Historica</div><div id="statMejor" class="valor" style="color:#20c997;">--</div></div>
@@ -83,6 +87,46 @@
     <div class="titulo-sec">HISTORIAL DE JORNADAS Y TELEMETRIA</div>
     <div id="listaHistorial"><p style="color:#777; font-size:13px;">Cuando corras en el circuito, tus resultados quedaran guardados aqui.</p></div>
   </div>
+  <!-- MODAL INSCRIPCION -->
+  <div id="modalInscripcion" class="modal-fondo">
+    <div class="modal-caja">
+      <div class="modal-header">
+        <span class="modal-titulo">Inscribirse a Carrera</span>
+        <button class="btn-cerrar-modal" onclick="cerrarModal('modalInscripcion')">X</button>
+      </div>
+      <p style="font-size:12px; color:#ccc; margin-top:0;">Selecciona tu moto para esta manga:</p>
+      <div id="listaMotosInscripcion" class="grid-motos-ins"></div>
+      <div id="msgInscripcion" style="font-size:12px; text-align:center; margin:6px 0; color:#ffc107;"></div>
+      <button id="btnConfirmarIns" class="btn-confirmar-ins" disabled onclick="enviarInscripcionCarrera()">INSCRIBIRME A LA CARRERA</button>
+    </div>
+  </div>
+
+  <!-- MODAL GARAJE -->
+  <div id="modalGaraje" class="modal-fondo">
+    <div class="modal-caja">
+      <div class="modal-header">
+        <span class="modal-titulo">Mi Garaje Losi MX</span>
+        <div>
+          <button style="background:#20c997; color:#000; margin-right:4px;" onclick="toggleFormNuevaMoto()">+ Nueva Moto</button>
+          <button class="btn-cerrar-modal" onclick="cerrarModal('modalGaraje')">X</button>
+        </div>
+      </div>
+
+      <div id="formNuevaMoto" class="form-nueva-moto">
+        <div style="font-size:12px; font-weight:bold; color:#ffc107; margin-bottom:8px;">AÑADIR MOTO AL GARAJE</div>
+        <input type="text" id="inpModeloMoto" placeholder="Modelo (ej. Losi Promoto-MX FXR)" style="margin-bottom:6px;">
+        <input type="text" id="inpDorsalMoto" placeholder="Dorsal (ej. 46)" style="margin-bottom:6px;">
+        <input type="file" id="inpFotoMoto" accept="image/*" style="margin-bottom:8px;">
+        <button style="width:100%; background:#ffc107; color:#000;" onclick="guardarNuevaMoto()">GUARDAR EN GARAJE</button>
+      </div>
+
+      <div style="font-size:11px; color:#aaa; margin-bottom:8px; text-align:center;">Desliza hacia la izquierda para ver tus motos guardadas</div>
+      <div id="carruselGaraje" class="carrusel-garaje"></div>
+    </div>
+  </div>
+
+  <input type="file" id="inpCambiarFotoOculto" accept="image/*" style="display:none;" onchange="procesarCambioFoto(event)">
+
 <script>
   var sc = document.createElement('script');
   sc.src = "estado.js?t=" + Date.now();
@@ -93,8 +137,10 @@
   var uid = localStorage.getItem('metro_uid');
   var nombreLocal = localStorage.getItem('metro_nombre') || "Piloto";
   var dorsalLocal = localStorage.getItem('metro_dorsal') || "--";
-  var datosPerfil = { nombre: nombreLocal, dorsal: dorsalLocal, historial: [], motos: [] };
-  var fotoTempBase64 = "";
+  var datosPerfil = { nombre: nombreLocal, dorsal: dorsalLocal, historial: [] };
+  var garajeMotos = [];
+  var motoSeleccionadaIdx = -1;
+  var idxFotoEditando = -1;
 
   if (!uid) { window.location.href = "index.html"; }
 
@@ -104,140 +150,237 @@
   try {
     var cacheHist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]");
     if (Array.isArray(cacheHist)) datosPerfil.historial = cacheHist;
-    var cacheMotos = JSON.parse(localStorage.getItem('metro_motos_' + uid) || "[]");
-    if (Array.isArray(cacheMotos) && cacheMotos.length !== 0) {
-      datosPerfil.motos = cacheMotos;
-    } else {
-      datosPerfil.motos = [{ id: 1, modelo: "Losi Promoto MX", dorsal: dorsalLocal, foto: "logo.png" }];
-    }
   } catch (e) {}
 
-  function fmt(ms) { return (!ms || ms === 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+  try {
+    var cacheGaraje = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]");
+    if (Array.isArray(cacheGaraje)) garajeMotos = cacheGaraje;
+  } catch (e) {}
 
-  function toggleFormMoto() {
+  function guardarGarajeStorage() {
+    localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos));
+  }
+
+  function fmt(ms) { return (!ms || ms === 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+  function cerrarModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function comprimirImagenBase64(file, callback) {
+    if (!file) { callback(""); return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var maxW = 420;
+        var scale = (img.width > maxW) ? (maxW / img.width) : 1;
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function toggleFormNuevaMoto() {
     var f = document.getElementById('formNuevaMoto');
-    f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+    f.style.display = (f.style.display === 'block') ? 'none' : 'block';
     document.getElementById('inpDorsalMoto').value = datosPerfil.dorsal;
   }
 
-  function procesarFotoSubida(input) {
-    if (!input.files || input.files.length === 0) return;
-    var file = input.files.item(0);
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        var maxDim = 420;
-        var w = img.width, h = img.height;
-        if (w > h) { if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; } }
-        else { if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        fotoTempBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        var prev = document.getElementById('previewMoto');
-        prev.src = fotoTempBase64;
-        prev.style.display = 'inline-block';
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+  function guardarNuevaMoto() {
+    var modelo = document.getElementById('inpModeloMoto').value.trim() || "Losi Promoto-MX";
+    var dorsal = document.getElementById('inpDorsalMoto').value.trim() || datosPerfil.dorsal;
+    var inputFoto = document.getElementById('inpFotoMoto');
+    var file = (inputFoto.files && inputFoto.files.length > 0) ? inputFoto.files[0] : null;
+
+    comprimirImagenBase64(file, function(fotoB64) {
+      garajeMotos.push({
+        id: Date.now(),
+        modelo: modelo,
+        dorsal: dorsal,
+        foto: fotoB64,
+        settings: {
+          horquilla: "",
+          amortiguador: "",
+          desarrollo: "",
+          neumaticos: "",
+          giroscopio: "",
+          notas: ""
+        }
+      });
+      guardarGarajeStorage();
+      document.getElementById('inpModeloMoto').value = "";
+      inputFoto.value = "";
+      document.getElementById('formNuevaMoto').style.display = 'none';
+      renderizarGaraje();
+    });
   }
 
-  function guardarFichaMoto() {
-    var mod = document.getElementById('inpModeloMoto').value.trim() || "Losi Promoto MX";
-    var dor = document.getElementById('inpDorsalMoto').value.trim() || datosPerfil.dorsal;
-    var fotoFinal = fotoTempBase64 || "logo.png";
-    datosPerfil.motos.push({ id: Date.now(), modelo: mod, dorsal: dor, foto: fotoFinal });
-    localStorage.setItem('metro_motos_' + uid, JSON.stringify(datosPerfil.motos));
-    fotoTempBase64 = "";
-    document.getElementById('inpModeloMoto').value = "";
-    document.getElementById('previewMoto').style.display = 'none';
-    document.getElementById('formNuevaMoto').style.display = 'none';
-    pintarGaraje();
+  function abrirModalGaraje() {
+    document.getElementById('modalGaraje').style.display = 'block';
+    renderizarGaraje();
   }
 
-  function cambiarFotoMotoExistente(idx, input) {
-    if (!input.files || input.files.length === 0) return;
-    var file = input.files.item(0);
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        var maxDim = 420, w = img.width, h = img.height;
-        if (w > h) { if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; } }
-        else { if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        datosPerfil.motos[idx].foto = canvas.toDataURL('image/jpeg', 0.8);
-        localStorage.setItem('metro_motos_' + uid, JSON.stringify(datosPerfil.motos));
-        pintarGaraje();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function borrarMoto(idx) {
-    if (datosPerfil.motos.length === 1) return;
-    datosPerfil.motos.splice(idx, 1);
-    localStorage.setItem('metro_motos_' + uid, JSON.stringify(datosPerfil.motos));
-    pintarGaraje();
-  }
-  function pintarGaraje() {
-    var cont = document.getElementById('listaGaraje');
-    var sel = document.getElementById('selMotoCarrera');
-    var html = "", optHtml = "";
-    for (var i = 0; i !== datosPerfil.motos.length; i++) {
-      var m = datosPerfil.motos.slice(i, i + 1).pop();
-      optHtml += '<option value="' + i + '">#' + m.dorsal + ' - ' + m.modelo + '</option>';
-      html += '<div class="card-moto">' +
-              '<img src="' + (m.foto || 'logo.png') + '" class="foto-moto">' +
-              '<div class="info-moto"><b style="color:#ffc107;">#' + m.dorsal + ' — ' + m.modelo + '</b><br>' +
-              '<label style="display:inline-block; margin-top:6px; background:#333; color:#0dcaf0; padding:4px 8px; border-radius:6px; font-size:11px; cursor:pointer;">CAMBIAR FOTO<input type="file" accept="image/*" style="display:none;" onchange="cambiarFotoMotoExistente(' + i + ', this)"></label> ' +
-              (datosPerfil.motos.length !== 1 ? '<button style="background:#dc3545; color:#fff; padding:4px 8px; font-size:11px;" onclick="borrarMoto(' + i + ')">X</button>' : '') +
-              '</div></div>';
-    }
-    cont.innerHTML = html;
-    sel.innerHTML = optHtml;
-  }
-
-  function inscribirseCarrera() {
-    var msg = document.getElementById('msgInscripcion');
-    var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
-    if (!est || !est.activo || !est.url || est.url.indexOf("http") !== 0) {
-      msg.style.color = "#ffc107";
-      msg.textContent = "El circuito esta cerrado ahora. Podras inscribirte cuando abra.";
+  function renderizarGaraje() {
+    var cont = document.getElementById('carruselGaraje');
+    if (garajeMotos.length === 0) {
+      cont.innerHTML = '<div style="width:100%; text-align:center; padding:20px; color:#888; font-size:13px;">Aun no tienes motos guardadas. Pulsa <b>+ Nueva Moto</b> arriba para añadir tu Losi Promoto-MX.</div>';
       return;
     }
-    var idx = parseInt(document.getElementById('selMotoCarrera').value || "0", 10);
-    var motoSel = datosPerfil.motos.slice(idx, idx + 1).pop() || datosPerfil.motos.slice(0, 1).pop();
-    var urlPista = est.url.replace(/\/$/, "");
+    var html = "";
+    var imgDefault = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='300' height='150'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' fill='%23666' font-family='Arial' font-size='14' text-anchor='middle'>SIN FOTO DE MOTO</text></svg>";
 
+    for (var i = 0; i < garajeMotos.length; i++) {
+      var m = garajeMotos[i];
+      var s = m.settings || {};
+      var srcFoto = m.foto ? m.foto : imgDefault;
+      html += '<div class="tarjeta-garaje">';
+      html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">';
+      html += '<span style="font-weight:bold; color:#ffc107; font-size:14px;">' + m.modelo + '</span>';
+      html += '<span style="background:#ffc107; color:#000; font-weight:bold; padding:2px 7px; border-radius:6px; font-size:12px;">#' + m.dorsal + ' (' + (i + 1) + '/' + garajeMotos.length + ')</span>';
+      html += '</div>';
+      html += '<img class="foto-garaje" src="' + srcFoto + '">';
+      html += '<div class="fila-acciones-moto">';
+      html += '<button style="background:#0dcaf0; color:#000;" onclick="iniciarCambioFoto(' + i + ')">Cambiar Foto</button>';
+      html += '<button style="background:#dc3545; color:#fff;" onclick="borrarMotoGaraje(' + i + ')">Eliminar Moto</button>';
+      html += '</div>';
+
+      html += '<div class="caja-settings">';
+      html += '<div class="titulo-settings">Settings Losi Promoto-MX</div>';
+      html += '<div class="grid-settings">';
+      html += '<div class="campo-set"><label>Aceite Horquilla</label><input type="text" id="set_horq_' + i + '" value="' + (s.horquilla || "") + '" placeholder="Ej. 50wt / 600cst"></div>';
+      html += '<div class="campo-set"><label>Amortiguador Tras.</label><input type="text" id="set_amort_' + i + '" value="' + (s.amortiguador || "") + '" placeholder="Ej. 35wt / Muelle duro"></div>';
+      html += '<div class="campo-set"><label>Piñon / Corona</label><input type="text" id="set_des_' + i + '" value="' + (s.desarrollo || "") + '" placeholder="Ej. 12T / 40T"></div>';
+      html += '<div class="campo-set"><label>Neumaticos</label><input type="text" id="set_neum_' + i + '" value="' + (s.neumaticos || "") + '" placeholder="Ej. Dunlop MX53"></div>';
+      html += '<div class="campo-set" style="grid-column:span 2;"><label>Giroscopio / Pesos / Bateria</label><input type="text" id="set_giro_' + i + '" value="' + (s.giroscopio || "") + '" placeholder="Ej. Gyro 60% / Lipo 2S 5000mAh"></div>';
+      html += '<div class="campo-set" style="grid-column:span 2;"><label>Notas de Pista</label><textarea id="set_notas_' + i + '" rows="2" placeholder="Sensaciones, rebote, agarre...">' + (s.notas || "") + '</textarea></div>';
+      html += '</div>';
+      html += '<button style="width:100%; margin-top:8px; background:#20c997; color:#000;" onclick="guardarSettingsMoto(' + i + ')">Guardar Settings</button>';
+      html += '</div></div>';
+    }
+    cont.innerHTML = html;
+  }
+
+  function guardarSettingsMoto(idx) {
+    if (!garajeMotos[idx]) return;
+    garajeMotos[idx].settings = {
+      horquilla: document.getElementById('set_horq_' + idx).value,
+      amortiguador: document.getElementById('set_amort_' + idx).value,
+      desarrollo: document.getElementById('set_des_' + idx).value,
+      neumaticos: document.getElementById('set_neum_' + idx).value,
+      giroscopio: document.getElementById('set_giro_' + idx).value,
+      notas: document.getElementById('set_notas_' + idx).value
+    };
+    guardarGarajeStorage();
+    alert("Settings guardados para " + garajeMotos[idx].modelo);
+  }
+
+  function iniciarCambioFoto(idx) {
+    idxFotoEditando = idx;
+    document.getElementById('inpCambiarFotoOculto').click();
+  }
+
+  function procesarCambioFoto(event) {
+    var file = (event.target.files && event.target.files.length > 0) ? event.target.files[0] : null;
+    if (!file || idxFotoEditando < 0) return;
+    comprimirImagenBase64(file, function(fotoB64) {
+      garajeMotos[idxFotoEditando].foto = fotoB64;
+      guardarGarajeStorage();
+      renderizarGaraje();
+      event.target.value = "";
+    });
+  }
+
+  function borrarMotoGaraje(idx) {
+    if (!confirm("¿Seguro que quieres eliminar esta moto del garaje?")) return;
+    garajeMotos.splice(idx, 1);
+    guardarGarajeStorage();
+    renderizarGaraje();
+  }
+  function abrirModalInscripcion() {
+    motoSeleccionadaIdx = -1;
+    document.getElementById('btnConfirmarIns').disabled = true;
+    document.getElementById('msgInscripcion').textContent = "";
+    document.getElementById('modalInscripcion').style.display = 'block';
+
+    var cont = document.getElementById('listaMotosInscripcion');
+    if (garajeMotos.length === 0) {
+      cont.innerHTML = '<div style="grid-column:span 2; text-align:center; padding:14px; background:#222; border-radius:8px; font-size:12px; color:#ccc;">No tienes motos en tu Garaje.<br><br><button style="background:#0dcaf0; color:#000;" onclick="cerrarModal(\'modalInscripcion\'); abrirModalGaraje();">Ir al Garaje para añadir moto</button></div>';
+      return;
+    }
+
+    var imgDefault = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='200' height='100'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' fill='%23666' font-family='Arial' font-size='12' text-anchor='middle'>SIN FOTO</text></svg>";
+    var html = "";
+    for (var i = 0; i < garajeMotos.length; i++) {
+      var m = garajeMotos[i];
+      var srcFoto = m.foto ? m.foto : imgDefault;
+      html += '<div class="card-moto-ins" id="cardIns_' + i + '" onclick="seleccionarMotoInscripcion(' + i + ')">';
+      html += '<img src="' + srcFoto + '">';
+      html += '<div style="font-weight:bold; font-size:12px; color:#fff;">' + m.modelo + '</div>';
+      html += '<div style="font-size:11px; color:#ffc107; font-weight:bold;">Dorsal #' + m.dorsal + '</div>';
+      html += '</div>';
+    }
+    cont.innerHTML = html;
+  }
+
+  function seleccionarMotoInscripcion(idx) {
+    motoSeleccionadaIdx = idx;
+    for (var i = 0; i < garajeMotos.length; i++) {
+      var card = document.getElementById('cardIns_' + i);
+      if (card) card.classList.remove('seleccionada');
+    }
+    var sel = document.getElementById('cardIns_' + idx);
+    if (sel) sel.classList.add('seleccionada');
+    document.getElementById('btnConfirmarIns').disabled = false;
+  }
+
+  function enviarInscripcionCarrera() {
+    if (motoSeleccionadaIdx < 0 || !garajeMotos[motoSeleccionadaIdx]) return;
+    var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
+    var msg = document.getElementById('msgInscripcion');
+    var btn = document.getElementById('btnConfirmarIns');
+
+    if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
+      msg.style.color = "#ff4d5e";
+      msg.textContent = "El circuito está cerrado en este momento.";
+      return;
+    }
+
+    var moto = garajeMotos[motoSeleccionadaIdx];
+    var urlPista = est.url.replace(/\/$/, "");
+    btn.disabled = true;
     msg.style.color = "#0dcaf0";
-    msg.textContent = "Enviando inscripcion y foto al Director de Carrera...";
+    msg.textContent = "Enviando inscripción a pista...";
+
+    var payload = {
+      nombre: datosPerfil.nombre,
+      dorsal: moto.dorsal || datosPerfil.dorsal,
+      moto: moto.modelo,
+      foto: moto.foto || ""
+    };
 
     fetch(urlPista + "/inscribir_app", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Pinggy-No-Screen": "true" },
-      body: JSON.stringify({
-        nombre: datosPerfil.nombre,
-        dorsal: motoSel.dorsal,
-        moto: motoSel.modelo,
-        foto: (motoSel.foto && motoSel.foto.indexOf("data:image") === 0) ? motoSel.foto : ""
-      })
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
     }).then(function(r) { return r.json(); }).then(function(res) {
+      btn.disabled = false;
       if (res && res.ok) {
         msg.style.color = "#20c997";
-        msg.textContent = "INSCRITO! Tu moto #" + motoSel.dorsal + " ya aparece en el panel del Director.";
+        msg.textContent = "¡Inscrito correctamente con " + moto.modelo + "!";
       } else {
         msg.style.color = "#ff4d5e";
-        msg.textContent = res.error || "No se pudo completar la inscripcion.";
+        msg.textContent = (res && res.error) ? res.error : "Inscripciones cerradas en pista.";
       }
     }).catch(function() {
+      btn.disabled = false;
       msg.style.color = "#ff4d5e";
-      msg.textContent = "Error de conexion con el circuito.";
+      msg.textContent = "Error de conexión con el servidor del circuito.";
     });
   }
 
@@ -284,14 +427,12 @@
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
     if (!est || !est.activo || !est.url || est.url.indexOf("http") !== 0) {
       banner.style.color = "#aaa";
-      banner.textContent = "Circuito cerrado ahora — Mostrando tu garaje e historial.";
+      banner.textContent = "Circuito cerrado ahora — Mostrando tu historial guardado.";
       return;
     }
     var urlPista = est.url.replace(/\/$/, "");
-    var hdrs = { headers: { "X-Pinggy-No-Screen": "true" } };
-    fetch(urlPista + "/ping_usuario?uid=" + encodeURIComponent(uid), hdrs).catch(function() {});
-    fetch(urlPista + "/live_data.json?t=" + Date.now(), hdrs).then(function(r) { return r.json(); }).then(function(live) {
-      fetch(urlPista + "/radar_live.json?t=" + Date.now(), hdrs).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
+    fetch(urlPista + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(live) {
+      fetch(urlPista + "/radar_live.json?t=" + Date.now()).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
         var kmhActual = (rad && rad.porPiloto) ? (Reflect.get(rad.porPiloto, String(datosPerfil.dorsal)) || 0) : 0;
         var lista = live.clasificacionManga || [], encontrado = null, pos = 0;
         for (var i = 0; i !== lista.length; i++) {
@@ -311,12 +452,12 @@
           banner.textContent = "EN VIVO: Datos de pista sincronizados y guardados.";
         } else {
           banner.style.color = "#0dcaf0";
-          banner.textContent = "Circuito abierto — Ya puedes inscribir tu moto para la carrera.";
+          banner.textContent = "Conectado al circuito (esperando vueltas del dorsal #" + datosPerfil.dorsal + ").";
         }
       });
     }).catch(function() {
       banner.style.color = "#aaa";
-      banner.textContent = "Modo Offline — Mostrando tu garaje e historial.";
+      banner.textContent = "Modo Offline — Mostrando tu historial guardado.";
     });
   }
 
@@ -325,7 +466,6 @@
     window.location.href = "index.html";
   }
 
-  pintarGaraje();
   pintarEstadisticasYGrafica();
 </script>
 </body>
