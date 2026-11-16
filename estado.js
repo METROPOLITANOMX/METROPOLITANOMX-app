@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://ectbl-89-131-138-119.run.pinggy-free.link" };
+﻿window.ESTADO_CIRCUITO = { activo: false, url: "" };
