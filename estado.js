@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://qlcgm-89-131-138-119.run.pinggy-free.link" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://regions-associations-writes-nitrogen.trycloudflare.com" };
