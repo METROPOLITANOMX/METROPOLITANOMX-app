@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://exclude-muze-msie-tigers.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://plans-radar-husband-retail.trycloudflare.com" };
