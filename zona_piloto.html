@@ -92,28 +92,22 @@
     </div>
   </div>
     <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
-  <div class="tabs-nav">
+    <div class="tabs-nav">
     <button id="tabPag0" class="tab-pag activa" onclick="irPaginaPiloto(0)">1. MI PERFIL Y MOTO</button>
-    <button id="tabPag1" class="tab-pag" onclick="irPaginaPiloto(1)">2. TIEMPOS POR DIA Y RIVALES &rarr;</button>
+    <button id="tabPag1" class="tab-pag" onclick="irPaginaPiloto(1)">2. TIEMPOS Y RIVALES &rarr;</button>
   </div>
   <div id="contenedorPaginas" class="contenedor-paginas" onscroll="detectarSlidePiloto()">
     <div class="pagina-slide" id="paginaPerfil">
-  <div id="panelEnVivo" class="panel-vivo">
-    <div class="vivo-header"><span class="badge-vivo">EN PISTA AHORA</span><span style="font-size:12px; color:#ffc107; font-weight:bold;">Manga Activa</span></div>
-    <div class="grid-vivo">
-      <div class="dato-vivo"><div class="lbl">Posicion</div><div id="vivoPos" class="val" style="color:#ffc107;">--</div></div>
-      <div class="dato-vivo"><div class="lbl">Ultima Vuelta</div><div id="vivoUltima" class="val">--</div></div>
-      <div class="dato-vivo"><div class="lbl">Delta Mejor</div><div id="vivoDelta" class="val">--</div></div>
-    </div>
-  </div>
-  <div class="grid-resumen">
-    <div class="card-stat"><div class="etiq">Mejor Vuelta Historica</div><div id="statMejor" class="valor" style="color:#20c997;">--</div><div id="statTop3" class="sub-valor">Ritmo Top 3: --</div></div>
-    <div class="card-stat"><div class="etiq">Velocidad Punta Max.</div><div id="statVel" class="valor" style="color:#ff4d5e;">-- km/h</div><div id="statRegularidad" class="sub-valor">Regularidad: --%</div></div>
-    <div class="card-stat"><div class="etiq">Total Vueltas</div><div id="statVueltas" class="valor">0</div><div id="statMejorPos" class="sub-valor">Mejor Pos: --</div></div>
-    <div class="card-stat"><div class="etiq">Carreras Guardadas</div><div id="statCarreras" class="valor" style="color:#ffc107;">0</div><div id="statPodios" class="sub-valor">0 Victorias • 0 Podios</div></div>
-  </div>
-  </div>
-        <div class="caja-seccion"><div class="titulo-sec"><span>MOTO PRINCIPAL EN PISTA</span><button style="background:#0dcaf0;color:#000;font-size:10px;padding:4px 8px;" onclick="abrirModalGaraje()">Abrir Garaje</button></div><div id="resumenMotoPortada" style="font-size:12px;color:#ccc;text-align:left;">Cargando datos de tu moto...</div></div>
+      <div class="grid-resumen">
+        <div class="card-stat"><div class="etiq">Mejor Vuelta Historica</div><div id="statMejor" class="valor" style="color:#20c997;">--</div><div id="statTop3" class="sub-valor">Ritmo Top 3: --</div></div>
+        <div class="card-stat"><div class="etiq">Velocidad Punta Max.</div><div id="statVel" class="valor" style="color:#ff4d5e;">-- km/h</div><div id="statRegularidad" class="sub-valor">Regularidad: --%</div></div>
+        <div class="card-stat"><div class="etiq">Total Vueltas</div><div id="statVueltas" class="valor">0</div><div id="statMejorPos" class="sub-valor">Mejor Pos: --</div></div>
+        <div class="card-stat"><div class="etiq">Carreras Guardadas</div><div id="statCarreras" class="valor" style="color:#ffc107;">0</div><div id="statPodios" class="sub-valor">0 Victorias &bull; 0 Podios</div></div>
+      </div>
+      <div class="caja-seccion" style="border-color:#ffc107;">
+        <div class="titulo-sec"><span style="color:#ffc107;">MOTO PRINCIPAL EN PISTA</span><button style="background:#0dcaf0;color:#000;font-size:10px;padding:5px 9px;border-radius:6px;" onclick="abrirModalGaraje()">Cambiar / Garaje</button></div>
+        <div id="resumenMotoPortada" style="text-align:left;">Cargando tu moto...</div>
+      </div>
     </div>
     <div class="pagina-slide" id="paginaJornadas">
       <div class="caja-seccion" style="border-color:#0dcaf0;">
@@ -125,9 +119,7 @@
         <div id="listaHistorial" class="carrusel-garaje"><p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p></div>
       </div>
     </div>
-  </div>
-
-  <div id="modalInscripcion" class="modal-fondo">
+  </div><div id="modalInscripcion" class="modal-fondo">
     <div class="modal-caja">
       <div class="modal-header"><span class="modal-titulo">Inscribirse a Carrera</span><button class="btn-cerrar-modal" onclick="cerrarModal('modalInscripcion')">X</button></div>
       <p style="font-size:12px; color:#ccc; margin-top:0;">Selecciona tu moto para esta manga:</p>
@@ -653,6 +645,7 @@
 </script>
 </body>
 </html>
+
 
 
 
