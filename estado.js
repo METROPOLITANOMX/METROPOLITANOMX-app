@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://allowance-vii-bottle-rom.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://fence-jane-fan-taking.trycloudflare.com" };
