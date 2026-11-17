@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0d0d">
 <style>
-  body { margin:0; background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; box-sizing:border-box; }
+  body { margin:0; background:#050505 url("logo.png") center center / cover no-repeat; color:#fff; font-family:Arial, sans-serif; min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; text-align:center; padding:24px 20px 36px 20px; box-sizing:border-box; box-shadow:inset 0 -220px 140px -40px rgba(0,0,0,0.92); }
   .logo-app { width:160px; max-width:60%; border-radius:16px; margin-bottom:16px; border:2px solid #ffc107; }
   h1 { color:#ffc107; font-size:24px; margin:0 0 6px 0; text-transform:uppercase; }
   .sub { color:#aaa; font-size:14px; margin-bottom:26px; }
@@ -27,14 +27,8 @@
 </style>
 </head>
 <body>
-  <div id="splashScreen" style="position:fixed;inset:0;background:#080808;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px;transition:opacity 0.5s;">
-    <img src="logo.png" alt="Metropolitano Circuit" style="width:82vw;max-width:420px;border-radius:24px;border:3px solid #ffc107;box-shadow:0 0 40px rgba(255,193,7,0.35);">
-    <div style="color:#ffc107;font-weight:bold;letter-spacing:2px;margin-top:18px;font-size:15px;">METROPOLITANO CIRCUIT</div>
-  </div>
-  <script>setTimeout(function(){ var s=document.getElementById('splashScreen'); if(s){ s.style.opacity='0'; setTimeout(function(){ s.style.display='none'; }, 500); } }, 2400);</script>
-  <img src="logo.png" alt="Metropolitano Circuit" class="logo-app" onerror="this.style.display='none'">
-  <h1>METROPOLITANO CIRCUIT</h1>
-  <div class="sub">LOSI PROMOTO MX - TELEMETRIA Y RESULTADOS</div>
+  
+  
 
   <div id="menuPrincipal" class="caja-botones">
     <button class="btn-publico" onclick="entrarComoPublico()">SOY PUBLICO</button>
@@ -256,5 +250,7 @@
 </script>
 </body>
 </html>
+
+
 
 
