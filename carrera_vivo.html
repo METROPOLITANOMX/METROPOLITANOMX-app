@@ -29,6 +29,16 @@
     <div><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Salir Pista</button></div>
   </div>
   <div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
+    <div id="panelSemaforo" style="background:#111;border:2px solid #333;border-radius:12px;padding:8px 10px;max-width:560px;margin:0 auto 8px auto;">
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:5px;">
+      <span class="foco-sem" id="foco1" style="width:22px;height:22px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:inline-block;"></span>
+      <span class="foco-sem" id="foco2" style="width:22px;height:22px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:inline-block;"></span>
+      <span class="foco-sem" id="foco3" style="width:22px;height:22px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:inline-block;"></span>
+      <span class="foco-sem" id="foco4" style="width:22px;height:22px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:inline-block;"></span>
+      <span class="foco-sem" id="foco5" style="width:22px;height:22px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:inline-block;"></span>
+    </div>
+    <div id="txtSemaforo" style="font-size:12px;font-weight:bold;color:#ffc107;letter-spacing:0.5px;">ESPERANDO SALIDA EN PARRILLA</div>
+  </div>
   <div id="boxRecordPista" style="background:#1c1226;border:1px solid #8a2be2;border-radius:10px;padding:7px 10px;max-width:560px;margin:0 auto 8px auto;font-size:12px;color:#d8b4fe;font-weight:bold;">VR PISTA: Esperando vueltas...</div><div id="boxEstadoManga" class="estado-manga"><span id="txtMangaNombre" style="color:#ffc107;font-weight:bold;">ESPERANDO MANGA</span><span id="txtFaseReloj" style="color:#20c997;font-weight:bold;">--:--</span></div>
   <div class="grid-principal">
     <div class="box-dato destacado"><div class="lbl">Posicion Actual</div><div id="valPos" class="val-xl" style="color:#ffc107;">--</div><div id="valVueltas" class="sub-txt">0 Vueltas</div><div id="valProy" style="font-size:10px;color:#0dcaf0;margin-top:2px;">Proy: --</div></div>
@@ -121,6 +131,7 @@
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
       document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" • " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
+      actualizarSemaforo(rel.fase, segs);
       var faseUp = String(rel.fase || "").toUpperCase(), boxM = document.getElementById('boxEstadoManga');
       if (boxM) { boxM.style.borderColor = faseUp.indexOf("FIN") >= 0 ? "#dc3545" : (faseUp.indexOf("LISTO") >= 0 ? "#ffc107" : "#20c997"); }
       if (ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
@@ -190,6 +201,7 @@
   }
   setInterval(leerPista, 1200);
 </script></body></html>
+
 
 
 
