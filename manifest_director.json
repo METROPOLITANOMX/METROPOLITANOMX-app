@@ -1,0 +1,15 @@
+﻿{
+  "name": "Director MX - Control de Pista",
+  "short_name": "Director MX",
+  "start_url": "director_movil.html",
+  "display": "standalone",
+  "background_color": "#090909",
+  "theme_color": "#ffc107",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
