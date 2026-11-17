@@ -60,6 +60,22 @@
     if ('speechSynthesis' in window) vocesApp = window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().indexOf('es') === 0);
   }
   if ('speechSynthesis' in window) { cargarVocesApp(); window.speechSynthesis.onvoiceschanged = cargarVocesApp; }
+    function registrarVueltaEnHistorial(vtaNum, ms, posActual, kmhActual) {
+    if (!ms || ms <= 0) return;
+    var hoy = new Date().toLocaleDateString('es-ES'), key = 'metro_hist_' + uid, hist = [];
+    try { hist = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) {}
+    var reg = (hist.length > 0 && hist[hist.length - 1].fecha === hoy) ? hist[hist.length - 1] : null;
+    if (!reg) { reg = { fecha: hoy, pos: posActual || 1, vueltas: 0, mejor: ms, kmh: kmhActual || 0, detalleVueltas: [] }; hist.push(reg); }
+    if (!Array.isArray(reg.detalleVueltas)) reg.detalleVueltas = [];
+    if (reg.detalleVueltas.length === 0 || reg.detalleVueltas[reg.detalleVueltas.length - 1].v !== vtaNum) {
+      reg.detalleVueltas.push({ v: vtaNum, t: ms, m: document.getElementById('txtMangaNombre').textContent });
+    }
+    reg.vueltas = Math.max(reg.vueltas || 0, vtaNum);
+    if (!reg.mejor || ms < reg.mejor) reg.mejor = ms;
+    if (posActual > 0) reg.pos = posActual;
+    if (kmhActual > (reg.kmh || 0)) reg.kmh = kmhActual;
+    localStorage.setItem(key, JSON.stringify(hist));
+  }
   function hablar(t) {
     if (!vozOn || !t || !('speechSynthesis' in window)) return;
     if (vocesApp.length === 0) cargarVocesApp();
@@ -147,7 +163,7 @@
         document.getElementById('valMejor').textContent = fmt(mej);
         if (ult > 0 && mej > 0) { var df = (ult - mej) / 1000, elD = document.getElementById('valDelta'); elD.textContent = "Delta: +" + df.toFixed(2) + "s"; elD.style.color = df <= 0.15 ? "#20c997" : "#ff4d5e"; }
         if (vtas !== ultVtaCantada) {
-          if (ult > 0) histVtas.push(ult);
+          if (ult > 0) { histVtas.push(ult); registrarVueltaEnHistorial(vtas, ult, miIdx + 1, parseInt(document.getElementById("valVel").textContent) || 0); }
           var boxU = document.getElementById('boxUltima'), extraVoz = "";
           if (ult > 0 && recordPistaManga > 0 && ult <= recordPistaManga) { if (boxU) { boxU.style.borderColor = "#a855f7"; boxU.style.background = "#261438"; } extraVoz = ", vuelta rapida de carrera"; }
           else if (ult > 0 && (miMejorManga === 0 || ult < miMejorManga)) { if (boxU) { boxU.style.borderColor = "#20c997"; boxU.style.background = "#0f291e"; } extraVoz = ", nuevo record personal"; }
@@ -174,6 +190,7 @@
   }
   setInterval(leerPista, 1200);
 </script></body></html>
+
 
 
 

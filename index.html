@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -225,5 +225,30 @@
     }, 1200);
   }
 </script>
+<script>
+  (function() {
+    var devId = localStorage.getItem('metro_device_id');
+    if (!devId) { devId = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); localStorage.setItem('metro_device_id', devId); }
+    function reportarApp() {
+      var est = window.ESTADO_CIRCUITO || {};
+      if (!est.activo || !est.url || est.url.indexOf('http') !== 0) return;
+      var uId = localStorage.getItem('metro_uid') || devId;
+      var nom = localStorage.getItem('metro_nombre') || 'Publico / Visitante';
+      var dor = localStorage.getItem('metro_dorsal') || '--';
+      fetch(est.url.replace(/\/$/, '') + '/registrar_usuario_app', {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ uid: uId, nombre: nom, dorsal: dor })
+      }).then(r => r.json()).then(res => {
+        if (res && res.bloqueado) {
+          localStorage.removeItem('metro_uid');
+          document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#ff4d5e;font-family:Arial;"><h2>ACCESO SUSPENDIDO</h2><p style="color:#ccc;">Tu cuenta o dispositivo ha sido bloqueado por el administrador del Metropolitano Circuit por mal uso.</p></div>';
+        }
+      }).catch(() => {});
+    }
+    setTimeout(reportarApp, 2000);
+    setInterval(reportarApp, 15000);
+  })();
+</script>
 </body>
 </html>
+
