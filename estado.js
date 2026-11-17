@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://elections-halifax-meetup-sheet.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://love-atom-assuming-vacation.trycloudflare.com" };
