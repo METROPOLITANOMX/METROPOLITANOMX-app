@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://fence-jane-fan-taking.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://axis-plays-alpha-boots.trycloudflare.com" };
