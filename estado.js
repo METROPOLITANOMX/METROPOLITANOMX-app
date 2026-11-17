@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://involve-baseball-tall-hockey.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://entertaining-retired-saw-alabama.trycloudflare.com" };
