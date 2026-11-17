@@ -66,7 +66,17 @@
   .campo-set label { display:block; font-size:10px; color:#aaa; margin-bottom:3px; text-transform:uppercase; }
   .campo-set input, .campo-set select, .campo-set textarea, .form-nueva-moto input { width:100%; background:#222; border:1px solid #444; color:#fff; padding:7px; border-radius:6px; font-size:12px; }
   .form-nueva-moto { background:#1e1e1e; border:1px dashed #555; border-radius:10px; padding:10px; margin-bottom:12px; display:none; }
-.carrusel-dias{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding-bottom:8px;}.tarjeta-dia{flex:0 0 98%;scroll-snap-align:center;background:#1b1b1b;border:1px solid #383838;border-radius:12px;padding:12px;}.lista-vtas-dia{max-height:190px;overflow-y:auto;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;margin-top:8px;}.fila-vta-dia{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1f1f1f;font-size:12px;}</style>
+.carrusel-dias{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding-bottom:8px;}.tarjeta-dia{flex:0 0 98%;scroll-snap-align:center;background:#1b1b1b;border:1px solid #383838;border-radius:12px;padding:12px;}.lista-vtas-dia{max-height:190px;overflow-y:auto;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;margin-top:8px;}.fila-vta-dia{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1f1f1f;font-size:12px;}  .tabs-nav { display:flex; gap:6px; max-width:560px; margin:0 auto 10px auto; background:#141414; padding:5px; border-radius:10px; border:1px solid #2e2e2e; }
+  .tab-pag { flex:1; padding:8px; font-size:11px; font-weight:bold; border-radius:7px; background:transparent; color:#999; border:none; cursor:pointer; }
+  .tab-pag.activa { background:#ffc107; color:#000; }
+  .contenedor-paginas { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; width:100%; max-width:560px; margin:0 auto; scroll-behavior:smooth; }
+  .contenedor-paginas::-webkit-scrollbar { display:none; }
+  .pagina-slide { flex:0 0 100%; width:100%; scroll-snap-align:start; padding:0 2px; }
+  .dia-acordeon { background:#1b1b1b; border:1px solid #333; border-radius:10px; margin-bottom:8px; overflow:hidden; }
+  .dia-cabecera { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; cursor:pointer; background:#202020; }
+  .dia-cuerpo { display:none; padding:8px 12px; background:#121212; border-top:1px solid #2a2a2a; }
+  .dia-acordeon.abierto .dia-cuerpo { display:block; }
+</style>
 </head>
 <body>
   <div class="cabecera">
@@ -78,7 +88,13 @@
       <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
-  <div id="bannerEstadoRed" class="estado-red">Perfil listo â€” Consultando estado de pista...</div>
+    <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
+  <div class="tabs-nav">
+    <button id="tabPag0" class="tab-pag activa" onclick="irPaginaPiloto(0)">1. MI PERFIL Y MOTO</button>
+    <button id="tabPag1" class="tab-pag" onclick="irPaginaPiloto(1)">2. TIEMPOS POR DIA Y RIVALES &rarr;</button>
+  </div>
+  <div id="contenedorPaginas" class="contenedor-paginas" onscroll="detectarSlidePiloto()">
+    <div class="pagina-slide" id="paginaPerfil">
   <div id="panelEnVivo" class="panel-vivo">
     <div class="vivo-header"><span class="badge-vivo">EN PISTA AHORA</span><span style="font-size:12px; color:#ffc107; font-weight:bold;">Manga Activa</span></div>
     <div class="grid-vivo">
@@ -94,7 +110,19 @@
     <div class="card-stat"><div class="etiq">Carreras Guardadas</div><div id="statCarreras" class="valor" style="color:#ffc107;">0</div><div id="statPodios" class="sub-valor">0 Victorias • 0 Podios</div></div>
   </div>
   <div class="caja-seccion"><div class="titulo-sec"><span>EVOLUCION DE MEJORES TIEMPOS</span></div><div id="contenedorGrafica" class="grafica-barras"><p style="color:#777; font-size:12px;">Aun no hay suficientes jornadas para graficar.</p></div></div>
-  <div class="caja-seccion"><div class="titulo-sec"><span>JORNADAS POR DIA (DESLIZA &larr;)</span><span id="txtMotoActivaTop" style="color:#0dcaf0;font-size:10px;"></span></div><div id="listaHistorial" class="carrusel-dias"><p style="color:#777; font-size:13px;">Cuando corras en el circuito, tus resultados quedaran guardados aqui.</p></div></div>
+        <div class="caja-seccion"><div class="titulo-sec"><span>MOTO PRINCIPAL EN PISTA</span><button style="background:#0dcaf0;color:#000;font-size:10px;padding:4px 8px;" onclick="abrirModalGaraje()">Abrir Garaje</button></div><div id="resumenMotoPortada" style="font-size:12px;color:#ccc;text-align:left;">Cargando datos de tu moto...</div></div>
+    </div>
+    <div class="pagina-slide" id="paginaJornadas">
+      <div class="caja-seccion" style="border-color:#0dcaf0;">
+        <div class="titulo-sec"><span style="color:#0dcaf0;">COMPARATIVA CON RIVALES EN PISTA</span></div>
+        <div id="comparativaRivales" style="font-size:12px;color:#aaa;text-align:left;">Sincronizando tiempos de pista...</div>
+      </div>
+      <div class="caja-seccion">
+        <div class="titulo-sec"><span>TIEMPOS POR DIA (TOCA UN DIA PARA VER VUELTAS)</span></div>
+        <div id="listaHistorial"><p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p></div>
+      </div>
+    </div>
+  </div>
 
   <div id="modalInscripcion" class="modal-fondo">
     <div class="modal-caja">
@@ -172,6 +200,43 @@
   } catch (e) {}
 
   function guardarGarajeStorage() { localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos)); }
+    function irPaginaPiloto(idx) {
+    var cont = document.getElementById('contenedorPaginas');
+    if (cont) cont.scrollTo({ left: idx * cont.clientWidth, behavior: 'smooth' });
+  }
+  function detectarSlidePiloto() {
+    var cont = document.getElementById('contenedorPaginas');
+    if (!cont || cont.clientWidth === 0) return;
+    var idx = Math.round(cont.scrollLeft / cont.clientWidth);
+    document.getElementById('tabPag0').className = 'tab-pag' + (idx === 0 ? ' activa' : '');
+    document.getElementById('tabPag1').className = 'tab-pag' + (idx === 1 ? ' activa' : '');
+  }
+  function toggleDiaAcordeon(i) {
+    var el = document.getElementById('diaAcord_' + i);
+    if (el) el.classList.toggle('abierto');
+  }
+  function actualizarComparativaRivales(lista, radPorPiloto) {
+    var box = document.getElementById('comparativaRivales');
+    if (!box) return;
+    if (!lista || lista.length === 0) { box.innerHTML = "No hay pilotos rodando en pista ahora mismo."; return; }
+    var lider = lista, miDor = String(localStorage.getItem('metro_dorsal') || "");
+    var yo = lista.find(x => String(x.dorsal) === miDor);
+    var h = '<div style="background:#121212;padding:8px;border-radius:8px;margin-bottom:8px;border-left:3px solid #ffc107;">' +
+      '<b>Lider actual:</b> #' + lider.dorsal + ' ' + (lider.nombre || '') + ' &bull; <span style="color:#20c997;">' + fmt(lider.mejor) + '</span>';
+    if (yo && yo.mejor > 0 && lider.mejor > 0) {
+      var diff = ((yo.mejor - lider.mejor) / 1000).toFixed(2);
+      h += '<br><b>Tu diferencia con el 1º:</b> <span style="color:' + (diff <= 0 ? '#20c997' : '#ff4d5e') + ';">' + (diff <= 0 ? 'ERES EL LIDER' : ('+' + diff + 's')) + '</span>';
+    }
+    h += '</div>';
+    for (var i = 0; i < Math.min(lista.length, 6); i++) {
+      var r = lista[i], kmhR = (radPorPiloto && radPorPiloto[String(r.dorsal)]) ? radPorPiloto[String(r.dorsal)] : 0;
+      var esYo = String(r.dorsal) === miDor;
+      h += '<div style="display:flex;justify-content:space-between;padding:5px 4px;border-bottom:1px solid #222;' + (esYo ? 'color:#20c997;font-weight:bold;' : '') + '">' +
+        '<span>' + (i + 1) + 'º #' + r.dorsal + ' ' + (r.nombre || '') + '</span>' +
+        '<span>' + fmt(r.mejor) + (kmhR > 0 ? (' | ' + kmhR + ' km/h') : '') + '</span></div>';
+    }
+    box.innerHTML = h;
+  }
   function fmt(ms) { return (!ms || ms === 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
   function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -585,6 +650,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
