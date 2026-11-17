@@ -269,7 +269,7 @@
     var p = obtenerDatosPilotoCam();
     fetch(urlCircuitoCam + "/vuelta_camara", {
       method: "POST",
-      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true })
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: !!lecturaActiva, modo: (document.getElementById("selModoDet") ? document.getElementById("selModoDet").value : "MOVIMIENTO") })
     }).catch(function() {});
   }, 4000);
 
