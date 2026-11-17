@@ -193,13 +193,29 @@
         if (typeof cG[g].vueltasMant !== "number") cG[g].vueltasMant = 0;
         if (!cG[g].settings) cG[g].settings = {};
       }
-      garajeMotos = cG; pintarMotoPortada();
+      garajeMotos = cG;   setInterval(function() {
+    try {
+      var hRaw = localStorage.getItem('metro_hist_' + uid);
+      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      var gRaw = localStorage.getItem('metro_garaje_' + uid);
+      if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
+    } catch (e) {}
+  }, 3000);
+  pintarMotoPortada();
     }
   } catch (e) {}
 
       function activarMotoEnPista(idx) {
     localStorage.setItem('metro_moto_activa_' + uid, String(idx));
-    pintarMotoPortada();
+      setInterval(function() {
+    try {
+      var hRaw = localStorage.getItem('metro_hist_' + uid);
+      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      var gRaw = localStorage.getItem('metro_garaje_' + uid);
+      if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
+    } catch (e) {}
+  }, 3000);
+  pintarMotoPortada();
     renderizarGaraje();
     if (garajeMotos[idx]) alert("Moto activa en pista: " + garajeMotos[idx].modelo);
   }
@@ -221,7 +237,15 @@
       '<div><span style="color:#888;display:block;font-size:9px;">ACEITE HORQ.</span><b>' + (s.aceite || '5000') + '</b></div>' +
       '<div><span style="color:#888;display:block;font-size:9px;">USO MOTO</span><b style="color:#0dcaf0;">' + (m.vueltasMant || 0) + ' vtas</b></div></div>';
   }
-  function guardarGarajeStorage() { localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos)); pintarMotoPortada(); }
+  function guardarGarajeStorage() { localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos));   setInterval(function() {
+    try {
+      var hRaw = localStorage.getItem('metro_hist_' + uid);
+      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      var gRaw = localStorage.getItem('metro_garaje_' + uid);
+      if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
+    } catch (e) {}
+  }, 3000);
+  pintarMotoPortada(); }
     function irPaginaPiloto(idx) {
     var cont = document.getElementById('contenedorPaginas');
     if (cont) cont.scrollTo({ left: idx * cont.clientWidth, behavior: 'smooth' });
@@ -705,6 +729,7 @@
 </script>
 </body>
 </html>
+
 
 
 
