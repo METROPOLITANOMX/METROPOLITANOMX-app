@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://records-water-gsm-sisters.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://called-setup-com-kyle.trycloudflare.com" };
