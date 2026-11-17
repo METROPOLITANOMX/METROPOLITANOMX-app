@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://benjamin-remedy-mail-verified.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://simultaneously-balance-workout-increased.trycloudflare.com" };
