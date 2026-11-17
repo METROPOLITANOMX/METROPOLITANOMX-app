@@ -79,13 +79,16 @@
 </style>
 </head>
 <body>
-  <div class="cabecera">
-    <div class="nom-piloto"><span id="txtDorsal" class="badge-dorsal">#--</span><span id="txtNombre">PILOTO</span></div>
-    <div class="acciones-top">
-      <button style="background:#20c997;color:#000;" onclick="window.location.href='carrera_vivo.html'">En Pista</button><button class="btn-inscribir" onclick="abrirModalInscripcion()">Inscribirse</button>
-      <button class="btn-garaje" onclick="abrirModalGaraje()">Garaje</button>
-      <button id="btnVozPiloto" style="background:#444;color:#fff;" onclick="toggleVozPiloto()">Voz OFF</button><button class="btn-sync" onclick="sincronizarConPista()">Actualizar</button>
-      <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+    <div class="cabecera" style="flex-direction:column;gap:8px;align-items:stretch;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="nom-piloto"><span id="txtDorsal" class="badge-dorsal">#--</span><span id="txtNombre">PILOTO</span></div>
+      <button class="btn-salir" style="padding:6px 10px;font-size:11px;" onclick="cerrarSesion()">Salir</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+      <button style="background:#20c997;color:#000;padding:10px 4px;font-size:11px;border-radius:8px;font-weight:bold;" onclick="window.location.href='carrera_vivo.html'">EN PISTA</button>
+      <button class="btn-inscribir" style="padding:10px 4px;font-size:11px;border-radius:8px;" onclick="abrirModalInscripcion()">INSCRIBIR</button>
+      <button class="btn-garaje" style="padding:10px 4px;font-size:11px;border-radius:8px;" onclick="abrirModalGaraje()">GARAJE</button>
+      <button class="btn-sync" style="padding:10px 4px;font-size:11px;border-radius:8px;" onclick="sincronizarConPista()">ACTUALIZAR</button>
     </div>
   </div>
     <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
@@ -109,7 +112,7 @@
     <div class="card-stat"><div class="etiq">Total Vueltas</div><div id="statVueltas" class="valor">0</div><div id="statMejorPos" class="sub-valor">Mejor Pos: --</div></div>
     <div class="card-stat"><div class="etiq">Carreras Guardadas</div><div id="statCarreras" class="valor" style="color:#ffc107;">0</div><div id="statPodios" class="sub-valor">0 Victorias • 0 Podios</div></div>
   </div>
-  <div class="caja-seccion"><div class="titulo-sec"><span>EVOLUCION DE MEJORES TIEMPOS</span></div><div id="contenedorGrafica" class="grafica-barras"><p style="color:#777; font-size:12px;">Aun no hay suficientes jornadas para graficar.</p></div></div>
+  </div>
         <div class="caja-seccion"><div class="titulo-sec"><span>MOTO PRINCIPAL EN PISTA</span><button style="background:#0dcaf0;color:#000;font-size:10px;padding:4px 8px;" onclick="abrirModalGaraje()">Abrir Garaje</button></div><div id="resumenMotoPortada" style="font-size:12px;color:#ccc;text-align:left;">Cargando datos de tu moto...</div></div>
     </div>
     <div class="pagina-slide" id="paginaJornadas">
@@ -118,8 +121,8 @@
         <div id="comparativaRivales" style="font-size:12px;color:#aaa;text-align:left;">Sincronizando tiempos de pista...</div>
       </div>
       <div class="caja-seccion">
-        <div class="titulo-sec"><span>TIEMPOS POR DIA (TOCA UN DIA PARA VER VUELTAS)</span></div>
-        <div id="listaHistorial"><p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p></div>
+        <div class="titulo-sec"><span>TIEMPOS POR DIA (DESLIZA &larr; / &rarr;)</span></div>
+        <div id="listaHistorial" class="carrusel-garaje"><p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p></div>
       </div>
     </div>
   </div>
@@ -650,6 +653,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
