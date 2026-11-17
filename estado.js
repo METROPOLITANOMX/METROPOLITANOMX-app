@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://documentation-needs-ampland-placement.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://sensor-adaptive-instruction-literacy.trycloudflare.com" };
