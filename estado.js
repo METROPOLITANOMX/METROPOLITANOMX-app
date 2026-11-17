@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://called-setup-com-kyle.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://hearings-system-jet-ide.trycloudflare.com" };
