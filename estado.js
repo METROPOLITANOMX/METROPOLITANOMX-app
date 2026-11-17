@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://butterfly-nursing-infinite-lead.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://ratios-halifax-glasses-widescreen.trycloudflare.com" };
