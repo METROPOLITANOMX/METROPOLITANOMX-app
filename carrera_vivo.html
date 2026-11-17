@@ -26,14 +26,10 @@
   #overlaySemaforo { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#050505; z-index:9999; flex-direction:column; justify-content:center; align-items:center; padding:20px; }
   .caja-luces { display:flex; justify-content:space-evenly; align-items:center; width:96vw; max-width:950px; background:#141414; padding:26px 14px; border-radius:28px; border:4px solid #333; }
   .luz-sem { width:15vw; height:15vw; max-width:145px; max-height:145px; border-radius:50%; background:#252525; border:4px solid #444; }
-  .luz-sem.roja { background:#ff1e1e; box-shadow:0 0 28px #ff1e1e; border-color:#fff; }
+  .luz-sem.roja { background:#ff1e1e; box-shadow:0 0 28px #ff1e1e; border-color:#fff; } .luz-sem.ambar { background:#ffc107; box-shadow:0 0 28px #ffc107; border-color:#fff; }
   .luz-sem.verde { background:#00e676; box-shadow:0 0 32px #00e676; border-color:#fff; }
 @media (orientation:landscape){.grid-principal{grid-template-columns:repeat(4,1fr);}.val-xl{font-size:36px;}.val-lg{font-size:30px;}}</style></head><body id="cuerpoPista">
-  <div id="overlaySemaforo"><div class="caja-luces"><span id="luz1" class="luz-sem"></span><span id="luz2" class="luz-sem"></span><span id="luz3" class="luz-sem"></span><span id="luz4" class="luz-sem"></span><span id="luz5" class="luz-sem"></span></div><span id="numCuentaSem" style="display:none;"></span><span id="txtEstadoSem" style="display:none;"></span></div>
-  <div class="top-bar">
-    <div class="piloto-id"><span id="txtD" class="badge-d">#--</span><span id="txtN">PILOTO</span></div>
-    <div><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Salir Pista</button></div>
-  </div>
+  <div id="overlaySemaforo"><div id="numCuentaSem" style="font-size:30vw;font-weight:bold;color:#fff;line-height:1;text-shadow:0 4px 25px rgba(0,0,0,0.45);">00:30</div></div>
   <div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
   <div id="boxRecordPista" style="background:#1c1226;border:1px solid #8a2be2;border-radius:10px;padding:7px 10px;width:100%;max-width:100%;margin:0 auto 8px auto;font-size:12px;color:#d8b4fe;font-weight:bold;">VR PISTA: Esperando vueltas...</div>
   <div id="boxEstadoManga" class="estado-manga"><span id="txtMangaNombre" style="color:#ffc107;font-weight:bold;">ESPERANDO MANGA</span><span id="txtFaseReloj" style="color:#20c997;font-weight:bold;">--:--</span></div>
@@ -77,14 +73,25 @@
   function iluminarBordeBandera(colorHex) {
     document.getElementById('cuerpoPista').style.boxShadow = colorHex ? ("inset 0 0 0 8px " + colorHex + ", inset 0 0 28px " + colorHex) : "none";
   }
-  function gestionarSemaforo(fase, rest) {
-    var fUp = String(fase || "").toUpperCase(), ov = document.getElementById('overlaySemaforo'), num = document.getElementById('numCuentaSem'), txt = document.getElementById('txtEstadoSem');
-    var pintar = function(cls) { for (var i = 1; i <= 5; i++) document.getElementById('luz' + i).className = "luz-sem" + (cls ? (" " + cls) : ""); };
-    if (fUp === 'SALIDA_30') { ov.style.display = "flex"; pintar("roja"); num.textContent = rest; txt.style.color = "#ff4d5e"; txt.textContent = "LUZ ROJA - PREPARADOS"; }
-    else if (fUp === 'CARRERA' && ultFaseSem === 'SALIDA_30') { ov.style.display = "flex"; pintar("verde"); num.textContent = "YA!"; txt.style.color = "#00e676"; txt.textContent = "SEMAFORO EN VERDE - GAS!"; hablar("Salida, gas a fondo!"); setTimeout(function() { ov.style.display = "none"; }, 1800); }
-    else if (fUp !== 'SALIDA_30') { ov.style.display = "none"; }
+    function gestionarSemaforo(fase, rest) {
+    var fUp = String(fase || "").toUpperCase(), ov = document.getElementById('overlaySemaforo'), num = document.getElementById('numCuentaSem');
+    var sTxt = rest < 10 ? ("00:0" + rest) : ("00:" + rest);
+    if (fUp === 'SALIDA_30') {
+      ov.style.display = "flex";
+      ov.style.background = rest <= 10 ? "#f77f00" : "#d90429";
+      num.textContent = sTxt;
+    } else if (fUp === 'CARRERA' && ultFaseSem === 'SALIDA_30') {
+      ov.style.display = "flex";
+      ov.style.background = "#00b050";
+      num.textContent = "00:00";
+      hablar("Salida, gas a fondo!");
+      setTimeout(function() { ov.style.display = "none"; }, 2200);
+    } else if (fUp !== 'SALIDA_30') {
+      ov.style.display = "none";
+    }
     ultFaseSem = fUp;
-    if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107"); else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e");
+    if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107");
+    else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e");
   }
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
@@ -190,5 +197,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
+
 
 
