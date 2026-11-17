@@ -94,7 +94,7 @@
   function vibrarSalida(patron) {
     try { if (navigator && navigator.vibrate) navigator.vibrate(patron); } catch (e) {}
   }
-  function gestionarSemaforo(fase, rest) {
+  function gestionarSemaforo(fase, rest, luzLibre) {
     var fUp = String(fase || "").toUpperCase(), ov = document.getElementById('overlaySemaforo'), num = document.getElementById('numCuentaSem');
     if (!ov || !num) return;
     var sTxt = rest < 10 ? ("00:0" + rest) : ("00:" + rest);
@@ -124,7 +124,14 @@
       ov.style.display = "none";
     }
     ultFaseSem = fUp;
-    if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107"); else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e"); else if (fUp === 'LISTO' || fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null);
+        if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107");
+    else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e");
+    else if (fUp === 'LISTO') {
+      if (luzLibre === 'roja') iluminarBordeBandera("#d90429");
+      else if (luzLibre === 'verde') iluminarBordeBandera("#00b050");
+      else if (luzLibre === 'ambar') iluminarBordeBandera("#f77f00");
+      else iluminarBordeBandera(null);
+    } else if (fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null);
   }
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
@@ -169,7 +176,7 @@
     fetch(uP + "/live_data.json?t=" + Date.now()).then(r => r.json()).then(live => {
       if (!live) return;
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
-      gestionarSemaforo(rel.fase, segs);
+      gestionarSemaforo(rel.fase, segs, rel.luzLibre);
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
       document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" • " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
@@ -230,6 +237,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
