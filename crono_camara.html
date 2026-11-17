@@ -87,6 +87,50 @@
 <script>
   var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
   var vozCam = true, camActiva = false, lecturaActiva = false, prevIzq = null, prevDer = null, pasoIzqMs = 0, ultimoPasoMs = 0, vueltasCam = [], mejorCam = 0, maxKmhCam = 0, ac = null;
+    var wakeLockObj = null, modoAntenaGlobal = false, ultOrdenCamMarca = 0, ocupVoz = false, ocupModo = false;
+  async function mantenerPantallaEncendida() {
+    try {
+      if ('wakeLock' in navigator && !wakeLockObj) {
+        wakeLockObj = await navigator.wakeLock.request('screen');
+        wakeLockObj.addEventListener('release', function() { wakeLockObj = null; });
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && camActiva) mantenerPantallaEncendida();
+  });
+
+  setInterval(function() {
+    if (!urlCircuitoCam || ocupVoz) return;
+    ocupVoz = true;
+    fetch(urlCircuitoCam + "/voz_cmd.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(cmd){
+      if (cmd && cmd.marca && cmd.marca > ultOrdenCamMarca) {
+        var esPrimera = (ultOrdenCamMarca === 0);
+        ultOrdenCamMarca = cmd.marca;
+        if (!esPrimera && camActiva && modoAntenaGlobal) {
+          if (cmd.accion === 'START' && !lecturaActiva) { iniciarLecturaCrono(); }
+          if ((cmd.accion === 'PAUSE' || cmd.accion === 'FINAL') && lecturaActiva) { pararLecturaCrono(); }
+          if (cmd.accion === 'RESET') { reiniciarSesionCam(); }
+        }
+      }
+    }).catch(function(){}).finally(function(){ ocupVoz = false; });
+  }, 150);
+
+  setInterval(function() {
+    if (!urlCircuitoCam || ocupModo) return;
+    ocupModo = true;
+    fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){
+      if (m && typeof m.antenasMoviles === "boolean") {
+        modoAntenaGlobal = m.antenasMoviles;
+        var b2 = document.getElementById('btnToggleLectura');
+        if (camActiva && modoAntenaGlobal && !lecturaActiva && b2) {
+          b2.textContent = "ESPERANDO SALIDA DIRECTOR...";
+          b2.style.background = "#0dcaf0"; b2.style.color = "#000";
+        }
+      }
+    }).catch(function(){}).finally(function(){ ocupModo = false; });
+  }, 1000);
+
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
   function toggleVozCam() {
     vozCam = !vozCam; var b = document.getElementById('btnVozCam');
@@ -109,7 +153,7 @@
       var v = document.getElementById('vidCam'); v.srcObject = stream; camActiva = true;
       var b1 = document.getElementById('btnStartCam'); b1.textContent = "1. CAMARA LISTA"; b1.style.background = "#198754";
       var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000";
-      if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {});
+      mantenerPantallaEncendida();
       requestAnimationFrame(analizarFotograma);
     } catch (err) { alert("No se pudo abrir la camara: " + err); }
   }
