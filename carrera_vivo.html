@@ -169,6 +169,15 @@
         ultMarcaLoc = loc.marca;
       }
     }).catch(() => {});
+        fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
+      if (ultFaseSem === 'LISTO' || ultFaseSem === '') {
+        var c = (lz && lz.color) ? lz.color : "";
+        if (c === 'roja') iluminarBordeBandera("#d90429");
+        else if (c === 'verde') iluminarBordeBandera("#00b050");
+        else if (c === 'ambar') iluminarBordeBandera("#f77f00");
+        else iluminarBordeBandera(null);
+      }
+    }).catch(() => {});
     fetch(uP + "/radar_live.json?t=" + Date.now()).then(r => r.json()).then(rad => {
       var kmh = (rad && rad.porPiloto) ? (rad.porPiloto[miDorsal] || 0) : 0;
       document.getElementById('valVel').textContent = kmh > 0 ? (kmh + " km/h") : "-- km/h";
@@ -237,6 +246,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
