@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://picks-seafood-inventory-could.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://richard-lauderdale-developer-books.trycloudflare.com" };
