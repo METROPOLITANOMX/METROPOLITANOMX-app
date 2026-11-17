@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://animal-episode-potato-ending.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://records-water-gsm-sisters.trycloudflare.com" };
