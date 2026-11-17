@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://simultaneously-balance-workout-increased.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://alexander-ddr-pizza-karma.trycloudflare.com" };
