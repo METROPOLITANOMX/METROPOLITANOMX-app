@@ -29,10 +29,10 @@
     <div><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Salir Pista</button></div>
   </div>
   <div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
-  <div class="estado-manga"><span id="txtMangaNombre" style="color:#ffc107;font-weight:bold;">ESPERANDO MANGA</span><span id="txtFaseReloj" style="color:#20c997;font-weight:bold;">--:--</span></div>
+  <div id="boxRecordPista" style="background:#1c1226;border:1px solid #8a2be2;border-radius:10px;padding:7px 10px;max-width:560px;margin:0 auto 8px auto;font-size:12px;color:#d8b4fe;font-weight:bold;">VR PISTA: Esperando vueltas...</div><div id="boxEstadoManga" class="estado-manga"><span id="txtMangaNombre" style="color:#ffc107;font-weight:bold;">ESPERANDO MANGA</span><span id="txtFaseReloj" style="color:#20c997;font-weight:bold;">--:--</span></div>
   <div class="grid-principal">
-    <div class="box-dato destacado"><div class="lbl">Posicion Actual</div><div id="valPos" class="val-xl" style="color:#ffc107;">--</div><div id="valVueltas" class="sub-txt">0 Vueltas</div></div>
-    <div class="box-dato destacado"><div class="lbl">Ultima Vuelta</div><div id="valUltima" class="val-xl" style="color:#20c997;">--</div><div id="valDelta" class="sub-txt">Delta: --</div></div>
+    <div class="box-dato destacado"><div class="lbl">Posicion Actual</div><div id="valPos" class="val-xl" style="color:#ffc107;">--</div><div id="valVueltas" class="sub-txt">0 Vueltas</div><div id="valProy" style="font-size:10px;color:#0dcaf0;margin-top:2px;">Proy: --</div></div>
+    <div id="boxUltima" class="box-dato destacado"><div class="lbl">Ultima Vuelta</div><div id="valUltima" class="val-xl" style="color:#20c997;">--</div><div id="valDelta" class="sub-txt">Delta: --</div></div>
     <div class="box-dato"><div class="lbl">Mejor Vuelta</div><div id="valMejor" class="val-lg" style="color:#0dcaf0;">--</div></div>
     <div class="box-dato"><div class="lbl">Vuelta Media / Ritmo</div><div id="valMedia" class="val-lg" style="color:#fff;">--</div></div>
   </div>
@@ -41,7 +41,7 @@
     <div class="box-mini"><div class="lbl">Gap Detras</div><div id="valGapDet" class="val-md" style="color:#20c997;">--</div></div>
     <div class="box-mini"><div class="lbl">Vel. Punta</div><div id="valVel" class="val-md" style="color:#ffc107;">-- km/h</div></div>
   </div>
-  <div class="tabla-rivales"><div style="font-size:11px;color:#ffc107;font-weight:bold;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #2a2a2a;padding-bottom:4px;">Clasificacion en Pista</div><div id="listaRivales" style="font-size:12px;color:#888;">Esperando tiempos de pista...</div></div>
+  <button id="btnAvisoTorre" onclick="avisarTorreProblema()" style="width:100%;max-width:560px;margin:0 auto 10px auto;display:block;background:#dc3545;color:#fff;padding:11px;font-size:12px;border-radius:10px;">AVISO A TORRE DE CONTROL (AVERIA / PARADA)</button><div class="tabla-rivales"><div style="font-size:11px;color:#ffc107;font-weight:bold;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #2a2a2a;padding-bottom:4px;">Clasificacion en Pista</div><div id="listaRivales" style="font-size:12px;color:#888;">Esperando tiempos de pista...</div></div>
 <script>
   var sc = document.createElement('script'); sc.src = "estado.js?t=" + Date.now(); sc.onload = leerPista; document.body.appendChild(sc);
   var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
@@ -74,6 +74,18 @@
     else { u.pitch = 0.85; }
     window.speechSynthesis.speak(u);
   }
+    var miMejorManga = 0, recordPistaManga = 0, wakeLockObj = null;
+  async function activarWakeLock() { try { if ('wakeLock' in navigator) wakeLockObj = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  activarWakeLock(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') activarWakeLock(); });
+  function avisarTorreProblema() {
+    var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
+    if (!est.activo || !est.url) return;
+    if (!confirm("¿Enviar aviso urgente de averia o parada a Torre de Control?")) return;
+    btn.disabled = true; btn.textContent = "ENVIANDO AVISO A TORRE...";
+    fetch(est.url.replace(/\/$/, "") + "/locucion", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ frase: "Atencion direccion de carrera, dorsal " + miDorsal + " " + document.getElementById('txtN').textContent + " reporta parada en pista", marca: Date.now() }) })
+      .then(() => { btn.style.background = "#ffc107"; btn.style.color = "#000"; btn.textContent = "AVISO ENVIADO A TORRE"; setTimeout(() => { btn.disabled = false; btn.style.background = "#dc3545"; btn.style.color = "#fff"; btn.textContent = "AVISO A TORRE DE CONTROL (AVERIA / PARADA)"; }, 8000); })
+      .catch(() => { btn.disabled = false; btn.textContent = "ERROR AL AVISAR - REINTENTAR"; });
+  }
   function leerPista() {
     var est = window.ESTADO_CIRCUITO || {}, ban = document.getElementById('bannerDir');
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { ban.style.color = "#ff4d5e"; ban.textContent = "CIRCUITO CERRADO"; return; }
@@ -93,6 +105,8 @@
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
       document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" • " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
+      var faseUp = String(rel.fase || "").toUpperCase(), boxM = document.getElementById('boxEstadoManga');
+      if (boxM) { boxM.style.borderColor = faseUp.indexOf("FIN") >= 0 ? "#dc3545" : (faseUp.indexOf("LISTO") >= 0 ? "#ffc107" : "#20c997"); }
       if (ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
       if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
         var sp = live.superpoleVivo, clasSp = sp.clasificacion || [], miPos = 0, miT = 0;
@@ -116,7 +130,9 @@
         }
         return;
       }
-      var lista = live.clasificacionManga || [], miIdx = -1, hR = "";
+      var lista = live.clasificacionManga || [], miIdx = -1, hR = "", vrAbs = 99999999, vrPiloto = "";
+      for (var r = 0; r < lista.length; r++) { if (lista[r].mejor > 0 && lista[r].mejor < vrAbs) { vrAbs = lista[r].mejor; vrPiloto = "#" + lista[r].dorsal + " " + (lista[r].nombre || ""); } }
+      if (vrAbs < 99999999) { recordPistaManga = vrAbs; document.getElementById('boxRecordPista').textContent = "VR PISTA: " + fmt(vrAbs) + " (" + vrPiloto + ")"; }
       for (var j = 0; j < lista.length; j++) {
         var p = lista[j], soyYo = String(p.dorsal) === miDorsal;
         if (soyYo) miIdx = j;
@@ -132,12 +148,19 @@
         if (ult > 0 && mej > 0) { var df = (ult - mej) / 1000, elD = document.getElementById('valDelta'); elD.textContent = "Delta: +" + df.toFixed(2) + "s"; elD.style.color = df <= 0.15 ? "#20c997" : "#ff4d5e"; }
         if (vtas !== ultVtaCantada) {
           if (ult > 0) histVtas.push(ult);
-          if (ultVtaCantada !== -1 && ult > 0) hablar("Vuelta " + vtas + ", " + (ult / 1000).toFixed(2).replace(".", " punto ") + " segundos");
+          var boxU = document.getElementById('boxUltima'), extraVoz = "";
+          if (ult > 0 && recordPistaManga > 0 && ult <= recordPistaManga) { if (boxU) { boxU.style.borderColor = "#a855f7"; boxU.style.background = "#261438"; } extraVoz = ", vuelta rapida de carrera"; }
+          else if (ult > 0 && (miMejorManga === 0 || ult < miMejorManga)) { if (boxU) { boxU.style.borderColor = "#20c997"; boxU.style.background = "#0f291e"; } extraVoz = ", nuevo record personal"; }
+          else if (boxU) { boxU.style.borderColor = "#2b2b2b"; boxU.style.background = "#141414"; }
+          if (ult > 0 && (miMejorManga === 0 || ult < miMejorManga)) miMejorManga = ult;
+          if (ultVtaCantada !== -1 && ult > 0) hablar("Vuelta " + vtas + ", " + (ult / 1000).toFixed(2).replace(".", " punto ") + " segundos" + extraVoz);
           ultVtaCantada = vtas;
         }
         var med = yo.media || 0;
         if (!med && histVtas.length > 0) { var s = 0; for (var k = 0; k < histVtas.length; k++) s += histVtas[k]; med = s / histVtas.length; }
         document.getElementById('valMedia').textContent = med > 0 ? fmt(med) : fmt(mej);
+        var ritmoMs = med > 0 ? med : mej;
+        if (ritmoMs > 0 && rel.total > 0) { var proy = Math.floor((rel.total * 1000) / ritmoMs); document.getElementById('valProy').textContent = "Proy: ~" + proy + " vtas"; }
         if (miIdx > 0) {
           var del = lista[miIdx - 1], dV = (del.vueltas || 0) - vtas;
           document.getElementById('valGapDel').textContent = dV > 0 ? ("+" + dV + " vta") : (del.total && yo.total ? ("+" + Math.abs((yo.total - del.total) / 1000).toFixed(2) + "s") : ("+" + Math.abs((mej - (del.mejor || mej)) / 1000).toFixed(2) + "s"));
@@ -151,5 +174,7 @@
   }
   setInterval(leerPista, 1200);
 </script></body></html>
+
+
 
 
