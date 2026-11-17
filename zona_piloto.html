@@ -74,7 +74,7 @@
     <div class="acciones-top">
       <button class="btn-inscribir" onclick="abrirModalInscripcion()">Inscribirse</button>
       <button class="btn-garaje" onclick="abrirModalGaraje()">Garaje</button>
-      <button class="btn-sync" onclick="sincronizarConPista()">Actualizar</button>
+      <button id="btnVozPiloto" style="background:#444;color:#fff;" onclick="toggleVozPiloto()">Voz OFF</button><button class="btn-sync" onclick="sincronizarConPista()">Actualizar</button>
       <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
@@ -465,6 +465,27 @@
     else { ctx.fillStyle = "#1a1a1a"; ctx.fillRect(60, 140, 600, 340); fin(); }
   }
 
+    var vozPilotoActiva = false, ultimaMarcaLoc = 0, ultVtaCantada = -1;
+  function toggleVozPiloto() {
+    vozPilotoActiva = !vozPilotoActiva;
+    var b = document.getElementById('btnVozPiloto');
+    b.style.background = vozPilotoActiva ? '#20c997' : '#444';
+    b.style.color = vozPilotoActiva ? '#000' : '#fff';
+    b.textContent = vozPilotoActiva ? 'Voz ON' : 'Voz OFF';
+    if (vozPilotoActiva) hablarPiloto("Audio de pista y director activado");
+    else if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+  function hablarPiloto(txt) {
+    if (!vozPilotoActiva || !txt || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var v = new SpeechSynthesisUtterance(txt);
+    v.lang = 'es-ES'; v.rate = 1.05;
+    window.speechSynthesis.speak(v);
+  }
+  setInterval(function() {
+    var est = window.ESTADO_CIRCUITO || {};
+    if (est.activo && est.url && est.url.indexOf("http") === 0) sincronizarConPista();
+  }, 1500);
   function sincronizarConPista() {
     var ban = document.getElementById('bannerEstadoRed'), pV = document.getElementById('panelEnVivo');
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
@@ -475,6 +496,15 @@
       return;
     }
     var uP = est.url.replace(/\/$/, "");
+    fetch(uP + "/locucion.json?t=" + Date.now()).then(function(rl) { return rl.json(); }).then(function(loc) {
+      if (loc && loc.frase && loc.marca && loc.marca !== ultimaMarcaLoc) {
+        if (ultimaMarcaLoc !== 0) {
+          ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase;
+          hablarPiloto(loc.frase);
+        }
+        ultimaMarcaLoc = loc.marca;
+      }
+    }).catch(function() {});
     var hdrs = { };
     fetch(uP + "/live_data.json?t=" + Date.now(), { headers: hdrs }).then(function(r) { return r.json(); }).then(function(live) {
       fetch(uP + "/radar_live.json?t=" + Date.now(), { headers: hdrs }).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
@@ -486,6 +516,10 @@
           document.getElementById('vivoPos').textContent = pos + "Âº";
           var ult = enc.ultima || enc.mejor || 0;
           document.getElementById('vivoUltima').textContent = fmt(ult);
+          if (ultVtaCantada !== enc.vueltas) {
+            if (ultVtaCantada !== -1 && ult > 0) hablarPiloto("Vuelta " + enc.vueltas + ", " + (ult / 1000).toFixed(2).replace(".", " punto ") + " segundos");
+            ultVtaCantada = enc.vueltas;
+          }
           if (enc.mejor && ult) {
             var df = (ult - enc.mejor) / 1000, elD = document.getElementById('vivoDelta');
             elD.textContent = "+" + df.toFixed(2) + "s";
@@ -527,3 +561,4 @@
 </script>
 </body>
 </html>
+
