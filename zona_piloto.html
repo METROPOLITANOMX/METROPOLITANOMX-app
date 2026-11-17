@@ -395,7 +395,7 @@
       var pct = Math.min(100, Math.round((vtas / 120) * 100));
       var colM = pct < 60 ? "#20c997" : (pct < 85 ? "#ffc107" : "#ff4d5e");
       var estM = pct < 60 ? "Optimo" : (pct < 85 ? "Revisar pronto" : "Mantenimiento");
-      html += '<div class="tarjeta-garaje"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-weight:bold; color:#ffc107; font-size:15px;">' + m.modelo + '</span><div><span style="background:#ffc107; color:#000; font-weight:bold; padding:3px 8px; border-radius:6px; font-size:12px; margin-right:5px;">#' + m.dorsal + ' (' + (i + 1) + '/' + garajeMotos.length + ')</span><button style="background:#dc3545; color:#fff; padding:4px 7px; font-size:10px;" onclick="borrarMotoGaraje(' + i + ')">Borrar</button></div></div><img class="visor-principal" src="' + srcG + '"><div class="grid-4-fotos">';
+      html += '<div class="tarjeta-garaje"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-weight:bold; color:#ffc107; font-size:15px;">' + m.modelo + '</span><div><span style="background:#ffc107; color:#000; font-weight:bold; padding:3px 8px; border-radius:6px; font-size:12px; margin-right:5px;">#' + m.dorsal + ' (' + (i + 1) + '/' + garajeMotos.length + ')</span><button style="background:#dc3545; color:#fff; padding:4px 7px; font-size:10px;" onclick="activarMotoEnPista(' + i + ')" style="background:#20c997;color:#000;padding:4px 7px;font-size:10px;margin-right:4px;">Usar en Pista</button><button style="background:#dc3545;color:#fff;padding:4px 7px;font-size:10px;" onclick="borrarMotoGaraje(' + i + ')">Borrar</button></div></div><img class="visor-principal" src="' + srcG + '"><div class="grid-4-fotos">';
       for (var f = 0; f < 4; f++) {
         html += '<div class="slot-foto' + (f === act ? ' activa' : '') + '" onclick="seleccionarFotoVisor(' + i + ',' + f + ')">' + (fotos[f] ? '<img src="' + fotos[f] + '">' : '<span>+ ' + slots[f] + '</span>') + '<div class="btn-edit-slot" onclick="abrirSelectorSlot(' + i + ',' + f + ',event)">Subir</div></div>';
       }
@@ -669,6 +669,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
