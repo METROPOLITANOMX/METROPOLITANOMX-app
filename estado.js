@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://aluminium-traffic-ordinance-teenage.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://butterfly-nursing-infinite-lead.trycloudflare.com" };
