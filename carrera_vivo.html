@@ -108,8 +108,7 @@
       ov.style.display = "none";
     }
     ultFaseSem = fUp;
-    if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107");
-    else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e");
+    if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107"); else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e"); else if (fUp === 'LISTO' || fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null);
   }
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
@@ -215,6 +214,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
