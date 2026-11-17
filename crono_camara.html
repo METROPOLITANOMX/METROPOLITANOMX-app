@@ -225,7 +225,33 @@
     } catch (e) {}
     return { dorsal: String(dor || "1").trim(), nombre: String(nom || uid || "Piloto").trim() };
   }
+    var offsetRelojSrvMs = 0;
+  function sincronizarRelojAntena() {
+    if (!urlCircuitoCam) return;
+    var t0 = Date.now();
+    fetch(urlCircuitoCam + "/hora_servidor?t=" + t0).then(function(r) { return r.json(); }).then(function(d) {
+      var t1 = Date.now();
+      if (d && d.epochMs) {
+        offsetRelojSrvMs = d.epochMs - Math.round((t0 + t1) / 2);
+      }
+    }).catch(function() {});
+  }
+  setInterval(sincronizarRelojAntena, 15000);
+  setTimeout(sincronizarRelojAntena, 1000);
+
+  function enviarVueltaOficialAntena() {
+    var modo = document.getElementById("selModoDet");
+    if (!urlCircuitoCam || !modo || modo.value !== "COLOR") return;
+    var p = obtenerDatosPilotoCam();
+    var pasoSrvMs = Date.now() + offsetRelojSrvMs;
+    fetch(urlCircuitoCam + "/vuelta_oficial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, pasoEpochMs: pasoSrvMs })
+    }).catch(function() {});
+  }
   function enviarVueltaRankingCam(ms, kmhVal) {
+    enviarVueltaOficialAntena();
     if (!urlCircuitoCam) return;
     var p = obtenerDatosPilotoCam();
     fetch(urlCircuitoCam + "/vuelta_camara", {
