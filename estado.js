@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://molecules-sauce-shoppers-ocean.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://tracked-boutique-enhanced-bacon.trycloudflare.com" };
