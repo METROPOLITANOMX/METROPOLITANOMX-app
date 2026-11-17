@@ -211,7 +211,7 @@
     var urlCircuitoCam = "";
   var scEst = document.createElement('script');
   scEst.src = "estado.js?t=" + Date.now();
-  scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlCircuitoCam = window.ESTADO_CIRCUITO.url; };
+  scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) { urlCircuitoCam = window.ESTADO_CIRCUITO.url; var p0 = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p0.dorsal, nombre: p0.nombre, ping: true }) }).catch(function(){}); } };
   document.body.appendChild(scEst);
 
     function obtenerDatosPilotoCam() {
@@ -260,7 +260,7 @@
     }).then(function() { actualizarRankingCam(); }).catch(function() {});
   }
   setInterval(function() {
-    if (!urlCircuitoCam || !camActiva) return;
+    if (!urlCircuitoCam) return;
     var p = obtenerDatosPilotoCam();
     fetch(urlCircuitoCam + "/vuelta_camara", {
       method: "POST",
