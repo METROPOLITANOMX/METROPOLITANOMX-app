@@ -41,7 +41,7 @@
   </div>
 
   <div class="card">
-    <h2>Configurar Manga</h2>
+    <h2>Sistema de Antena / Crono</h2><button id="btnModoAntena" class="btn-dark" onclick="alternarModoAntena()">CARGANDO MODO ANTENA...</button><div id="descAntena" style="font-size:11px;color:#aaa;text-align:center;margin-bottom:10px;">Comprobando servidor...</div><h2>Configurar Manga</h2>
     <select id="selManga">
       <option value="ENTRENAMIENTOS LIBRES">Entrenamientos Libres</option>
       <option value="ENTRENAMIENTOS CRONOMETRADOS">Entrenos Cronometrados</option>
@@ -128,7 +128,28 @@
     document.getElementById("txtVoz").value = "";
   }
 
+    var antenasMovilesActivas = false;
+  function actualizarUIModoAntena() {
+    var b = document.getElementById("btnModoAntena");
+    var d = document.getElementById("descAntena");
+    if (!b || !d) return;
+    if (antenasMovilesActivas) {
+      b.style.background = "#0dcaf0"; b.style.color = "#000";
+      b.textContent = "MODO: ANTENAS MOVILES (PILOTOS)";
+      d.textContent = "Los moviles en Modo Color inyectan vueltas oficiales en vivo.";
+    } else {
+      b.style.background = "#ffc107"; b.style.color = "#000";
+      b.textContent = "MODO: ANTENA CIRCUITO (PC)";
+      d.textContent = "Cronometraje clasico desde la meta del circuito.";
+    }
+  }
+  function alternarModoAntena() {
+    antenasMovilesActivas = !antenasMovilesActivas;
+    actualizarUIModoAntena();
+    enviarCmd({ accion: "ANTENA", antenasMoviles: antenasMovilesActivas });
+  }
   function refrescarEstado() {
+    if (URL_SRV) { fetch(URL_SRV + '/modo_antena.json?t=' + Date.now()).then(function(r){return r.json();}).then(function(m){ if(m && typeof m.antenasMoviles==='boolean'){ antenasMovilesActivas = m.antenasMoviles; actualizarUIModoAntena(); } }).catch(function(){}); }
     if (!URL_SRV) return;
     fetch(URL_SRV + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(d) {
       if (d && d.reloj) {
