@@ -125,17 +125,28 @@
     }
   }
 
-  function entrarComoPublico() {
+    function entrarComoPublico() {
     var est = document.getElementById('estadoConexion');
-    var info = window.ESTADO_CIRCUITO || { activo: false, url: "" };
-    if (info.activo && info.url && info.url.indexOf("http") === 0) {
-      est.style.color = "#20c997";
-      est.textContent = "Circuito abierto! Entrando...";
-      window.location.href = info.url;
-    } else {
-      est.style.color = "#ffc107";
-      est.textContent = "CIRCUITO CERRADO - Proxima carrera proximamente.";
-    }
+    est.style.color = "#0dcaf0";
+    est.textContent = "Conectando con el circuito...";
+    var s = document.createElement('script');
+    s.src = "estado.js?t=" + Date.now();
+    s.onload = function() {
+      var info = window.ESTADO_CIRCUITO || { activo: false, url: "" };
+      if (info.activo && info.url && info.url.indexOf("http") === 0) {
+        est.style.color = "#20c997";
+        est.textContent = "Circuito abierto! Entrando...";
+        window.location.href = info.url;
+      } else {
+        est.style.color = "#ffc107";
+        est.textContent = "CIRCUITO CERRADO - Proxima carrera proximamente.";
+      }
+    };
+    s.onerror = function() {
+      est.style.color = "#ff4d5e";
+      est.textContent = "Sin conexion con el servidor del circuito.";
+    };
+    document.body.appendChild(s);
   }
 
   function procesarAccesoPiloto() {
@@ -250,6 +261,7 @@
 </script>
 </body>
 </html>
+
 
 
 
