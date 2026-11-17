@@ -214,17 +214,33 @@
   scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlCircuitoCam = window.ESTADO_CIRCUITO.url; };
   document.body.appendChild(scEst);
 
+    function obtenerDatosPilotoCam() {
+    var dor = "", nom = "";
+    try {
+      var cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}");
+      if (cuentas[uid]) { dor = cuentas[uid].dorsal || ""; nom = cuentas[uid].nombre || ""; }
+      var gar = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]");
+      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (gar[idxM] && gar[idxM].dorsal) dor = gar[idxM].dorsal;
+    } catch (e) {}
+    return { dorsal: String(dor || "1").trim(), nombre: String(nom || uid || "Piloto").trim() };
+  }
   function enviarVueltaRankingCam(ms, kmhVal) {
     if (!urlCircuitoCam) return;
-    var perf = {};
-    try { perf = JSON.parse(localStorage.getItem('metro_perfil_' + uid) || "{}"); } catch (e) {}
-    var dor = perf.dorsal || "99";
-    var nom = perf.nombre || "Piloto";
+    var p = obtenerDatosPilotoCam();
     fetch(urlCircuitoCam + "/vuelta_camara", {
       method: "POST",
-      body: JSON.stringify({ dorsal: dor, nombre: nom, tiempoMs: ms, kmh: kmhVal || 0 })
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, tiempoMs: ms, kmh: kmhVal || 0 })
     }).then(function() { actualizarRankingCam(); }).catch(function() {});
   }
+  setInterval(function() {
+    if (!urlCircuitoCam || !camActiva) return;
+    var p = obtenerDatosPilotoCam();
+    fetch(urlCircuitoCam + "/vuelta_camara", {
+      method: "POST",
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true })
+    }).catch(function() {});
+  }, 4000);
 
   function actualizarRankingCam() {
     if (!urlCircuitoCam) return;
@@ -268,22 +284,17 @@
   }
     function salirDeCamara() {
     if (urlCircuitoCam) {
-      var perf = {};
-      try { perf = JSON.parse(localStorage.getItem('metro_perfil_' + uid) || "{}"); } catch (e) {}
-      fetch(urlCircuitoCam + "/vuelta_camara", {
-        method: "POST",
-        keepalive: true,
-        body: JSON.stringify({ dorsal: perf.dorsal || "99", nombre: perf.nombre || "Piloto", tiempoMs: 0, kmh: 0, salir: true })
-      }).catch(function() {});
+      var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", keepalive: true, body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function() {});
     }
     window.location.href = 'zona_piloto.html';
   }
-  function reiniciarSesionCam() { if (urlCircuitoCam) { var pf = {}; try { pf = JSON.parse(localStorage.getItem("metro_perfil_" + uid) || "{}"); } catch(e){} fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: pf.dorsal || "99", nombre: pf.nombre || "Piloto", tiempoMs: 0, kmh: 0, salir: true }) }).catch(function(){}); }
+  function reiniciarSesionCam() { if (urlCircuitoCam) { var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function(){}); }
     ultimoPasoMs = 0; pasoIzqMs = 0; vueltasCam = []; mejorCam = 0; maxKmhCam = 0;
     document.getElementById('cVtas').textContent = "0"; document.getElementById('cUlt').textContent = "--"; document.getElementById('cMej').textContent = "--"; document.getElementById('cKmh').textContent = "-- km/h";
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
   }
 </script></body></html>
+
 
 
 
