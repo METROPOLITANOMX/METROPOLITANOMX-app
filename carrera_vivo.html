@@ -47,7 +47,7 @@
   <button id="btnAvisoTorre" onclick="avisarTorreProblema()" style="width:100%;width:100%;max-width:100%;margin:0 auto 8px auto;display:block;background:#dc3545;color:#fff;padding:11px;font-size:12px;border-radius:10px;">AVISO A TORRE DE CONTROL (AVERIA / PARADA)</button>
   <div class="tabla-rivales"><div style="font-size:11px;color:#ffc107;font-weight:bold;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #2a2a2a;padding-bottom:4px;">Clasificacion en Pista</div><div id="listaRivales" style="font-size:12px;color:#888;">Esperando tiempos de pista...</div></div>
 <script>
-  var sc = document.createElement('script'); sc.src = "estado.js?t=" + Date.now(); sc.onload = leerPista; document.body.appendChild(sc);
+  function recargarEstadoPista() { var s = document.createElement("script"); s.src = "estado.js?t=" + Date.now(); s.onload = leerPista; document.body.appendChild(s); } recargarEstadoPista(); setInterval(recargarEstadoPista, 10000);
   var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
   var miDorsal = String(localStorage.getItem('metro_dorsal') || "--");
   document.getElementById('txtN').textContent = localStorage.getItem('metro_nombre') || "Piloto";
@@ -250,6 +250,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
