@@ -354,9 +354,40 @@
     }
   }
 
+    function asegurarSetupsMoto(m) {
+    if (!Array.isArray(m.setups) || m.setups.length === 0) {
+      var base = Object.assign({ nombre: "Setup Principal" }, m.settings || {});
+      m.setups = [base]; m.setupActivoIdx = 0;
+    }
+    if (typeof m.setupActivoIdx !== 'number' || m.setupActivoIdx >= m.setups.length) m.setupActivoIdx = 0;
+    m.settings = m.setups[m.setupActivoIdx];
+  }
+  function cambiarSetupMoto(i, sIdx) {
+    var m = garajeMotos[i]; if (!m) return;
+    asegurarSetupsMoto(m); m.setupActivoIdx = parseInt(sIdx, 10) || 0; m.settings = m.setups[m.setupActivoIdx];
+    guardarGarajeStorage(); renderizarGaraje();
+  }
+  function nuevoSetupMoto(i) {
+    var m = garajeMotos[i]; if (!m) return;
+    asegurarSetupsMoto(m);
+    var nom = prompt("Nombre del nuevo Setup (ej: Tierra Seca, Barro, Clasificacion):", "Setup " + (m.setups.length + 1));
+    if (!nom || !nom.trim()) return;
+    var copia = Object.assign({}, m.setups[m.setupActivoIdx], { nombre: nom.trim() });
+    m.setups.push(copia); m.setupActivoIdx = m.setups.length - 1; m.settings = copia;
+    guardarGarajeStorage(); renderizarGaraje();
+  }
+  function borrarSetupMoto(i) {
+    var m = garajeMotos[i]; if (!m) return;
+    asegurarSetupsMoto(m);
+    if (m.setups.length <= 1) { alert("Debe quedar al menos un Setup guardado en esta moto."); return; }
+    if (!confirm("¿Eliminar el setup '" + m.setups[m.setupActivoIdx].nombre + "'?")) return;
+    m.setups.splice(m.setupActivoIdx, 1); m.setupActivoIdx = 0; m.settings = m.setups[0];
+    guardarGarajeStorage(); renderizarGaraje();
+  }
   function guardarSettingsMoto(i) {
     if (!garajeMotos[i]) return;
-    garajeMotos[i].settings = {
+    asegurarSetupsMoto(garajeMotos[i]);
+    var obj = Object.assign({}, garajeMotos[i].setups[garajeMotos[i].setupActivoIdx], {
       terreno: document.getElementById('set_terr_' + i).value,
       horquilla: document.getElementById('set_horq_' + i).value,
       muellesHorquilla: document.getElementById('set_muelle_' + i).value,
@@ -365,9 +396,11 @@
       neumaticos: document.getElementById('set_neum_' + i).value,
       giroscopio: document.getElementById('set_giro_' + i).value,
       notas: document.getElementById('set_notas_' + i).value
-    };
+    });
+    garajeMotos[i].setups[garajeMotos[i].setupActivoIdx] = obj;
+    garajeMotos[i].settings = obj;
     guardarGarajeStorage();
-    alert("Settings guardados para " + garajeMotos[i].modelo);
+    alert("Setup '" + obj.nombre + "' guardado para " + garajeMotos[i].modelo);
   }
 
   function compartirSetupWhatsApp(i) {
@@ -389,7 +422,7 @@
     var slots = ["Principal", "Chasis", "Horquilla", "Extra"];
     var imgDef = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' fill='%23666' font-family='Arial' font-size='13' text-anchor='middle'>TOCA UN RECUADRO PARA SUBIR FOTO</text></svg>";
     for (var i = 0; i < garajeMotos.length; i++) {
-      var m = garajeMotos[i], s = m.settings || {};
+      var m = garajeMotos[i]; asegurarSetupsMoto(m); var s = m.settings || {}; var optsSet = m.setups.map((st, ix) => "<option value=\"" + ix + "\"" + (ix === m.setupActivoIdx ? " selected" : "") + ">" + st.nombre + "</option>").join("");
       var fotos = Array.isArray(m.fotos) ? m.fotos : [m.foto || "", "", "", ""];
       var act = fotoActivaPorMoto[i] || 0;
       var srcG = fotos[act] || fotos[0] || imgDef;
@@ -403,7 +436,7 @@
         html += '<div class="slot-foto' + (f === act ? ' activa' : '') + '" onclick="seleccionarFotoVisor(' + i + ',' + f + ')">' + (fotos[f] ? '<img src="' + fotos[f] + '">' : '<span>+ ' + slots[f] + '</span>') + '<div class="btn-edit-slot" onclick="abrirSelectorSlot(' + i + ',' + f + ',event)">Subir</div></div>';
       }
       html += '</div><div class="caja-mant"><div style="display:flex; justify-content:space-between; font-size:11px;"><span style="color:#ccc; font-weight:bold;">USO: ' + vtas + ' vtas (~' + hrs + 'h)</span><span style="color:' + colM + '; font-weight:bold;">' + estM + '</span></div><div class="barra-mant-bg"><div class="barra-mant-fill" style="width:' + pct + '%; background:' + colM + ';"></div></div><div style="display:flex; gap:6px; justify-content:flex-end;"><button style="background:#2a2a2a; color:#ccc; padding:4px 8px; font-size:10px;" onclick="sumarVueltasManual(' + i + ')">+15 Vtas</button><button style="background:#20c997; color:#000; padding:4px 8px; font-size:10px;" onclick="resetearMantenimiento(' + i + ')">Reset Mant.</button></div></div>';
-      html += '<div class="caja-settings"><div class="titulo-settings"><span>Settings Losi Promoto-MX</span><button style="background:#25D366; color:#000; padding:4px 8px; font-size:10px;" onclick="compartirSetupWhatsApp(' + i + ')">WhatsApp</button></div><div class="campo-set" style="margin-bottom:8px;"><label>Perfil Terreno</label><select id="set_terr_' + i + '"><option' + (s.terreno === 'Seco / Suelto' ? ' selected' : '') + '>Seco / Suelto</option><option' + (s.terreno === 'Riego / Agarre Alto' ? ' selected' : '') + '>Riego / Agarre Alto</option><option' + (s.terreno === 'Saltos / Baches Grandes' ? ' selected' : '') + '>Saltos / Baches Grandes</option><option' + (s.terreno === 'Barro / Humedo' ? ' selected' : '') + '>Barro / Humedo</option></select></div><div class="grid-settings"><div class="campo-set"><label>Aceite Horquilla</label><input type="text" id="set_horq_' + i + '" value="' + (s.horquilla || "") + '" placeholder="50wt"></div><div class="campo-set"><label>Muelles Horquilla</label><input type="text" id="set_muelle_' + i + '" value="' + (s.muellesHorquilla || "") + '" placeholder="Duros / Estandar"></div><div class="campo-set"><label>Amortiguador Tras.</label><input type="text" id="set_amort_' + i + '" value="' + (s.amortiguador || "") + '" placeholder="35wt"></div><div class="campo-set"><label>PiÃ±on / Corona</label><input type="text" id="set_des_' + i + '" value="' + (s.desarrollo || "") + '" placeholder="12T / 40T"></div><div class="campo-set"><label>Neumaticos</label><input type="text" id="set_neum_' + i + '" value="' + (s.neumaticos || "") + '" placeholder="Dunlop MX53"></div><div class="campo-set"><label>Gyro / Pesos / Bat</label><input type="text" id="set_giro_' + i + '" value="' + (s.giroscopio || "") + '" placeholder="Gyro 60%"></div><div class="campo-set" style="grid-column:span 2;"><label>Notas Pista</label><textarea id="set_notas_' + i + '" rows="2">' + (s.notas || "") + '</textarea></div></div><button style="width:100%; margin-top:8px; background:#0dcaf0; color:#000; padding:9px;" onclick="guardarSettingsMoto(' + i + ')">Guardar Settings</button></div></div>';
+      html += '<div class="caja-settings"><div style="display:flex;gap:4px;align-items:center;margin-bottom:8px;flex-wrap:wrap;"><select onchange="cambiarSetupMoto(' + i + ', this.value)" style="flex:1;padding:6px;font-size:11px;background:#000;color:#ffc107;border:1px solid #ffc107;">' + optsSet + '</select><button onclick="nuevoSetupMoto(' + i + ')" style="background:#20c997;color:#000;padding:6px 8px;font-size:10px;">+ Setup</button><button onclick="borrarSetupMoto(' + i + ')" style="background:#dc3545;color:#fff;padding:6px 8px;font-size:10px;">Borrar</button></div><div class="titulo-settings"><span>Settings Losi Promoto-MX</span><button style="background:#25D366; color:#000; padding:4px 8px; font-size:10px;" onclick="compartirSetupWhatsApp(' + i + ')">WhatsApp</button></div><div class="campo-set" style="margin-bottom:8px;"><label>Perfil Terreno</label><select id="set_terr_' + i + '"><option' + (s.terreno === 'Seco / Suelto' ? ' selected' : '') + '>Seco / Suelto</option><option' + (s.terreno === 'Riego / Agarre Alto' ? ' selected' : '') + '>Riego / Agarre Alto</option><option' + (s.terreno === 'Saltos / Baches Grandes' ? ' selected' : '') + '>Saltos / Baches Grandes</option><option' + (s.terreno === 'Barro / Humedo' ? ' selected' : '') + '>Barro / Humedo</option></select></div><div class="grid-settings"><div class="campo-set"><label>Aceite Horquilla</label><input type="text" id="set_horq_' + i + '" value="' + (s.horquilla || "") + '" placeholder="50wt"></div><div class="campo-set"><label>Muelles Horquilla</label><input type="text" id="set_muelle_' + i + '" value="' + (s.muellesHorquilla || "") + '" placeholder="Duros / Estandar"></div><div class="campo-set"><label>Amortiguador Tras.</label><input type="text" id="set_amort_' + i + '" value="' + (s.amortiguador || "") + '" placeholder="35wt"></div><div class="campo-set"><label>PiÃ±on / Corona</label><input type="text" id="set_des_' + i + '" value="' + (s.desarrollo || "") + '" placeholder="12T / 40T"></div><div class="campo-set"><label>Neumaticos</label><input type="text" id="set_neum_' + i + '" value="' + (s.neumaticos || "") + '" placeholder="Dunlop MX53"></div><div class="campo-set"><label>Gyro / Pesos / Bat</label><input type="text" id="set_giro_' + i + '" value="' + (s.giroscopio || "") + '" placeholder="Gyro 60%"></div><div class="campo-set" style="grid-column:span 2;"><label>Notas Pista</label><textarea id="set_notas_' + i + '" rows="2">' + (s.notas || "") + '</textarea></div></div><button style="width:100%; margin-top:8px; background:#0dcaf0; color:#000; padding:9px;" onclick="guardarSettingsMoto(' + i + ')">Guardar Settings</button></div></div>';
     }
     cont.innerHTML = html;
   }
@@ -672,6 +705,7 @@
 </script>
 </body>
 </html>
+
 
 
 

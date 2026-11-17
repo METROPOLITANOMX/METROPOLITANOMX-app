@@ -130,7 +130,15 @@
     if (!Array.isArray(reg.detalleVueltas)) reg.detalleVueltas = [];
     reg.detalleVueltas.push({ v: vNum, t: ms, m: "Entreno Camara" });
     reg.vueltas = (reg.vueltas || 0) + 1; if (!reg.mejor || ms < reg.mejor) reg.mejor = ms;
-    localStorage.setItem(key, JSON.stringify(hist));
+        localStorage.setItem(key, JSON.stringify(hist));
+    try {
+      var gKey = 'metro_garaje_' + uid, gArr = JSON.parse(localStorage.getItem(gKey) || "[]");
+      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (gArr[idxM]) {
+        if (!gArr[idxM].mejorMoto || ms < gArr[idxM].mejorMoto) gArr[idxM].mejorMoto = ms;
+        localStorage.setItem(gKey, JSON.stringify(gArr));
+      }
+    } catch (e) {}
   }
   function reiniciarSesionCam() {
     ultimoPasoMs = 0; vueltasCam = []; mejorCam = 0;
@@ -138,4 +146,5 @@
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Esperando primer paso por linea...</span>';
   }
 </script></body></html>
+
 

@@ -144,7 +144,16 @@
     if (!Array.isArray(reg.detalleVueltas)) reg.detalleVueltas = [];
     if (reg.detalleVueltas.length === 0 || reg.detalleVueltas[reg.detalleVueltas.length - 1].v !== vtaNum) reg.detalleVueltas.push({ v: vtaNum, t: ms, m: document.getElementById('txtMangaNombre').textContent });
     reg.vueltas = Math.max(reg.vueltas || 0, vtaNum); if (!reg.mejor || ms < reg.mejor) reg.mejor = ms; if (posActual > 0) reg.pos = posActual; if (kmhActual > (reg.kmh || 0)) reg.kmh = kmhActual;
-    localStorage.setItem(key, JSON.stringify(hist));
+        localStorage.setItem(key, JSON.stringify(hist));
+    try {
+      var gKey = 'metro_garaje_' + uid, gArr = JSON.parse(localStorage.getItem(gKey) || "[]");
+      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (gArr[idxM]) {
+        if (!gArr[idxM].mejorMoto || ms < gArr[idxM].mejorMoto) gArr[idxM].mejorMoto = ms;
+        if (kmhActual > (gArr[idxM].kmhMoto || 0)) gArr[idxM].kmhMoto = kmhActual;
+        localStorage.setItem(gKey, JSON.stringify(gArr));
+      }
+    } catch (e) {}
   }
   function leerPista() {
     var est = window.ESTADO_CIRCUITO || {}, ban = document.getElementById('bannerDir');
@@ -241,6 +250,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
