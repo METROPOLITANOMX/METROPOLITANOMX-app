@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://workflow-adam-gradually-maui.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://series-medicare-bradley-holmes.trycloudflare.com" };
