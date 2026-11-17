@@ -193,10 +193,36 @@
         if (typeof cG[g].vueltasMant !== "number") cG[g].vueltasMant = 0;
         if (!cG[g].settings) cG[g].settings = {};
       }
-      garajeMotos = cG;   setInterval(function() {
+      garajeMotos = cG;     function pintarTiemposPorDia() {
+    var el = document.getElementById('listaHistorial');
+    if (!el) return;
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]"); } catch (e) {}
+    if (!Array.isArray(hist) || hist.length === 0) {
+      el.innerHTML = '<p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p>';
+      return;
+    }
+    var lHtml = "";
+    for (var m = hist.length - 1; m >= 0; m--) {
+      var reg = hist[m], vtasArr = Array.isArray(reg.detalleVueltas) ? reg.detalleVueltas : [], sumD = 0;
+      for (var d = 0; d < vtasArr.length; d++) sumD += (vtasArr[d].t || 0);
+      var medDia = vtasArr.length > 0 ? (sumD / vtasArr.length) : (reg.mejor || 0);
+      var hVtas = vtasArr.length > 0 ? vtasArr.map(v => '<div class="fila-vta-dia"><span>Vuelta <b>' + v.v + '</b> <span style="color:#777;font-size:10px;">(' + (v.m || '') + ')</span></span><span style="color:' + (v.t <= reg.mejor ? '#20c997;font-weight:bold' : '#fff') + ';">' + fmt(v.t) + (v.t <= reg.mejor ? ' ★' : '') + '</span></div>').join('') : '<div style="color:#777;font-size:11px;padding:10px 0;text-align:center;">Sin vueltas individuales registradas este dia.</div>';
+      lHtml += '<div class="tarjeta-garaje"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:8px;"><div><b style="color:#ffc107;font-size:14px;">' + (reg.fecha || "Jornada") + '</b> <span style="font-size:11px;color:#888;">(' + (hist.length - m) + '/' + hist.length + ')</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta PNG</button></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;background:#121212;padding:6px;border-radius:8px;font-size:11px;">' +
+        '<div><span style="color:#888;display:block;font-size:9px;">VTAS</span><b style="color:#ffc107;">' + (reg.vueltas || vtasArr.length || 0) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEJOR</span><b style="color:#20c997;">' + fmt(reg.mejor) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEDIA</span><b>' + fmt(medDia) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">PUNTA</span><b style="color:#ff4d5e;">' + (reg.kmh || 0) + '</b></div></div>' +
+        '<div class="lista-vtas-dia">' + hVtas + '</div></div>';
+    }
+    el.innerHTML = lHtml;
+  }
+  pintarTiemposPorDia();
+  setInterval(function() {
     try {
       var hRaw = localStorage.getItem('metro_hist_' + uid);
-      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      pintarTiemposPorDia();
       var gRaw = localStorage.getItem('metro_garaje_' + uid);
       if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
     } catch (e) {}
@@ -207,10 +233,36 @@
 
       function activarMotoEnPista(idx) {
     localStorage.setItem('metro_moto_activa_' + uid, String(idx));
-      setInterval(function() {
+        function pintarTiemposPorDia() {
+    var el = document.getElementById('listaHistorial');
+    if (!el) return;
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]"); } catch (e) {}
+    if (!Array.isArray(hist) || hist.length === 0) {
+      el.innerHTML = '<p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p>';
+      return;
+    }
+    var lHtml = "";
+    for (var m = hist.length - 1; m >= 0; m--) {
+      var reg = hist[m], vtasArr = Array.isArray(reg.detalleVueltas) ? reg.detalleVueltas : [], sumD = 0;
+      for (var d = 0; d < vtasArr.length; d++) sumD += (vtasArr[d].t || 0);
+      var medDia = vtasArr.length > 0 ? (sumD / vtasArr.length) : (reg.mejor || 0);
+      var hVtas = vtasArr.length > 0 ? vtasArr.map(v => '<div class="fila-vta-dia"><span>Vuelta <b>' + v.v + '</b> <span style="color:#777;font-size:10px;">(' + (v.m || '') + ')</span></span><span style="color:' + (v.t <= reg.mejor ? '#20c997;font-weight:bold' : '#fff') + ';">' + fmt(v.t) + (v.t <= reg.mejor ? ' ★' : '') + '</span></div>').join('') : '<div style="color:#777;font-size:11px;padding:10px 0;text-align:center;">Sin vueltas individuales registradas este dia.</div>';
+      lHtml += '<div class="tarjeta-garaje"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:8px;"><div><b style="color:#ffc107;font-size:14px;">' + (reg.fecha || "Jornada") + '</b> <span style="font-size:11px;color:#888;">(' + (hist.length - m) + '/' + hist.length + ')</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta PNG</button></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;background:#121212;padding:6px;border-radius:8px;font-size:11px;">' +
+        '<div><span style="color:#888;display:block;font-size:9px;">VTAS</span><b style="color:#ffc107;">' + (reg.vueltas || vtasArr.length || 0) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEJOR</span><b style="color:#20c997;">' + fmt(reg.mejor) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEDIA</span><b>' + fmt(medDia) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">PUNTA</span><b style="color:#ff4d5e;">' + (reg.kmh || 0) + '</b></div></div>' +
+        '<div class="lista-vtas-dia">' + hVtas + '</div></div>';
+    }
+    el.innerHTML = lHtml;
+  }
+  pintarTiemposPorDia();
+  setInterval(function() {
     try {
       var hRaw = localStorage.getItem('metro_hist_' + uid);
-      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      pintarTiemposPorDia();
       var gRaw = localStorage.getItem('metro_garaje_' + uid);
       if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
     } catch (e) {}
@@ -237,10 +289,36 @@
       '<div><span style="color:#888;display:block;font-size:9px;">ACEITE HORQ.</span><b>' + (s.aceite || '5000') + '</b></div>' +
       '<div><span style="color:#888;display:block;font-size:9px;">USO MOTO</span><b style="color:#0dcaf0;">' + (m.vueltasMant || 0) + ' vtas</b></div></div>';
   }
-  function guardarGarajeStorage() { localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos));   setInterval(function() {
+  function guardarGarajeStorage() { localStorage.setItem('metro_garaje_' + uid, JSON.stringify(garajeMotos));     function pintarTiemposPorDia() {
+    var el = document.getElementById('listaHistorial');
+    if (!el) return;
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]"); } catch (e) {}
+    if (!Array.isArray(hist) || hist.length === 0) {
+      el.innerHTML = '<p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p>';
+      return;
+    }
+    var lHtml = "";
+    for (var m = hist.length - 1; m >= 0; m--) {
+      var reg = hist[m], vtasArr = Array.isArray(reg.detalleVueltas) ? reg.detalleVueltas : [], sumD = 0;
+      for (var d = 0; d < vtasArr.length; d++) sumD += (vtasArr[d].t || 0);
+      var medDia = vtasArr.length > 0 ? (sumD / vtasArr.length) : (reg.mejor || 0);
+      var hVtas = vtasArr.length > 0 ? vtasArr.map(v => '<div class="fila-vta-dia"><span>Vuelta <b>' + v.v + '</b> <span style="color:#777;font-size:10px;">(' + (v.m || '') + ')</span></span><span style="color:' + (v.t <= reg.mejor ? '#20c997;font-weight:bold' : '#fff') + ';">' + fmt(v.t) + (v.t <= reg.mejor ? ' ★' : '') + '</span></div>').join('') : '<div style="color:#777;font-size:11px;padding:10px 0;text-align:center;">Sin vueltas individuales registradas este dia.</div>';
+      lHtml += '<div class="tarjeta-garaje"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:8px;"><div><b style="color:#ffc107;font-size:14px;">' + (reg.fecha || "Jornada") + '</b> <span style="font-size:11px;color:#888;">(' + (hist.length - m) + '/' + hist.length + ')</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta PNG</button></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;background:#121212;padding:6px;border-radius:8px;font-size:11px;">' +
+        '<div><span style="color:#888;display:block;font-size:9px;">VTAS</span><b style="color:#ffc107;">' + (reg.vueltas || vtasArr.length || 0) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEJOR</span><b style="color:#20c997;">' + fmt(reg.mejor) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEDIA</span><b>' + fmt(medDia) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">PUNTA</span><b style="color:#ff4d5e;">' + (reg.kmh || 0) + '</b></div></div>' +
+        '<div class="lista-vtas-dia">' + hVtas + '</div></div>';
+    }
+    el.innerHTML = lHtml;
+  }
+  pintarTiemposPorDia();
+  setInterval(function() {
     try {
       var hRaw = localStorage.getItem('metro_hist_' + uid);
-      if (hRaw && typeof renderizarHistorial === 'function') renderizarHistorial();
+      pintarTiemposPorDia();
       var gRaw = localStorage.getItem('metro_garaje_' + uid);
       if (gRaw) { garajeMotos = JSON.parse(gRaw); pintarMotoPortada(); }
     } catch (e) {}
@@ -626,6 +704,32 @@
     v.lang = 'es-ES'; v.rate = 1.05;
     window.speechSynthesis.speak(v);
   }
+    function pintarTiemposPorDia() {
+    var el = document.getElementById('listaHistorial');
+    if (!el) return;
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('metro_hist_' + uid) || "[]"); } catch (e) {}
+    if (!Array.isArray(hist) || hist.length === 0) {
+      el.innerHTML = '<p style="color:#777; font-size:13px;">Aun no hay jornadas guardadas.</p>';
+      return;
+    }
+    var lHtml = "";
+    for (var m = hist.length - 1; m >= 0; m--) {
+      var reg = hist[m], vtasArr = Array.isArray(reg.detalleVueltas) ? reg.detalleVueltas : [], sumD = 0;
+      for (var d = 0; d < vtasArr.length; d++) sumD += (vtasArr[d].t || 0);
+      var medDia = vtasArr.length > 0 ? (sumD / vtasArr.length) : (reg.mejor || 0);
+      var hVtas = vtasArr.length > 0 ? vtasArr.map(v => '<div class="fila-vta-dia"><span>Vuelta <b>' + v.v + '</b> <span style="color:#777;font-size:10px;">(' + (v.m || '') + ')</span></span><span style="color:' + (v.t <= reg.mejor ? '#20c997;font-weight:bold' : '#fff') + ';">' + fmt(v.t) + (v.t <= reg.mejor ? ' ★' : '') + '</span></div>').join('') : '<div style="color:#777;font-size:11px;padding:10px 0;text-align:center;">Sin vueltas individuales registradas este dia.</div>';
+      lHtml += '<div class="tarjeta-garaje"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:8px;"><div><b style="color:#ffc107;font-size:14px;">' + (reg.fecha || "Jornada") + '</b> <span style="font-size:11px;color:#888;">(' + (hist.length - m) + '/' + hist.length + ')</span></div><button class="btn-share-card" onclick="generarTarjetaSocial(' + m + ')">Tarjeta PNG</button></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;background:#121212;padding:6px;border-radius:8px;font-size:11px;">' +
+        '<div><span style="color:#888;display:block;font-size:9px;">VTAS</span><b style="color:#ffc107;">' + (reg.vueltas || vtasArr.length || 0) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEJOR</span><b style="color:#20c997;">' + fmt(reg.mejor) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">MEDIA</span><b>' + fmt(medDia) + '</b></div>' +
+        '<div><span style="color:#888;display:block;font-size:9px;">PUNTA</span><b style="color:#ff4d5e;">' + (reg.kmh || 0) + '</b></div></div>' +
+        '<div class="lista-vtas-dia">' + hVtas + '</div></div>';
+    }
+    el.innerHTML = lHtml;
+  }
+  pintarTiemposPorDia();
   setInterval(function() {
     var est = window.ESTADO_CIRCUITO || {};
     if (est.activo && est.url && est.url.indexOf("http") === 0) sincronizarConPista();
@@ -729,6 +833,7 @@
 </script>
 </body>
 </html>
+
 
 
 
