@@ -194,7 +194,13 @@
     }
   } catch (e) {}
 
-    function pintarMotoPortada() {
+      function activarMotoEnPista(idx) {
+    localStorage.setItem('metro_moto_activa_' + uid, String(idx));
+    pintarMotoPortada();
+    renderizarGaraje();
+    if (garajeMotos[idx]) alert("Moto activa en pista: " + garajeMotos[idx].modelo);
+  }
+  function pintarMotoPortada() {
     var box = document.getElementById('resumenMotoPortada');
     if (!box) return;
     if (!Array.isArray(garajeMotos) || garajeMotos.length === 0) {
@@ -663,6 +669,7 @@
 </script>
 </body>
 </html>
+
 
 
 
