@@ -74,6 +74,10 @@
     document.getElementById('cuerpoPista').style.boxShadow = colorHex ? ("inset 0 0 0 8px " + colorHex + ", inset 0 0 28px " + colorHex) : "none";
   }
       var verdeHastaMs = 0;
+    var ultSegVib = -1;
+  function vibrarSalida(patron) {
+    try { if (navigator && navigator.vibrate) navigator.vibrate(patron); } catch (e) {}
+  }
   function gestionarSemaforo(fase, rest) {
     var fUp = String(fase || "").toUpperCase(), ov = document.getElementById('overlaySemaforo'), num = document.getElementById('numCuentaSem');
     if (!ov || !num) return;
@@ -82,10 +86,16 @@
       ov.style.display = "flex";
       ov.style.background = rest <= 10 ? "#f77f00" : "#d90429";
       num.textContent = sTxt;
+      if (rest !== ultSegVib && rest > 0) {
+        ultSegVib = rest;
+        if (rest > 10) vibrarSalida(140);
+        else if (rest > 5) vibrarSalida([110, 90, 110]);
+        else vibrarSalida([120, 60, 120, 60, 120]);
+      }
     } else if (fUp === 'CARRERA') {
       if (ultFaseSem === 'SALIDA_30') {
         verdeHastaMs = Date.now() + 2200;
-        hablar("Salida, gas a fondo!");
+        hablar("Salida, gas a fondo!"); vibrarSalida(650); ultSegVib = -1;
       }
       if (Date.now() < verdeHastaMs) {
         ov.style.display = "flex";
@@ -205,6 +215,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
