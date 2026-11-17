@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://immune-administrators-immediately-chen.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://country-determination-generations-pharmaceuticals.trycloudflare.com" };
