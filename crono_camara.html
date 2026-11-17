@@ -19,7 +19,17 @@
 </style></head><body>
   <div class="top">
     <b style="color:#ffc107;font-size:14px;">CRONO OPTICO CAMARA</b>
-    <div><button id="btnVozCam" style="background:#20c997;color:#000;margin-right:4px;" onclick="toggleVozCam()">Voz ON</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Volver</button></div>
+    <div><button style="background:#0dcaf0;color:#000;margin-right:4px;" onclick="var g=document.getElementById('guiaCam');g.style.display=g.style.display==='none'?'block':'none'">Guia</button><button id="btnVozCam" style="background:#20c997;color:#000;margin-right:4px;" onclick="toggleVozCam()">Voz ON</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Volver</button></div>
+  </div>
+    <div id="guiaCam" style="background:#141a24;border:1px solid #0dcaf0;border-radius:10px;padding:10px 12px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;color:#ddd;line-height:1.45;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <b style="color:#0dcaf0;font-size:13px;">COMO USAR EL CRONO POR CAMARA</b>
+      <button onclick="document.getElementById('guiaCam').style.display='none'" style="background:#333;color:#fff;padding:3px 8px;font-size:10px;">Ocultar</button>
+    </div>
+    <div><b>1. Movil totalmente fijo:</b> Apoyalo en un tripode o soporte en el suelo. Si se mueve en la mano, marcara vueltas falsas.</div>
+    <div><b>2. Apunta al suelo de la pista:</b> Haz que la <b>linea roja central</b> corte el paso de la moto, evitando que se vean arboles o gente moviendose al fondo.</div>
+    <div><b>3. Calibra la sensibilidad:</b> Con la pista vacia, la barra verde inferior debe estar casi vacia. Ajusta el deslizador para que solo salte al pasar la moto.</div>
+    <div><b>4. Bloqueo entre vueltas:</b> Ajustalo a unos segundos menos de tu tiempo por vuelta (ej. 12s) para evitar dobles lecturas al cruzar.</div>
   </div>
   <div class="visor-wrap" id="visorCaja"><video id="vidCam" autoplay playsinline muted></video><div id="lineaMeta"></div><div id="barraNivel"></div></div>
   <div style="display:flex;gap:6px;max-width:560px;margin:0 auto 8px auto;">
@@ -128,3 +138,4 @@
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Esperando primer paso por linea...</span>';
   }
 </script></body></html>
+
