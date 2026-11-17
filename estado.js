@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://vacation-plaintiff-wear-atmosphere.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://badly-according-conflicts-bible.trycloudflare.com" };
