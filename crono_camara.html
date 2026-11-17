@@ -153,6 +153,15 @@
       var v = document.getElementById('vidCam'); v.srcObject = stream; camActiva = true;
       var b1 = document.getElementById('btnStartCam'); b1.textContent = "1. CAMARA LISTA"; b1.style.background = "#198754";
       var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000";
+      if (urlCircuitoCam) {
+        fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){
+          if (m && m.antenasMoviles === true) {
+            modoAntenaGlobal = true;
+            b2.textContent = "ESPERANDO SALIDA DIRECTOR...";
+            b2.style.background = "#0dcaf0"; b2.style.color = "#000";
+          }
+        }).catch(function(){});
+      }
       mantenerPantallaEncendida();
       requestAnimationFrame(analizarFotograma);
     } catch (err) { alert("No se pudo abrir la camara: " + err); }
