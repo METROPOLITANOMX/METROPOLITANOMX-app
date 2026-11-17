@@ -24,7 +24,7 @@
     <div>
       <button style="background:#0dcaf0;color:#000;margin-right:4px;" onclick="var g=document.getElementById('guiaCam');g.style.display=g.style.display==='none'?'block':'none'">Guia</button>
       <button id="btnVozCam" style="background:#20c997;color:#000;margin-right:4px;" onclick="toggleVozCam()">Voz ON</button>
-      <button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Volver</button>
+      <button style="background:#dc3545;color:#fff;" onclick="salirDeCamara()">Volver</button>
     </div>
   </div>
   <div id="guiaCam" style="display:none;background:#141a24;border:1px solid #0dcaf0;border-radius:10px;padding:10px 12px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;color:#ddd;line-height:1.45;">
@@ -266,12 +266,26 @@
       }
     } catch (e) {}
   }
-  function reiniciarSesionCam() {
+    function salirDeCamara() {
+    if (urlCircuitoCam) {
+      var perf = {};
+      try { perf = JSON.parse(localStorage.getItem('metro_perfil_' + uid) || "{}"); } catch (e) {}
+      fetch(urlCircuitoCam + "/vuelta_camara", {
+        method: "POST",
+        keepalive: true,
+        body: JSON.stringify({ dorsal: perf.dorsal || "99", nombre: perf.nombre || "Piloto", tiempoMs: 0, kmh: 0, salir: true })
+      }).catch(function() {});
+    }
+    window.location.href = 'zona_piloto.html';
+  }
+  function reiniciarSesionCam() { if (urlCircuitoCam) { var pf = {}; try { pf = JSON.parse(localStorage.getItem("metro_perfil_" + uid) || "{}"); } catch(e){} fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: pf.dorsal || "99", nombre: pf.nombre || "Piloto", tiempoMs: 0, kmh: 0, salir: true }) }).catch(function(){}); }
     ultimoPasoMs = 0; pasoIzqMs = 0; vueltasCam = []; mejorCam = 0; maxKmhCam = 0;
     document.getElementById('cVtas').textContent = "0"; document.getElementById('cUlt').textContent = "--"; document.getElementById('cMej').textContent = "--"; document.getElementById('cKmh').textContent = "-- km/h";
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
   }
 </script></body></html>
+
+
 
 
 
