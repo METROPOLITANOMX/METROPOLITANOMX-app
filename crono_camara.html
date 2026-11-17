@@ -74,6 +74,13 @@
     <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Bloqueo vueltas: <b id="lblCool">5</b>s</span><input type="range" id="rngCool" min="3" max="15" value="5" oninput="document.getElementById('lblCool').textContent=this.value"></div>
     <div style="display:flex;justify-content:space-between;"><span>Distancia Radar (Azul-Roja): <b id="lblDist">1.5</b>m</span><input type="range" id="rngDist" min="0.5" max="4.0" step="0.1" value="1.5" oninput="document.getElementById('lblDist').textContent=parseFloat(this.value).toFixed(1)"></div>
   </div>
+    <div id="boxLivePista" style="background:#141a24;border:1px solid #20c997;border-radius:10px;padding:8px 10px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <b style="color:#20c997;">CLASIFICACION EN VIVO (CAMARAS EN PISTA)</b>
+      <span id="estSyncCam" style="font-size:10px;color:#0dcaf0;">Sincronizado</span>
+    </div>
+    <div id="tablaLiveCam"><span style="color:#888;">Esperando vueltas de pilotos en pista...</span></div>
+  </div>
   <div class="lista-v" id="listaVtasCam"><span style="color:#777;">Activa la camara, calibra y pulsa <b>2. INICIAR LECTURA</b>...</span></div>
   <canvas id="cnvProc" width="64" height="64" style="display:none;"></canvas>
 <script>
@@ -201,7 +208,44 @@
     }
     document.getElementById('listaVtasCam').innerHTML = h;
   }
+    var urlCircuitoCam = "";
+  var scEst = document.createElement('script');
+  scEst.src = "estado.js?t=" + Date.now();
+  scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlCircuitoCam = window.ESTADO_CIRCUITO.url; };
+  document.body.appendChild(scEst);
+
+  function enviarVueltaRankingCam(ms, kmhVal) {
+    if (!urlCircuitoCam) return;
+    var perf = {};
+    try { perf = JSON.parse(localStorage.getItem('metro_perfil_' + uid) || "{}"); } catch (e) {}
+    var dor = perf.dorsal || "99";
+    var nom = perf.nombre || "Piloto";
+    fetch(urlCircuitoCam + "/vuelta_camara", {
+      method: "POST",
+      body: JSON.stringify({ dorsal: dor, nombre: nom, tiempoMs: ms, kmh: kmhVal || 0 })
+    }).then(function() { actualizarRankingCam(); }).catch(function() {});
+  }
+
+  function actualizarRankingCam() {
+    if (!urlCircuitoCam) return;
+    fetch(urlCircuitoCam + "/ranking_camara.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(arr) {
+      var box = document.getElementById('tablaLiveCam');
+      if (!box || !Array.isArray(arr) || arr.length === 0) return;
+      arr.sort(function(a, b) {
+        if ((b.vueltas || 0) !== (a.vueltas || 0)) return (b.vueltas || 0) - (a.vueltas || 0);
+        return (a.mejor || 999999) - (b.mejor || 999999);
+      });
+      box.innerHTML = arr.map(function(p, idx) {
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #222;">' +
+          '<span><b style="color:#ffc107;">' + (idx + 1) + '. #' + p.dorsal + '</b> ' + p.nombre + ' <span style="color:#aaa;">(' + p.vueltas + ' vtas)</span></span>' +
+          '<span>Mejor: <b style="color:#20c997;">' + fmt(p.mejor) + '</b>' + (p.kmh > 0 ? ' <span style="color:#ff4d5e;">' + p.kmh + 'km/h</span>' : '') + '</span></div>';
+      }).join('');
+    }).catch(function() {});
+  }
+  setInterval(actualizarRankingCam, 3000);
+
   function guardarVueltaCamaraHistorial(vNum, ms, kmhVal) {
+    enviarVueltaRankingCam(ms, kmhVal);
     var hoy = new Date().toLocaleDateString('es-ES'), key = 'metro_hist_' + uid, hist = [];
     try { hist = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) {}
     var reg = (hist.length > 0 && hist[hist.length - 1].fecha === hoy) ? hist[hist.length - 1] : null;
@@ -228,5 +272,6 @@
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
   }
 </script></body></html>
+
 
 
