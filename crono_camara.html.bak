@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crono Camara y Radar - Metropolitano MX</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#080808; color:#fff; font-family:Arial,sans-serif; padding:10px; text-align:center; }
+  .top { display:flex; justify-content:space-between; align-items:center; background:#161616; border-bottom:3px solid #ffc107; padding:9px 12px; border-radius:12px; margin-bottom:8px; }
+  button, select { padding:8px 10px; font-size:11px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; text-transform:uppercase; }
+  .visor-wrap { position:relative; width:100%; max-width:560px; margin:0 auto 8px auto; border-radius:12px; overflow:hidden; border:2px solid #333; background:#000; height:225px; }
+  video { width:100%; height:100%; object-fit:cover; }
+  .linea-radar { position:absolute; top:0; bottom:0; width:3px; transition:background 0.1s; }
+  #lineaIzq { left:28%; background:#0dcaf0; box-shadow:0 0 10px #0dcaf0; }
+  #lineaMeta { left:72%; width:4px; background:#ff2a2a; box-shadow:0 0 14px #ff2a2a; }
+  #barraNivel { position:absolute; bottom:0; left:0; height:6px; width:0%; background:#20c997; transition:width 0.08s; }
+  .grid-tiempos { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-width:560px; margin:0 auto 8px auto; }
+  .box-t { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:9px 4px; }
+  .lbl { font-size:9px; color:#999; text-transform:uppercase; }
+  .val { font-size:17px; font-weight:bold; margin-top:3px; }
+  .controles { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:10px; max-width:560px; margin:0 auto 8px auto; font-size:11px; text-align:left; }
+  .lista-v { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:8px 10px; max-width:560px; margin:0 auto; max-height:175px; overflow-y:auto; text-align:left; font-size:12px; }
+</style></head><body>
+  <div class="top">
+    <b style="color:#ffc107;font-size:13px;">CRONO OPTICO + RADAR</b>
+    <div>
+      <button style="background:#0dcaf0;color:#000;margin-right:4px;" onclick="var g=document.getElementById('guiaCam');g.style.display=g.style.display==='none'?'block':'none'">Guia</button>
+      <button id="btnVozCam" style="background:#20c997;color:#000;margin-right:4px;" onclick="toggleVozCam()">Voz ON</button>
+      <button style="background:#dc3545;color:#fff;" onclick="salirDeCamara()">Volver</button>
+    </div>
+  </div>
+  <div id="guiaCam" style="display:none;background:#141a24;border:1px solid #0dcaf0;border-radius:10px;padding:10px 12px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;color:#ddd;line-height:1.45;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <b style="color:#0dcaf0;font-size:13px;">GUIA DE USO - CRONO Y RADAR CAMARA</b>
+      <button onclick="document.getElementById('guiaCam').style.display='none'" style="background:#333;color:#fff;padding:3px 8px;font-size:10px;">Cerrar</button>
+    </div>
+    <div><b>1. Activa y fija el movil:</b> Pulsa <b>1. ACTIVAR CAMARA</b> y deja el telefono quieto en un soporte apuntando al suelo de la pista.</div>
+    <div><b>2. Elige modo de deteccion:</b> Usa <b>Movimiento</b> (para cualquier moto) o <b>Color</b> (seleccionando el color de tu carroceria para evitar falsos disparos).</div>
+    <div><b>3. Calibra sensibilidad y bloqueo:</b> Ajusta la sensibilidad para que la barra verde solo suba al pasar la moto y pon el bloqueo en unos segundos menos que tu vuelta.</div>
+    <div><b>4. Radar de velocidad (km/h):</b> Coloca dos marcas en el suelo de la pista haciendolas coincidir exactamente con la <b>linea azul</b> y la <b>linea roja</b> de la pantalla. Mide esa distancia real en metros y ponla exacta en la barra deslizadora <b>Distancia Radar (Azul-Roja)</b> para que la velocidad marcada sea real.</div>
+    <div><b>5. Inicia el crono:</b> Cuando este todo listo, pulsa <b>2. INICIAR LECTURA</b> (puedes pausar o usar <b>Paso Manual</b> cuando quieras).</div>
+  </div>
+  <div class="visor-wrap"><video id="vidCam" autoplay playsinline muted></video><div id="lineaIzq" class="linea-radar"></div><div id="lineaMeta" class="linea-radar"></div><div id="barraNivel"></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:560px;margin:0 auto 6px auto;">
+    <button id="btnStartCam" style="background:#0d6efd;color:#fff;padding:11px;font-size:12px;" onclick="iniciarCamaraCrono()">1. ACTIVAR CAMARA</button>
+    <button id="btnToggleLectura" disabled style="background:#333;color:#888;padding:11px;font-size:12px;" onclick="alternarLecturaCrono()">2. INICIAR LECTURA</button>
+  </div>
+  <div style="display:flex;gap:6px;max-width:560px;margin:0 auto 8px auto;">
+    <button style="flex:1;background:#2b2b2b;color:#fff;padding:9px;font-size:11px;" onclick="registrarPasoMeta(0)">PASO MANUAL</button>
+    <button style="background:#dc3545;color:#fff;padding:9px 12px;font-size:11px;" onclick="reiniciarSesionCam()">RESET</button>
+  </div>
+  <div class="grid-tiempos">
+    <div class="box-t"><div class="lbl">Vueltas</div><div id="cVtas" class="val" style="color:#ffc107;">0</div></div>
+    <div class="box-t"><div class="lbl">Ultima</div><div id="cUlt" class="val" style="color:#20c997;">--</div></div>
+    <div class="box-t"><div class="lbl">Mejor</div><div id="cMej" class="val" style="color:#0dcaf0;">--</div></div>
+    <div class="box-t"><div class="lbl">Radar Punta</div><div id="cKmh" class="val" style="color:#ff4d5e;">-- km/h</div></div>
+  </div>
+  <div class="controles">
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <select id="selModoDet" onchange="document.getElementById('boxColorTarget').style.display=this.value==='COLOR'?'flex':'none'" style="flex:1;background:#000;color:#ffc107;border:1px solid #ffc107;">
+        <option value="MOVIMIENTO">Modo: Deteccion Movimiento</option>
+        <option value="COLOR">Modo: Deteccion por Color</option>
+      </select>
+      <div id="boxColorTarget" style="display:none;flex:1;">
+        <select id="selColorMoto" style="width:100%;background:#000;color:#20c997;border:1px solid #20c997;">
+          <option value="ROJO">Color: Rojo</option>
+          <option value="NARANJA">Color: Naranja</option>
+          <option value="AMARILLO">Color: Amarillo</option>
+          <option value="VERDE">Color: Verde</option>
+          <option value="AZUL">Color: Azul</option>
+          <option value="BLANCO">Color: Blanco</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Sensibilidad: <b id="lblSens">35</b></span><input type="range" id="rngSens" min="12" max="80" value="35" oninput="document.getElementById('lblSens').textContent=this.value"></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Bloqueo vueltas: <b id="lblCool">5</b>s</span><input type="range" id="rngCool" min="3" max="15" value="5" oninput="document.getElementById('lblCool').textContent=this.value"></div>
+    <div style="display:flex;justify-content:space-between;"><span>Distancia Radar (Azul-Roja): <b id="lblDist">1.5</b>m</span><input type="range" id="rngDist" min="0.5" max="4.0" step="0.1" value="1.5" oninput="document.getElementById('lblDist').textContent=parseFloat(this.value).toFixed(1)"></div>
+  </div>
+    <div id="boxLivePista" style="background:#141a24;border:1px solid #20c997;border-radius:10px;padding:8px 10px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <b style="color:#20c997;">CLASIFICACION EN VIVO (CAMARAS EN PISTA)</b>
+      <span id="estSyncCam" style="font-size:10px;color:#0dcaf0;">Sincronizado</span>
+    </div>
+    <div id="tablaLiveCam"><span style="color:#888;">Esperando vueltas de pilotos en pista...</span></div>
+  </div>
+  <div class="lista-v" id="listaVtasCam"><span style="color:#777;">Activa la camara, calibra y pulsa <b>2. INICIAR LECTURA</b>...</span></div>
+  <canvas id="cnvProc" width="64" height="64" style="display:none;"></canvas>
+<script>
+  var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
+  var vozCam = true, camActiva = false, lecturaActiva = false, prevIzq = null, prevDer = null, pasoIzqMs = 0, ultimoPasoMs = 0, vueltasCam = [], mejorCam = 0, maxKmhCam = 0, ac = null;
+  function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+  function toggleVozCam() {
+    vozCam = !vozCam; var b = document.getElementById('btnVozCam');
+    b.style.background = vozCam ? '#20c997' : '#444'; b.style.color = vozCam ? '#000' : '#fff'; b.textContent = vozCam ? 'Voz ON' : 'Voz OFF';
+  }
+  function pitarCam(f) {
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f || 920; o.connect(g); g.connect(ac.destination);
+      o.start(); setTimeout(() => o.stop(), 150);
+    } catch (e) {}
+  }
+  function hablarCam(t) {
+    if (!vozCam || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; u.rate = 1.05; window.speechSynthesis.speak(u);
+  }
+  async function iniciarCamaraCrono() {
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      var v = document.getElementById('vidCam'); v.srcObject = stream; camActiva = true;
+      var b1 = document.getElementById('btnStartCam'); b1.textContent = "1. CAMARA LISTA"; b1.style.background = "#198754";
+      var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000";
+      if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {});
+      requestAnimationFrame(analizarFotograma);
+    } catch (err) { alert("No se pudo abrir la camara: " + err); }
+  }
+  function alternarLecturaCrono() {
+    if (!camActiva) return;
+    lecturaActiva = !lecturaActiva;
+    var b2 = document.getElementById('btnToggleLectura');
+    if (lecturaActiva) {
+      prevIzq = null; prevDer = null; pasoIzqMs = 0;
+      b2.textContent = "PAUSAR LECTURA"; b2.style.background = "#ffc107"; b2.style.color = "#000";
+      hablarCam("Lectura de tiempos activada");
+    } else {
+      b2.textContent = "2. INICIAR LECTURA"; b2.style.background = "#20c997"; b2.style.color = "#000";
+      hablarCam("Lectura en pausa");
+    }
+  }
+  function coincideColorPixel(r, g, b, col) {
+    if (col === 'ROJO') return r > 140 && r > g * 1.5 && r > b * 1.5;
+    if (col === 'NARANJA') return r > 160 && g > 75 && g < 175 && b < 90 && r > g * 1.25;
+    if (col === 'AMARILLO') return r > 160 && g > 150 && b < 100;
+    if (col === 'VERDE') return g > 130 && g > r * 1.3 && g > b * 1.3;
+    if (col === 'AZUL') return b > 135 && b > r * 1.4 && b > g * 1.2;
+    if (col === 'BLANCO') return r > 205 && g > 205 && b > 205;
+    return false;
+  }
+  function medirFranja(data, prevData, modo, colObj) {
+    var totalPix = data.length / 4;
+    if (modo === 'COLOR') {
+      var hits = 0;
+      for (var i = 0; i < data.length; i += 4) if (coincideColorPixel(data[i], data[i+1], data[i+2], colObj)) hits++;
+      return Math.min(100, Math.round((hits / totalPix) * 260));
+    }
+    if (!prevData) return 0;
+    var diff = 0;
+    for (var j = 0; j < data.length; j += 4) diff += Math.abs(data[j] - prevData[j]) + Math.abs(data[j+1] - prevData[j+1]) + Math.abs(data[j+2] - prevData[j+2]);
+    return Math.min(100, Math.round((diff / totalPix) / 2.5));
+  }
+  function analizarFotograma() {
+    if (!camActiva) return;
+    var v = document.getElementById('vidCam'), cnv = document.getElementById('cnvProc'), ctx = cnv.getContext('2d');
+    if (v.readyState === v.HAVE_ENOUGH_DATA) {
+      ctx.drawImage(v, 0, 0, 64, 64);
+      var dIzq = ctx.getImageData(15, 0, 6, 64).data;
+      var dDer = ctx.getImageData(43, 0, 6, 64).data;
+      var modo = document.getElementById('selModoDet').value, colObj = document.getElementById('selColorMoto').value;
+      var nivIzq = medirFranja(dIzq, prevIzq, modo, colObj);
+      var nivDer = medirFranja(dDer, prevDer, modo, colObj);
+      prevIzq = new Uint8ClampedArray(dIzq); prevDer = new Uint8ClampedArray(dDer);
+      document.getElementById('barraNivel').style.width = Math.max(nivIzq, nivDer) + "%";
+      var sens = parseInt(document.getElementById('rngSens').value, 10);
+      if (lecturaActiva) {
+        if (nivIzq >= sens) {
+          pasoIzqMs = Date.now();
+          var lI = document.getElementById('lineaIzq'); lI.style.background = "#00e676"; setTimeout(() => lI.style.background = "#0dcaf0", 300);
+        }
+        if (nivDer >= sens) {
+          var ahora = Date.now(), kmhCalc = 0;
+          if (pasoIzqMs > 0 && (ahora - pasoIzqMs) > 25 && (ahora - pasoIzqMs) < 1800) {
+            var distM = parseFloat(document.getElementById('rngDist').value) || 1.5;
+            kmhCalc = Math.round((distM / ((ahora - pasoIzqMs) / 1000)) * 3.6);
+            if (kmhCalc > 140) kmhCalc = 0;
+          }
+          pasoIzqMs = 0;
+          registrarPasoMeta(kmhCalc);
+        }
+      }
+    }
+    requestAnimationFrame(analizarFotograma);
+  }
+  function registrarPasoMeta(kmhPasada) {
+    var ahora = Date.now(), cool = parseInt(document.getElementById('rngCool').value, 10) * 1000;
+    if (ultimoPasoMs > 0 && (ahora - ultimoPasoMs) < cool) return;
+    var linea = document.getElementById('lineaMeta');
+    linea.style.background = "#00e676"; setTimeout(() => linea.style.background = "#ff2a2a", 400);
+    pitarCam(950);
+    if (kmhPasada > 0) {
+      if (kmhPasada > maxKmhCam) { maxKmhCam = kmhPasada; document.getElementById('cKmh').textContent = maxKmhCam + " km/h"; }
+    }
+    if (ultimoPasoMs === 0) {
+      ultimoPasoMs = ahora;
+      document.getElementById('listaVtasCam').innerHTML = '<div style="color:#20c997;font-weight:bold;">Salida detectada! Cronometro en marcha' + (kmhPasada > 0 ? (' (' + kmhPasada + ' km/h)') : '') + '...</div>';
+      hablarCam("Salida detectada" + (kmhPasada > 0 ? (", " + kmhPasada + " kilometros por hora") : ""));
+      return;
+    }
+    var lapMs = ahora - ultimoPasoMs; ultimoPasoMs = ahora;
+    var numV = vueltasCam.length + 1; vueltasCam.push({ t: lapMs, kmh: kmhPasada });
+    if (mejorCam === 0 || lapMs < mejorCam) mejorCam = lapMs;
+    document.getElementById('cVtas').textContent = numV;
+    document.getElementById('cUlt').textContent = fmt(lapMs);
+    document.getElementById('cMej').textContent = fmt(mejorCam);
+    hablarCam("Vuelta " + numV + ", " + (lapMs / 1000).toFixed(2).replace(".", " punto ") + " segundos" + (kmhPasada > 0 ? (", a " + kmhPasada + " por hora") : ""));
+    guardarVueltaCamaraHistorial(numV, lapMs, kmhPasada);
+    var h = "";
+    for (var i = vueltasCam.length - 1; i >= 0; i--) {
+      var it = vueltasCam[i], esM = (it.t === mejorCam);
+      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #222;' + (esM ? 'color:#20c997;font-weight:bold;' : '') + '"><span>Vuelta ' + (i + 1) + (it.kmh > 0 ? (' <span style="color:#ff4d5e;font-size:11px;">(' + it.kmh + ' km/h)</span>') : '') + '</span><span>' + fmt(it.t) + (esM ? ' ★' : '') + '</span></div>';
+    }
+    document.getElementById('listaVtasCam').innerHTML = h;
+  }
+    var urlCircuitoCam = "";
+  var scEst = document.createElement('script');
+  scEst.src = "estado.js?t=" + Date.now();
+  scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlCircuitoCam = window.ESTADO_CIRCUITO.url; };
+  document.body.appendChild(scEst);
+
+    function obtenerDatosPilotoCam() {
+    var dor = "", nom = "";
+    try {
+      var cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}");
+      if (cuentas[uid]) { dor = cuentas[uid].dorsal || ""; nom = cuentas[uid].nombre || ""; }
+      var gar = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]");
+      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (gar[idxM] && gar[idxM].dorsal) dor = gar[idxM].dorsal;
+    } catch (e) {}
+    return { dorsal: String(dor || "1").trim(), nombre: String(nom || uid || "Piloto").trim() };
+  }
+  function enviarVueltaRankingCam(ms, kmhVal) {
+    if (!urlCircuitoCam) return;
+    var p = obtenerDatosPilotoCam();
+    fetch(urlCircuitoCam + "/vuelta_camara", {
+      method: "POST",
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, tiempoMs: ms, kmh: kmhVal || 0 })
+    }).then(function() { actualizarRankingCam(); }).catch(function() {});
+  }
+  setInterval(function() {
+    if (!urlCircuitoCam || !camActiva) return;
+    var p = obtenerDatosPilotoCam();
+    fetch(urlCircuitoCam + "/vuelta_camara", {
+      method: "POST",
+      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true })
+    }).catch(function() {});
+  }, 4000);
+
+  function actualizarRankingCam() {
+    if (!urlCircuitoCam) return;
+    fetch(urlCircuitoCam + "/ranking_camara.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(arr) {
+      var box = document.getElementById('tablaLiveCam');
+      if (!box || !Array.isArray(arr) || arr.length === 0) return;
+      arr.sort(function(a, b) {
+        if ((b.vueltas || 0) !== (a.vueltas || 0)) return (b.vueltas || 0) - (a.vueltas || 0);
+        return (a.mejor || 999999) - (b.mejor || 999999);
+      });
+      box.innerHTML = arr.map(function(p, idx) {
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #222;">' +
+          '<span><b style="color:#ffc107;">' + (idx + 1) + '. #' + p.dorsal + '</b> ' + p.nombre + ' <span style="color:#aaa;">(' + p.vueltas + ' vtas)</span></span>' +
+          '<span>Mejor: <b style="color:#20c997;">' + fmt(p.mejor) + '</b>' + (p.kmh > 0 ? ' <span style="color:#ff4d5e;">' + p.kmh + 'km/h</span>' : '') + '</span></div>';
+      }).join('');
+    }).catch(function() {});
+  }
+  setInterval(actualizarRankingCam, 3000);
+
+  function guardarVueltaCamaraHistorial(vNum, ms, kmhVal) {
+    enviarVueltaRankingCam(ms, kmhVal);
+    var hoy = new Date().toLocaleDateString('es-ES'), key = 'metro_hist_' + uid, hist = [];
+    try { hist = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) {}
+    var reg = (hist.length > 0 && hist[hist.length - 1].fecha === hoy) ? hist[hist.length - 1] : null;
+    if (!reg) { reg = { fecha: hoy, pos: 1, vueltas: 0, mejor: ms, kmh: kmhVal || 0, detalleVueltas: [] }; hist.push(reg); }
+    if (!Array.isArray(reg.detalleVueltas)) reg.detalleVueltas = [];
+    reg.detalleVueltas.push({ v: vNum, t: ms, m: "Camara" + (kmhVal > 0 ? (" " + kmhVal + "km/h") : "") });
+    reg.vueltas = (reg.vueltas || 0) + 1;
+    if (!reg.mejor || ms < reg.mejor) reg.mejor = ms;
+    if (kmhVal > (reg.kmh || 0)) reg.kmh = kmhVal;
+    localStorage.setItem(key, JSON.stringify(hist));
+    try {
+      var gKey = 'metro_garaje_' + uid, gArr = JSON.parse(localStorage.getItem(gKey) || "[]");
+      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (gArr[idxM]) {
+        if (!gArr[idxM].mejorMoto || ms < gArr[idxM].mejorMoto) gArr[idxM].mejorMoto = ms;
+        if (kmhVal > (gArr[idxM].kmhMoto || 0)) gArr[idxM].kmhMoto = kmhVal;
+        localStorage.setItem(gKey, JSON.stringify(gArr));
+      }
+    } catch (e) {}
+  }
+    function salirDeCamara() {
+    if (urlCircuitoCam) {
+      var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", keepalive: true, body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function() {});
+    }
+    window.location.href = 'zona_piloto.html';
+  }
+  function reiniciarSesionCam() { if (urlCircuitoCam) { var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function(){}); }
+    ultimoPasoMs = 0; pasoIzqMs = 0; vueltasCam = []; mejorCam = 0; maxKmhCam = 0;
+    document.getElementById('cVtas').textContent = "0"; document.getElementById('cUlt').textContent = "--"; document.getElementById('cMej').textContent = "--"; document.getElementById('cKmh').textContent = "-- km/h";
+    document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
+  }
+</script></body></html>
+
+
+
+
+
+
