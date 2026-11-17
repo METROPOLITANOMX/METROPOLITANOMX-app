@@ -126,12 +126,7 @@
     ultFaseSem = fUp;
         if (fUp === 'PAUSA') iluminarBordeBandera("#ffc107");
     else if (fUp === 'FINAL') iluminarBordeBandera("#ff1e1e");
-    else if (fUp === 'LISTO') {
-      if (luzLibre === 'roja') iluminarBordeBandera("#d90429");
-      else if (luzLibre === 'verde') iluminarBordeBandera("#00b050");
-      else if (luzLibre === 'ambar') iluminarBordeBandera("#f77f00");
-      else iluminarBordeBandera(null);
-    } else if (fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null);
+    else if (fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null); else if (fUp === 'SALIDA_30' || (fUp === 'CARRERA' && ultFaseSem === 'PAUSA')) iluminarBordeBandera(null);
   }
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
@@ -160,7 +155,7 @@
         if (ultMarcaLoc !== 0) {
           ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; hablar(loc.frase);
           var fl = loc.frase.toLowerCase();
-          if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
+          if (fl.indexOf("pista cerrada") !== -1) iluminarBordeBandera("#d90429"); else if (fl.indexOf("precaucion en pista") !== -1) iluminarBordeBandera("#f77f00"); else if (fl.indexOf("pista abierta") !== -1) iluminarBordeBandera("#00b050"); else if (fl.indexOf("luz pista apagada") !== -1) iluminarBordeBandera(null); else if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
           else if (fl.indexOf("roja") !== -1) iluminarBordeBandera("#ff1e1e");
           else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
           else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
@@ -246,6 +241,7 @@
   }
   setInterval(leerPista, 1000);
 </script></body></html>
+
 
 
 
