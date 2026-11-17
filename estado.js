@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://directory-taxes-true-fashion.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://promptly-honolulu-convergence-nirvana.trycloudflare.com" };
