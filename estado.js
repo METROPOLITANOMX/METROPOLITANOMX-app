@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://generating-diesel-bay-icon.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://may-comfort-learned-biological.trycloudflare.com" };
