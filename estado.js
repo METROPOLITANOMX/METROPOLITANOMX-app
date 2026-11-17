@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://entertaining-retired-saw-alabama.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://benjamin-remedy-mail-verified.trycloudflare.com" };
