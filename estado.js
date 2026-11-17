@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://promptly-honolulu-convergence-nirvana.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://immune-administrators-immediately-chen.trycloudflare.com" };
