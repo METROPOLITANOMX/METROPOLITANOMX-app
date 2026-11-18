@@ -158,14 +158,15 @@
     b.style.background = vozCam ? '#20c997' : '#444'; b.style.color = vozCam ? '#000' : '#fff'; b.textContent = vozCam ? 'Voz ON' : 'Voz OFF';
   }
     var soloAntenaActivo = false;
-  function activarModoSoloAntena() { if (!camActiva && typeof iniciarCamaraCrono === 'function') { iniciarCamaraCrono(); setTimeout(function(){ if (!lecturaActiva && typeof iniciarLecturaCrono === 'function') iniciarLecturaCrono(); }, 800); } else if (!lecturaActiva && typeof iniciarLecturaCrono === 'function') { iniciarLecturaCrono(); } if (typeof pitarCam === 'function') pitarCam(950);
+  function activarModoSoloAntena() {
     soloAntenaActivo = true;
     vozCam = false;
-    window.speechSynthesis.cancel();
+    try { window.speechSynthesis.cancel(); } catch (e) {}
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var capa = document.getElementById('capaSoloAntena');
-    if (capa) capa.style.display = 'flex';
+    if (capa) { capa.style.cssText = 'display:flex !important;position:fixed;top:0;left:0;right:0;bottom:0;background:#000 !important;z-index:999999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;'; }
+    if (!camActiva && typeof iniciarCamaraCrono === 'function') { iniciarCamaraCrono(); }
   }
   function salirModoSoloAntena() {
     soloAntenaActivo = false;
