@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://soldier-isaac-containing-ribbon.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://gender-richard-lying-tyler.trycloudflare.com" };
