@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -65,7 +65,7 @@
 <script>
   var uid = localStorage.getItem('metro_uid') || "piloto";
   var camOn = false, detectando = false, modoAntena = false, vozOn = true;
-  var prevDer = null, ultimoPasoMs = 0, vueltas = [], mejorMs = 0, urlSrv = "", modoOficial = false, ultFaseSrv = "";
+var prevDer = null, ultimoPasoMs = 0, vueltas = [], mejorMs = 0, urlSrv = "", modoOficial = false, ultFaseSrv = "", esperandoCamaraAuto = false;
   var wakeLock = null, ac = null;
 
   function getPiloto() {
@@ -100,14 +100,14 @@
   }
   async function mantenerPantalla() {
     try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function() { wakeLock = null; }); } } catch (e) {}
-  }
+document.addEventListener("visibilitychange", function() { if (document.visibilityState === "visible" && (camOn || modoAntena)) mantenerPantalla(); });
   async function encenderCamara() {
     if (camOn) { mantenerPantalla(); return; }
     try {
       var st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       document.getElementById('vidCam').srcObject = st; camOn = true;
       var b = document.getElementById('btnCam'); b.textContent = "CAMARA OK"; b.style.background = "#198754";
-      mantenerPantalla(); requestAnimationFrame(bucleVideo);
+mantenerPantalla(); requestAnimationFrame(bucleVideo); if (esperandoCamaraAuto) { esperandoCamaraAuto = false; arrancarDeteccion(); }
     } catch (e) { alert("Error camara: " + e); }
   }
   function arrancarDeteccion() {
@@ -126,7 +126,7 @@
   function activarModoAntena() {
     modoAntena = true; try { window.speechSynthesis.cancel(); } catch (e) {}
     document.getElementById('capaNegraAntena').style.display = 'flex';
-    encenderCamara(); mantenerPantalla();
+if (camOn) { mantenerPantalla(); } else { esperandoCamaraAuto = false; encenderCamara(); }
   }
   function salirModoAntena() {
     modoAntena = false; document.getElementById('capaNegraAntena').style.display = 'none';
@@ -182,7 +182,7 @@
     requestAnimationFrame(bucleVideo);
   }
   var sc = document.createElement('script'); sc.src = "estado.js?t=" + Date.now();
-  sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlSrv = window.ESTADO_CIRCUITO.url; };
+sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo && window.ESTADO_CIRCUITO.url) urlSrv = window.ESTADO_CIRCUITO.url.replace(/\/$/, ""); };
   document.body.appendChild(sc);
   setInterval(function() {
     var stN = document.getElementById('txtNegraEstado'), crN = document.getElementById('txtNegraCrono');
@@ -204,14 +204,14 @@
       document.getElementById('txtModoSrv').textContent = (modoOficial || modoAntena) ? "ANTENA CIRCUITO" : "LIBRE";
       var fase = (res[1] && res[1].reloj && res[1].reloj.fase) ? String(res[1].reloj.fase).toUpperCase() : "";
       var ordM = (res[2] && res[2][p.dorsal]) ? res[2][p.dorsal] : null;
-      if ((modoOficial || modoAntena) && camOn && fase) {
-        if (fase === "CARRERA" && !detectando) { arrancarDeteccion(); ultimoPasoMs = Date.now(); }
-        if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && detectando) pararDeteccion();
+if (modoOficial || modoAntena) {
+if (fase === "CARRERA" || fase === "DUELO" || fase === "SUPERPOLE") { if (!camOn) { esperandoCamaraAuto = true; encenderCamara(); } else if (!detectando) { arrancarDeteccion(); if (modoAntena && !modoOficial) ultimoPasoMs = Date.now(); } }
+if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && detectando) pararDeteccion();
       }
       if (ordM && ordM.marca && ordM.marca > (window._ultOrdM || 0)) {
         var prim = !(window._ultOrdM); window._ultOrdM = ordM.marca;
-        if (!prim && camOn) {
-          if (ordM.accion === "INICIAR" && !detectando) { arrancarDeteccion(); if (modoAntena) ultimoPasoMs = Date.now(); }
+if (!prim) {
+if (ordM.accion === "INICIAR") { if (!camOn) { esperandoCamaraAuto = true; encenderCamara(); } else if (!detectando) { arrancarDeteccion(); if (modoAntena && !modoOficial) ultimoPasoMs = Date.now(); } }
           if (ordM.accion === "PARAR" && detectando) pararDeteccion();
         }
       }
