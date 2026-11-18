@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://treatments-cheaper-edward-democrats.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://utc-autumn-hire-identical.trycloudflare.com" };
