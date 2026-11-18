@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Telemetría en Vivo - Metropolitano MX</title>
+<title>TelemetrÃ­a en Vivo - Metropolitano MX</title>
 <style>
   * { box-sizing:border-box; }
   body { margin:0; background:#080808; color:#fff; font-family:Arial,sans-serif; padding:10px; text-align:center; min-height:100vh; transition:box-shadow 0.3s; }
@@ -150,7 +150,7 @@
 
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
-    if (!est.activo || !est.url || !confirm("¿Enviar aviso urgente de averia a Torre de Control?")) return;
+    if (!est.activo || !est.url || !confirm("Â¿Enviar aviso urgente de averia a Torre de Control?")) return;
     btn.disabled = true; btn.textContent = "ENVIANDO AVISO...";
     fetch(est.url.replace(/\/$/, "") + "/locucion", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ frase: "Atencion direccion, dorsal " + miDorsal + " " + document.getElementById('txtN').textContent + " reporta parada en pista", marca: Date.now() }) })
       .then(function() { btn.style.background = "#ffc107"; btn.style.color = "#000"; btn.textContent = "AVISO ENVIADO"; setTimeout(function() { btn.disabled = false; btn.style.background = "#dc3545"; btn.style.color = "#fff"; btn.textContent = "AVISO A TORRE DE CONTROL (AVERIA / PARADA)"; }, 8000); });
@@ -262,7 +262,7 @@
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
       gestionarSemaforo(rel.fase || "LISTO", segs);
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
-      document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" • " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
+      document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" â€¢ " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
       var lista = live.clasificacionManga || [], miIdx = -1, hR = "", vrAbs = 99999999, vrPil = "";
@@ -271,12 +271,12 @@
       for (var j = 0; j < lista.length; j++) {
         var p = lista[j], soyYo = String(p.dorsal) === miDorsal;
         if (soyYo) miIdx = j;
-        hR += '<div class="fila-rival' + (soyYo ? ' yo' : '') + '"><span><b>' + (j + 1) + 'º</b> #' + p.dorsal + ' ' + (p.nombre || "") + ' (' + (p.vueltas || 0) + 'v)</span><span style="color:#20c997;">Mejor: ' + fmt(p.mejor) + '</span></div>';
+        hR += '<div class="fila-rival' + (soyYo ? ' yo' : '') + '"><span><b>' + (j + 1) + 'Âº</b> #' + p.dorsal + ' ' + (p.nombre || "") + ' (' + (p.vueltas || 0) + 'v)</span><span style="color:#20c997;">Mejor: ' + fmt(p.mejor) + '</span></div>';
       }
       document.getElementById('listaRivales').innerHTML = hR || "Esperando salida a pista...";
       if (miIdx >= 0) {
         var yo = lista[miIdx], vtas = yo.vueltas || 0, ult = yo.ultima || yo.mejor || 0, mej = yo.mejor || 0;
-        document.getElementById('valPos').textContent = (miIdx + 1) + "º"; document.getElementById('valVueltas').textContent = vtas + " Vueltas";
+        document.getElementById('valPos').textContent = (miIdx + 1) + "Âº"; document.getElementById('valVueltas').textContent = vtas + " Vueltas";
         document.getElementById('valUltima').textContent = fmt(ult); document.getElementById('valMejor').textContent = fmt(mej);
         if (ult > 0 && mej > 0) { var df = (ult - mej) / 1000, elD = document.getElementById('valDelta'); elD.textContent = "Delta: +" + df.toFixed(2) + "s"; elD.style.color = df <= 0.15 ? "#20c997" : "#ff4d5e"; }
         if (vtas !== ultVtaCantada) {
