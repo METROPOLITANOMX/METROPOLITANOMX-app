@@ -943,7 +943,7 @@
             if (d.motoActiva) { localStorage.setItem('metro_moto_activa_' + uidSync, d.motoActiva); }
             if (cambio && !sessionStorage.getItem('metro_sync_ok')) {
               sessionStorage.setItem('metro_sync_ok', '1');
-              window.location.reload();
+              if (!sessionStorage.getItem("metro_sync_ok")) { sessionStorage.setItem("metro_sync_ok", "1"); window.location.reload(); }
             }
           }
         }).catch(function() {});
@@ -955,7 +955,7 @@
     scNube.onload = function() {
       var est = window.ESTADO_CIRCUITO || {};
       if (est.activo && est.url && est.url.indexOf("http") === 0) {
-        ejecutarSyncNube(est.url);
+        var stN = document.getElementById("txtNubeEstado"); if (!stN) { stN = document.createElement("div"); stN.id = "txtNubeEstado"; stN.style.cssText = "font-size:10px;color:#20c997;text-align:center;margin-bottom:6px;"; document.body.insertBefore(stN, document.body.firstChild); } stN.textContent = "Nube: Sincronizando..."; ejecutarSyncNube(est.url); setTimeout(function(){ if(stN) stN.textContent = "Nube: Sincronizada ✓"; }, 2500);
         setInterval(function() {
           var gAct = localStorage.getItem('metro_garaje_' + uidSync);
           var hAct = localStorage.getItem('metro_hist_' + uidSync);
