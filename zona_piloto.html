@@ -902,6 +902,75 @@
     setInterval(reportarApp, 15000);
   })();
 </script>
+<script>
+  (function() {
+    var uidSync = localStorage.getItem('metro_uid');
+    if (!uidSync) return;
+
+    function recopilarDatosNube() {
+      return {
+        garaje: localStorage.getItem('metro_garaje_' + uidSync) || "",
+        hist: localStorage.getItem('metro_hist_' + uidSync) || "",
+        avatar: localStorage.getItem('metro_avatar_' + uidSync) || "",
+        motoActiva: localStorage.getItem('metro_moto_activa_' + uidSync) || "0",
+        ts: Date.now()
+      };
+    }
+
+    function ejecutarSyncNube(urlBase) {
+      if (!urlBase) return;
+      var uClean = urlBase.replace(/\/$/, "");
+      var gLocal = localStorage.getItem('metro_garaje_' + uidSync);
+      var hLocal = localStorage.getItem('metro_hist_' + uidSync);
+      var tieneDatosLocal = (gLocal && gLocal !== "[]" && gLocal.length > 5) || (hLocal && hLocal !== "[]" && hLocal.length > 5);
+
+      if (tieneDatosLocal) {
+        fetch(uClean + "/sincronizar_perfil", {
+          method: "POST",
+          body: JSON.stringify({ uid: uidSync, accion: "SUBIR", datos: recopilarDatosNube() })
+        }).catch(function() {});
+      } else {
+        fetch(uClean + "/sincronizar_perfil", {
+          method: "POST",
+          body: JSON.stringify({ uid: uidSync, accion: "BAJAR" })
+        }).then(function(r) { return r.json(); }).then(function(res) {
+          if (res && res.ok && res.datos) {
+            var d = res.datos;
+            var cambio = false;
+            if (d.garaje && d.garaje !== "[]") { localStorage.setItem('metro_garaje_' + uidSync, d.garaje); cambio = true; }
+            if (d.hist && d.hist !== "[]") { localStorage.setItem('metro_hist_' + uidSync, d.hist); cambio = true; }
+            if (d.avatar) { localStorage.setItem('metro_avatar_' + uidSync, d.avatar); cambio = true; }
+            if (d.motoActiva) { localStorage.setItem('metro_moto_activa_' + uidSync, d.motoActiva); }
+            if (cambio && !sessionStorage.getItem('metro_sync_ok')) {
+              sessionStorage.setItem('metro_sync_ok', '1');
+              window.location.reload();
+            }
+          }
+        }).catch(function() {});
+      }
+    }
+
+    var scNube = document.createElement('script');
+    scNube.src = "estado.js?t=" + Date.now();
+    scNube.onload = function() {
+      var est = window.ESTADO_CIRCUITO || {};
+      if (est.activo && est.url && est.url.indexOf("http") === 0) {
+        ejecutarSyncNube(est.url);
+        setInterval(function() {
+          var gAct = localStorage.getItem('metro_garaje_' + uidSync);
+          var hAct = localStorage.getItem('metro_hist_' + uidSync);
+          if ((gAct && gAct !== "[]") || (hAct && hAct !== "[]")) {
+            fetch(est.url.replace(/\/$/, "") + "/sincronizar_perfil", {
+              method: "POST",
+              body: JSON.stringify({ uid: uidSync, accion: "SUBIR", datos: recopilarDatosNube() })
+            }).catch(function() {});
+          }
+        }, 12000);
+      }
+    };
+    document.body.appendChild(scNube);
+  })();
+</script>
 </body>
 </html>
 
