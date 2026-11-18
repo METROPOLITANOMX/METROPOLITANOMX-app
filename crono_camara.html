@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crono Camara y Radar - Metropolitano MX</title>
 <style>
@@ -172,6 +172,16 @@
     var capa = document.getElementById('capaSoloAntena');
     if (capa) capa.style.display = 'none';
   }
+    function desconectarAntenaCam() {
+    if (!urlCircuitoCam) return;
+    var p = obtenerDatosPilotoCam();
+    if (!p || !p.dorsal) return;
+    try {
+      navigator.sendBeacon(urlCircuitoCam + "/camara_movil", JSON.stringify({ dorsal: p.dorsal, salir: true }));
+    } catch (e) {}
+  }
+  window.addEventListener("pagehide", desconectarAntenaCam);
+  window.addEventListener("beforeunload", desconectarAntenaCam);
   function pitarCam(f) {
     if (soloAntenaActivo) return;
     try {
