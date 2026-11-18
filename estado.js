@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://frost-reputation-dip-glossary.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://observations-oak-located-putting.trycloudflare.com" };
