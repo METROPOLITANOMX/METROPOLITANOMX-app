@@ -205,27 +205,25 @@
     var uP = est.url.replace(/\/$/, "");
     fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
       if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
-        if (true) {
-          ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; hablar(loc.frase);
-          var fl = loc.frase.toLowerCase();
-          if (fl.indexOf("pista cerrada") !== -1) iluminarBordeBandera("#d90429"); else if (fl.indexOf("precaucion en pista") !== -1) iluminarBordeBandera("#f77f00"); else if (fl.indexOf("pista abierta") !== -1) iluminarBordeBandera("#00b050"); else if (fl.indexOf("luz pista apagada") !== -1) { banderaLocActual = ""; iluminarBordeBandera(null); } else if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
-          else if (fl.indexOf("roja") !== -1) iluminarBordeBandera("#ff1e1e");
-          else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
-          else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
-          else if (fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050"); else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1) { iluminarBordeBandera("#00e676"); setTimeout(() => iluminarBordeBandera(null), 5000); }
-        }
         ultMarcaLoc = loc.marca;
+        ban.style.color = "#ffc107";
+        ban.textContent = "DIRECTOR: " + loc.frase;
+        hablar(loc.frase);
+        var fl = loc.frase.toLowerCase();
+        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1) { banderaLocActual = "#d90429"; iluminarBordeBandera("#d90429"); }
+        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) { banderaLocActual = "#ffc107"; iluminarBordeBandera("#ffc107"); }
+        else if (fl.indexOf("azul") !== -1) { banderaLocActual = "#0d6efd"; iluminarBordeBandera("#0d6efd"); }
+        else if (fl.indexOf("negra") !== -1) { banderaLocActual = "#ffffff"; iluminarBordeBandera("#ffffff"); }
+        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) { banderaLocActual = "#00b050"; iluminarBordeBandera("#00b050"); }
+        else if (fl.indexOf("apagada") !== -1) { banderaLocActual = ""; iluminarBordeBandera(null); }
       }
     }).catch(() => {});
     fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
       var c = (lz && lz.color) ? lz.color : "";
-      if (c !== colorLuzPistaActual) {
-        colorLuzPistaActual = c;
-        if (c === 'roja') iluminarBordeBandera("#d90429");
-        else if (c === 'verde') iluminarBordeBandera("#00b050");
-        else if (c === 'ambar') iluminarBordeBandera("#f77f00");
-        else if (!banderaLocActual) iluminarBordeBandera(null);
-      }
+      if (c === 'roja') { banderaLocActual = "#d90429"; iluminarBordeBandera("#d90429"); }
+      else if (c === 'ambar') { banderaLocActual = "#f77f00"; iluminarBordeBandera("#f77f00"); }
+      else if (c === 'verde') { banderaLocActual = "#00b050"; iluminarBordeBandera("#00b050"); }
+      else if (c === '' && banderaLocActual === '') { iluminarBordeBandera(null); }
     }).catch(() => {});
     fetch(uP + "/radar_live.json?t=" + Date.now()).then(r => r.json()).then(rad => {
       var kmh = (rad && rad.porPiloto) ? (rad.porPiloto[miDorsal] || 0) : 0;
