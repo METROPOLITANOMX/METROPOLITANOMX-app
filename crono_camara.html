@@ -305,7 +305,13 @@
     document.getElementById('cUlt').textContent = fmt(lapMs);
     document.getElementById('cMej').textContent = fmt(mejorCam);
     hablarCam("Vuelta " + numV + ", " + (lapMs / 1000).toFixed(2).replace(".", " punto ") + " segundos" + (kmhPasada > 0 ? (", a " + kmhPasada + " por hora") : ""));
-    guardarVueltaCamaraHistorial(numV, lapMs, kmhPasada); if (typeof enviarVueltaRankingCam === 'function') enviarVueltaRankingCam(lapMs, kmhPasada);
+    /* autoStopSpAplicado */
+    guardarVueltaCamaraHistorial(numV, lapMs, kmhPasada);
+    if (urlCircuitoCam && numV >= 1) {
+      fetch(urlCircuitoCam + "/live_data.json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(ld) {
+        if (ld && String(ld.modo || "").toUpperCase() === "SUPERPOLE" && typeof pararLecturaCrono === "function") pararLecturaCrono();
+      }).catch(function(){});
+    } if (typeof enviarVueltaRankingCam === 'function') enviarVueltaRankingCam(lapMs, kmhPasada);
     var h = "";
     for (var i = vueltasCam.length - 1; i >= 0; i--) {
       var it = vueltasCam[i], esM = (it.t === mejorCam);
