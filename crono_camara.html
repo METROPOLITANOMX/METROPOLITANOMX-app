@@ -1,475 +1,209 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crono Camara y Radar - Metropolitano MX</title>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Camara Antena - Metropolitano MX</title>
 <style>
-  * { box-sizing:border-box; }
-  body { margin:0; background:#080808; color:#fff; font-family:Arial,sans-serif; padding:10px; text-align:center; }
-  .top { display:flex; justify-content:space-between; align-items:center; background:#161616; border-bottom:3px solid #ffc107; padding:9px 12px; border-radius:12px; margin-bottom:8px; }
-  button, select { padding:8px 10px; font-size:11px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; text-transform:uppercase; }
-  .visor-wrap { position:relative; width:100%; max-width:560px; margin:0 auto 8px auto; border-radius:12px; overflow:hidden; border:2px solid #333; background:#000; height:225px; }
+  * { box-sizing: border-box; }
+  body { background:#0b0b0b; color:#fff; font-family:Arial,sans-serif; margin:0; padding:10px; text-align:center; }
+  .top { display:flex; justify-content:space-between; align-items:center; max-width:540px; margin:0 auto 8px auto; }
+  button { border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+  .visor { position:relative; width:100%; max-width:540px; height:210px; margin:0 auto 8px auto; background:#000; border:2px solid #333; border-radius:12px; overflow:hidden; }
   video { width:100%; height:100%; object-fit:cover; }
-  .linea-radar { position:absolute; top:0; bottom:0; width:3px; transition:background 0.1s; }
-  #lineaIzq { left:28%; background:#0dcaf0; box-shadow:0 0 10px #0dcaf0; }
-  #lineaMeta { left:72%; width:4px; background:#ff2a2a; box-shadow:0 0 14px #ff2a2a; }
-  #barraNivel { position:absolute; bottom:0; left:0; height:6px; width:0%; background:#20c997; transition:width 0.08s; }
-  .grid-tiempos { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-width:560px; margin:0 auto 8px auto; }
-  .box-t { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:9px 4px; }
-  .lbl { font-size:9px; color:#999; text-transform:uppercase; }
-  .val { font-size:17px; font-weight:bold; margin-top:3px; }
-  .controles { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:10px; max-width:560px; margin:0 auto 8px auto; font-size:11px; text-align:left; }
-  .lista-v { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:8px 10px; max-width:560px; margin:0 auto; max-height:175px; overflow-y:auto; text-align:left; font-size:12px; }
-</style></head><body>
-  <div style="font-size:13px;color:#888;margin-bottom:20px;">Audio silenciado · Pantalla en ahorro · Leyendo pista</div>
-    <div style="font-size:12px;color:#555;border:1px solid #333;padding:8px 14px;border-radius:8px;">Toca la pantalla para volver a ver la camara</div>
+  .linea-meta { position:absolute; top:0; bottom:0; left:68%; width:4px; background:#ff2a2a; }
+  .barra-niv { position:absolute; bottom:0; left:0; height:6px; width:0%; background:#00e676; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; max-width:540px; margin:0 auto 8px auto; }
+  .box { background:#161616; border:1px solid #2c2c2c; border-radius:10px; padding:8px; }
+  .lbl { font-size:10px; color:#888; text-transform:uppercase; }
+  .val { font-size:20px; font-weight:bold; margin-top:2px; }
+  .cfg { background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:8px; max-width:540px; margin:0 auto 8px auto; font-size:12px; text-align:left; }
+  .cfg input[type=range] { width:100%; }
+  #capaNegraAntena { display:none; position:fixed; inset:0; width:100vw; height:100vh; background:#000; z-index:99999; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+</style>
+</head>
+<body>
+<div id="capaNegraAntena">
+  <div id="txtNegraEstado" style="font-size:22px;font-weight:bold;color:#ffc107;margin-bottom:10px;">ANTENA LISTA - ESPERANDO SALIDA</div>
+  <div id="txtNegraVtas" style="font-size:15px;color:#20c997;margin-bottom:28px;">0 Vueltas registradas</div>
+  <button onclick="salirModoAntena()" style="background:#222;color:#fff;border:1px solid #555;padding:12px 22px;font-size:13px;">SALIR DE MODO ANTENA</button>
+</div>
+<div class="top">
+  <span id="titPilotoCam" style="color:#ffc107;font-weight:bold;font-size:14px;">CAMARA ANTENA</span>
+  <div style="display:flex;gap:6px;">
+    <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:6px 10px;font-size:11px;">Voz ON</button>
+    <button onclick="window.location.href='zona_piloto.html'" style="background:#dc3545;color:#fff;padding:6px 10px;font-size:11px;">Volver</button>
   </div>
-  <div class="top">
-    <b style="color:#ffc107;font-size:13px;">CRONO OPTICO + RADAR</b>
-    <div>
-      <button style="background:#0dcaf0;color:#000;margin-right:4px;" onclick="var g=document.getElementById('guiaCam');g.style.display=g.style.display==='none'?'block':'none'">Guia</button>
-      <button id="btnVozCam" style="background:#20c997;color:#000;margin-right:4px;" onclick="toggleVozCam()">Voz ON</button>
-      <button style="background:#dc3545;color:#fff;" onclick="salirDeCamara()">Volver</button>
-    </div>
-  </div>
-  <div id="guiaCam" style="display:none;background:#141a24;border:1px solid #0dcaf0;border-radius:10px;padding:10px 12px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;color:#ddd;line-height:1.45;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <b style="color:#0dcaf0;font-size:13px;">GUIA DE USO - CRONO Y RADAR CAMARA</b>
-      <button onclick="document.getElementById('guiaCam').style.display='none'" style="background:#333;color:#fff;padding:3px 8px;font-size:10px;">Cerrar</button>
-    </div>
-    <div><b>1. Activa y fija el movil:</b> Pulsa <b>1. ACTIVAR CAMARA</b> y deja el telefono quieto en un soporte apuntando al suelo de la pista.</div>
-    <div><b>2. Elige modo de deteccion:</b> Usa <b>Movimiento</b> (para cualquier moto) o <b>Color</b> (seleccionando el color de tu carroceria para evitar falsos disparos).</div>
-    <div><b>3. Calibra sensibilidad y bloqueo:</b> Ajusta la sensibilidad para que la barra verde solo suba al pasar la moto y pon el bloqueo en unos segundos menos que tu vuelta.</div>
-    <div><b>4. Radar de velocidad (km/h):</b> Coloca dos marcas en el suelo de la pista haciendolas coincidir exactamente con la <b>linea azul</b> y la <b>linea roja</b> de la pantalla. Mide esa distancia real en metros y ponla exacta en la barra deslizadora <b>Distancia Radar (Azul-Roja)</b> para que la velocidad marcada sea real.</div>
-    <div><b>5. Inicia el crono:</b> Cuando este todo listo, pulsa <b>2. INICIAR LECTURA</b> (puedes pausar o usar <b>Paso Manual</b> cuando quieras).</div>
-  </div>
-  <div class="visor-wrap"><video id="vidCam" autoplay playsinline muted></video><div id="lineaIzq" class="linea-radar"></div><div id="lineaMeta" class="linea-radar"></div><div id="barraNivel"></div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:560px;margin:0 auto 6px auto;">
-    <button id="btnStartCam" style="background:#0d6efd;color:#fff;padding:11px 6px;font-size:11px;" onclick="iniciarCamaraCrono()">1. ACTIVAR CAMARA</button>
-    <button id="btnToggleLectura" disabled style="background:#333;color:#888;padding:11px 6px;font-size:11px;" onclick="iniciarLecturaCrono()">2. INICIAR LECTURA</button>
-    <button id="btnPararLectura" disabled style="background:#333;color:#888;padding:11px 6px;font-size:11px;" onclick="pararLecturaCrono()">PARAR DETECCION</button>
-  </div>
-  <div style="display:flex;gap:6px;max-width:560px;margin:0 auto 8px auto;">
-    <button style="flex:1;background:#2b2b2b;color:#fff;padding:9px;font-size:11px;" onclick="registrarPasoMeta(0)">PASO MANUAL</button>
-    <button style="background:#dc3545;color:#fff;padding:9px 12px;font-size:11px;" onclick="reiniciarSesionCam()">RESET</button><button id="btnModoAntenaNuevo" style="background:#6f42c1;color:#fff;padding:9px 10px;font-size:11px;" onclick="iniciarModoAntenaLimpio()">MODO ANTENA</button>
-  </div>
-  <div class="grid-tiempos">
-    <div class="box-t"><div class="lbl">Vueltas</div><div id="cVtas" class="val" style="color:#ffc107;">0</div></div>
-    <div class="box-t"><div class="lbl">Ultima</div><div id="cUlt" class="val" style="color:#20c997;">--</div></div>
-    <div class="box-t"><div class="lbl">Mejor</div><div id="cMej" class="val" style="color:#0dcaf0;">--</div></div>
-    <div class="box-t"><div class="lbl">Radar Punta</div><div id="cKmh" class="val" style="color:#ff4d5e;">-- km/h</div></div>
-  </div>
-  <div class="controles">
-    <div style="display:flex;gap:6px;margin-bottom:8px;">
-      <select id="selModoDet" onchange="document.getElementById('boxColorTarget').style.display=this.value==='COLOR'?'flex':'none'" style="flex:1;background:#000;color:#ffc107;border:1px solid #ffc107;">
-        <option value="MOVIMIENTO">Modo: Deteccion Movimiento</option>
-        <option value="COLOR">Modo: Deteccion por Color</option>
-      </select>
-      <div id="boxColorTarget" style="display:none;flex:1;">
-        <select id="selColorMoto" style="width:100%;background:#000;color:#20c997;border:1px solid #20c997;">
-          <option value="ROJO">Color: Rojo</option>
-          <option value="NARANJA">Color: Naranja</option>
-          <option value="AMARILLO">Color: Amarillo</option>
-          <option value="VERDE">Color: Verde</option>
-          <option value="AZUL">Color: Azul</option>
-          <option value="BLANCO">Color: Blanco</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Sensibilidad: <b id="lblSens">35</b></span><input type="range" id="rngSens" min="12" max="80" value="35" oninput="document.getElementById('lblSens').textContent=this.value"></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Bloqueo vueltas: <b id="lblCool">5</b>s</span><input type="range" id="rngCool" min="3" max="15" value="5" oninput="document.getElementById('lblCool').textContent=this.value"></div>
-    <div style="display:flex;justify-content:space-between;"><span>Distancia Radar (Azul-Roja): <b id="lblDist">1.5</b>m</span><input type="range" id="rngDist" min="0.5" max="4.0" step="0.1" value="1.5" oninput="document.getElementById('lblDist').textContent=parseFloat(this.value).toFixed(1)"></div>
-  </div>
-    <div id="boxLivePista" style="background:#141a24;border:1px solid #20c997;border-radius:10px;padding:8px 10px;max-width:560px;margin:0 auto 8px auto;text-align:left;font-size:12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <b style="color:#20c997;">CLASIFICACION EN VIVO (CAMARAS EN PISTA)</b>
-      <span id="estSyncCam" style="font-size:10px;color:#0dcaf0;">Sincronizado</span>
-    </div>
-    <div id="tablaLiveCam"><span style="color:#888;">Esperando vueltas de pilotos en pista...</span></div>
-  </div>
-  <div class="lista-v" id="listaVtasCam"><span style="color:#777;">Activa la camara, calibra y pulsa <b>2. INICIAR LECTURA</b>...</span></div>
-  <canvas id="cnvProc" width="64" height="64" style="display:none;"></canvas>
+</div>
+<div class="visor"><video id="vidCam" autoplay playsinline muted></video><div id="lMeta" class="linea-meta"></div><div id="bNiv" class="barra-niv"></div></div>
+<canvas id="cnv" width="64" height="64" style="display:none;"></canvas>
+<div class="grid3">
+  <button id="btnCam" onclick="encenderCamara()" style="background:#0d6efd;color:#fff;padding:11px 4px;font-size:11px;">1. CAMARA</button>
+  <button id="btnLec" onclick="toggleLecturaManual()" style="background:#20c997;color:#000;padding:11px 4px;font-size:11px;">2. INICIAR</button>
+  <button onclick="activarModoAntena()" style="background:#6f42c1;color:#fff;padding:11px 4px;font-size:11px;">MODO ANTENA</button>
+</div>
+<div class="grid3">
+  <button onclick="registrarPaso()" style="background:#2b2b2b;color:#fff;padding:8px;font-size:11px;">PASO MANUAL</button>
+  <button onclick="resetearCam()" style="background:#dc3545;color:#fff;padding:8px;font-size:11px;">RESET</button>
+  <div class="box" style="padding:4px;"><div class="lbl">Modo</div><div id="txtModoSrv" style="font-size:11px;color:#0dcaf0;font-weight:bold;">LIBRE</div></div>
+</div>
+<div class="grid3">
+  <div class="box"><div class="lbl">Vueltas</div><div id="vCnt" class="val" style="color:#ffc107;">0</div></div>
+  <div class="box"><div class="lbl">Ultima</div><div id="vUlt" class="val" style="color:#20c997;">--</div></div>
+  <div class="box"><div class="lbl">Mejor</div><div id="vMej" class="val" style="color:#0dcaf0;">--</div></div>
+</div>
+<div class="cfg">
+  <div>Sensibilidad: <b id="lblSens">35</b>%</div>
+  <input id="rngSens" type="range" min="10" max="85" value="35" oninput="document.getElementById('lblSens').textContent=this.value">
+  <div style="margin-top:6px;">Bloqueo entre vueltas: <b id="lblCool">4</b>s</div>
+  <input id="rngCool" type="range" min="1" max="20" value="4" oninput="document.getElementById('lblCool').textContent=this.value">
+</div>
+<div id="listaVtas" style="max-width:540px;margin:0 auto;font-size:13px;text-align:left;"></div>
 <script>
-  var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
-  var vozCam = true, camActiva = false, lecturaActiva = false, prevIzq = null, prevDer = null, pasoIzqMs = 0, ultimoPasoMs = 0, vueltasCam = [], mejorCam = 0, maxKmhCam = 0, ac = null;
-    var wakeLockObj = null, modoAntenaGlobal = false, ultOrdenCamMarca = 0, ocupVoz = false, ocupModo = false;
-  async function mantenerPantallaEncendida() {
+  var uid = localStorage.getItem('metro_uid') || "piloto";
+  var camOn = false, detectando = false, modoAntena = false, vozOn = true;
+  var prevDer = null, ultimoPasoMs = 0, vueltas = [], mejorMs = 0, urlSrv = "", modoOficial = false, ultFaseSrv = "";
+  var wakeLock = null, ac = null;
+
+  function getPiloto() {
+    var d = localStorage.getItem('metro_dorsal') || "1", n = localStorage.getItem('metro_nombre') || uid;
     try {
-      if ('wakeLock' in navigator && !wakeLockObj) {
-        wakeLockObj = await navigator.wakeLock.request('screen');
-        wakeLockObj.addEventListener('release', function() { wakeLockObj = null; });
-      }
+      var g = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]");
+      var idx = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
+      if (g[idx] && g[idx].dorsal && g[idx].dorsal !== "--") d = g[idx].dorsal;
     } catch (e) {}
+    return { dorsal: String(d).trim(), nombre: String(n).trim() };
   }
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible' && camActiva) mantenerPantallaEncendida();
-  });
-
-  setInterval(function() {
-    if (!urlCircuitoCam || ocupVoz) return;
-    ocupVoz = true;
-    fetch(urlCircuitoCam + "/voz_cmd.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(cmd){
-      if (cmd && cmd.marca && cmd.marca > ultOrdenCamMarca) {
-        var esPrimera = (ultOrdenCamMarca === 0);
-        ultOrdenCamMarca = cmd.marca;
-        if (!esPrimera && camActiva && modoAntenaGlobal) {
-          /* esperar fase CARRERA en live_data.json */
-          if ((cmd.accion === 'PAUSE' || cmd.accion === 'FINAL') && lecturaActiva) { pararLecturaCrono(); }
-          if (cmd.accion === 'RESET') { reiniciarSesionCam(); }
-        }
-      }
-    }).catch(function(){}).finally(function(){ ocupVoz = false; });
-  }, 150);
-
-  setInterval(function() {
-    if (!urlCircuitoCam || ocupModo) return;
-    ocupModo = true;
-    fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){
-      if (m && typeof m.antenasMoviles === "boolean") {
-        modoAntenaGlobal = m.antenasMoviles;
-        var b2 = document.getElementById('btnToggleLectura');
-        if (camActiva && modoAntenaGlobal && !lecturaActiva && b2) {
-          b2.textContent = "ESPERANDO SALIDA DIRECTOR...";
-          b2.style.background = "#0dcaf0"; b2.style.color = "#000";
-        }
-      }
-    }).catch(function(){}).finally(function(){ ocupModo = false; });
-  }, 1000);
-
-    var ultMandoPilotoMarca = 0, ocupMp = false;
-  setInterval(function() {
-    if (!urlCircuitoCam || !camActiva || ocupMp) return;
-    ocupMp = true;
-    fetch(urlCircuitoCam + "/mando_camaras.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(mapa){
-      var p = obtenerDatosPilotoCam();
-      var ord = mapa && p && p.dorsal ? mapa[String(p.dorsal)] : null;
-      if (ord && ord.marca && ord.marca > ultMandoPilotoMarca) {
-        var esPrim = (ultMandoPilotoMarca === 0);
-        ultMandoPilotoMarca = ord.marca;
-        if (esPrim) return;
-        if (ord.accion === "INICIAR" && !lecturaActiva) iniciarLecturaCrono();
-        if (ord.accion === "PARAR" && lecturaActiva) pararLecturaCrono();
-      }
-    }).catch(function(){}).finally(function(){ ocupMp = false; });
-  }, 250);
-    var ultFaseOficialCam = "";
-  setInterval(function() {
-    if (!urlCircuitoCam || !camActiva || !modoAntenaGlobal) return;
-    fetch(urlCircuitoCam + "/live_data.json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(ld) {
-      var f = (ld && ld.reloj && ld.reloj.fase) ? String(ld.reloj.fase).toUpperCase() : "LISTO";
-      if (f === "CARRERA" && ultFaseOficialCam !== "CARRERA" && !lecturaActiva) {
-        iniciarLecturaCrono();
-      } else if ((f === "LISTO" || f === "FINAL" || f === "PAUSA") && ultFaseOficialCam === "CARRERA" && lecturaActiva) {
-        pararLecturaCrono();
-      }
-      ultFaseOficialCam = f;
-    }).catch(function(){});
-  }, 300);
+  var pInit = getPiloto();
+  document.getElementById('titPilotoCam').textContent = "#" + pInit.dorsal + " " + pInit.nombre;
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
-  function toggleVozCam() {
-    vozCam = !vozCam; var b = document.getElementById('btnVozCam');
-    b.style.background = vozCam ? '#20c997' : '#444'; b.style.color = vozCam ? '#000' : '#fff'; b.textContent = vozCam ? 'Voz ON' : 'Voz OFF';
-  }
-    
-    function desconectarAntenaCam() {
-    if (!urlCircuitoCam) return;
-    var p = obtenerDatosPilotoCam();
-    if (!p || !p.dorsal) return;
-    try {
-      navigator.sendBeacon(urlCircuitoCam + "/camara_movil", JSON.stringify({ dorsal: p.dorsal, salir: true }));
-    } catch (e) {}
-  }
-  window.addEventListener("pagehide", desconectarAntenaCam);
-  window.addEventListener("beforeunload", desconectarAntenaCam);
-  function pitarCam(f) {
-    
+
+  function pitar(f) {
+    if (modoAntena) return;
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-      var o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f || 920; o.connect(g); g.connect(ac.destination);
-      o.start(); setTimeout(() => o.stop(), 150);
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = f || 900; o.connect(g); g.connect(ac.destination);
+      o.start(); setTimeout(function() { o.stop(); }, 120);
     } catch (e) {}
   }
-  function hablarCam(t) { if (enModoAntenaLimpio) return; try { window.speechSynthesis.cancel(); } catch(e) {}
-    if (!vozCam || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; u.rate = 1.05; window.speechSynthesis.speak(u);
+  function hablar(txt) {
+    if (!vozOn || modoAntena || !('speechSynthesis' in window)) return;
+    try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(txt); u.lang = 'es-ES'; u.rate = 1.05; window.speechSynthesis.speak(u); } catch (e) {}
   }
-  async function iniciarCamaraCrono() {
+  function toggleVoz() {
+    vozOn = !vozOn; var b = document.getElementById('btnVoz');
+    b.style.background = vozOn ? '#20c997' : '#444'; b.style.color = vozOn ? '#000' : '#fff'; b.textContent = vozOn ? 'Voz ON' : 'Voz OFF';
+  }
+  async function mantenerPantalla() {
+    try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', function() { wakeLock = null; }); } } catch (e) {}
+  }
+  async function encenderCamara() {
+    if (camOn) { mantenerPantalla(); return; }
     try {
-      var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-      var v = document.getElementById('vidCam'); v.srcObject = stream; camActiva = true;
-      var b1 = document.getElementById('btnStartCam'); b1.textContent = "1. CAMARA LISTA"; b1.style.background = "#198754";
-      var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000"; if (urlCircuitoCam) { fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){ if (m && m.antenasMoviles === true) { modoAntenaGlobal = true; b2.textContent = "ESPERANDO SALIDA DIRECTOR..."; b2.style.background = "#0dcaf0"; b2.style.color = "#000"; } }).catch(function(){}); }
-      if (urlCircuitoCam) {
-        fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){
-          if (m && m.antenasMoviles === true) {
-            modoAntenaGlobal = true;
-            b2.textContent = "ESPERANDO SALIDA DIRECTOR...";
-            b2.style.background = "#0dcaf0"; b2.style.color = "#000";
-          }
-        }).catch(function(){});
-      }
-      mantenerPantallaEncendida();
-      requestAnimationFrame(analizarFotograma);
-    } catch (err) { alert("No se pudo abrir la camara: " + err); }
+      var st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      document.getElementById('vidCam').srcObject = st; camOn = true;
+      var b = document.getElementById('btnCam'); b.textContent = "CAMARA OK"; b.style.background = "#198754";
+      mantenerPantalla(); requestAnimationFrame(bucleVideo);
+    } catch (e) { alert("Error camara: " + e); }
   }
-  function iniciarLecturaCrono() {
-    if (!camActiva || lecturaActiva) return;
-    lecturaActiva = true;
-    prevIzq = null; prevDer = null; pasoIzqMs = 0;
-    var b2 = document.getElementById('btnToggleLectura'), b3 = document.getElementById('btnPararLectura');
-    b2.textContent = "DETECTANDO..."; b2.style.background = "#198754"; b2.style.color = "#fff";
-    if (b3) { b3.disabled = false; b3.style.background = "#dc3545"; b3.style.color = "#fff"; }
-    hablarCam("Deteccion activada");
+  function arrancarDeteccion() {
+    if (!camOn || detectando) return;
+    detectando = true; prevDer = null; ultimoPasoMs = 0;
+    var b = document.getElementById('btnLec'); b.textContent = "DETECTANDO"; b.style.background = "#198754"; b.style.color = "#fff";
+    hablar("Deteccion activada");
   }
-  function pararLecturaCrono() {
-    if (!lecturaActiva) return;
-    lecturaActiva = false;
-    var b2 = document.getElementById('btnToggleLectura'), b3 = document.getElementById('btnPararLectura');
-    b2.textContent = "2. INICIAR LECTURA"; b2.style.background = "#20c997"; b2.style.color = "#000";
-    if (b3) { b3.disabled = true; b3.style.background = "#333"; b3.style.color = "#888"; }
-    hablarCam("Deteccion detenida");
+  function pararDeteccion() {
+    if (!detectando) return;
+    detectando = false;
+    var b = document.getElementById('btnLec'); b.textContent = "2. INICIAR"; b.style.background = "#20c997"; b.style.color = "#000";
+    hablar("Deteccion detenida");
   }
-  function coincideColorPixel(r, g, b, col) {
-    if (col === 'ROJO') return r > 140 && r > g * 1.5 && r > b * 1.5;
-    if (col === 'NARANJA') return r > 160 && g > 75 && g < 175 && b < 90 && r > g * 1.25;
-    if (col === 'AMARILLO') return r > 160 && g > 150 && b < 100;
-    if (col === 'VERDE') return g > 130 && g > r * 1.3 && g > b * 1.3;
-    if (col === 'AZUL') return b > 135 && b > r * 1.4 && b > g * 1.2;
-    if (col === 'BLANCO') return r > 205 && g > 205 && b > 205;
-    return false;
+  function toggleLecturaManual() { if (!camOn) { alert("Activa primero la camara."); return; } if (detectando) pararDeteccion(); else arrancarDeteccion(); }
+  function activarModoAntena() {
+    modoAntena = true; vozOn = false; try { window.speechSynthesis.cancel(); } catch (e) {}
+    document.getElementById('capaNegraAntena').style.display = 'flex';
+    encenderCamara();
   }
-  function medirFranja(data, prevData, modo, colObj) {
-    var totalPix = data.length / 4;
-    if (modo === 'COLOR') {
-      var hits = 0;
-      for (var i = 0; i < data.length; i += 4) if (coincideColorPixel(data[i], data[i+1], data[i+2], colObj)) hits++;
-      return Math.min(100, Math.round((hits / totalPix) * 260));
-    }
-    if (!prevData) return 0;
-    var diff = 0;
-    for (var j = 0; j < data.length; j += 4) diff += Math.abs(data[j] - prevData[j]) + Math.abs(data[j+1] - prevData[j+1]) + Math.abs(data[j+2] - prevData[j+2]);
-    return Math.min(100, Math.round((diff / totalPix) / 2.5));
+  function salirModoAntena() { modoAntena = false; document.getElementById('capaNegraAntena').style.display = 'none'; }
+  function resetearCam() {
+    vueltas = []; mejorMs = 0; ultimoPasoMs = 0;
+    document.getElementById('vCnt').textContent = "0"; document.getElementById('vUlt').textContent = "--"; document.getElementById('vMej').textContent = "--"; document.getElementById('listaVtas').innerHTML = "";
   }
-  function analizarFotograma() {
-    if (!camActiva) return;
-    var v = document.getElementById('vidCam'), cnv = document.getElementById('cnvProc'), ctx = cnv.getContext('2d');
-    if (v.readyState === v.HAVE_ENOUGH_DATA) {
-      ctx.drawImage(v, 0, 0, 64, 64);
-      var dIzq = ctx.getImageData(15, 0, 6, 64).data;
-      var dDer = ctx.getImageData(43, 0, 6, 64).data;
-      var modo = document.getElementById('selModoDet').value, colObj = document.getElementById('selColorMoto').value;
-      var nivIzq = medirFranja(dIzq, prevIzq, modo, colObj);
-      var nivDer = medirFranja(dDer, prevDer, modo, colObj);
-      prevIzq = new Uint8ClampedArray(dIzq); prevDer = new Uint8ClampedArray(dDer);
-      document.getElementById('barraNivel').style.width = Math.max(nivIzq, nivDer) + "%";
-      var sens = parseInt(document.getElementById('rngSens').value, 10);
-      if (lecturaActiva) {
-        if (nivIzq >= sens) {
-          pasoIzqMs = Date.now();
-          var lI = document.getElementById('lineaIzq'); lI.style.background = "#00e676"; setTimeout(() => lI.style.background = "#0dcaf0", 300);
-        }
-        if (nivDer >= sens) {
-          var ahora = Date.now(), kmhCalc = 0;
-          if (pasoIzqMs > 0 && (ahora - pasoIzqMs) > 25 && (ahora - pasoIzqMs) < 1800) {
-            var distM = parseFloat(document.getElementById('rngDist').value) || 1.5;
-            kmhCalc = Math.round((distM / ((ahora - pasoIzqMs) / 1000)) * 3.6);
-            if (kmhCalc > 140) kmhCalc = 0;
-          }
-          pasoIzqMs = 0;
-          registrarPasoMeta(kmhCalc);
-        }
-      }
-    }
-    requestAnimationFrame(analizarFotograma);
-  }
-  function registrarPasoMeta(kmhPasada) {
-    var ahora = Date.now(), cool = parseInt(document.getElementById('rngCool').value, 10) * 1000;
+  function registrarPaso() {
+    var ahora = Date.now(), cool = (parseInt(document.getElementById('rngCool').value, 10) || 4) * 1000;
     if (ultimoPasoMs > 0 && (ahora - ultimoPasoMs) < cool) return;
-    var linea = document.getElementById('lineaMeta');
-    linea.style.background = "#00e676"; setTimeout(() => linea.style.background = "#ff2a2a", 400);
-    pitarCam(950); enviarVueltaOficialAntena();
-    if (kmhPasada > 0) {
-      if (kmhPasada > maxKmhCam) { maxKmhCam = kmhPasada; document.getElementById('cKmh').textContent = maxKmhCam + " km/h"; }
-    }
+    var lm = document.getElementById('lMeta'); lm.style.background = "#00e676"; setTimeout(function() { lm.style.background = "#ff2a2a"; }, 300);
+    pitar(950);
     if (ultimoPasoMs === 0) {
       ultimoPasoMs = ahora;
-      document.getElementById('listaVtasCam').innerHTML = '<div style="color:#20c997;font-weight:bold;">Salida detectada! Cronometro en marcha' + (kmhPasada > 0 ? (' (' + kmhPasada + ' km/h)') : '') + '...</div>';
-      hablarCam("Salida detectada" + (kmhPasada > 0 ? (", " + kmhPasada + " kilometros por hora") : ""));
-      return;
+      document.getElementById('listaVtas').innerHTML = '<div style="color:#20c997;font-weight:bold;">Salida detectada! Cronometro en marcha...</div>';
+      hablar("Salida detectada"); return;
     }
-    var lapMs = ahora - ultimoPasoMs; ultimoPasoMs = ahora;
-    var numV = vueltasCam.length + 1; vueltasCam.push({ t: lapMs, kmh: kmhPasada });
-    if (mejorCam === 0 || lapMs < mejorCam) mejorCam = lapMs;
-    document.getElementById('cVtas').textContent = numV;
-    document.getElementById('cUlt').textContent = fmt(lapMs);
-    document.getElementById('cMej').textContent = fmt(mejorCam);
-    hablarCam("Vuelta " + numV + ", " + (lapMs / 1000).toFixed(2).replace(".", " punto ") + " segundos" + (kmhPasada > 0 ? (", a " + kmhPasada + " por hora") : ""));
-    /* autoStopSpAplicado */
-    guardarVueltaCamaraHistorial(numV, lapMs, kmhPasada);
-    if (urlCircuitoCam && numV >= 1) {
-      fetch(urlCircuitoCam + "/live_data.json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(ld) {
-        if (ld && String(ld.modo || "").toUpperCase() === "SUPERPOLE" && typeof pararLecturaCrono === "function") pararLecturaCrono();
-      }).catch(function(){});
-    } if (typeof enviarVueltaRankingCam === 'function') enviarVueltaRankingCam(lapMs, kmhPasada);
+    var lapMs = ahora - ultimoPasoMs; ultimoPasoMs = ahora; vueltas.push(lapMs);
+    if (mejorMs === 0 || lapMs < mejorMs) mejorMs = lapMs;
+    var nV = vueltas.length;
+    document.getElementById('vCnt').textContent = nV; document.getElementById('vUlt').textContent = fmt(lapMs); document.getElementById('vMej').textContent = fmt(mejorMs);
+    document.getElementById('txtNegraVtas').textContent = nV + " Vueltas registradas";
+    hablar("Vuelta " + nV + ", " + (lapMs / 1000).toFixed(2).replace(".", " punto ") + " segundos");
+    var p = getPiloto();
+    if (urlSrv) {
+      fetch(urlSrv + "/paso_movil", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ts: ahora }) }).catch(function() {});
+      fetch(urlSrv + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, tiempoMs: lapMs, kmh: 0 }) }).catch(function() {});
+    }
     var h = "";
-    for (var i = vueltasCam.length - 1; i >= 0; i--) {
-      var it = vueltasCam[i], esM = (it.t === mejorCam);
-      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #222;' + (esM ? 'color:#20c997;font-weight:bold;' : '') + '"><span>Vuelta ' + (i + 1) + (it.kmh > 0 ? (' <span style="color:#ff4d5e;font-size:11px;">(' + it.kmh + ' km/h)</span>') : '') + '</span><span>' + fmt(it.t) + (esM ? ' ★' : '') + '</span></div>';
-    }
-    document.getElementById('listaVtasCam').innerHTML = h;
+    for (var i = vueltas.length - 1; i >= 0; i--) h += '<div style="padding:5px 0;border-bottom:1px solid #222;display:flex;justify-content:space-between;"><span>Vuelta ' + (i + 1) + '</span><b>' + fmt(vueltas[i]) + '</b></div>';
+    document.getElementById('listaVtas').innerHTML = h;
   }
-    var urlCircuitoCam = "";
-  var scEst = document.createElement('script');
-  scEst.src = "estado.js?t=" + Date.now();
-  scEst.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) { urlCircuitoCam = window.ESTADO_CIRCUITO.url; var p0 = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p0.dorsal, nombre: p0.nombre, ping: true }) }).catch(function(){}); } };
-  document.body.appendChild(scEst);
-
-    function obtenerDatosPilotoCam() {
-    var dor = "", nom = "";
-    try {
-      var cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}");
-      if (cuentas[uid]) { dor = cuentas[uid].dorsal || ""; nom = cuentas[uid].nombre || ""; }
-      var gar = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]");
-      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
-      if (gar[idxM] && gar[idxM].dorsal) dor = gar[idxM].dorsal;
-    } catch (e) {}
-    return { dorsal: String(dor || "1").trim(), nombre: String(nom || uid || "Piloto").trim() };
-  }
-    var offsetRelojSrvMs = 0;
-  function sincronizarRelojAntena() {
-    if (!urlCircuitoCam) return;
-    var t0 = Date.now();
-    fetch(urlCircuitoCam + "/hora_servidor?t=" + t0).then(function(r) { return r.json(); }).then(function(d) {
-      var t1 = Date.now();
-      if (d && d.epochMs) {
-        offsetRelojSrvMs = d.epochMs - Math.round((t0 + t1) / 2);
+  function bucleVideo() {
+    if (!camOn) return;
+    var v = document.getElementById('vidCam'), cnv = document.getElementById('cnv'), ctx = cnv.getContext('2d');
+    if (v.readyState === v.HAVE_ENOUGH_DATA) {
+      ctx.drawImage(v, 0, 0, 64, 64);
+      var dDer = ctx.getImageData(42, 0, 6, 64).data;
+      if (prevDer) {
+        var diff = 0, pix = dDer.length / 4;
+        for (var i = 0; i < dDer.length; i += 4) diff += Math.abs(dDer[i] - prevDer[i]) + Math.abs(dDer[i+1] - prevDer[i+1]) + Math.abs(dDer[i+2] - prevDer[i+2]);
+        var niv = Math.min(100, Math.round((diff / pix) / 2.5));
+        document.getElementById('bNiv').style.width = niv + "%";
+        if (detectando && niv >= (parseInt(document.getElementById('rngSens').value, 10) || 35)) registrarPaso();
       }
-    }).catch(function() {});
+      prevDer = new Uint8ClampedArray(dDer);
+    }
+    requestAnimationFrame(bucleVideo);
   }
-  setInterval(sincronizarRelojAntena, 15000);
-  setTimeout(sincronizarRelojAntena, 1000);
-
-  function enviarVueltaOficialAntena() {
-    var modo = document.getElementById("selModoDet");
-    if (!urlCircuitoCam) return;
-    var p = obtenerDatosPilotoCam();
-    var pasoSrvMs = Date.now() + offsetRelojSrvMs;
-    fetch(urlCircuitoCam + "/vuelta_oficial", {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, pasoEpochMs: pasoSrvMs })
-    }).catch(function() {});
-  }
-  function enviarVueltaRankingCam(ms, kmhVal) {
-    enviarVueltaOficialAntena();
-    if (!urlCircuitoCam) return;
-    var p = obtenerDatosPilotoCam();
-    fetch(urlCircuitoCam + "/vuelta_camara", {
-      method: "POST",
-      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, tiempoMs: ms, kmh: kmhVal || 0 })
-    }).then(function() { actualizarRankingCam(); }).catch(function() {});
-  }
+  var sc = document.createElement('script'); sc.src = "estado.js?t=" + Date.now();
+  sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlSrv = window.ESTADO_CIRCUITO.url; };
+  document.body.appendChild(sc);
   setInterval(function() {
-    if (!urlCircuitoCam) return;
-    var p = obtenerDatosPilotoCam();
-    fetch(urlCircuitoCam + "/vuelta_camara", {
-      method: "POST",
-      body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: !!lecturaActiva, modo: (document.getElementById("selModoDet") ? document.getElementById("selModoDet").value : "MOVIMIENTO") })
-    }).catch(function() {});
-  }, 4000);
-
-  function actualizarRankingCam() {
-    if (!urlCircuitoCam) return;
-    fetch(urlCircuitoCam + "/ranking_camara.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(arr) {
-      var box = document.getElementById('tablaLiveCam');
-      if (!box || !Array.isArray(arr) || arr.length === 0) return;
-      arr.sort(function(a, b) {
-        if ((b.vueltas || 0) !== (a.vueltas || 0)) return (b.vueltas || 0) - (a.vueltas || 0);
-        return (a.mejor || 999999) - (b.mejor || 999999);
-      });
-      box.innerHTML = arr.map(function(p, idx) {
-        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #222;">' +
-          '<span><b style="color:#ffc107;">' + (idx + 1) + '. #' + p.dorsal + '</b> ' + p.nombre + ' <span style="color:#aaa;">(' + p.vueltas + ' vtas)</span></span>' +
-          '<span>Mejor: <b style="color:#20c997;">' + fmt(p.mejor) + '</b>' + (p.kmh > 0 ? ' <span style="color:#ff4d5e;">' + p.kmh + 'km/h</span>' : '') + '</span></div>';
-      }).join('');
-    }).catch(function() {});
-  }
-  setInterval(actualizarRankingCam, 3000);
-
-  function guardarVueltaCamaraHistorial(vNum, ms, kmhVal) {
-    enviarVueltaRankingCam(ms, kmhVal);
-    var hoy = new Date().toLocaleDateString('es-ES'), key = 'metro_hist_' + uid, hist = [];
-    try { hist = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) {}
-    var reg = (hist.length > 0 && hist[hist.length - 1].fecha === hoy) ? hist[hist.length - 1] : null;
-    if (!reg) { reg = { fecha: hoy, pos: 1, vueltas: 0, mejor: ms, kmh: kmhVal || 0, detalleVueltas: [] }; hist.push(reg); }
-    if (!Array.isArray(reg.detalleVueltas)) reg.detalleVueltas = [];
-    reg.detalleVueltas.push({ v: vNum, t: ms, m: "Camara" + (kmhVal > 0 ? (" " + kmhVal + "km/h") : "") });
-    reg.vueltas = (reg.vueltas || 0) + 1;
-    if (!reg.mejor || ms < reg.mejor) reg.mejor = ms;
-    if (kmhVal > (reg.kmh || 0)) reg.kmh = kmhVal;
-    localStorage.setItem(key, JSON.stringify(hist));
-    try {
-      var gKey = 'metro_garaje_' + uid, gArr = JSON.parse(localStorage.getItem(gKey) || "[]");
-      var idxM = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10);
-      if (gArr[idxM]) {
-        if (!gArr[idxM].mejorMoto || ms < gArr[idxM].mejorMoto) gArr[idxM].mejorMoto = ms;
-        if (kmhVal > (gArr[idxM].kmhMoto || 0)) gArr[idxM].kmhMoto = kmhVal;
-        localStorage.setItem(gKey, JSON.stringify(gArr));
+    var stN = document.getElementById('txtNegraEstado');
+    if (stN) { stN.textContent = detectando ? "DETECTANDO EN PISTA" : "ANTENA LISTA - ESPERANDO SALIDA"; stN.style.color = detectando ? "#00e676" : "#ffc107"; }
+    if (!urlSrv) return;
+    var p = getPiloto();
+    if (camOn) fetch(urlSrv + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: detectando }) }).catch(function() {});
+    Promise.all([
+      fetch(urlSrv + "/modo_antena.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; }),
+      fetch(urlSrv + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; }),
+      fetch(urlSrv + "/mando_camaras.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; })
+    ]).then(function(res) {
+      modoOficial = !!(res[0] && res[0].antenasMoviles);
+      document.getElementById('txtModoSrv').textContent = modoOficial ? "ANTENA CIRCUITO" : "LIBRE";
+      var fase = (res[1] && res[1].reloj && res[1].reloj.fase) ? String(res[1].reloj.fase).toUpperCase() : "LISTO";
+      var ordM = (res[2] && res[2][p.dorsal]) ? res[2][p.dorsal] : null;
+      if (modoOficial && camOn) {
+        if (fase === "CARRERA" && ultFaseSrv !== "CARRERA" && !detectando) arrancarDeteccion();
+        if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && ultFaseSrv === "CARRERA" && detectando) pararDeteccion();
       }
-    } catch (e) {}
-  }
-    function salirDeCamara() {
-    if (urlCircuitoCam) {
-      var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", keepalive: true, body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function() {});
-    }
-    window.location.href = 'zona_piloto.html';
-  }
-  function reiniciarSesionCam() { if (urlCircuitoCam) { var p = obtenerDatosPilotoCam(); fetch(urlCircuitoCam + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, salir: true }) }).catch(function(){}); }
-    ultimoPasoMs = 0; pasoIzqMs = 0; vueltasCam = []; mejorCam = 0; maxKmhCam = 0;
-    document.getElementById('cVtas').textContent = "0"; document.getElementById('cUlt').textContent = "--"; document.getElementById('cMej').textContent = "--"; document.getElementById('cKmh').textContent = "-- km/h";
-    document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
-  }
-</script><div id="pantallaAntenaLimpia" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:99999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
-  <div id="txtEstadoAntenaLimpia" style="font-size:22px;font-weight:bold;margin-bottom:10px;">ANTENA CONECTADA - ESPERANDO SALIDA</div>
-  <div style="font-size:13px;color:#888;margin-bottom:28px;">Pantalla en ahorro · Bloqueo desactivado · Voz silenciada</div>
-  <button onclick="salirModoAntenaLimpio()" style="background:#222;color:#fff;border:1px solid #555;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:bold;">SALIR DE MODO ANTENA</button>
-</div>
-<script>
-  var enModoAntenaLimpio = false;
-  function iniciarModoAntenaLimpio() {
-    enModoAntenaLimpio = true;
-    vozCam = false;
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-    var bv = document.getElementById('btnVozCam');
-    if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
-    var p = document.getElementById('pantallaAntenaLimpia');
-    if (p) { p.style.cssText = 'display:flex !important;position:fixed;inset:0;width:100vw;height:100vh;background:#000 !important;z-index:999999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;'; }
-    if (!camActiva) {
-      iniciarCamaraCrono();
-    } else {
-      mantenerPantallaEncendida();
-    }
-  }
-  function salirModoAntenaLimpio() {
-    enModoAntenaLimpio = false;
-    var p = document.getElementById('pantallaAntenaLimpia');
-    if (p) p.style.display = 'none';
-  }
-  setInterval(function() {
-    if (!enModoAntenaLimpio) return;
-    var t = document.getElementById('txtEstadoAntenaLimpia');
-    if (!t) return;
-    if (lecturaActiva) {
-      t.textContent = "DETECTANDO PASOS EN PISTA (" + vueltasCam.length + " VTAS)";
-      t.style.color = "#00e676";
-    } else {
-      t.textContent = "ANTENA CONECTADA - ESPERANDO SALIDA";
-      t.style.color = "#ffc107";
-    }
+      if (ordM && ordM.marca && ordM.marca > (window._ultOrdM || 0)) {
+        var prim = !(window._ultOrdM); window._ultOrdM = ordM.marca;
+        if (!prim && camOn) {
+          if (ordM.accion === "INICIAR" && !detectando) arrancarDeteccion();
+          if (ordM.accion === "PARAR" && detectando) pararDeteccion();
+        }
+      }
+      ultFaseSrv = fase;
+    });
   }, 500);
 </script>
-</body></html>
-
-
-
-
-
-
+</body>
+</html>
