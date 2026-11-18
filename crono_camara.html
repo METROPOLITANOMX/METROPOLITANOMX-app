@@ -136,6 +136,22 @@
     }).catch(function(){}).finally(function(){ ocupModo = false; });
   }, 1000);
 
+    var ultMandoPilotoMarca = 0, ocupMp = false;
+  setInterval(function() {
+    if (!urlCircuitoCam || !camActiva || ocupMp) return;
+    ocupMp = true;
+    fetch(urlCircuitoCam + "/mando_camaras.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(mapa){
+      var p = obtenerDatosPilotoCam();
+      var ord = mapa && p && p.dorsal ? mapa[String(p.dorsal)] : null;
+      if (ord && ord.marca && ord.marca > ultMandoPilotoMarca) {
+        var esPrim = (ultMandoPilotoMarca === 0);
+        ultMandoPilotoMarca = ord.marca;
+        if (esPrim) return;
+        if (ord.accion === "INICIAR" && !lecturaActiva) iniciarLecturaCrono();
+        if (ord.accion === "PARAR" && lecturaActiva) pararLecturaCrono();
+      }
+    }).catch(function(){}).finally(function(){ ocupMp = false; });
+  }, 250);
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
   function toggleVozCam() {
     vozCam = !vozCam; var b = document.getElementById('btnVozCam');
