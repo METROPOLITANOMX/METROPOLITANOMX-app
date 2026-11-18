@@ -24,9 +24,12 @@
 </head>
 <body>
 <div id="capaNegraAntena">
-  <div id="txtNegraEstado" style="font-size:22px;font-weight:bold;color:#ffc107;margin-bottom:10px;">ANTENA LISTA - ESPERANDO SALIDA</div>
-  <div id="txtNegraVtas" style="font-size:15px;color:#20c997;margin-bottom:28px;">0 Vueltas registradas</div>
-  <button onclick="salirModoAntena()" style="background:#222;color:#fff;border:1px solid #555;padding:12px 22px;font-size:13px;">SALIR DE MODO ANTENA</button>
+  <div style="opacity:0.22;text-align:center;">
+    <div id="txtNegraEstado" style="font-size:20px;font-weight:bold;color:#888;margin-bottom:8px;">ANTENA LISTA - ESPERANDO SALIDA</div>
+    <div id="txtNegraCrono" style="font-size:34px;font-weight:bold;color:#777;margin-bottom:8px;">00:00.0</div>
+    <div id="txtNegraVtas" style="font-size:14px;color:#666;margin-bottom:26px;">0 Vueltas registradas</div>
+    <button onclick="salirModoAntena()" style="background:#111;color:#777;border:1px solid #333;padding:12px 22px;font-size:13px;">SALIR DE MODO ANTENA</button>
+  </div>
 </div>
 <div class="top">
   <span id="titPilotoCam" style="color:#ffc107;font-weight:bold;font-size:14px;">CAMARA ANTENA</span>
@@ -182,8 +185,13 @@
   sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.activo) urlSrv = window.ESTADO_CIRCUITO.url; };
   document.body.appendChild(sc);
   setInterval(function() {
-    var stN = document.getElementById('txtNegraEstado');
-    if (stN) { stN.textContent = detectando ? "DETECTANDO EN PISTA" : "ANTENA LISTA - ESPERANDO SALIDA"; stN.style.color = detectando ? "#00e676" : "#ffc107"; }
+    var stN = document.getElementById('txtNegraEstado'), crN = document.getElementById('txtNegraCrono');
+    if (stN) { stN.textContent = detectando ? "DETECTANDO EN PISTA" : "ANTENA LISTA - ESPERANDO SALIDA"; }
+    if (crN) {
+      var elap = (detectando && ultimoPasoMs > 0) ? (Date.now() - ultimoPasoMs) : 0;
+      var sTot = Math.floor(elap / 1000), mm = Math.floor(sTot / 60), ss = sTot % 60, dc = Math.floor((elap % 1000) / 100);
+      crN.textContent = (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss + "." + dc;
+    }
     if (!urlSrv) return;
     var p = getPiloto();
     if (camOn) fetch(urlSrv + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: detectando }) }).catch(function() {});
@@ -193,23 +201,23 @@
       fetch(urlSrv + "/mando_camaras.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; })
     ]).then(function(res) {
       modoOficial = !!(res[0] && res[0].antenasMoviles);
-      document.getElementById('txtModoSrv').textContent = modoOficial ? "ANTENA CIRCUITO" : "LIBRE";
-      var fase = (res[1] && res[1].reloj && res[1].reloj.fase) ? String(res[1].reloj.fase).toUpperCase() : "LISTO";
+      document.getElementById('txtModoSrv').textContent = (modoOficial || modoAntena) ? "ANTENA CIRCUITO" : "LIBRE";
+      var fase = (res[1] && res[1].reloj && res[1].reloj.fase) ? String(res[1].reloj.fase).toUpperCase() : "";
       var ordM = (res[2] && res[2][p.dorsal]) ? res[2][p.dorsal] : null;
-      if (modoOficial && camOn) {
-        if (fase === "CARRERA" && ultFaseSrv !== "CARRERA" && !detectando) arrancarDeteccion();
-        if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && ultFaseSrv === "CARRERA" && detectando) pararDeteccion();
+      if ((modoOficial || modoAntena) && camOn && fase) {
+        if (fase === "CARRERA" && !detectando) { arrancarDeteccion(); ultimoPasoMs = Date.now(); }
+        if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && detectando) pararDeteccion();
       }
       if (ordM && ordM.marca && ordM.marca > (window._ultOrdM || 0)) {
         var prim = !(window._ultOrdM); window._ultOrdM = ordM.marca;
         if (!prim && camOn) {
-          if (ordM.accion === "INICIAR" && !detectando) arrancarDeteccion();
+          if (ordM.accion === "INICIAR" && !detectando) { arrancarDeteccion(); if (modoAntena) ultimoPasoMs = Date.now(); }
           if (ordM.accion === "PARAR" && detectando) pararDeteccion();
         }
       }
-      ultFaseSrv = fase;
+      if (fase) ultFaseSrv = fase;
     });
-  }, 500);
+  }, 400);
 </script>
 </body>
 </html>
