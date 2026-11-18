@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://cope-interact-specialty-notices.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://gary-blind-amendments-realistic.trycloudflare.com" };
