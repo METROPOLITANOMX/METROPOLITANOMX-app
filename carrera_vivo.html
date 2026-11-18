@@ -29,6 +29,7 @@
   .luz-sem.roja { background:#ff1e1e; box-shadow:0 0 28px #ff1e1e; border-color:#fff; } .luz-sem.ambar { background:#ffc107; box-shadow:0 0 28px #ffc107; border-color:#fff; }
   .luz-sem.verde { background:#00e676; box-shadow:0 0 32px #00e676; border-color:#fff; }
 @media (orientation:landscape){.grid-principal{grid-template-columns:repeat(4,1fr);}.val-xl{font-size:36px;}.val-lg{font-size:30px;}}</style></head><body id="cuerpoPista">
+  <div id="marcoBanderaVivo" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:9998;box-sizing:border-box;"></div>
   <div id="overlaySemaforo"><div id="numCuentaSem" style="font-size:30vw;font-weight:bold;color:#fff;line-height:1;text-shadow:0 4px 25px rgba(0,0,0,0.45);">00:30</div></div>
   <div class="top-bar"><div class="piloto-id"><span id="txtD" class="badge-d">#--</span><span id="txtN">PILOTO</span></div><div><button id="btnPantalla" style="background:#333;color:#ccc;margin-right:4px;" onclick="togglePantallaFija()">Fija OFF</button><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Salir Pista</button></div></div><div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
   <div id="boxRecordPista" style="background:#1c1226;border:1px solid #8a2be2;border-radius:10px;padding:7px 10px;width:100%;max-width:100%;margin:0 auto 8px auto;font-size:12px;color:#d8b4fe;font-weight:bold;">VR PISTA: Esperando vueltas...</div>
@@ -58,14 +59,7 @@
   document.getElementById('txtD').textContent = "#" + miDorsal;
   var vozOn = false, ultMarcaLoc = 0, ultVtaCantada = -1, ultTiempoSp = "", histVtas = [], miMejorManga = 0, recordPistaManga = 0, ultFaseSem = "", vocesApp = [];
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
-  var vozYaDesbloqueada = false;
-  function activarVozUnaVez() {
-    if (vozYaDesbloqueada) return;
-    vozYaDesbloqueada = true;
-    if (!vozOn && typeof toggleVoz === 'function') toggleVoz();
-  }
-  document.addEventListener('touchstart', activarVozUnaVez, { passive: true });
-  document.addEventListener('click', activarVozUnaVez, { passive: true });
+
   function cargarVocesApp() { if ('speechSynthesis' in window) vocesApp = window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().indexOf('es') === 0); }
   if ('speechSynthesis' in window) { cargarVocesApp(); window.speechSynthesis.onvoiceschanged = cargarVocesApp; }
     var pantallaFijaOn = false, wakeLockRef = null;
@@ -98,8 +92,19 @@
     u.rate = 1.02;
     window.speechSynthesis.speak(u);
   }
+  var colorLuzPistaActual = "";
   function iluminarBordeBandera(colorHex) {
-    document.getElementById('cuerpoPista').style.boxShadow = colorHex ? ("inset 0 0 0 8px " + colorHex + ", inset 0 0 28px " + colorHex) : "none";
+    var m = document.getElementById('marcoBanderaVivo');
+    if (!m) return;
+    if (colorHex) {
+      m.style.display = "block";
+      m.style.border = "8px solid " + colorHex;
+      m.style.boxShadow = "inset 0 0 28px " + colorHex;
+    } else {
+      m.style.display = "none";
+      m.style.border = "none";
+      m.style.boxShadow = "none";
+    }
   }
       var verdeHastaMs = 0;
     var ultSegVib = -1;
@@ -196,9 +201,10 @@
         ultMarcaLoc = loc.marca;
       }
     }).catch(() => {});
-        fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
-      if (true) {
-        var c = (lz && lz.color) ? lz.color : "";
+    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
+      var c = (lz && lz.color) ? lz.color : "";
+      if (c !== colorLuzPistaActual) {
+        colorLuzPistaActual = c;
         if (c === 'roja') iluminarBordeBandera("#d90429");
         else if (c === 'verde') iluminarBordeBandera("#00b050");
         else if (c === 'ambar') iluminarBordeBandera("#f77f00");
