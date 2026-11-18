@@ -111,7 +111,7 @@
         var esPrimera = (ultOrdenCamMarca === 0);
         ultOrdenCamMarca = cmd.marca;
         if (!esPrimera && camActiva && modoAntenaGlobal) {
-          if (cmd.accion === 'START' && !lecturaActiva) { iniciarLecturaCrono(); }
+          /* esperar fase CARRERA en live_data.json */
           if ((cmd.accion === 'PAUSE' || cmd.accion === 'FINAL') && lecturaActiva) { pararLecturaCrono(); }
           if (cmd.accion === 'RESET') { reiniciarSesionCam(); }
         }
@@ -150,6 +150,19 @@
       }
     }).catch(function(){}).finally(function(){ ocupMp = false; });
   }, 250);
+    var ultFaseOficialCam = "";
+  setInterval(function() {
+    if (!urlCircuitoCam || !camActiva || !modoAntenaGlobal) return;
+    fetch(urlCircuitoCam + "/live_data.json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(ld) {
+      var f = (ld && ld.reloj && ld.reloj.fase) ? String(ld.reloj.fase).toUpperCase() : "LISTO";
+      if (f === "CARRERA" && ultFaseOficialCam !== "CARRERA" && !lecturaActiva) {
+        iniciarLecturaCrono();
+      } else if ((f === "LISTO" || f === "FINAL" || f === "PAUSA") && ultFaseOficialCam === "CARRERA" && lecturaActiva) {
+        pararLecturaCrono();
+      }
+      ultFaseOficialCam = f;
+    }).catch(function(){});
+  }, 300);
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
   function toggleVozCam() {
     vozCam = !vozCam; var b = document.getElementById('btnVozCam');
@@ -174,7 +187,7 @@
       o.start(); setTimeout(() => o.stop(), 150);
     } catch (e) {}
   }
-  function hablarCam(t) {
+  function hablarCam(t) { if (enModoAntenaLimpio) return; try { window.speechSynthesis.cancel(); } catch(e) {}
     if (!vozCam || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; u.rate = 1.05; window.speechSynthesis.speak(u);
   }
@@ -428,7 +441,7 @@
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var p = document.getElementById('pantallaAntenaLimpia');
-    if (p) p.style.display = 'flex';
+    if (p) { p.style.cssText = 'display:flex !important;position:fixed;inset:0;width:100vw;height:100vh;background:#000 !important;z-index:999999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;'; }
     if (!camActiva) {
       iniciarCamaraCrono();
     } else {
