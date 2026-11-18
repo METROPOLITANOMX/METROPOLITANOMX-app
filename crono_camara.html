@@ -166,10 +166,14 @@
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var capa = document.getElementById('capaSoloAntena');
-    if (capa) capa.style.display = 'flex';
+    if (capa) {
+      capa.style.display = 'flex';
+      capa.style.zIndex = '99999';
+      capa.style.background = '#000';
+    }
     if (!camActiva) {
       iniciarCamaraCrono();
-    } else if (typeof mantenerPantallaEncendida === 'function') {
+    } else {
       mantenerPantallaEncendida();
     }
   }
@@ -223,6 +227,7 @@
     if (!camActiva || lecturaActiva) return;
     lecturaActiva = true;
     prevIzq = null; prevDer = null; pasoIzqMs = 0;
+    if (modoAntenaGlobal) ultimoPasoMs = Date.now();
     var b2 = document.getElementById('btnToggleLectura'), b3 = document.getElementById('btnPararLectura');
     b2.textContent = "DETECTANDO..."; b2.style.background = "#198754"; b2.style.color = "#fff";
     if (b3) { b3.disabled = false; b3.style.background = "#dc3545"; b3.style.color = "#fff"; }
