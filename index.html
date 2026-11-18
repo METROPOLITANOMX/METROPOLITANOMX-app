@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -113,7 +113,7 @@
     modoAuth = modo;
     document.getElementById('tabEntrar').className = (modo === 'LOGIN') ? 'tab-btn activa' : 'tab-btn';
     document.getElementById('tabRegistro').className = (modo === 'REGISTRO') ? 'tab-btn activa' : 'tab-btn';
-    document.getElementById('inpDorsalReg').style.display = (modo === 'REGISTRO') ? 'block' : 'none';
+    document.getElementById('inpDorsalReg').style.display = 'none';
     document.getElementById('filaOpcionesLogin').style.display = (modo === 'LOGIN') ? 'flex' : 'none';
     document.getElementById('btnAccionAuth').textContent = (modo === 'LOGIN') ? 'ACCEDER A MI TELEMETRIA' : 'REGISTRARME COMO PILOTO';
     document.getElementById('msgAuth').textContent = "";
@@ -176,7 +176,7 @@
     var nomOrig = document.getElementById('inpUsuario').value.trim();
     var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
     var clave = document.getElementById('inpClave').value;
-    var dorsal = document.getElementById('inpDorsalReg').value.trim();
+    var dorsal = '';
     var recordar = document.getElementById('chkRecordar').checked;
     var msg = document.getElementById('msgAuth');
 
@@ -191,7 +191,7 @@
     var urlSrv = obtenerUrlServidorAuth();
 
     if (modoAuth === 'REGISTRO') {
-      if (!dorsal) { msg.style.color = "#ff4d5e"; msg.textContent = "Indica tu numero de dorsal."; return; }
+      /* dorsal opcional en registro, se asigna por moto en garaje */
       if (!urlSrv) {
         if (Reflect.has(cuentas, userKey)) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre de piloto ya existe."; return; }
         entrarFinalPiloto(userKey, nomOrig, clave, dorsal, recordar);
