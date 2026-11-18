@@ -58,8 +58,8 @@
   document.getElementById('txtN').textContent = localStorage.getItem('metro_nombre') || "Piloto";
   document.getElementById('txtD').textContent = "#" + miDorsal;
 
-  var vozOn = false, ultMarcaLoc = 0, ultVtaCantada = -1, histVtas = [], miMejorManga = 0, recordPistaManga = 0, ultFaseSem = "";
-  var modoEntrenoPersonal = false, ultVtaEntrenoCantada = -1, histEntrenoMs = [], colorLuzPistaActual = "";
+  var vozOn = false, ultMarcaLoc = null, ultVtaCantada = -1, histVtas = [], miMejorManga = 0, recordPistaManga = 0, ultFaseSem = "";
+  var modoEntrenoPersonal = false, ultVtaEntrenoCantada = -1, histEntrenoMs = [], colorActual = "INIT";
   var pantallaFijaOn = false, wakeLockRef = null, verdeHastaMs = 0, ultSegVib = -1;
 
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
@@ -122,8 +122,6 @@
       m.style.boxShadow = "inset 0 0 30px " + colorHex;
     } else {
       m.style.display = "none";
-      m.style.border = "none";
-      m.style.boxShadow = "none";
     }
   }
 
@@ -171,8 +169,8 @@
       if (rest !== ultSegVib && rest > 0) {
         ultSegVib = rest;
         if (rest > 10) vibrarSalida(140);
-        else if (rest > 5) vibrarSalida([110, 90, 110]);
-        else vibrarSalida([120, 60, 120, 60, 120]);
+        else if (rest > 5) vibrarSalida();
+        else vibrarSalida();
       }
     } else if (fUp === 'CARRERA') {
       if (ultFaseSem === 'SALIDA_30') { verdeHastaMs = Date.now() + 2200; hablar("Salida, gas a fondo!"); vibrarSalida(650); ultSegVib = -1; }
@@ -192,32 +190,31 @@
     }
     var uP = est.url.replace(/\/$/, "");
 
-    fetch(uP + "/locucion.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(loc) {
-      if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
-        var esInicio = (ultMarcaLoc === 0);
-        ultMarcaLoc = loc.marca;
-        if (!esInicio) {
-          if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
-          hablar(loc.frase);
-          var fl = loc.frase.toLowerCase();
-          if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429");
-          else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
-          else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
-          else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
-          else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050");
-          else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null);
-        }
+    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(lz) {
+      var c = (lz && typeof lz.color === "string") ? lz.color : "";
+      if (c !== colorActual) {
+        colorActual = c;
+        if (c === "roja") iluminarBordeBandera("#d90429");
+        else if (c === "ambar") iluminarBordeBandera("#f77f00");
+        else if (c === "verde") iluminarBordeBandera("#00b050");
+        else iluminarBordeBandera(null);
       }
     }).catch(function() {});
 
-    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(lz) {
-      if (!lz || typeof lz.color !== "string") return;
-      if (lz.color !== colorLuzPistaActual) {
-        colorLuzPistaActual = lz.color;
-        if (lz.color === "roja") iluminarBordeBandera("#d90429");
-        else if (lz.color === "ambar") iluminarBordeBandera("#f77f00");
-        else if (lz.color === "verde") iluminarBordeBandera("#00b050");
-        else if (lz.color === "") iluminarBordeBandera(null);
+    fetch(uP + "/locucion.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(loc) {
+      if (!loc || !loc.frase || !loc.marca) return;
+      if (ultMarcaLoc === null) { ultMarcaLoc = loc.marca; return; }
+      if (loc.marca !== ultMarcaLoc) {
+        ultMarcaLoc = loc.marca;
+        if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
+        hablar(loc.frase);
+        var fl = loc.frase.toLowerCase();
+        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429");
+        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
+        else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
+        else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
+        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050");
+        else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null);
       }
     }).catch(function() {});
 
