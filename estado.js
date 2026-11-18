@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://tuesday-conflict-gain-enters.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://vendor-miami-economy-marriage.trycloudflare.com" };
