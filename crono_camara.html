@@ -158,7 +158,7 @@
     b.style.background = vozCam ? '#20c997' : '#444'; b.style.color = vozCam ? '#000' : '#fff'; b.textContent = vozCam ? 'Voz ON' : 'Voz OFF';
   }
     var soloAntenaActivo = false;
-  function activarModoSoloAntena() {
+  function activarModoSoloAntena() { if (!camActiva && typeof iniciarCamaraCrono === 'function') { iniciarCamaraCrono(); setTimeout(function(){ if (!lecturaActiva && typeof iniciarLecturaCrono === 'function') iniciarLecturaCrono(); }, 800); } else if (!lecturaActiva && typeof iniciarLecturaCrono === 'function') { iniciarLecturaCrono(); } if (typeof pitarCam === 'function') pitarCam(950);
     soloAntenaActivo = true;
     vozCam = false;
     window.speechSynthesis.cancel();
