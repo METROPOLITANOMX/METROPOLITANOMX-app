@@ -285,7 +285,7 @@
       document.getElementById('listaRivales').innerHTML = hR || "Esperando salida a pista...";
       if (miIdx >= 0) {
         var yo = lista[miIdx], vtas = yo.vueltas || 0, ult = yo.ultima || yo.mejor || 0, mej = yo.mejor || 0;
-        document.getElementById('valPos').textContent = (miIdx + 1) + "Ãƒâ€šÃ‚º"; document.getElementById('valVueltas').textContent = vtas + " Vueltas";
+        document.getElementById('valPos').textContent = (miIdx + 1) + "&ordm;"; document.getElementById('valVueltas').textContent = vtas + " Vueltas";
         document.getElementById('valUltima').textContent = fmt(ult); document.getElementById('valMejor').textContent = fmt(mej);
         if (ult > 0 && mej > 0) { var df = (ult - mej) / 1000, elD = document.getElementById('valDelta'); elD.textContent = "Delta: +" + df.toFixed(2) + "s"; elD.style.color = df <= 0.15 ? "#20c997" : "#ff4d5e"; }
         if (vtas !== ultVtaCantada) {
