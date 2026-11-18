@@ -274,6 +274,26 @@
       document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
+            if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
+        var sp = live.superpoleVivo, clasSp = sp.clasificacion || [], miPosSp = -1, miTsp = 0, hSp = "";
+        for (var sIdx = 0; sIdx < clasSp.length; sIdx++) {
+          var itemSp = clasSp[sIdx], esYoSp = String(itemSp.dorsal) === miDorsal;
+          if (esYoSp) { miPosSp = sIdx + 1; miTsp = itemSp.tiempo || 0; }
+          hSp += '<div class="fila-rival' + (esYoSp ? ' yo' : '') + '"><span><b>' + (sIdx + 1) + '&ordm;</b> #' + itemSp.dorsal + ' ' + (itemSp.nombre || "") + '</span><span style="color:#20c997;">' + fmt(itemSp.tiempo) + '</span></div>';
+        }
+        document.getElementById('listaRivales').innerHTML = hSp || "Esperando tiempos de Superpole...";
+        if (miPosSp > 0) {
+          document.getElementById('valPos').textContent = miPosSp + "\u00BA";
+          document.getElementById('valVueltas').textContent = "1 Vuelta SP";
+          document.getElementById('valUltima').textContent = fmt(miTsp);
+          document.getElementById('valMejor').textContent = fmt(miTsp);
+        }
+        if (sp.ultimoTiempo && sp.ultimoTiempo !== window.ultTiempoSpCantado && String(sp.piloto || "").indexOf("#" + miDorsal) !== -1) {
+          if (window.ultTiempoSpCantado !== undefined) hablar("Final de Superpole, tiempo " + sp.ultimoTiempo);
+          window.ultTiempoSpCantado = sp.ultimoTiempo;
+        }
+        return;
+      }
       var lista = live.clasificacionManga || [], miIdx = -1, hR = "", vrAbs = 99999999, vrPil = "";
       for (var r = 0; r < lista.length; r++) { if (lista[r].mejor > 0 && lista[r].mejor < vrAbs) { vrAbs = lista[r].mejor; vrPil = "#" + lista[r].dorsal + " " + (lista[r].nombre || ""); } }
       if (vrAbs < 99999999) { recordPistaManga = vrAbs; document.getElementById('boxRecordPista').textContent = "VR PISTA: " + fmt(vrAbs) + " (" + vrPil + ")"; }
