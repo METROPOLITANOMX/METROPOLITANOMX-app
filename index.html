@@ -149,6 +149,29 @@
     document.body.appendChild(s);
   }
 
+    function obtenerUrlServidorAuth() {
+    var est = window.ESTADO_CIRCUITO || {};
+    return (est.activo && est.url && est.url.indexOf("http") === 0) ? est.url.replace(/\/$/, "") : "";
+  }
+
+  function entrarFinalPiloto(userKey, nomOrig, clave, dorsal, recordar) {
+    var cuentas = {};
+    try { cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}"); } catch (e) {}
+    cuentas[userKey] = { nombre: nomOrig, clave: clave, dorsal: dorsal };
+    localStorage.setItem('metro_cuentas', JSON.stringify(cuentas));
+    if (recordar) {
+      localStorage.setItem('metro_rec_user', nomOrig);
+      localStorage.setItem('metro_rec_pass', clave);
+    } else {
+      localStorage.removeItem('metro_rec_user');
+      localStorage.removeItem('metro_rec_pass');
+    }
+    localStorage.setItem('metro_uid', userKey);
+    localStorage.setItem('metro_nombre', nomOrig);
+    localStorage.setItem('metro_dorsal', dorsal);
+    window.location.href = "zona_piloto.html";
+  }
+
   function procesarAccesoPiloto() {
     var nomOrig = document.getElementById('inpUsuario').value.trim();
     var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -165,36 +188,58 @@
 
     var cuentas = {};
     try { cuentas = JSON.parse(localStorage.getItem('metro_cuentas') || "{}"); } catch (e) {}
+    var urlSrv = obtenerUrlServidorAuth();
 
     if (modoAuth === 'REGISTRO') {
       if (!dorsal) { msg.style.color = "#ff4d5e"; msg.textContent = "Indica tu numero de dorsal."; return; }
-      if (Reflect.has(cuentas, userKey)) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre de piloto ya existe."; return; }
-      Reflect.set(cuentas, userKey, { nombre: nomOrig, clave: clave, dorsal: dorsal });
-      localStorage.setItem('metro_cuentas', JSON.stringify(cuentas));
-      localStorage.setItem('metro_rec_user', nomOrig);
-      localStorage.setItem('metro_rec_pass', clave);
-      localStorage.setItem('metro_uid', userKey);
-      localStorage.setItem('metro_nombre', nomOrig);
-      localStorage.setItem('metro_dorsal', dorsal);
-      window.location.href = "zona_piloto.html";
-    } else {
-      var perfil = Reflect.get(cuentas, userKey);
-      if (!perfil || perfil.clave !== clave) {
-        msg.style.color = "#ff4d5e";
-        msg.textContent = "Usuario o contrasena incorrectos.";
+      if (!urlSrv) {
+        if (Reflect.has(cuentas, userKey)) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre de piloto ya existe."; return; }
+        entrarFinalPiloto(userKey, nomOrig, clave, dorsal, recordar);
         return;
       }
-      if (recordar) {
-        localStorage.setItem('metro_rec_user', nomOrig);
-        localStorage.setItem('metro_rec_pass', clave);
-      } else {
-        localStorage.removeItem('metro_rec_user');
-        localStorage.removeItem('metro_rec_pass');
+      msg.style.color = "#0dcaf0"; msg.textContent = "Registrando en servidor...";
+      fetch(urlSrv + "/auth_piloto", {
+        method: "POST",
+        body: JSON.stringify({ modo: "REGISTRO", userKey: userKey, nombre: nomOrig, clave: clave, dorsal: dorsal })
+      }).then(function(r) { return r.json(); }).then(function(res) {
+        if (res && res.ok) {
+          entrarFinalPiloto(userKey, res.nombre || nomOrig, clave, res.dorsal || dorsal, recordar);
+        } else {
+          msg.style.color = "#ff4d5e"; msg.textContent = (res && res.msg) ? res.msg : "Error al registrar.";
+        }
+      }).catch(function() {
+        entrarFinalPiloto(userKey, nomOrig, clave, dorsal, recordar);
+      });
+    } else {
+      var perfilLocal = Reflect.get(cuentas, userKey);
+      if (perfilLocal && perfilLocal.clave === clave) {
+        if (urlSrv) {
+          fetch(urlSrv + "/auth_piloto", {
+            method: "POST",
+            body: JSON.stringify({ modo: "SYNC", userKey: userKey, nombre: perfilLocal.nombre, clave: clave, dorsal: perfilLocal.dorsal })
+          }).catch(function() {});
+        }
+        entrarFinalPiloto(userKey, perfilLocal.nombre, clave, perfilLocal.dorsal, recordar);
+        return;
       }
-      localStorage.setItem('metro_uid', userKey);
-      localStorage.setItem('metro_nombre', perfil.nombre);
-      localStorage.setItem('metro_dorsal', perfil.dorsal);
-      window.location.href = "zona_piloto.html";
+      if (!urlSrv) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = "Usuario o contrasena incorrectos (Circuito cerrado).";
+        return;
+      }
+      msg.style.color = "#0dcaf0"; msg.textContent = "Verificando cuenta en el circuito...";
+      fetch(urlSrv + "/auth_piloto", {
+        method: "POST",
+        body: JSON.stringify({ modo: "LOGIN", userKey: userKey, clave: clave })
+      }).then(function(r) { return r.json(); }).then(function(res) {
+        if (res && res.ok) {
+          entrarFinalPiloto(userKey, res.nombre || nomOrig, clave, res.dorsal, recordar);
+        } else {
+          msg.style.color = "#ff4d5e"; msg.textContent = (res && res.msg) ? res.msg : "Usuario o contrasena incorrectos.";
+        }
+      }).catch(function() {
+        msg.style.color = "#ff4d5e"; msg.textContent = "Sin conexion con el servidor.";
+      });
     }
   }
 
