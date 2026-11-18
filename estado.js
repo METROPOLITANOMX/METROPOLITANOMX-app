@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://casual-oasis-television-hearts.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://jean-employment-contamination-cooling.trycloudflare.com" };
