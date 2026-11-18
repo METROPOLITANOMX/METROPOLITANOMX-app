@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://extending-down-aim-necessarily.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://spirits-closer-beauty-action.trycloudflare.com" };
