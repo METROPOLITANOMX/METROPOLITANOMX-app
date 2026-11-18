@@ -46,6 +46,7 @@
     <div class="box-mini"><div class="lbl">Vel. Punta</div><div id="valVel" class="val-md" style="color:#ffc107;">-- km/h</div></div>
   </div>
   <button id="btnAvisoTorre" onclick="avisarTorreProblema()" style="width:100%;width:100%;max-width:100%;margin:0 auto 8px auto;display:block;background:#dc3545;color:#fff;padding:11px;font-size:12px;border-radius:10px;">AVISO A TORRE DE CONTROL (AVERIA / PARADA)</button>
+  <button id="btnModoEntreno" onclick="toggleModoEntrenoPersonal()" style="width:100%;margin:0 auto 8px auto;display:block;background:#222;color:#ffc107;border:1px solid #ffc107;padding:9px;font-size:11px;font-weight:bold;border-radius:10px;cursor:pointer;">MODO ENTRENO PERSONAL: OFF (VER CARRERA PC)</button>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 auto 8px auto;">
     <button onclick="controlarMiCamaraRemota('INICIAR')" style="background:#0dcaf0;color:#000;padding:10px 6px;font-size:11px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;">ACTIVAR MI CAMARA META</button>
     <button onclick="controlarMiCamaraRemota('PARAR')" style="background:#333;color:#fff;padding:10px 6px;font-size:11px;font-weight:bold;border:1px solid #555;border-radius:10px;cursor:pointer;">PARAR MI CAMARA META</button>
@@ -57,6 +58,21 @@
   var miDorsal = String(localStorage.getItem('metro_dorsal') || "--");
   document.getElementById('txtN').textContent = localStorage.getItem('metro_nombre') || "Piloto";
   document.getElementById('txtD').textContent = "#" + miDorsal;
+    var modoEntrenoPersonal = false, ultVtaEntrenoCantada = -1, histEntrenoMs = [], banderaLocActual = "";
+  function toggleModoEntrenoPersonal() {
+    modoEntrenoPersonal = !modoEntrenoPersonal;
+    var b = document.getElementById("btnModoEntreno");
+    if (b) {
+      if (modoEntrenoPersonal) {
+        b.style.background = "#ffc107"; b.style.color = "#000";
+        b.textContent = "MODO ENTRENO PERSONAL: ON (IGNORANDO PC)";
+      } else {
+        b.style.background = "#222"; b.style.color = "#ffc107";
+        b.textContent = "MODO ENTRENO PERSONAL: OFF (VER CARRERA PC)";
+      }
+    }
+    leerPista();
+  }
   var vozOn = false, ultMarcaLoc = 0, ultVtaCantada = -1, ultTiempoSp = "", histVtas = [], miMejorManga = 0, recordPistaManga = 0, ultFaseSem = "", vocesApp = [];
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
 
@@ -189,10 +205,10 @@
     var uP = est.url.replace(/\/$/, "");
     fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
       if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
-        if (ultMarcaLoc !== 0) {
+        if (true) {
           ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; hablar(loc.frase);
           var fl = loc.frase.toLowerCase();
-          if (fl.indexOf("pista cerrada") !== -1) iluminarBordeBandera("#d90429"); else if (fl.indexOf("precaucion en pista") !== -1) iluminarBordeBandera("#f77f00"); else if (fl.indexOf("pista abierta") !== -1) iluminarBordeBandera("#00b050"); else if (fl.indexOf("luz pista apagada") !== -1) iluminarBordeBandera(null); else if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
+          if (fl.indexOf("pista cerrada") !== -1) iluminarBordeBandera("#d90429"); else if (fl.indexOf("precaucion en pista") !== -1) iluminarBordeBandera("#f77f00"); else if (fl.indexOf("pista abierta") !== -1) iluminarBordeBandera("#00b050"); else if (fl.indexOf("luz pista apagada") !== -1) { banderaLocActual = ""; iluminarBordeBandera(null); } else if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
           else if (fl.indexOf("roja") !== -1) iluminarBordeBandera("#ff1e1e");
           else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
           else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
@@ -208,7 +224,7 @@
         if (c === 'roja') iluminarBordeBandera("#d90429");
         else if (c === 'verde') iluminarBordeBandera("#00b050");
         else if (c === 'ambar') iluminarBordeBandera("#f77f00");
-        else iluminarBordeBandera(null);
+        else if (!banderaLocActual) iluminarBordeBandera(null);
       }
     }).catch(() => {});
     fetch(uP + "/radar_live.json?t=" + Date.now()).then(r => r.json()).then(rad => {
@@ -217,6 +233,44 @@
     }).catch(() => {});
     fetch(uP + "/live_data.json?t=" + Date.now()).then(r => r.json()).then(live => {
       if (!live) return;
+      if (modoEntrenoPersonal) {
+        document.getElementById('txtMangaNombre').textContent = "ENTRENO PERSONAL #" + miDorsal;
+        document.getElementById('txtFaseReloj').textContent = "ANTENA PERSONAL";
+        fetch(uP + "/ranking_camara.json?t=" + Date.now()).then(r => r.json()).then(arr => {
+          var listaC = Array.isArray(arr) ? arr : [], miC = null;
+          for (var i = 0; i < listaC.length; i++) {
+            if (String(listaC[i].dorsal) === miDorsal) { miC = listaC[i]; break; }
+          }
+          if (!miC) {
+            document.getElementById('listaRivales').innerHTML = "Esperando deteccion de tu camara #" + miDorsal + "...";
+            return;
+          }
+          var vtas = miC.vueltas || 0, ult = miC.ultima || 0, mej = miC.mejor || 0;
+          document.getElementById('valPos').textContent = "ENT";
+          document.getElementById('valVueltas').textContent = vtas + " Vueltas";
+          document.getElementById('valUltima').textContent = fmt(ult);
+          document.getElementById('valMejor').textContent = fmt(mej);
+          if (miC.kmh > 0) document.getElementById('valVel').textContent = miC.kmh + " km/h";
+          if (ult > 0 && mej > 0) {
+            var df = (ult - mej) / 1000, elD = document.getElementById('valDelta');
+            elD.textContent = df <= 0 ? "RECORD PERSONAL!" : ("Dif. VR: +" + df.toFixed(2) + "s");
+            elD.style.color = df <= 0.15 ? "#20c997" : "#ff4d5e";
+          }
+          if (vtas !== ultVtaEntrenoCantada && vtas > 0 && ult > 0) {
+            histEntrenoMs.push(ult);
+            var sumE = 0; for (var k = 0; k < histEntrenoMs.length; k++) sumE += histEntrenoMs[k];
+            document.getElementById('valMedia').textContent = fmt(sumE / histEntrenoMs.length);
+            if (ultVtaEntrenoCantada !== -1) {
+              hablar("Vuelta " + vtas + ", " + (ult / 1000).toFixed(2).replace(".", " punto ") + " segundos");
+            }
+            ultVtaEntrenoCantada = vtas;
+          }
+          document.getElementById('valGapDel').textContent = mej > 0 ? fmt(mej) : "--";
+          document.getElementById('valGapDet').textContent = (ult > 0 && mej > 0) ? ("+" + ((ult - mej) / 1000).toFixed(2) + "s") : "--";
+          document.getElementById('listaRivales').innerHTML = "<div class='fila-rival yo'><span><b>#" + miDorsal + " " + (miC.nombre || "") + "</b> (" + vtas + " vueltas)</span><span style='color:#20c997;'>VR: " + fmt(mej) + "</span></div>";
+        }).catch(() => {});
+        return;
+      }
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
       gestionarSemaforo(rel.fase || "LISTO", segs, rel.luzLibre || "");
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
