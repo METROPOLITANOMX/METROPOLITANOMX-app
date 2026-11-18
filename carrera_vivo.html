@@ -205,7 +205,9 @@
     var uP = est.url.replace(/\/$/, "");
     fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
       if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
+        var esCargaInicial = (ultMarcaLoc === 0);
         ultMarcaLoc = loc.marca;
+        if (esCargaInicial) return;
         ban.style.color = "#ffc107";
         ban.textContent = "DIRECTOR: " + loc.frase;
         hablar(loc.frase);
