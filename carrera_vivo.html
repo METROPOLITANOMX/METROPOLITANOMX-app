@@ -58,6 +58,14 @@
   document.getElementById('txtD').textContent = "#" + miDorsal;
   var vozOn = false, ultMarcaLoc = 0, ultVtaCantada = -1, ultTiempoSp = "", histVtas = [], miMejorManga = 0, recordPistaManga = 0, ultFaseSem = "", vocesApp = [];
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+    document.addEventListener('touchstart', function desbloqVoz() {
+    if (!vozOn && typeof toggleVoz === 'function') toggleVoz();
+    document.removeEventListener('touchstart', desbloqVoz);
+  }, { passive: true });
+  document.addEventListener('click', function desbloqVozClick() {
+    if (!vozOn && typeof toggleVoz === 'function') toggleVoz();
+    document.removeEventListener('click', desbloqVozClick);
+  }, { passive: true });
   function cargarVocesApp() { if ('speechSynthesis' in window) vocesApp = window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().indexOf('es') === 0); }
   if ('speechSynthesis' in window) { cargarVocesApp(); window.speechSynthesis.onvoiceschanged = cargarVocesApp; }
     var pantallaFijaOn = false, wakeLockRef = null;
@@ -189,7 +197,7 @@
       }
     }).catch(() => {});
         fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
-      if (ultFaseSem === 'LISTO' || ultFaseSem === '') {
+      if (true) {
         var c = (lz && lz.color) ? lz.color : "";
         if (c === 'roja') iluminarBordeBandera("#d90429");
         else if (c === 'verde') iluminarBordeBandera("#00b050");
