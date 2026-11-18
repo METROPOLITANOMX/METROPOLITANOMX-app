@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Telemetría en Vivo - Metropolitano MX</title>
 <style>
@@ -190,7 +190,7 @@
     }
     var uP = est.url.replace(/\/$/, "");
 
-    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(lz) {
+    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(lz) {
       var c = (lz && typeof lz.color === "string") ? lz.color : "";
       if (c !== colorActual) {
         colorActual = c;
@@ -201,7 +201,7 @@
       }
     }).catch(function() {});
 
-    fetch(uP + "/locucion.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(loc) {
+    fetch(uP + "/locucion.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(loc) {
       if (!loc || !loc.frase || !loc.marca) return;
       if (ultMarcaLoc === null) { ultMarcaLoc = loc.marca; if (!loc.frase) return; }
       if (loc.marca !== ultMarcaLoc) {
@@ -218,17 +218,17 @@
       }
     }).catch(function() {});
 
-    fetch(uP + "/radar_live.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(rad) {
+    fetch(uP + "/radar_live.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(rad) {
       var kmh = (rad && rad.porPiloto) ? (rad.porPiloto[miDorsal] || 0) : 0;
       document.getElementById('valVel').textContent = kmh > 0 ? (kmh + " km/h") : "-- km/h";
     }).catch(function() {});
 
-    fetch(uP + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(live) {
+    fetch(uP + "/live_data.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(live) {
       if (!live) return;
       if (modoEntrenoPersonal) {
         document.getElementById('txtMangaNombre').textContent = "ENTRENO PERSONAL #" + miDorsal;
         document.getElementById('txtFaseReloj').textContent = "ANTENA PERSONAL";
-        fetch(uP + "/ranking_camara.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(arr) {
+        fetch(uP + "/ranking_camara.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(arr) {
           var listaC = Array.isArray(arr) ? arr : [], miC = null;
           for (var i = 0; i < listaC.length; i++) {
             if (String(listaC[i].dorsal) === miDorsal) { miC = listaC[i]; break; }
