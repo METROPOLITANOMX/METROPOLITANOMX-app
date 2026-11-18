@@ -108,8 +108,8 @@
     u.rate = 1.02;
     window.speechSynthesis.speak(u);
   }
-    var timerLuzBandera = null;
-  function iluminarBordeBandera(colorHex) {
+    var timerLuzBandera = null, colorLuzFija = "";
+  function iluminarBordeBandera(colorHex, esTemporal) {
     var m = document.getElementById('marcoBanderaVivo');
     if (!m) {
       m = document.createElement('div');
@@ -124,13 +124,14 @@
       m.style.boxShadow = "inset 0 0 30px " + colorHex;
       if (colorHex === "#ffc107" || colorHex === "#f77f00") vibrarSalida([200, 120, 200, 120, 200, 120, 200]);
       else if (colorHex === "#d90429") vibrarSalida([650, 200, 650]);
-      timerLuzBandera = setTimeout(function() {
-        m.style.display = "none";
-        document.body.style.boxShadow = "none";
-      }, 5000);
+      if (esTemporal) {
+        timerLuzBandera = setTimeout(function() {
+          if (colorLuzFija) iluminarBordeBandera(colorLuzFija, false);
+          else { m.style.display = "none"; }
+        }, 4500);
+      }
     } else {
       m.style.display = "none";
-      document.body.style.boxShadow = "none";
     }
   }
 
@@ -203,10 +204,10 @@
       var c = (lz && typeof lz.color === "string") ? lz.color : "";
       if (c !== colorActual) {
         colorActual = c;
-        if (c === "roja") iluminarBordeBandera("#d90429");
-        else if (c === "ambar") iluminarBordeBandera("#f77f00");
-        else if (c === "verde") iluminarBordeBandera("#00b050");
-        else iluminarBordeBandera(null);
+        if (c === "roja") { colorLuzFija = "#d90429"; iluminarBordeBandera(colorLuzFija, false); }
+        else if (c === "ambar") { colorLuzFija = "#f77f00"; iluminarBordeBandera(colorLuzFija, false); }
+        else if (c === "verde") { colorLuzFija = "#00b050"; iluminarBordeBandera(colorLuzFija, false); }
+        else { colorLuzFija = ""; iluminarBordeBandera(null, false); }
       }
     }).catch(function() {});
 
@@ -218,12 +219,12 @@
         if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
         hablar(loc.frase);
         var fl = loc.frase.toLowerCase();
-        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429");
-        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
-        else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
-        else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
-        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050");
-        else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null);
+        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429", true);
+        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107", true);
+        else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd", true);
+        else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff", true);
+        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050", true);
+        else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null, true);
       }
     }).catch(function() {});
 
@@ -268,12 +269,23 @@
         return;
       }
 
-      if (live.reloj && live.reloj.fase) window._ultRelojValido = live.reloj;
-      var rel = (live.reloj && live.reloj.fase) ? live.reloj : (window._ultRelojValido || {});
-      var segs = Math.max(0, parseInt(rel.restante, 10) || 0), min = Math.floor(segs / 60), seg = segs % 60;
-      gestionarSemaforo(rel.fase || "LISTO", segs);
+      if (live.reloj && live.reloj.fase) {
+        var tsN = Number(live.reloj.ts || 0), tsA = Number((window._ultRelojValido && window._ultRelojValido.ts) || 0);
+        if (!tsN || tsN >= tsA || live.reloj.fase !== (window._ultRelojValido && window._ultRelojValido.fase)) {
+          window._ultRelojValido = Object.assign({}, live.reloj, { _rxMs: Date.now() });
+        }
+      }
+      var rel = window._ultRelojValido || {};
+      var fAct = String(rel.fase || "LISTO").toUpperCase();
+      var baseS = Math.max(0, parseInt(rel.restante, 10) || 0);
+      var elapS = rel._rxMs ? Math.floor((Date.now() - rel._rxMs) / 1000) : 0;
+      var segs = baseS;
+      if (fAct === "SALIDA_30" || fAct === "DESCANSO" || (fAct === "CARRERA" && Number(rel.total || 0) > 0)) segs = Math.max(0, baseS - elapS);
+      else if (fAct === "CARRERA" && Number(rel.total || 0) === 0) segs = baseS + elapS;
+      var min = Math.floor(segs / 60), seg = segs % 60;
+      gestionarSemaforo(fAct, segs);
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
-      document.getElementById('txtFaseReloj').textContent = (rel.fase || "LISTO") + " \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg;
+      document.getElementById('txtFaseReloj').textContent = fAct + " \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg;
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
             if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
