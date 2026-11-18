@@ -1,5 +1,1 @@
-self.addEventListener('fetch', function(event) {
-  event.respondWith(fetch(event.request, { cache: 'no-store' }));
-});
-
-// v20261118192914
+self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); }); // v_20261118201113

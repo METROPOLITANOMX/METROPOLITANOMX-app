@@ -19,9 +19,7 @@
   .controles { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:10px; max-width:560px; margin:0 auto 8px auto; font-size:11px; text-align:left; }
   .lista-v { background:#141414; border:1px solid #2b2b2b; border-radius:10px; padding:8px 10px; max-width:560px; margin:0 auto; max-height:175px; overflow-y:auto; text-align:left; font-size:12px; }
 </style></head><body>
-  <div id="capaSoloAntena" onclick="salirModoSoloAntena()" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;">
-    <div style="font-size:22px;font-weight:bold;margin-bottom:8px;">MODO SOLO ANTENA ACTIVO</div>
-    <div style="font-size:13px;color:#888;margin-bottom:20px;">Audio silenciado · Pantalla en ahorro · Leyendo pista</div>
+  <div style="font-size:13px;color:#888;margin-bottom:20px;">Audio silenciado · Pantalla en ahorro · Leyendo pista</div>
     <div style="font-size:12px;color:#555;border:1px solid #333;padding:8px 14px;border-radius:8px;">Toca la pantalla para volver a ver la camara</div>
   </div>
   <div class="top">
@@ -51,7 +49,7 @@
   </div>
   <div style="display:flex;gap:6px;max-width:560px;margin:0 auto 8px auto;">
     <button style="flex:1;background:#2b2b2b;color:#fff;padding:9px;font-size:11px;" onclick="registrarPasoMeta(0)">PASO MANUAL</button>
-    <button style="background:#dc3545;color:#fff;padding:9px 12px;font-size:11px;" onclick="reiniciarSesionCam()">RESET</button><button id="btnSoloAntena" style="background:#6f42c1;color:#fff;padding:9px 10px;font-size:11px;" onclick="activarModoSoloAntena()">SOLO ANTENA</button>
+    <button style="background:#dc3545;color:#fff;padding:9px 12px;font-size:11px;" onclick="reiniciarSesionCam()">RESET</button><button id="btnModoAntenaNuevo" style="background:#6f42c1;color:#fff;padding:9px 10px;font-size:11px;" onclick="iniciarModoAntenaLimpio()">MODO ANTENA</button>
   </div>
   <div class="grid-tiempos">
     <div class="box-t"><div class="lbl">Vueltas</div><div id="cVtas" class="val" style="color:#ffc107;">0</div></div>
@@ -157,31 +155,7 @@
     vozCam = !vozCam; var b = document.getElementById('btnVozCam');
     b.style.background = vozCam ? '#20c997' : '#444'; b.style.color = vozCam ? '#000' : '#fff'; b.textContent = vozCam ? 'Voz ON' : 'Voz OFF';
   }
-    var soloAntenaActivo = false;
-  function activarModoSoloAntena() {
-    if (!soloAntenaActivo) pitarCam(950);
-    soloAntenaActivo = true;
-    vozCam = false;
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-    var bv = document.getElementById('btnVozCam');
-    if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
-    var capa = document.getElementById('capaSoloAntena');
-    if (capa) {
-      capa.style.display = 'flex';
-      capa.style.zIndex = '99999';
-      capa.style.background = '#000';
-    }
-    if (!camActiva) {
-      iniciarCamaraCrono();
-    } else {
-      mantenerPantallaEncendida();
-    }
-  }
-  function salirModoSoloAntena() {
-    soloAntenaActivo = false;
-    var capa = document.getElementById('capaSoloAntena');
-    if (capa) capa.style.display = 'none';
-  }
+    
     function desconectarAntenaCam() {
     if (!urlCircuitoCam) return;
     var p = obtenerDatosPilotoCam();
@@ -193,7 +167,7 @@
   window.addEventListener("pagehide", desconectarAntenaCam);
   window.addEventListener("beforeunload", desconectarAntenaCam);
   function pitarCam(f) {
-    if (soloAntenaActivo) return;
+    
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
       var o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f || 920; o.connect(g); g.connect(ac.destination);
@@ -227,7 +201,6 @@
     if (!camActiva || lecturaActiva) return;
     lecturaActiva = true;
     prevIzq = null; prevDer = null; pasoIzqMs = 0;
-    if (modoAntenaGlobal) ultimoPasoMs = Date.now();
     var b2 = document.getElementById('btnToggleLectura'), b3 = document.getElementById('btnPararLectura');
     b2.textContent = "DETECTANDO..."; b2.style.background = "#198754"; b2.style.color = "#fff";
     if (b3) { b3.disabled = false; b3.style.background = "#dc3545"; b3.style.color = "#fff"; }
@@ -441,7 +414,46 @@
     document.getElementById('cVtas').textContent = "0"; document.getElementById('cUlt').textContent = "--"; document.getElementById('cMej').textContent = "--"; document.getElementById('cKmh').textContent = "-- km/h";
     document.getElementById('listaVtasCam').innerHTML = '<span style="color:#777;">Sesion reiniciada. Pulsa <b>2. INICIAR LECTURA</b> cuando estes listo...</span>';
   }
-</script></body></html>
+</script><div id="pantallaAntenaLimpia" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:99999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
+  <div id="txtEstadoAntenaLimpia" style="font-size:22px;font-weight:bold;margin-bottom:10px;">ANTENA CONECTADA - ESPERANDO SALIDA</div>
+  <div style="font-size:13px;color:#888;margin-bottom:28px;">Pantalla en ahorro · Bloqueo desactivado · Voz silenciada</div>
+  <button onclick="salirModoAntenaLimpio()" style="background:#222;color:#fff;border:1px solid #555;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:bold;">SALIR DE MODO ANTENA</button>
+</div>
+<script>
+  var enModoAntenaLimpio = false;
+  function iniciarModoAntenaLimpio() {
+    enModoAntenaLimpio = true;
+    vozCam = false;
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    var bv = document.getElementById('btnVozCam');
+    if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
+    var p = document.getElementById('pantallaAntenaLimpia');
+    if (p) p.style.display = 'flex';
+    if (!camActiva) {
+      iniciarCamaraCrono();
+    } else {
+      mantenerPantallaEncendida();
+    }
+  }
+  function salirModoAntenaLimpio() {
+    enModoAntenaLimpio = false;
+    var p = document.getElementById('pantallaAntenaLimpia');
+    if (p) p.style.display = 'none';
+  }
+  setInterval(function() {
+    if (!enModoAntenaLimpio) return;
+    var t = document.getElementById('txtEstadoAntenaLimpia');
+    if (!t) return;
+    if (lecturaActiva) {
+      t.textContent = "DETECTANDO PASOS EN PISTA (" + vueltasCam.length + " VTAS)";
+      t.style.color = "#00e676";
+    } else {
+      t.textContent = "ANTENA CONECTADA - ESPERANDO SALIDA";
+      t.style.color = "#ffc107";
+    }
+  }, 500);
+</script>
+</body></html>
 
 
 
