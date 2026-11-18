@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://commons-treating-blocked-mission.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://extending-down-aim-necessarily.trycloudflare.com" };
