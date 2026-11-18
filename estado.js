@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://incomplete-meditation-send-homepage.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://rapids-ban-focus-websites.trycloudflare.com" };
