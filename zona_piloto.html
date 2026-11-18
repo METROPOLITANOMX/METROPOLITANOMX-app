@@ -446,7 +446,7 @@
   function toggleFormNuevaMoto() {
     var f = document.getElementById('formNuevaMoto');
     f.style.display = (f.style.display === 'block') ? 'none' : 'block';
-    document.getElementById('inpDorsalMoto').value = datosPerfil.dorsal;
+    document.getElementById('inpDorsalMoto').value = (datosPerfil.dorsal && datosPerfil.dorsal !== '--') ? datosPerfil.dorsal : '';
   }
 
   function guardarNuevaMoto() {
@@ -460,8 +460,7 @@
         fotos: [b64, "", "", ""], vueltasMant: 0,
         settings: { terreno: "Seco / Suelto", horquilla: "", muellesHorquilla: "", amortiguador: "", desarrollo: "", neumaticos: "", giroscopio: "", notas: "" }
       });
-      guardarGarajeStorage();
-      document.getElementById('inpModeloMoto').value = "";
+      guardarGarajeStorage(); if (garajeMotos.length === 1) activarMotoEnPista(0); document.getElementById('inpModeloMoto').value = "";
       inp.value = "";
       document.getElementById('formNuevaMoto').style.display = 'none';
       renderizarGaraje();
