@@ -203,7 +203,12 @@
     var est = window.ESTADO_CIRCUITO || {}, ban = document.getElementById('bannerDir');
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { ban.style.color = "#ff4d5e"; ban.textContent = "CIRCUITO CERRADO"; return; }
     var uP = est.url.replace(/\/$/, "");
-        fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
+            fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
+      var c = (lz && lz.color) ? lz.color : "";
+      var hex = (c === "roja") ? "#d90429" : ((c === "ambar") ? "#f77f00" : ((c === "verde") ? "#00b050" : ""));
+      iluminarBordeBandera(hex || null);
+    }).catch(() => {});
+    fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
       if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
         var esInicio = (ultMarcaLoc === 0);
         ultMarcaLoc = loc.marca;
@@ -212,22 +217,12 @@
         ban.textContent = "DIRECTOR: " + loc.frase;
         hablar(loc.frase);
         var fl = loc.frase.toLowerCase();
-        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1) iluminarBordeBandera("#d90429");
-        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
+        if (fl.indexOf("amarilla") !== -1) iluminarBordeBandera("#ffc107");
+        else if (fl.indexOf("roja") !== -1) iluminarBordeBandera("#d90429");
         else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
         else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
-        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050");
+        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1) iluminarBordeBandera("#00b050");
         else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null);
-      }
-    }).catch(() => {});
-    fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
-      if (!lz || typeof lz.color !== "string") return;
-      if (lz.color !== colorLuzPistaActual) {
-        colorLuzPistaActual = lz.color;
-        if (lz.color === "roja") iluminarBordeBandera("#d90429");
-        else if (lz.color === "ambar") iluminarBordeBandera("#f77f00");
-        else if (lz.color === "verde") iluminarBordeBandera("#00b050");
-        else if (lz.color === "") iluminarBordeBandera(null);
       }
     }).catch(() => {});
     fetch(uP + "/radar_live.json?t=" + Date.now()).then(r => r.json()).then(rad => {
@@ -335,7 +330,8 @@
     }).catch(() => {});
   }
   setInterval(leerPista, 1000);
-</script></body></html>
+</script>  
+</body></html>
 
 
 
