@@ -203,10 +203,13 @@
     var est = window.ESTADO_CIRCUITO || {}, ban = document.getElementById('bannerDir');
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { ban.style.color = "#ff4d5e"; ban.textContent = "CIRCUITO CERRADO"; return; }
     var uP = est.url.replace(/\/$/, "");
-            fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
+                fetch(uP + "/luz_pista.json?t=" + Date.now()).then(r => r.json()).then(lz => {
       var c = (lz && lz.color) ? lz.color : "";
-      var hex = (c === "roja") ? "#d90429" : ((c === "ambar") ? "#f77f00" : ((c === "verde") ? "#00b050" : ""));
-      iluminarBordeBandera(hex || null);
+      if (c !== colorLuzPistaActual) {
+        colorLuzPistaActual = c;
+        var hex = (c === "roja") ? "#d90429" : ((c === "ambar") ? "#f77f00" : ((c === "verde") ? "#00b050" : ""));
+        iluminarBordeBandera(hex || null);
+      }
     }).catch(() => {});
     fetch(uP + "/locucion.json?t=" + Date.now()).then(r => r.json()).then(loc => {
       if (loc && loc.frase && loc.marca && loc.marca !== ultMarcaLoc) {
