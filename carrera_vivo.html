@@ -271,7 +271,7 @@
       var rel = live.reloj || {}, segs = rel.restante || 0, min = Math.floor(segs / 60), seg = segs % 60;
       gestionarSemaforo(rel.fase || "LISTO", segs);
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
-      document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
+      document.getElementById('txtFaseReloj').textContent = (rel.fase || "") + (segs > 0 ? (" \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
       var lista = live.clasificacionManga || [], miIdx = -1, hR = "", vrAbs = 99999999, vrPil = "";
