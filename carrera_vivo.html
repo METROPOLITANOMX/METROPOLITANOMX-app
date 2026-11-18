@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Telemetr&#237;a en Vivo - Metropolitano MX</title>
+<title>TelemetrÃƒÆ’Ã‚Â­a en Vivo - Metropolitano MX</title>
 <style>
   * { box-sizing:border-box; }
   body { margin:0; background:#080808; color:#fff; font-family:Arial,sans-serif; padding:10px; text-align:center; min-height:100vh; transition:box-shadow 0.3s; }
@@ -31,7 +31,7 @@
 @media (orientation:landscape){.grid-principal{grid-template-columns:repeat(4,1fr);}.val-xl{font-size:36px;}.val-lg{font-size:30px;}}</style></head><body id="cuerpoPista">
   <div id="marcoBanderaVivo" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:9998;box-sizing:border-box;"></div>
   <div id="overlaySemaforo"><div id="numCuentaSem" style="font-size:30vw;font-weight:bold;color:#fff;line-height:1;text-shadow:0 4px 25px rgba(0,0,0,0.45);">00:30</div></div>
-  <div class="top-bar"><div class="piloto-id"><span id="txtD" class="badge-d">#--</span><span id="txtN">PILOTO</span></div><div><button id="btnPantalla" style="background:#333;color:#ccc;margin-right:4px;" onclick="togglePantallaFija()">Fija OFF</button><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="(window.parent && window.parent.cambiarVistaApp ? window.parent.cambiarVistaApp('PERFIL') : (window.location.href='zona_piloto.html'))">Salir Pista</button></div></div><div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
+  <div class="top-bar"><div class="piloto-id"><span id="txtD" class="badge-d">#--</span><span id="txtN">PILOTO</span></div><div><button id="btnPantalla" style="background:#333;color:#ccc;margin-right:4px;" onclick="togglePantallaFija()">Fija OFF</button><button id="btnVoz" style="background:#444;color:#fff;margin-right:4px;" onclick="toggleVoz()">Voz OFF</button><button style="background:#dc3545;color:#fff;" onclick="window.location.href='zona_piloto.html'">Salir Pista</button></div></div><div id="bannerDir" class="banner-dir">Conectando con Torre de Control...</div>
   <div id="boxRecordPista" style="background:#1c1226;border:1px solid #8a2be2;border-radius:10px;padding:7px 10px;width:100%;max-width:100%;margin:0 auto 8px auto;font-size:12px;color:#d8b4fe;font-weight:bold;">VR PISTA: Esperando vueltas...</div>
   <div id="boxEstadoManga" class="estado-manga"><span id="txtMangaNombre" style="color:#ffc107;font-weight:bold;">ESPERANDO MANGA</span><span id="txtFaseReloj" style="color:#20c997;font-weight:bold;">--:--</span></div>
   <div class="grid-principal">
@@ -108,8 +108,8 @@
     u.rate = 1.02;
     window.speechSynthesis.speak(u);
   }
-    var timerLuzBandera = null, colorLuzFija = "";
-  function iluminarBordeBandera(colorHex, esTemporal) {
+    var timerLuzBandera = null;
+  function iluminarBordeBandera(colorHex) {
     var m = document.getElementById('marcoBanderaVivo');
     if (!m) {
       m = document.createElement('div');
@@ -124,14 +124,13 @@
       m.style.boxShadow = "inset 0 0 30px " + colorHex;
       if (colorHex === "#ffc107" || colorHex === "#f77f00") vibrarSalida([200, 120, 200, 120, 200, 120, 200]);
       else if (colorHex === "#d90429") vibrarSalida([650, 200, 650]);
-      if (esTemporal) {
-        timerLuzBandera = setTimeout(function() {
-          if (colorLuzFija) iluminarBordeBandera(colorLuzFija, false);
-          else { m.style.display = "none"; }
-        }, 4500);
-      }
+      timerLuzBandera = setTimeout(function() {
+        m.style.display = "none";
+        document.body.style.boxShadow = "none";
+      }, 5000);
     } else {
       m.style.display = "none";
+      document.body.style.boxShadow = "none";
     }
   }
 
@@ -160,7 +159,7 @@
 
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
-  if (!est.activo || !est.url || !confirm("\u00BFEnviar aviso urgente de averia a Torre de Control?")) return;
+    if (!est.activo || !est.url || !confirm("Ãƒâ€šÃ‚Â¿Enviar aviso urgente de averia a Torre de Control?")) return;
     btn.disabled = true; btn.textContent = "ENVIANDO AVISO...";
     fetch(est.url.replace(/\/$/, "") + "/locucion", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ frase: "Atencion direccion, dorsal " + miDorsal + " " + document.getElementById('txtN').textContent + " reporta parada en pista", marca: Date.now() }) })
       .then(function() { btn.style.background = "#ffc107"; btn.style.color = "#000"; btn.textContent = "AVISO ENVIADO"; setTimeout(function() { btn.disabled = false; btn.style.background = "#dc3545"; btn.style.color = "#fff"; btn.textContent = "AVISO A TORRE DE CONTROL (AVERIA / PARADA)"; }, 8000); });
@@ -168,25 +167,34 @@
 
   function vibrarSalida(patron) { try { if (navigator && navigator.vibrate) navigator.vibrate(patron); } catch (e) {} }
 
-  function gestionarSemaforo(fase, rest) {
+  function gestionarSemaforo(fase, rest, tsRef) {
     var fUp = String(fase || "").toUpperCase(), ov = document.getElementById('overlaySemaforo'), num = document.getElementById('numCuentaSem');
     if (!ov || !num) return;
     var sTxt = rest < 10 ? ("00:0" + rest) : ("00:" + rest);
     if (fUp === 'SALIDA_30') {
+      window._enCuentaSalida = true;
       ov.style.display = "flex";
       ov.style.background = rest <= 10 ? "#f77f00" : "#d90429";
       num.textContent = sTxt;
       if (rest !== ultSegVib && rest > 0) {
         ultSegVib = rest;
         if (rest > 10) vibrarSalida(140);
-      else if (rest > 5) vibrarSalida([120, 80, 120]);
-      else vibrarSalida([90, 60, 90, 60, 90]);
+        else if (rest > 5) vibrarSalida([120, 80, 120]);
+        else vibrarSalida([90, 60, 90, 60, 90]);
       }
-  } else if (fUp === 'CARRERA' || fUp === 'SUPERPOLE' || fUp === 'DUELO') {
-      if (ultFaseSem === 'SALIDA_30') { verdeHastaMs = Date.now() + 2200; hablar("Salida, gas a fondo!"); vibrarSalida(650); ultSegVib = -1; }
+    } else if (fUp === 'CARRERA' || fUp === 'SUPERPOLE' || fUp === 'DUELO') {
+      if (window._enCuentaSalida && (Date.now() - (window._ultVerdeMs || 0)) > 8000) {
+        window._enCuentaSalida = false;
+        window._ultVerdeMs = Date.now();
+        verdeHastaMs = Date.now() + 2200;
+        hablar("Salida, gas a fondo!");
+        vibrarSalida(650);
+        ultSegVib = -1;
+      }
       if (Date.now() < verdeHastaMs) { ov.style.display = "flex"; ov.style.background = "#00b050"; num.textContent = "SALIDA!"; }
       else ov.style.display = "none";
     } else {
+      window._enCuentaSalida = false;
       ov.style.display = "none";
       ultSegVib = -1;
     }
@@ -204,10 +212,10 @@
       var c = (lz && typeof lz.color === "string") ? lz.color : "";
       if (c !== colorActual) {
         colorActual = c;
-        if (c === "roja") { colorLuzFija = "#d90429"; iluminarBordeBandera(colorLuzFija, false); }
-        else if (c === "ambar") { colorLuzFija = "#f77f00"; iluminarBordeBandera(colorLuzFija, false); }
-        else if (c === "verde") { colorLuzFija = "#00b050"; iluminarBordeBandera(colorLuzFija, false); }
-        else { colorLuzFija = ""; iluminarBordeBandera(null, false); }
+        if (c === "roja") iluminarBordeBandera("#d90429");
+        else if (c === "ambar") iluminarBordeBandera("#f77f00");
+        else if (c === "verde") iluminarBordeBandera("#00b050");
+        else iluminarBordeBandera(null);
       }
     }).catch(function() {});
 
@@ -219,12 +227,12 @@
         if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
         hablar(loc.frase);
         var fl = loc.frase.toLowerCase();
-        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429", true);
-        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107", true);
-        else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd", true);
-        else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff", true);
-        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050", true);
-        else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null, true);
+        if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429");
+        else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
+        else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
+        else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
+        else if (fl.indexOf("verde") !== -1 || fl.indexOf("libre") !== -1 || fl.indexOf("abierta") !== -1) iluminarBordeBandera("#00b050");
+        else if (fl.indexOf("apagada") !== -1) iluminarBordeBandera(null);
       }
     }).catch(function() {});
 
@@ -271,38 +279,27 @@
 
       if (live.reloj && live.reloj.fase) {
         var tsN = Number(live.reloj.ts || 0), tsA = Number((window._ultRelojValido && window._ultRelojValido.ts) || 0);
-        if (!tsN || tsN >= tsA || live.reloj.fase !== (window._ultRelojValido && window._ultRelojValido.fase)) {
+        if (!tsA || tsN >= tsA) {
           window._ultRelojValido = Object.assign({}, live.reloj, { _rxMs: Date.now() });
         }
       }
-      var rel = window._ultRelojValido || {};
+      var rel = window._ultRelojValido || live.reloj || {};
       var fAct = String(rel.fase || "LISTO").toUpperCase();
       var baseS = Math.max(0, parseInt(rel.restante, 10) || 0);
       var elapS = rel._rxMs ? Math.floor((Date.now() - rel._rxMs) / 1000) : 0;
       var segs = baseS;
       if (fAct === "SALIDA_30" || fAct === "DESCANSO" || (fAct === "CARRERA" && Number(rel.total || 0) > 0)) segs = Math.max(0, baseS - elapS);
       else if (fAct === "CARRERA" && Number(rel.total || 0) === 0) segs = baseS + elapS;
+      if (fAct === "SALIDA_30" && segs <= 0) {
+        fAct = String(live.modo || "CARRERA").toUpperCase();
+        if (fAct === "CRONO") fAct = "CARRERA";
+      }
       var min = Math.floor(segs / 60), seg = segs % 60;
-      gestionarSemaforo(fAct, segs);
+      gestionarSemaforo(fAct, segs, rel.ts || 0);
       document.getElementById('txtMangaNombre').textContent = rel.manga || live.modo || "PISTA ACTIVA";
-      document.getElementById('txtFaseReloj').textContent = fAct + " \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg;
+      document.getElementById('txtFaseReloj').textContent = fAct + (segs > 0 ? (" \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
-    if (live.modo === "DUELO" && live.dueloVivo) {
-      var dv = live.dueloVivo, r1 = dv.piloto1 || {}, r2 = dv.piloto2 || {};
-      var esR1 = String(r1.dorsal || "") === miDorsal, esR2 = String(r2.dorsal || "") === miDorsal;
-      document.getElementById('listaRivales').innerHTML =
-        '<div class="fila-rival' + (esR1 ? ' yo' : '') + '"><span style="color:#ff4d5e;"><b>ROJO: #' + (r1.dorsal || '--') + '</b> ' + (r1.nombre || '') + '</span><span>Vta ' + (r1.vueltas || 0) + ' (' + fmt(r1.mejor) + ')</span></div>' +
-        '<div class="fila-rival' + (esR2 ? ' yo' : '') + '"><span style="color:#0dcaf0;"><b>AZUL: #' + (r2.dorsal || '--') + '</b> ' + (r2.nombre || '') + '</span><span>Vta ' + (r2.vueltas || 0) + ' (' + fmt(r2.mejor) + ')</span></div>';
-      if (esR1 || esR2) {
-        var miR = esR1 ? r1 : r2;
-        document.getElementById('valPos').textContent = esR1 ? "ROJO" : "AZUL";
-        document.getElementById('valVueltas').textContent = (miR.vueltas || 0) + " Vueltas";
-        document.getElementById('valUltima').textContent = fmt(miR.ultima || miR.mejor);
-        document.getElementById('valMejor').textContent = fmt(miR.mejor);
-      }
-      return;
-    }
             if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
         var sp = live.superpoleVivo, clasSp = sp.clasificacion || [], miPosSp = -1, miTsp = 0, hSp = "";
         for (var sIdx = 0; sIdx < clasSp.length; sIdx++) {
