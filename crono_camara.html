@@ -159,13 +159,19 @@
   }
     var soloAntenaActivo = false;
   function activarModoSoloAntena() {
+    if (!soloAntenaActivo) pitarCam(950);
     soloAntenaActivo = true;
     vozCam = false;
-    window.speechSynthesis.cancel();
+    try { window.speechSynthesis.cancel(); } catch (e) {}
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var capa = document.getElementById('capaSoloAntena');
     if (capa) capa.style.display = 'flex';
+    if (!camActiva) {
+      iniciarCamaraCrono();
+    } else if (typeof mantenerPantallaEncendida === 'function') {
+      mantenerPantallaEncendida();
+    }
   }
   function salirModoSoloAntena() {
     soloAntenaActivo = false;
