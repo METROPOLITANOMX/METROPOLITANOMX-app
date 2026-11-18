@@ -165,7 +165,7 @@
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var capa = document.getElementById('capaSoloAntena');
-    if (capa) { capa.style.cssText = 'display:flex !important;position:fixed;top:0;left:0;right:0;bottom:0;background:#000 !important;z-index:999999;color:#20c997;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;'; }
+    if (capa) { capa.style.display = 'flex'; }
     if (!camActiva && typeof iniciarCamaraCrono === 'function') { iniciarCamaraCrono(); }
   }
   function salirModoSoloAntena() {
