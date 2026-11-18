@@ -200,7 +200,7 @@
           if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
           hablar(loc.frase);
           var fl = loc.frase.toLowerCase();
-          if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1) iluminarBordeBandera("#d90429");
+          if (fl.indexOf("roja") !== -1 || fl.indexOf("cerrada") !== -1 || fl.indexOf("detenida") !== -1) iluminarBordeBandera("#d90429");
           else if (fl.indexOf("amarilla") !== -1 || fl.indexOf("precaucion") !== -1) iluminarBordeBandera("#ffc107");
           else if (fl.indexOf("azul") !== -1) iluminarBordeBandera("#0d6efd");
           else if (fl.indexOf("negra") !== -1) iluminarBordeBandera("#ffffff");
