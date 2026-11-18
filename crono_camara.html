@@ -152,7 +152,7 @@
       var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       var v = document.getElementById('vidCam'); v.srcObject = stream; camActiva = true;
       var b1 = document.getElementById('btnStartCam'); b1.textContent = "1. CAMARA LISTA"; b1.style.background = "#198754";
-      var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000";
+      var b2 = document.getElementById('btnToggleLectura'); b2.disabled = false; b2.style.background = "#20c997"; b2.style.color = "#000"; if (urlCircuitoCam) { fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){ if (m && m.antenasMoviles === true) { modoAntenaGlobal = true; b2.textContent = "ESPERANDO SALIDA DIRECTOR..."; b2.style.background = "#0dcaf0"; b2.style.color = "#000"; } }).catch(function(){}); }
       if (urlCircuitoCam) {
         fetch(urlCircuitoCam + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).then(function(m){
           if (m && m.antenasMoviles === true) {
@@ -241,7 +241,7 @@
     if (ultimoPasoMs > 0 && (ahora - ultimoPasoMs) < cool) return;
     var linea = document.getElementById('lineaMeta');
     linea.style.background = "#00e676"; setTimeout(() => linea.style.background = "#ff2a2a", 400);
-    pitarCam(950);
+    pitarCam(950); enviarVueltaOficialAntena();
     if (kmhPasada > 0) {
       if (kmhPasada > maxKmhCam) { maxKmhCam = kmhPasada; document.getElementById('cKmh').textContent = maxKmhCam + " km/h"; }
     }
@@ -299,7 +299,7 @@
 
   function enviarVueltaOficialAntena() {
     var modo = document.getElementById("selModoDet");
-    if (!urlCircuitoCam || !modo || modo.value !== "COLOR") return;
+    if (!urlCircuitoCam || !modoAntenaGlobal) return;
     var p = obtenerDatosPilotoCam();
     var pasoSrvMs = Date.now() + offsetRelojSrvMs;
     fetch(urlCircuitoCam + "/vuelta_oficial", {
