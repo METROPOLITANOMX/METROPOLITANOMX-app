@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://jean-employment-contamination-cooling.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://cope-interact-specialty-notices.trycloudflare.com" };
