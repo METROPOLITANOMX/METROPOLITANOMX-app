@@ -135,6 +135,10 @@
     if (ultimoPasoMs > 0 && (ahora - ultimoPasoMs) < cool) return;
     var lm = document.getElementById('lMeta'); lm.style.background = "#00e676"; setTimeout(function() { lm.style.background = "#ff2a2a"; }, 300);
     pitar(950);
+    var p = getPiloto();
+    if (urlSrv) {
+      fetch(urlSrv + "/paso_movil", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ts: ahora }) }).catch(function() {});
+    }
     if (ultimoPasoMs === 0) {
       ultimoPasoMs = ahora;
       document.getElementById('listaVtas').innerHTML = '<div style="color:#20c997;font-weight:bold;">Salida detectada! Cronometro en marcha...</div>';
