@@ -161,12 +161,11 @@
   function activarModoSoloAntena() {
     soloAntenaActivo = true;
     vozCam = false;
-    try { window.speechSynthesis.cancel(); } catch (e) {}
+    window.speechSynthesis.cancel();
     var bv = document.getElementById('btnVozCam');
     if (bv) { bv.style.background = '#444'; bv.style.color = '#fff'; bv.textContent = 'Voz OFF'; }
     var capa = document.getElementById('capaSoloAntena');
-    if (capa) { capa.style.display = 'flex'; }
-    if (!camActiva && typeof iniciarCamaraCrono === 'function') { iniciarCamaraCrono(); }
+    if (capa) capa.style.display = 'flex';
   }
   function salirModoSoloAntena() {
     soloAntenaActivo = false;
