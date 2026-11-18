@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://rapids-ban-focus-websites.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://jersey-marco-recognised-expanded.trycloudflare.com" };
