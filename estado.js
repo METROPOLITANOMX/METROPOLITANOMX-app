@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://robin-lights-went-magazines.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://undefined-integral-evaluating-interactions.trycloudflare.com" };
