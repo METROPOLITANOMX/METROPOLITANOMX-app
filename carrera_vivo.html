@@ -108,7 +108,7 @@
     u.rate = 1.02;
     window.speechSynthesis.speak(u);
   }
-  function iluminarBordeBandera(colorHex) {
+  function iluminarBordeBandera(colorHex) { document.body.style.boxShadow = colorHex ? ("inset 0 0 0 10px " + colorHex) : "none";
     var m = document.getElementById('marcoBanderaVivo');
     if (!m) {
       m = document.createElement('div');
@@ -203,7 +203,7 @@
 
     fetch(uP + "/locucion.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(loc) {
       if (!loc || !loc.frase || !loc.marca) return;
-      if (ultMarcaLoc === null) { ultMarcaLoc = loc.marca; return; }
+      if (ultMarcaLoc === null) { ultMarcaLoc = loc.marca; if (!loc.frase) return; }
       if (loc.marca !== ultMarcaLoc) {
         ultMarcaLoc = loc.marca;
         if (ban) { ban.style.color = "#ffc107"; ban.textContent = "DIRECTOR: " + loc.frase; }
