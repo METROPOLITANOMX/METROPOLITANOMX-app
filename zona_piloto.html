@@ -128,7 +128,7 @@
       <div class="modal-header"><span class="modal-titulo">Inscribirse a Carrera</span><button class="btn-cerrar-modal" onclick="cerrarModal('modalInscripcion')">X</button></div>
       <p style="font-size:12px; color:#ccc; margin-top:0;">Selecciona tu moto para esta manga:</p>
       <div id="listaMotosInscripcion" class="grid-motos-ins"></div>
-      <div id="msgInscripcion" style="font-size:12px; text-align:center; margin:6px 0; color:#ffc107;"></div>
+      <div id="boxNormasIns" style="background:#1c1c1c;border:1px solid #ffc107;border-radius:8px;padding:8px;margin:8px 0;font-size:11px;color:#ddd;text-align:left;"><b style="color:#ffc107;">NORMAS DE JUEGO LIMPIO:</b><br>• Respeta el trazado y no acortes curvas.<br>• Evita golpes intencionados y cede paso si vas doblado.<br>• Respeta las banderas y avisos de Dirección de Carrera.<label style="display:flex;align-items:center;gap:6px;margin-top:6px;color:#20c997;font-weight:bold;cursor:pointer;"><input type="checkbox" id="chkNormasIns" onchange="validarBotonIns()"> Acepto las normas de juego limpio</label></div><div id="msgInscripcion" style="font-size:12px; text-align:center; margin:6px 0; color:#ffc107;"></div>
       <button id="btnConfirmarIns" class="btn-confirmar-ins" disabled onclick="enviarInscripcionCarrera()">INSCRIBIRME A LA CARRERA</button>
     </div>
   </div>
@@ -653,15 +653,15 @@
     }
     var sel = document.getElementById('cardIns_' + idx);
     if (sel) sel.classList.add('seleccionada');
-    document.getElementById('btnConfirmarIns').disabled = false;
+    validarBotonIns();
   }
 
-  function enviarInscripcionCarrera() {
+  function validarBotonIns(){var chk=document.getElementById("chkNormasIns"),b=document.getElementById("btnConfirmarIns");if(b)b.disabled=!(motoSeleccionadaIdx>=0&&(!chk||chk.checked));}function guardarInsNube(payload){fetch("https://app-servidor-9bb38-default-rtdb.europe-west1.firebasedatabase.app/inscripciones_pendientes/"+uid+".json",{method:"PUT",body:JSON.stringify(payload)}).catch(function(){});}function enviarInscripcionCarrera() {
     if (motoSeleccionadaIdx < 0 || !garajeMotos[motoSeleccionadaIdx]) return;
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
     var msg = document.getElementById('msgInscripcion');
     var btn = document.getElementById('btnConfirmarIns');
-    if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
+    var moto0 = garajeMotos[motoSeleccionadaIdx]; var pay0 = { uid: uid, nombre: datosPerfil.nombre, dorsal: moto0.dorsal || datosPerfil.dorsal, moto: moto0.modelo, fecha: new Date().toLocaleDateString("es-ES"), ts: Date.now() }; if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { localStorage.setItem("metro_moto_activa_" + uid, String(motoSeleccionadaIdx)); localStorage.setItem("metro_ins_pend_" + uid, JSON.stringify(pay0)); guardarInsNube(pay0); msg.style.color = "#20c997"; msg.textContent = "¡Inscripción guardada! Se enviará al circuito al abrir."; marcarYaInscritoUI(moto0.modelo); return; } if (false) {
       msg.style.color = "#ff4d5e";
       msg.textContent = "El circuito estÃ¡ cerrado ahora.";
       return;
@@ -670,7 +670,7 @@
     localStorage.setItem('metro_moto_activa_' + uid, String(motoSeleccionadaIdx));
     btn.disabled = true;
     msg.style.color = "#0dcaf0";
-    msg.textContent = "Enviando inscripciÃ³n...";
+    msg.textContent = "Enviando inscripción...";
     var fotoP = (moto.fotos && moto.fotos[0]) ? moto.fotos[0] : (moto.foto || "");
     fetch(est.url.replace(/\/$/, "") + "/inscribir_app", {
       method: "POST",
@@ -690,7 +690,7 @@
       btn.disabled = false;
       if (res && res.ok) {
         msg.style.color = "#20c997";
-        msg.textContent = "Â¡Inscrito con " + moto.modelo + "!";
+        msg.textContent = "¡Inscrito con " + moto.modelo + "!";
       } else {
         msg.style.color = "#ff4d5e";
         msg.textContent = (res && res.error) ? res.error : "Inscripciones cerradas.";
@@ -698,7 +698,7 @@
     }).catch(function(err) {
       btn.disabled = false;
       msg.style.color = "#ff4d5e";
-      msg.textContent = "Error de conexiÃ³n con pista (" + (err.message || "red") + ").";
+      msg.textContent = "Error de conexión con pista (" + (err.message || "red") + ").";
     });
   }
 
@@ -831,13 +831,13 @@
   function sincronizarConPista() {
     var ban = document.getElementById('bannerEstadoRed'), pV = document.getElementById('panelEnVivo');
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
-    if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
+    var moto0 = garajeMotos[motoSeleccionadaIdx]; var pay0 = { uid: uid, nombre: datosPerfil.nombre, dorsal: moto0.dorsal || datosPerfil.dorsal, moto: moto0.modelo, fecha: new Date().toLocaleDateString("es-ES"), ts: Date.now() }; if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { localStorage.setItem("metro_moto_activa_" + uid, String(motoSeleccionadaIdx)); localStorage.setItem("metro_ins_pend_" + uid, JSON.stringify(pay0)); guardarInsNube(pay0); msg.style.color = "#20c997"; msg.textContent = "¡Inscripción guardada! Se enviará al circuito al abrir."; marcarYaInscritoUI(moto0.modelo); return; } if (false) {
       ban.style.color = "#aaa";
       ban.textContent = "Modo Entreno Libre activo - Mostrando tu historial.";
       pV.style.display = "none";
       return;
     }
-    var uP = est.url.replace(/\/$/, "");
+    var uP = est.url.replace(/\/$/, "");var pRaw=localStorage.getItem("metro_ins_pend_"+uid);if(pRaw){try{var pObj=JSON.parse(pRaw);fetch(uP+"/inscribir_app",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(pObj)}).then(function(rx){if(rx.ok)localStorage.removeItem("metro_ins_pend_"+uid);}).catch(function(){});}catch(e){}}
     fetch(uP + "/locucion.json?t=" + Date.now()).then(function(rl) { return rl.json(); }).then(function(loc) {
       if (loc && loc.frase && loc.marca && loc.marca !== ultimaMarcaLoc) {
         if (ultimaMarcaLoc !== 0) {
