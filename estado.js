@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://miniature-versus-reply-highlight.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: false, url: "" };
