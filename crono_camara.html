@@ -19,7 +19,7 @@
   .val { font-size:20px; font-weight:bold; margin-top:2px; }
   .cfg { background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:8px; max-width:540px; margin:0 auto 8px auto; font-size:12px; text-align:left; }
   .cfg input[type=range] { width:100%; }
-  #capaNegraAntena { display:none; position:fixed; inset:0; width:100vw; height:100vh; background:#000; z-index:99999; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  #capaNegraAntena { display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); z-index:99999; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
 </style>
 </head>
 <body>
@@ -194,7 +194,7 @@ sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.ac
     }
     if (!urlSrv) return;
     var p = getPiloto();
-    if (camOn) fetch(urlSrv + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: detectando }) }).catch(function() {});
+    if (camOn && (!window._ultPingCam || (Date.now() - window._ultPingCam) >= 4000)) { window._ultPingCam = Date.now(); fetch(urlSrv + "/vuelta_camara", { method: "POST", body: JSON.stringify({ dorsal: p.dorsal, nombre: p.nombre, ping: true, detectando: detectando }) }).catch(function() {}); }
     Promise.all([
       fetch(urlSrv + "/modo_antena.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; }),
       fetch(urlSrv + "/live_data.json?t=" + Date.now()).then(function(r) { return r.json(); }).catch(function() { return {}; }),
@@ -205,8 +205,8 @@ sc.onload = function() { if (window.ESTADO_CIRCUITO && window.ESTADO_CIRCUITO.ac
       var fase = (res[1] && res[1].reloj && res[1].reloj.fase) ? String(res[1].reloj.fase).toUpperCase() : "";
       var ordM = (res[2] && res[2][p.dorsal]) ? res[2][p.dorsal] : null;
 if (modoOficial || modoAntena) {
-if (fase === "CARRERA" || fase === "DUELO" || fase === "SUPERPOLE") { if (!camOn) { esperandoCamaraAuto = true; encenderCamara(); } else if (!detectando) { arrancarDeteccion(); if (modoAntena && !modoOficial) ultimoPasoMs = Date.now(); } }
-if ((fase === "LISTO" || fase === "FINAL" || fase === "PAUSA") && detectando) pararDeteccion();
+if (fase === "CARRERA" || fase === "DUELO" || fase === "SUPERPOLE") { if (!camOn) { esperandoCamaraAuto = true; encenderCamara(); } else if (!detectando) { arrancarDeteccion(); if (fase === "CARRERA") ultimoPasoMs = Date.now(); } }
+if ((fase === "FINAL" || fase === "PAUSA" || (fase === "LISTO" && (ultFaseSrv === "CARRERA" || ultFaseSrv === "DUELO" || ultFaseSrv === "SUPERPOLE"))) && detectando) pararDeteccion();
       }
       if (ordM && ordM.marca && ordM.marca > (window._ultOrdM || 0)) {
         var prim = !(window._ultOrdM); window._ultOrdM = ordM.marca;
@@ -217,7 +217,7 @@ if (ordM.accion === "INICIAR") { if (!camOn) { esperandoCamaraAuto = true; encen
       }
       if (fase) ultFaseSrv = fase;
     });
-  }, 400);
+  }, 1200);
 </script>
 </body>
 </html>
