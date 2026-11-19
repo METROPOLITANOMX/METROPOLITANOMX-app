@@ -1,1 +1,1 @@
-self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); }); // v_20261119034333
+self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); }); // v_20261119040433
