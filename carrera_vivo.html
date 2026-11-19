@@ -147,8 +147,8 @@
 
   function controlarMiCamaraRemota(acc) {
     var est = window.ESTADO_CIRCUITO || {};
-    if (!est.activo || !est.url) return;
-    fetch(est.url.replace(/\/$/, "") + "/mando_camara_piloto", {
+    if (!est.activo || !est.url) { var bErr = document.getElementById("bannerDir"); if (bErr) { bErr.style.color = "#ff4d5e"; bErr.textContent = "SIN CONEXION CON SERVIDOR"; } return; }
+    fetch(est.url.replace(/\/$/, "") + "/mando_camara_piloto", { headers: { "Content-Type": "text/plain" },
       method: "POST",
       body: JSON.stringify({ dorsal: miDorsal, accion: acc })
     }).then(function() {
