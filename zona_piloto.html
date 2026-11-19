@@ -845,7 +845,7 @@
         }
         ultimaMarcaLoc = loc.marca;
       }
-    }).catch(function() {});
+    }).catch(function() { if (ban && ban.textContent.indexOf("Consultando") >= 0) { ban.style.color = "#ffc107"; ban.textContent = "Circuito cerrado - Modo Entreno Sin PC listo."; } });
     var hdrs = { };
     fetch(uP + "/live_data.json?t=" + Date.now(), { headers: hdrs }).then(function(r) { return r.json(); }).then(function(live) {
       fetch(uP + "/radar_live.json?t=" + Date.now(), { headers: hdrs }).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
