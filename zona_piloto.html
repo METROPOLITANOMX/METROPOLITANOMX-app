@@ -832,7 +832,7 @@
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
     if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
       ban.style.color = "#aaa";
-      ban.textContent = "Circuito cerrado ahora â€” Mostrando tu historial guardado.";
+      ban.textContent = "Modo Entreno Libre activo - Mostrando tu historial.";
       pV.style.display = "none";
       return;
     }
@@ -845,7 +845,7 @@
         }
         ultimaMarcaLoc = loc.marca;
       }
-    }).catch(function() { if (ban && ban.textContent.indexOf("Consultando") >= 0) { ban.style.color = "#ffc107"; ban.textContent = "Circuito cerrado - Modo Entreno Sin PC listo."; } });
+    }).catch(function() { if (ban && ban.textContent.indexOf("Consultando") >= 0) { ban.style.color = "#ffc107"; ban.textContent = "Modo Entreno Libre activo - Listo para cronometrar."; } });
     var hdrs = { };
     fetch(uP + "/live_data.json?t=" + Date.now(), { headers: hdrs }).then(function(r) { return r.json(); }).then(function(live) {
       fetch(uP + "/radar_live.json?t=" + Date.now(), { headers: hdrs }).then(function(rr) { return rr.json(); }).catch(function() { return {}; }).then(function(rad) {
