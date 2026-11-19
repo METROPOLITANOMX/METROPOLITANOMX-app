@@ -54,7 +54,7 @@
   <div class="tabla-rivales"><div style="font-size:11px;color:#ffc107;font-weight:bold;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid #2a2a2a;padding-bottom:4px;">Clasificacion en Pista</div><div id="listaRivales" style="font-size:12px;color:#888;">Esperando tiempos de pista...</div></div>
 <script>
   var uid = localStorage.getItem('metro_uid'); if (!uid) window.location.href = "index.html";
-  var miDorsal = String(localStorage.getItem('metro_dorsal') || "--");
+  var miDorsal = String(localStorage.getItem('metro_dorsal') || "--"); try { var gAct = JSON.parse(localStorage.getItem('metro_garaje_' + uid) || "[]"); var iAct = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || "0", 10); if (gAct[iAct] && gAct[iAct].dorsal && gAct[iAct].dorsal !== "--") miDorsal = String(gAct[iAct].dorsal); } catch (e) {}
   document.getElementById('txtN').textContent = localStorage.getItem('metro_nombre') || "Piloto";
   document.getElementById('txtD').textContent = "#" + miDorsal;
 
@@ -159,7 +159,7 @@
 
   function avisarTorreProblema() {
     var est = window.ESTADO_CIRCUITO || {}, btn = document.getElementById('btnAvisoTorre');
-    if (!est.activo || !est.url || !confirm("Ãƒâ€šÃ‚Â¿Enviar aviso urgente de averia a Torre de Control?")) return;
+    if (!est.activo || !est.url || !confirm("\u00BFEnviar aviso urgente de averia a Torre de Control?")) return;
     btn.disabled = true; btn.textContent = "ENVIANDO AVISO...";
     fetch(est.url.replace(/\/$/, "") + "/locucion", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ frase: "Atencion direccion, dorsal " + miDorsal + " " + document.getElementById('txtN').textContent + " reporta parada en pista", marca: Date.now() }) })
       .then(function() { btn.style.background = "#ffc107"; btn.style.color = "#000"; btn.textContent = "AVISO ENVIADO"; setTimeout(function() { btn.disabled = false; btn.style.background = "#dc3545"; btn.style.color = "#fff"; btn.textContent = "AVISO A TORRE DE CONTROL (AVERIA / PARADA)"; }, 8000); });
@@ -300,7 +300,7 @@
       document.getElementById('txtFaseReloj').textContent = fAct + (segs > 0 ? (" \u2022 " + min + ":" + (seg < 10 ? "0" : "") + seg) : "");
       if (ban && ban.textContent.indexOf("Conectando") === 0) { ban.style.color = "#20c997"; ban.textContent = "EN LINEA CON TORRE DE CONTROL"; }
 
-            if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
+            if (live.modo === "DUELO" && live.dueloVivo) { var dv = live.dueloVivo, r1 = dv.piloto1 || {}, r2 = dv.piloto2 || {}, esR1 = String(r1.dorsal || "") === miDorsal, esR2 = String(r2.dorsal || "") === miDorsal; document.getElementById('listaRivales').innerHTML = '<div class="fila-rival' + (esR1 ? ' yo' : '') + '"><span style="color:#ff4d5e;"><b>ROJO: #' + (r1.dorsal || '--') + '</b> ' + (r1.nombre || '') + '</span><span>Vta ' + (r1.vueltas || 0) + ' (' + fmt(r1.mejor) + ')</span></div><div class="fila-rival' + (esR2 ? ' yo' : '') + '"><span style="color:#0dcaf0;"><b>AZUL: #' + (r2.dorsal || '--') + '</b> ' + (r2.nombre || '') + '</span><span>Vta ' + (r2.vueltas || 0) + ' (' + fmt(r2.mejor) + ')</span></div>'; if (esR1 || esR2) { var miR = esR1 ? r1 : r2; document.getElementById('valPos').textContent = esR1 ? "ROJO" : "AZUL"; document.getElementById('valVueltas').textContent = (miR.vueltas || 0) + " Vueltas"; document.getElementById('valUltima').textContent = fmt(miR.ultima || miR.mejor); document.getElementById('valMejor').textContent = fmt(miR.mejor); } return; } if (live.modo === "SUPERPOLE" && live.superpoleVivo) {
         var sp = live.superpoleVivo, clasSp = sp.clasificacion || [], miPosSp = -1, miTsp = 0, hSp = "";
         for (var sIdx = 0; sIdx < clasSp.length; sIdx++) {
           var itemSp = clasSp[sIdx], esYoSp = String(itemSp.dorsal) === miDorsal;

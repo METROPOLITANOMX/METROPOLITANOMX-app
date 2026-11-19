@@ -27,7 +27,7 @@
   <div style="opacity:0.22;text-align:center;">
     <div id="txtNegraEstado" style="font-size:20px;font-weight:bold;color:#888;margin-bottom:8px;">ANTENA LISTA - ESPERANDO SALIDA</div>
     <div id="txtNegraCrono" style="font-size:34px;font-weight:bold;color:#777;margin-bottom:8px;">00:00.0</div>
-    <div id="txtNegraVtas" style="font-size:14px;color:#666;margin-bottom:26px;">0 Vueltas registradas</div>
+    <div id="txtNegraVtas" style="font-size:14px;color:#666;margin-bottom:6px;">0 Vueltas registradas</div><div id="txtNegraPiloto" style="font-size:13px;color:#666;margin-bottom:24px;">--</div>
     <button onclick="salirModoAntena()" style="background:#111;color:#777;border:1px solid #333;padding:12px 22px;font-size:13px;">SALIR DE MODO ANTENA</button>
   </div>
 </div>
@@ -78,7 +78,7 @@ var prevDer = null, ultimoPasoMs = 0, vueltas = [], mejorMs = 0, urlSrv = "", mo
     return { dorsal: String(d).trim(), nombre: String(n).trim() };
   }
   var pInit = getPiloto();
-  document.getElementById('titPilotoCam').textContent = "#" + pInit.dorsal + " " + pInit.nombre;
+  document.getElementById('titPilotoCam').textContent = "#" + pInit.dorsal + " " + pInit.nombre; if (document.getElementById('txtNegraPiloto')) document.getElementById('txtNegraPiloto').textContent = "DORSAL #" + pInit.dorsal + " - " + pInit.nombre;
   function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
 
   function pitar(f) {
