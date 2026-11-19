@@ -76,7 +76,7 @@
   .dia-cabecera { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; cursor:pointer; background:#202020; }
   .dia-cuerpo { display:none; padding:8px 12px; background:#121212; border-top:1px solid #2a2a2a; }
   .dia-acordeon.abierto .dia-cuerpo { display:block; }
-@media (orientation:landscape){.cabecera,.estado-red,.panel-vivo,.grid-resumen,.tarjeta,.seccion,.panel,.box-garaje,[style*='max-width:560px']{max-width:100%!important;width:100%!important;}.grid-resumen,.grid-vivo{grid-template-columns:repeat(4,1fr)!important;}}
+@media (orientation:landscape){.cabecera,.estado-red,.panel-vivo,.grid-resumen,.caja-seccion,.tabs-nav,.contenedor-paginas,.tarjeta,.seccion,.panel,.box-garaje,[style*='max-width:560px']{max-width:100%!important;width:100%!important;}.grid-resumen,.grid-vivo{grid-template-columns:repeat(4,1fr)!important;}}
 </style>
 </head>
 <body>
@@ -626,11 +626,11 @@
     cont.innerHTML = html;
   }
 
-  function abrirModalInscripcion() { var idxIns = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || '0', 10); if (Array.isArray(garajeMotos) && garajeMotos[idxIns] && (!garajeMotos[idxIns].dorsal || garajeMotos[idxIns].dorsal === '--')) { if (!aplicarDorsalActivoMoto(garajeMotos[idxIns])) return; }
+  function claveInsHoy(){var e=window.ESTADO_CIRCUITO||{};return "metro_ins_"+uid+"_"+(new Date().toLocaleDateString("es-ES"))+"_"+(e.url||"local");}function marcarYaInscritoUI(txtMoto){var b=document.querySelector(".btn-inscribir");if(b){b.textContent="INSCRITO ✓";b.style.background="#20c997";b.style.color="#000";}if(txtMoto)try{localStorage.setItem(claveInsHoy(),txtMoto);}catch(e){}}function abrirModalInscripcion() { var idxIns = parseInt(localStorage.getItem('metro_moto_activa_' + uid) || '0', 10); if (Array.isArray(garajeMotos) && garajeMotos[idxIns] && (!garajeMotos[idxIns].dorsal || garajeMotos[idxIns].dorsal === '--')) { if (!aplicarDorsalActivoMoto(garajeMotos[idxIns])) return; }
     motoSeleccionadaIdx = -1;
     document.getElementById('btnConfirmarIns').disabled = true;
     document.getElementById('msgInscripcion').textContent = "";
-    document.getElementById('modalInscripcion').style.display = 'block';
+    document.getElementById('modalInscripcion').style.display = 'block';var yaI=localStorage.getItem(claveInsHoy());if(yaI){document.getElementById('listaMotosInscripcion').innerHTML='<div style="grid-column:span 2;text-align:center;padding:16px;background:#142b24;border:1px solid #20c997;border-radius:10px;color:#20c997;font-weight:bold;">YA ESTÁS INSCRITO EN ESTA JORNADA<br><span style="color:#fff;font-size:12px;font-weight:normal;">Moto: '+yaI+' (Dorsal #'+datosPerfil.dorsal+')</span></div>';document.getElementById('msgInscripcion').textContent="No es necesario volver a inscribirte.";document.getElementById('btnConfirmarIns').style.display="none";return;}document.getElementById('btnConfirmarIns').style.display="block";
     var cont = document.getElementById('listaMotosInscripcion');
     if (garajeMotos.length === 0) {
       cont.innerHTML = '<div style="grid-column:span 2; text-align:center; padding:14px; background:#222; border-radius:8px; font-size:12px; color:#ccc;">Sin motos en Garaje.<br><br><button style="background:#0dcaf0; color:#000;" onclick="cerrarModal(\'modalInscripcion\'); abrirModalGaraje();">Ir al Garaje</button></div>';
@@ -853,7 +853,7 @@
         var kmh = (rad && rad.porPiloto) ? (Reflect.get(rad.porPiloto, String(datosPerfil.dorsal)) || 0) : 0;
         var lista = live.clasificacionManga || [], enc = null, pos = 0;
         for (var i = 0; i < lista.length; i++) if (String(lista[i].dorsal) === String(datosPerfil.dorsal)) { enc = lista[i]; pos = i + 1; break; }
-        if (enc && enc.vueltas !== 0) {
+        if (enc) marcarYaInscritoUI((garajeMotos[0]&&garajeMotos[0].modelo)||"Moto activa");if (enc && enc.vueltas !== 0) {
           pV.style.display = "block";
           document.getElementById('vivoPos').textContent = pos + "Âº";
           var ult = enc.ultima || enc.mejor || 0;
