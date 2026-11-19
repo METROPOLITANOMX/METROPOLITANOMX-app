@@ -134,9 +134,14 @@
     s.onload = function() {
       var info = window.ESTADO_CIRCUITO || { activo: false, url: "" };
       if (info.activo && info.url && info.url.indexOf("http") === 0) {
-        est.style.color = "#20c997";
-        est.textContent = "Circuito abierto! Entrando...";
-        window.location.href = info.url;
+        est.style.color = "#0dcaf0"; est.textContent = "Verificando conexion con pista...";
+        fetch(info.url.replace(/\/$/, "") + "/live_data.json?t=" + Date.now()).then(function(r) {
+          if (!r.ok) throw 0;
+          est.style.color = "#20c997"; est.textContent = "Circuito abierto! Entrando...";
+          window.location.href = info.url;
+        }).catch(function() {
+          est.style.color = "#ffc107"; est.textContent = "CIRCUITO CERRADO - Solo modo entreno en Soy Piloto.";
+        });
       } else {
         est.style.color = "#ffc107";
         est.textContent = "CIRCUITO CERRADO - Proxima carrera proximamente.";
