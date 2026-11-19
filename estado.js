@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://vendor-miami-economy-marriage.trycloudflare.com" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://miniature-versus-reply-highlight.trycloudflare.com" };
