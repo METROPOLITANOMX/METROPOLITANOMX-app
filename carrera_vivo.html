@@ -236,7 +236,7 @@
       }
     }).catch(function() {});
 
-    fetch(uP + "/radar_live.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(rad) {
+    Promise.all([fetch(uP + "/mando_camaras.json?t=" + Date.now()).then(function(r){return r.json();}).catch(function(){return {};}), fetch(uP + "/modo_antena.json?t=" + Date.now()).then(function(r){return r.json();}).catch(function(){return {};})]).then(function(acRes){ var mc = (acRes && acRes[miDorsal]) ? acRes[miDorsal] : null, ag = !!(acRes && acRes.antenasMoviles), actDir = ag || !!(mc && mc.accion === "INICIAR" && (mc.origen === "DIRECTOR" || mc.oficial === true)); if (window._camDirAct !== undefined && actDir !== window._camDirAct) { var bn = document.getElementById("bannerDir"); if (actDir) { if (bn) { bn.style.color = "#0dcaf0"; bn.textContent = "CAMARA CONECTADA A TORRE DE CONTROL"; } hablar("Camara conectada a Torre de Control"); } else { if (bn) { bn.style.color = "#20c997"; bn.textContent = "CAMARA LIBERADA POR TORRE DE CONTROL"; } hablar("Camara liberada por Torre de Control"); } } window._camDirAct = actDir; }); fetch(uP + "/radar_live.json?t=" + Date.now()).then(function(r) { return r.text().then(function(t){ return JSON.parse(t.replace(/^\uFEFF/, "")); }); }).then(function(rad) {
       var kmh = (rad && rad.porPiloto) ? (rad.porPiloto[miDorsal] || 0) : 0;
       document.getElementById('valVel').textContent = kmh > 0 ? (kmh + " km/h") : "-- km/h";
     }).catch(function() {});
