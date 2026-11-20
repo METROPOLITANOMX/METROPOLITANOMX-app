@@ -125,7 +125,7 @@
     }
   }
 
-    function abrirAccesoDirMix(){var est=window.ESTADO_CIRCUITO||{};if(est.activo&&est.url&&est.url.indexOf("http")===0){if(!confirm("CLUB PC CONECTADO:\n\nACEPTAR = Direccion Movil (App)\nCANCELAR = Direccion Club PC")){location.href="director_movil.html";return;}}if(!localStorage.getItem("metro_uid")){var nm=prompt("Nombre del Director de Carrera:","Director MX");if(!nm)return;localStorage.setItem("metro_uid","dir_"+Date.now());localStorage.setItem("metro_nombre",nm.trim());localStorage.setItem("metro_dorsal","0");}location.href="manga_amigos.html?sala=METROPOLITANO&dir=1";}function entrarComoPublico() {
+    function abrirAccesoDirMix(){var cl=prompt("Clave de Acceso Direccion:");if(cl!=="2026"){if(cl!==null)alert("Clave incorrecta");return;}var est=window.ESTADO_CIRCUITO||{};if(est.activo&&est.url&&est.url.indexOf("http")===0){if(!confirm("CLUB PC CONECTADO:\n\nACEPTAR = Direccion Movil (App)\nCANCELAR = Direccion Club PC")){location.href="director_movil.html";return;}}if(!localStorage.getItem("metro_uid")){var nm=prompt("Nombre del Director de Carrera:","Director MX");if(!nm)return;localStorage.setItem("metro_uid","dir_"+Date.now());localStorage.setItem("metro_nombre",nm.trim());localStorage.setItem("metro_dorsal","0");}location.href="manga_amigos.html?sala=METROPOLITANO&dir=1";}function entrarComoPublico() {
     var est = document.getElementById('estadoConexion');
     est.style.color = "#0dcaf0";
     est.textContent = "Conectando con el circuito...";
