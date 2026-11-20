@@ -84,15 +84,15 @@ body.sol{background:#f4f4f4!important;color:#000!important;}body.sol .cabecera,b
     <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:8px;"><input type="file" id="inpAvatarPiloto" accept="image/*" style="display:none;" onchange="cambiarAvatarPiloto(this)"><div id="boxAvatarPiloto" onclick="document.getElementById('inpAvatarPiloto').click()" title="Toca para poner tu foto" style="width:42px;height:42px;border-radius:50%;background:#222;border:2px solid #ffc107;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px;">📷</div><div class="nom-piloto"><span id="txtDorsal" class="badge-dorsal">#--</span><span id="txtNombre">PILOTO</span></div></div>
       <div style="display:flex;gap:4px;">
-        <button id="btnSol" style="background:#fff;color:#000;padding:6px 8px;font-size:10px;border-radius:6px;" onclick="document.body.classList.toggle('sol')">Sol</button><button style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px;border-radius:6px;" onclick="window.location.href='guia.html?t='+Date.now()">Guia</button><button class="btn-inscribir" style="padding:6px 8px;font-size:10px;border-radius:6px;" onclick="abrirModalInscripcion()">Inscribirse</button>
+        <button id="btnSol" style="background:#fff;color:#000;padding:6px 8px;font-size:10px;border-radius:6px;" onclick="document.body.classList.toggle('sol')">Sol</button><button style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px;border-radius:6px;" onclick="window.location.href='guia.html?t='+Date.now()">Guia</button><button id="btnInsPc" class="btn-inscribir" style="display:none;padding:6px 8px;font-size:10px;border-radius:6px;" onclick="abrirModalInscripcion()">Inscribirse PC</button>
         
         <button class="btn-salir" style="padding:6px 8px;font-size:10px;border-radius:6px;" onclick="cerrarSesion()">Atras</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-      <button style="background:#20c997;color:#000;padding:13px 4px;font-size:12px;border-radius:10px;font-weight:bold;" onclick="window.location.href='carrera_vivo.html?t='+Date.now()">EN PISTA</button>
+      <button id="btnEnPistaPc" style="display:none;background:#20c997;color:#000;padding:13px 4px;font-size:12px;border-radius:10px;font-weight:bold;grid-column:span 2;" onclick="window.location.href='carrera_vivo.html?t='+Date.now()">EN PISTA (CLUB PC CONECTADO)</button><button style="background:#ffc107;color:#000;padding:13px 4px;font-size:12px;border-radius:10px;font-weight:bold;" onclick="window.location.href='manga_amigos.html?sala=METROPOLITANO&t='+Date.now()">SALA METROPOLITANO</button>
       <button class="btn-garaje" style="padding:13px 4px;font-size:12px;border-radius:10px;" onclick="abrirModalGaraje()">GARAJE</button>
-      <button style="background:#fd7e14;color:#000;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;" onclick="window.location.href='crono_camara.html?t='+Date.now()">CRONO MOVIL</button><button style="background:#6f42c1;color:#fff;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;" onclick="alert('MODO ANTENA REMOTA:\nColoca este movil en meta.\nPara ver el video de la camara y ajustar la linea roja de meta, entra en EN PISTA desde tu movil principal y pulsa CALIBRAR CAMARA ANTENA.');window.location.href='crono_camara.html?remota=1&t='+Date.now()">ANTENA REMOTA</button><button style="background:#0dcaf0;color:#000;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;grid-column:span 2;" onclick="window.location.href='manga_amigos.html?t='+Date.now()">SALA AMIGOS (MANGA PRIVADA)</button>
+      <button style="background:#fd7e14;color:#000;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;" onclick="window.location.href='crono_camara.html?t='+Date.now()">CRONO MOVIL</button><button style="background:#6f42c1;color:#fff;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;" onclick="alert('MODO ANTENA REMOTA:\nColoca este movil en meta.\nPara ver el video de la camara y ajustar la linea roja de meta, entra en EN PISTA desde tu movil principal y pulsa CALIBRAR CAMARA ANTENA.');window.location.href='crono_camara.html?remota=1&t='+Date.now()">ANTENA REMOTA</button><button style="background:#0dcaf0;color:#000;padding:13px 4px;font-size:11px;border-radius:10px;font-weight:bold;grid-column:span 2;" onclick="window.location.href='manga_amigos.html?t='+Date.now()">SALA PRIVADA CON AMIGOS</button>
     </div>
   </div>
     <div id="bannerEstadoRed" class="estado-red">Perfil listo — Consultando estado de pista...</div>
@@ -661,7 +661,7 @@ body.sol{background:#f4f4f4!important;color:#000!important;}body.sol .cabecera,b
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
     var msg = document.getElementById('msgInscripcion');
     var btn = document.getElementById('btnConfirmarIns');
-    var moto0 = garajeMotos[motoSeleccionadaIdx]; var pay0 = { uid: uid, nombre: datosPerfil.nombre, dorsal: moto0.dorsal || datosPerfil.dorsal, moto: moto0.modelo, fecha: new Date().toLocaleDateString("es-ES"), ts: Date.now() }; if (!est.activo || !est.url || est.url.indexOf("http") !== 0) { localStorage.setItem("metro_moto_activa_" + uid, String(motoSeleccionadaIdx)); localStorage.setItem("metro_ins_pend_" + uid, JSON.stringify(pay0)); guardarInsNube(pay0); msg.style.color = "#20c997"; msg.textContent = "¡Inscripción guardada! Se enviará al circuito al abrir."; marcarYaInscritoUI(moto0.modelo); return; } if (false) {
+    var moto0 = garajeMotos[motoSeleccionadaIdx]; var pay0 = { uid: uid, nombre: datosPerfil.nombre, dorsal: moto0.dorsal || datosPerfil.dorsal, moto: moto0.modelo, fecha: new Date().toLocaleDateString("es-ES"), ts: Date.now() }; var hayPc=(est.activo&&est.url&&est.url.indexOf("http")===0);var bI=document.getElementById("btnInsPc"),bP=document.getElementById("btnEnPistaPc");if(bI)bI.style.display=hayPc?"inline-block":"none";if(bP)bP.style.display=hayPc?"block":"none";if (!hayPc) { localStorage.setItem("metro_moto_activa_" + uid, String(motoSeleccionadaIdx)); localStorage.setItem("metro_ins_pend_" + uid, JSON.stringify(pay0)); guardarInsNube(pay0); msg.style.color = "#20c997"; msg.textContent = "¡Inscripción guardada! Se enviará al circuito al abrir."; marcarYaInscritoUI(moto0.modelo); return; } if (false) {
       msg.style.color = "#ff4d5e";
       msg.textContent = "El circuito estÃ¡ cerrado ahora.";
       return;
@@ -831,7 +831,7 @@ body.sol{background:#f4f4f4!important;color:#000!important;}body.sol .cabecera,b
   function sincronizarConPista() {
     var ban = document.getElementById('bannerEstadoRed'), pV = document.getElementById('panelEnVivo');
     var est = window.ESTADO_CIRCUITO || { activo: false, url: "" };
-    if (!est.activo || !est.url || est.url.indexOf("http") !== 0) {
+    var hayPc=(est.activo&&est.url&&est.url.indexOf("http")===0);var bI=document.getElementById("btnInsPc"),bP=document.getElementById("btnEnPistaPc");if(bI)bI.style.display=hayPc?"inline-block":"none";if(bP)bP.style.display=hayPc?"block":"none";if (!hayPc) {
       ban.style.color = "#aaa";
       ban.textContent = "Modo Entreno Libre activo - Mostrando tu historial.";
       if(pV)pV.style.display = "none";
@@ -994,7 +994,7 @@ body.sol{background:#f4f4f4!important;color:#000!important;}body.sol .cabecera,b
     document.body.appendChild(scNube);
   })();
 </script>
-<div class="nav-inf"><button onclick="irPaginaPiloto(0)">INICIO</button><button onclick="abrirModalGaraje()">GARAJE</button><button onclick="location.href='manga_amigos.html?t='+Date.now()">SALAS</button><button onclick="irPaginaPiloto(1)">TIEMPOS</button></div><div class="nav-inf"><button onclick="irPaginaPiloto(0);window.scrollTo(0,0)">INICIO</button><button onclick="abrirModalGaraje()">GARAJE</button><button onclick="location.href='manga_amigos.html?t='+Date.now()">SALAS</button><button onclick="irPaginaPiloto(1)">TIEMPOS</button></div></body>
+<div class="nav-inf"><button onclick="irPaginaPiloto(0);window.scrollTo(0,0)">INICIO</button><button onclick="abrirModalGaraje()">GARAJE</button><button onclick="location.href='manga_amigos.html?t='+Date.now()">SALAS</button><button onclick="irPaginaPiloto(1)">TIEMPOS</button></div></body>
 </html>
 
 
