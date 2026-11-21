@@ -174,7 +174,7 @@
     localStorage.setItem('metro_uid', userKey);
     localStorage.setItem('metro_nombre', nomOrig);
     localStorage.setItem('metro_dorsal', dorsal);
-    fetch(FB_CTA+"/"+userKey+".json").then(function(r){return r.json();}).then(function(pf){if(pf&&pf.bloqueado){alert("ACCESO SUSPENDIDO: Tu cuenta esta bloqueada por Direccion.");localStorage.removeItem("metro_uid");location.href="index.html";}}).catch(function(){});setTimeout(function(){window.location.href = "zona_piloto.html";},250);
+    fetch(FB_CTA+"/"+userKey+".json").then(function(r){return r.json();}).then(function(pf){if(pf&&pf.bloqueado){alert("ACCESO SUSPENDIDO: Tu cuenta esta bloqueada por Direccion.");localStorage.removeItem("metro_uid");location.href="index.html";}}).catch(function(){});window.location.href = "zona_piloto.html";
   }
 
   function procesarAccesoPiloto() {
