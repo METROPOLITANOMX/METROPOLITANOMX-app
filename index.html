@@ -36,14 +36,14 @@
     <div id="estadoConexion" class="msg-estado"></div>
   </div>
 
-  <div id="panelPilotoAuth" class="panel-oculto">
+  <div id="panelDirAuth" class="panel-oculto"><h3 style="color:#ffc107;margin:0 0 12px 0;font-size:16px;">🏁 TORRE DE DIRECCION</h3><input type="text" id="dirUsuario" placeholder="Nombre de Director (ej. Director MX)"><input type="password" id="dirClave" placeholder="Clave de Direccion"><div class="fila-check"><label><input type="checkbox" id="chkRecDir" checked> Recordar clave</label></div><button class="btn-piloto" onclick="procesarAccesoDir()">ENTRAR A TORRE DE CONTROL</button><div id="msgDirAuth" class="msg-estado" style="color:#ff4d5e;"></div><button class="btn-volver" onclick="volverInicio()">VOLVER</button></div><div id="panelPilotoAuth" class="panel-oculto">
     <div class="tabs-auth">
       <button id="tabEntrar" class="tab-btn activa" onclick="cambiarModoAuth('LOGIN')">ENTRAR</button>
       <button id="tabRegistro" class="tab-btn" onclick="cambiarModoAuth('REGISTRO')">CREAR CUENTA</button>
     </div>
     <input type="text" id="inpUsuario" placeholder="Nombre de Piloto (ej. Carlos22)">
     <input type="password" id="inpClave" placeholder="Contrasena">
-    <input type="text" id="inpDorsalReg" placeholder="Tu Dorsal en pista (ej. 22)" style="display:none;">
+    <input type="text" id="inpPinReg" placeholder="PIN recuperacion (4 numeros, ej. 2012)" maxlength="4" inputmode="numeric" style="display:none;">
     <div id="filaOpcionesLogin" class="fila-check">
       <label><input type="checkbox" id="chkRecordar" checked> Recordar clave</label>
       <button type="button" class="link-olvido" onclick="mostrarRecuperar()">Olvide mi clave</button>
@@ -56,7 +56,7 @@
   <div id="panelRecuperar" class="panel-oculto">
     <h3 style="color:#ffc107; margin:0 0 12px 0; font-size:16px;">RECUPERAR CONTRASENA</h3>
     <input type="text" id="recUsuario" placeholder="Tu Nombre de Piloto">
-    <input type="text" id="recDorsal" placeholder="Tu Dorsal registrado">
+    <input type="text" id="recPin" placeholder="Tu PIN de 4 numeros" maxlength="4" inputmode="numeric">
     <input type="password" id="recNuevaClave" placeholder="Nueva Contrasena">
     <button class="btn-publico" onclick="procesarRecuperacion()">CAMBIAR CONTRASENA</button>
     <div id="msgRec" class="msg-estado" style="color:#ff4d5e;"></div>
@@ -92,14 +92,14 @@
   }
 
   function volverInicio() {
-    document.getElementById('panelPilotoAuth').style.display = 'none';
+    document.getElementById('panelPilotoAuth').style.display = 'none';document.getElementById('panelDirAuth').style.display = 'none';
     document.getElementById('panelRecuperar').style.display = 'none';
     document.getElementById('menuPrincipal').style.display = 'flex';
     document.getElementById('estadoConexion').textContent = "";
   }
 
   function mostrarRecuperar() {
-    document.getElementById('panelPilotoAuth').style.display = 'none';
+    document.getElementById('panelPilotoAuth').style.display = 'none';document.getElementById('panelDirAuth').style.display = 'none';
     document.getElementById('panelRecuperar').style.display = 'block';
     document.getElementById('msgRec').textContent = "";
   }
@@ -113,7 +113,7 @@
     modoAuth = modo;
     document.getElementById('tabEntrar').className = (modo === 'LOGIN') ? 'tab-btn activa' : 'tab-btn';
     document.getElementById('tabRegistro').className = (modo === 'REGISTRO') ? 'tab-btn activa' : 'tab-btn';
-    document.getElementById('inpDorsalReg').style.display = 'none';
+    document.getElementById('inpPinReg').style.display = (modo === 'REGISTRO') ? 'block' : 'none';
     document.getElementById('filaOpcionesLogin').style.display = (modo === 'LOGIN') ? 'flex' : 'none';
     document.getElementById('btnAccionAuth').textContent = (modo === 'LOGIN') ? 'ACCEDER A MI TELEMETRIA' : 'REGISTRARME COMO PILOTO';
     document.getElementById('msgAuth').textContent = "";
@@ -125,7 +125,7 @@
     }
   }
 
-    function abrirAccesoDirMix(){var cl=prompt("Clave de Acceso Direccion:");if(cl!=="2026"){if(cl!==null)alert("Clave incorrecta");return;}var est=window.ESTADO_CIRCUITO||{};if(est.activo&&est.url&&est.url.indexOf("http")===0){if(!confirm("CLUB PC CONECTADO:\n\nACEPTAR = Direccion Movil (App)\nCANCELAR = Direccion Club PC")){location.href="director_movil.html";return;}}if(!localStorage.getItem("metro_uid")){var nm=prompt("Nombre del Director de Carrera:","Director MX");if(!nm)return;localStorage.setItem("metro_uid","dir_"+Date.now());localStorage.setItem("metro_nombre",nm.trim());localStorage.setItem("metro_dorsal","0");}location.href="torre_control.html";}function entrarComoPublico() {
+    function abrirAccesoDirMix(){document.getElementById("menuPrincipal").style.display="none";document.getElementById("panelPilotoAuth").style.display="none";document.getElementById("panelRecuperar").style.display="none";document.getElementById("panelDirAuth").style.display="block";var du=localStorage.getItem("metro_dir_user"),dp=localStorage.getItem("metro_dir_pass");if(du)document.getElementById("dirUsuario").value=du;if(dp)document.getElementById("dirClave").value=dp;}function procesarAccesoDir(){var nm=(document.getElementById("dirUsuario").value||"").trim()||"Director MX",cl=document.getElementById("dirClave").value,rec=document.getElementById("chkRecDir").checked,ms=document.getElementById("msgDirAuth");if(cl!=="2026"){ms.textContent="Clave de direccion incorrecta.";return;}if(rec){localStorage.setItem("metro_dir_user",nm);localStorage.setItem("metro_dir_pass",cl);}else{localStorage.removeItem("metro_dir_user");localStorage.removeItem("metro_dir_pass");}localStorage.setItem("metro_uid","dir_"+nm.toLowerCase().replace(/[^a-z0-9]/g,""));localStorage.setItem("metro_nombre",nm);localStorage.setItem("metro_dorsal","0");var est=window.ESTADO_CIRCUITO||{};if(est.activo&&est.url&&est.url.indexOf("http")===0){if(!confirm("CLUB PC CONECTADO:\n\nACEPTAR = Torre Control Movil (App)\nCANCELAR = Direccion Club PC")){location.href="director_movil.html";return;}}location.href="torre_control.html";}function entrarComoPublico() {
     var est = document.getElementById('estadoConexion');
     est.style.color = "#0dcaf0";
     est.textContent = "Conectando con el circuito...";
@@ -181,7 +181,7 @@
     var nomOrig = document.getElementById('inpUsuario').value.trim();
     var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
     var clave = document.getElementById('inpClave').value;
-    var dorsal = '';
+    var pinReg = (document.getElementById('inpPinReg').value || '').trim();if(modoAuth==='REGISTRO'&&!/^\d{4}$/.test(pinReg)){msg.style.color='#ff4d5e';msg.textContent='Escribe un PIN de 4 numeros para recuperar tu clave.';return;}var dorsal = '';
     var recordar = document.getElementById('chkRecordar').checked;
     var msg = document.getElementById('msgAuth');
 
@@ -229,7 +229,7 @@
       }
       if (!urlSrv) {
         msg.style.color = "#ff4d5e";
-        msg.textContent = "Usuario o contrasena incorrectos (Circuito cerrado).";
+        msg.style.color="#0dcaf0";msg.textContent="Buscando cuenta en la nube...";fetch(FB_CTA+"/"+userKey+".json").then(function(r){return r.json();}).then(function(pf){if(pf&&pf.clave===clave){entrarFinalPiloto(userKey,pf.nombre||nomOrig,clave,pf.dorsal||"",recordar);}else{msg.style.color="#ff4d5e";msg.textContent="Usuario o contrasena incorrectos.";}}).catch(function(){msg.style.color="#ff4d5e";msg.textContent="Usuario o contrasena incorrectos.";});
         return;
       }
       msg.style.color = "#0dcaf0"; msg.textContent = "Verificando cuenta en el circuito...";
@@ -251,7 +251,7 @@
   function procesarRecuperacion() {
     var nomOrig = document.getElementById('recUsuario').value.trim();
     var userKey = nomOrig.toLowerCase().replace(/[^a-z0-9]/g, '');
-    var dorsal = document.getElementById('recDorsal').value.trim();
+    var pinIn = document.getElementById('recPin').value.trim();
     var nuevaClave = document.getElementById('recNuevaClave').value;
     var msg = document.getElementById('msgRec');
 
