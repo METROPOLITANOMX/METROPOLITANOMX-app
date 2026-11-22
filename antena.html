@@ -61,7 +61,7 @@
     <button onclick="calibrarFondo()" style="width:100%;margin-top:8px;background:#20c997;color:#000">📍 CALIBRAR PISTA VACIA</button>
   </div>
 <script>
-var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro/circuitos/" + (localStorage.getItem("mxp_circ_id") || "METROPOLITANO");
 var _offSrv = 0;
 fetch("https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/.info/serverTimeOffset.json").then(function(r){return r.json();}).then(function(o){if(typeof o==="number")_offSrv=o;}).catch(function(){});
 function ahoraSrv() { return Date.now() + _offSrv; }
@@ -80,7 +80,7 @@ function elegirRanura(id, nom) {
   antId = id; antNom = nom;
   localStorage.setItem("mxp_ant_id", id); localStorage.setItem("mxp_ant_nom", nom);
   document.getElementById("modalRanura").style.display = "none";
-  document.getElementById("lblNomAnt").textContent = "📡 " + nom;
+  document.getElementById("lblNomAnt").textContent = "📡 " + nom + " [" + (localStorage.getItem("mxp_circ_id") || "METROPOLITANO").slice(0, 12) + "]";
   hablar(nom + " conectada");
 }
 function elegirTemporal() {

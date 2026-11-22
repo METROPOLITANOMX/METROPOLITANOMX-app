@@ -88,7 +88,7 @@ var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebas
 var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null;
 
 function abrir(id) {
-  ["menu", "pAuth", "pRec", "pDir", "pGuia"].forEach(function(x) {
+  ["menu", "pAuth", "pRec", "pDir", "pGuia", "pCirc", "pMundial"].forEach(function(x) {
     document.getElementById(x).style.display = (x === id) ? (x === "menu" ? "flex" : "block") : "none";
   });
 }
@@ -135,7 +135,7 @@ function finalizarAcceso(uid, u) {
   localStorage.setItem("mxp_rec_nom", u.nombre); localStorage.setItem("mxp_rec_clv", u.clave);
   localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", u.nombre);
   registrarVisita(rolSel, u.nombre);
-  location.href = (rolSel === "PILOTO") ? "piloto.html" : "vivo.html";
+  verificarZonaYEntrar(uid, u);
 }
 function recuperarClave() {
   var pin = document.getElementById("rPin").value.trim(), nomB = document.getElementById("rNom").value.trim().toLowerCase(), ncl = document.getElementById("rClv").value, msg = document.getElementById("mRec");
@@ -189,6 +189,97 @@ if ("geolocation" in navigator) {
       }
     }).catch(function(){});
   }, function(){}, { timeout: 5000 });
+}
+var circAct = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
+var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
+var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
+
+if (esIngles) {
+  document.getElementById("lblCircTit").textContent = "ACTIVE TRACK:";
+  document.querySelector(".b-pil").textContent = "🏍️ PROMOTO RIDER";
+  document.querySelector(".b-afi").textContent = "🎟️ FAN CLUB (LIVE & CHEER)";
+}
+
+function cambiarCircuitoIdx(val) {
+  var s = document.getElementById("selCircuitoIdx");
+  circAct = val || "METROPOLITANO";
+  circNom = (s && s.options[s.selectedIndex]) ? s.options[s.selectedIndex].text : circAct;
+  localStorage.setItem("mxp_circ_id", circAct);
+  localStorage.setItem("mxp_circ_nom", circNom);
+}
+
+function cargarListaCircuitos() {
+  fetch(FB + "/circuitos_lista.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(ls) {
+    var s = document.getElementById("selCircuitoIdx");
+    if (!s) return;
+    var h = '<option value="METROPOLITANO">🏁 METROPOLITANO CIRCUIT (ESPAÑA - SEDE)</option>';
+    if (ls) {
+      Object.keys(ls).forEach(function(k) {
+        if (k !== "METROPOLITANO" && ls[k] && ls[k].nombre) {
+          h += '<option value="' + k + '">🌍 ' + ls[k].nombre + ' (' + (ls[k].pais || '') + ' • ' + (ls[k].sup || 'MX') + ')</option>';
+        }
+      });
+    }
+    s.innerHTML = h;
+    if (circAct) s.value = circAct;
+  }).catch(function(){});
+}
+cargarListaCircuitos();
+
+function guardarNuevoCircuito() {
+  var nom = document.getElementById("cNom").value.trim(), pais = document.getElementById("cPais").value.trim(), sup = document.getElementById("cSup").value, mts = Number(document.getElementById("cMetros").value) || 0;
+  if (!nom || !pais) { alert(esIngles ? "Enter track name and country" : "Escribe nombre del circuito y pais"); return; }
+  var cid = nom.toUpperCase().replace(/[^A-Z0-9]/g, "_").slice(0, 22) + "_" + Math.floor(10 + Math.random() * 89);
+  var obj = { nombre: nom, pais: pais, sup: sup, metros: mts, ts: Date.now() };
+  fetch(FB + "/circuitos_lista/" + cid + ".json", { method: "PUT", body: JSON.stringify(obj) }).then(function() {
+    circAct = cid; circNom = nom;
+    localStorage.setItem("mxp_circ_id", cid); localStorage.setItem("mxp_circ_nom", nom);
+    cargarListaCircuitos();
+    abrir("menu");
+    alert((esIngles ? "Track created: " : "Circuito creado: ") + nom);
+  });
+}
+
+function verificarZonaYEntrar(uid, u) {
+  if (rolSel !== "PILOTO") { location.href = "vivo.html"; return; }
+  if (circAct !== "METROPOLITANO") { location.href = "piloto.html"; return; }
+  var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {}
+  var fueraZonaHoraria = (tz && tz.indexOf("Europe/Madrid") < 0 && tz.indexOf("Atlantic/Canary") < 0);
+  if (fueraZonaHoraria && !u.invitadoMetro) {
+    alert(esIngles ? "🌍 You are outside Madrid (Metropolitano HQ). Please create or select your local track to race!" : "🌍 Estas fuera de la zona del Metropolitano Circuit (Madrid). Crea o elige tu propio circuito local para rodar y competir en el Ranking Mundial.");
+    abrir("pCirc");
+    return;
+  }
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(function(p) {
+      fetch(FB + "/circuitos/METROPOLITANO/sala/gps.json").then(function(r) { return r.json(); }).then(function(g) {
+        if (g && g.lat) {
+          var dKm = Math.sqrt(Math.pow((p.coords.latitude - g.lat) * 111, 2) + Math.pow((p.coords.longitude - g.lng) * 85, 2));
+          if (dKm > 60 && !u.invitadoMetro) {
+            alert("🌍 Estas a " + Math.round(dKm) + " km del Metropolitano Circuit. Crea o selecciona tu propio circuito local para no mezclar tiempos.");
+            abrir("pCirc");
+            return;
+          }
+        }
+        location.href = "piloto.html";
+      }).catch(function() { location.href = "piloto.html"; });
+    }, function() { location.href = "piloto.html"; }, { timeout: 3500 });
+  } else {
+    location.href = "piloto.html";
+  }
+}
+
+function abrirMundial() { abrir("pMundial"); cargarMundial(); }
+function cargarMundial() {
+  var fil = document.getElementById("filSupMun").value, bx = document.getElementById("listaMundial");
+  fetch(FB + "/mundial.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(m) {
+    if (!m) { bx.innerHTML = "<div style='color:#888'>Aun no hay tiempos mundiales registrados. ¡Se el primero!</div>"; return; }
+    var arr = Object.keys(m).map(function(k) { return m[k]; }).filter(function(x) { return x && x.mejorMs && (fil === "TODOS" || (x.sup || "").indexOf(fil) >= 0); });
+    arr.sort(function(a, b) { return (b.regPct || 0) - (a.regPct || 0) || (a.mejorMs - b.mejorMs); });
+    bx.innerHTML = arr.slice(0, 25).map(function(x, i) {
+      return "<div style='padding:8px;border-bottom:1px solid #2a2a2a;text-align:left'><b>" + (i + 1) + "º " + x.nombre + "</b> <span style='color:#0dcaf0'>(" + (x.circuito || "Global") + ")</span><br><span style='color:#20c997'>VR: " + (x.mejorMs / 1000).toFixed(2) + "s</span> • Reg: <b>" + (x.regPct || 100) + "%</b> • " + (x.disc || "MX") + "<div style='font-size:10px;color:#aaa'>Setup: " + (x.setupTxt || "Serie") + "</div></div>";
+    }).join("") || "<div style='color:#888'>Sin registros en esta categoria.</div>";
+  }).catch(function(){});
 }
 </script>
 </body>

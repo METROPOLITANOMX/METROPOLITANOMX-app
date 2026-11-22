@@ -135,7 +135,7 @@
         <b style="color:#ffc107;font-size:13px">🏍️ MI MOTO ACTIVA EN PISTA</b>
         <button onclick="nuevaMotoGar()" style="background:#20c997;color:#000;padding:5px 9px;font-size:10px">+ NUEVA MOTO</button>
       </div>
-      <select id="selMotoGar" onchange="cambiarMotoGar(this.value)"></select>
+      <select id="selMotoGar" onchange="cambiarMotoGar(this.value)"></select><select id="gDisc" style="margin-bottom:6px;color:#0dcaf0;font-weight:bold"><option value="MX">🏍️ DISCIPLINA: MOTOCROSS (MX TIERRA)</option><option value="SM">🏁 DISCIPLINA: SUPERMOTO (SM ASFALTO)</option></select>
       <div class="grid2">
         <div><label style="font-size:10px;color:#aaa">MODELO</label><input id="gMod" placeholder="Losi Promoto-MX"></div>
         <div><label style="font-size:10px;color:#aaa">DORSAL</label><input id="gDor" placeholder="46"></div>
@@ -200,7 +200,7 @@
   </div>
   <canvas id="cnvPng" width="720" height="720" style="display:none"></canvas>
 <script>
-var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var FB_ROOT = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro"; var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO"; var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT"; var FB = FB_ROOT + "/circuitos/" + circId;
 var uid = localStorage.getItem("mxp_uid"), miNom = localStorage.getItem("mxp_nom") || "Piloto", esDir = (localStorage.getItem("mxp_dir_ok") === "1");
 if (!uid) location.href = "index.html";
 document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
@@ -229,7 +229,7 @@ function pintarGaraje() {
   var s = document.getElementById("selMotoGar");
   s.innerHTML = motosGar.map(function(m, i) { return '<option value="' + i + '"' + (i === idxMoto ? ' selected' : '') + '>' + m.modelo + ' (#' + (m.dorsal || '--') + ')</option>'; }).join("");
   var m = motosGar[idxMoto] || motosGar[0], st = m.setup || {};
-  document.getElementById("gMod").value = m.modelo || "";
+  document.getElementById("gMod").value = m.modelo || ""; if (document.getElementById("gDisc")) document.getElementById("gDisc").value = m.disc || "MX";
   document.getElementById("gDor").value = m.dorsal || "";
   document.getElementById("badgeDor").textContent = "#" + (m.dorsal || "--");
   document.getElementById("gTerr").value = st.terr || "";
@@ -294,7 +294,7 @@ function procesarFotoCap(inp) {
 function guardarFirmaGar() { motosGar[idxMoto].colores = colsTmpGar.slice(); document.getElementById("boxCapGar").style.display = "none"; guardarMotoGar(); hablarP("Colores guardados en la nube"); }
 function guardarMotoGar() {
   var m = motosGar[idxMoto];
-  m.modelo = document.getElementById("gMod").value.trim() || "Losi Promoto-MX";
+  m.modelo = document.getElementById("gMod").value.trim() || "Losi Promoto-MX"; m.disc = document.getElementById("gDisc") ? document.getElementById("gDisc").value : "MX";
   m.dorsal = document.getElementById("gDor").value.trim() || "1";
   m.setup = { terr: document.getElementById("gTerr").value.trim(), horq: document.getElementById("gHorq").value.trim(), amort: document.getElementById("gAmort").value.trim(), des: document.getElementById("gDes").value.trim(), neum: document.getElementById("gNeum").value.trim(), gyro: document.getElementById("gGyro").value.trim() };
   localStorage.setItem("mxp_gar_" + uid, JSON.stringify(motosGar));
@@ -356,7 +356,7 @@ function cmdAntDir(px) {
 function cargarClubDir() {
   var bx = document.getElementById("boxClubDir"); bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
-  fetch(FB + ".json").then(function(r) { return r.json(); }).then(function(root) {
+  fetch(FB_ROOT + ".json").then(function(r) { return r.json(); }).then(function(root) {
     var ct = (root && root.cuentas) || {}, vs = (root && root.visitas) || {};
     var h = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas: <b>" + Object.keys(vs).length + "</b> | Cuentas: <b>" + Object.keys(ct).length + "</b></div>";
     Object.keys(ct).forEach(function(k) {
@@ -366,8 +366,8 @@ function cargarClubDir() {
     bx.innerHTML = h;
   });
 }
-function bloqCta(k, st) { fetch(FB + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir); }
-function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir); }
+function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir); }
+function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir); }
 function registrarVuelta(pUid) {
   var p = pilotosAll[pUid]; if (!p) return;
   var ah = ahoraP(), st = salaObj.estado || "ESPERA";
@@ -388,7 +388,7 @@ function registrarVuelta(pUid) {
     var patchSala = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
     if (!salaObj.hotlapMs || lap < Number(salaObj.hotlapMs)) { patchSala.hotlapMs = lap; patchSala.hotlapTxt = p.nombre + " — " + fmt(lap); }
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(patchSala) });
-    if (pUid === uid) { guardarVtaLocal(lap); hablarP("Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos"); }
+    var mAct = motosGar[idxMoto] || motosGar[0], stM = mAct.setup || {}, stTx = [stM.terr, stM.horq, stM.amort, stM.des, stM.neum, stM.gyro].filter(Boolean).join(" • ") || "Serie"; var totM = histDias.reduce(function(s, d) { return s + (d.vtas ? d.vtas.length : 0); }, 0); var medM = totM ? (histDias.reduce(function(s, d) { return s + d.vtas.reduce(function(a, b) { return a + b; }, 0); }, 0) / totM) : lap; var regM = medM > 0 ? Math.max(50, Math.min(100, Math.round((mej / medM) * 100))) : 100; fetch(FB_ROOT + "/mundial/" + uid + "_" + circId + ".json", { method: "PUT", body: JSON.stringify({ nombre: miNom, circuito: circNom, disc: mAct.disc || "MX", sup: (mAct.disc === "SM" ? "SM Asfalto" : "MX Tierra"), mejorMs: mej, regPct: regM, setupTxt: stTx, ts: ah }) }).catch(function(){}); if (pUid === uid) { guardarVtaLocal(lap); hablarP("Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos"); }
   });
 }
 function sumarVueltaManual() { registrarVuelta(uid); }
