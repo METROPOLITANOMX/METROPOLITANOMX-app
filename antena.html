@@ -53,12 +53,7 @@
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO DE ANTENA</div>
     <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | PASOS: 0</div>
-    <div class="g3">
-      <button onclick="setPosX(25)" style="background:#2b2b2b;color:#fff">◀ IZQ</button>
-      <button onclick="setPosX(50)" style="background:#0dcaf0;color:#000">CENTRO</button>
-      <button onclick="setPosX(75)" style="background:#2b2b2b;color:#fff">DER ▶</button>
-    </div>
-    <button onclick="calibrarFondo()" style="width:100%;margin-top:8px;background:#20c997;color:#000">📍 CALIBRAR PISTA VACIA</button>
+    <div style="font-size:11px;color:#888;margin-top:6px">Control remoto activo desde Movil Principal</div>
   </div>
 <script>
 var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro/circuitos/" + (localStorage.getItem("mxp_circ_id") || "METROPOLITANO");
@@ -139,7 +134,7 @@ function proc() {
   var cx = Math.max(50, Math.min(334, Math.round((posX / 100) * 384)));
   var d = ctx.getImageData(cx - 45, 28, 90, 160).data, nPx = 14400, ah = Date.now();
 
-  if (!calibradaOk) { document.getElementById("lblEstado").textContent = "COLOCA EL MOVIL Y PULSA CALIBRAR"; document.getElementById("lblEstado").style.color = "#ffc107"; return; } if (!fondo || fondo.length !== d.length || ah < calHasta) {
+  if (!calibradaOk) { document.getElementById("lblEstado").textContent = "COLOCADA — ESPERANDO CALIBRACION DESDE DIRECTOR"; document.getElementById("lblEstado").style.color = "#ffc107"; return; } if (!fondo || fondo.length !== d.length || ah < calHasta) {
     fondo = new Uint8ClampedArray(d); est = "CAL";
     document.getElementById("lblEstado").textContent = "CALIBRANDO PISTA VACIA...";
     document.getElementById("lblEstado").style.color = "#0dcaf0";

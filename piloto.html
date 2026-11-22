@@ -69,7 +69,7 @@
     <div id="boxAmistosa" class="card" style="display:none;border-color:#fd7e14">
       <b style="color:#fd7e14;font-size:11px">MODO AMISTOSO (DIRECCION OFFLINE)</b>
       <div class="grid2" style="margin-top:6px">
-        <button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
+        <button id="btnCalAmistosa" onclick="calibrarConCuenta10()" style="grid-column:span 2;background:#0dcaf0;color:#000;margin-bottom:4px">📍 CALIBRAR ANTENA (CUENTA ATRAS 10s)</button><button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
         <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 SALIDA 30s</button>
       </div>
     </div>
@@ -347,7 +347,7 @@ function setModoAnt(m) {
   document.getElementById("bModCar").style.background = (m === "CAR") ? "#ffc107" : "#2b2b2b"; document.getElementById("bModCar").style.color = (m === "CAR") ? "#000" : "#fff";
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraP() }) });
 }
-function cmdAntDir(px) {
+var _tCal10=null;function calibrarConCuenta10(){if(_tCal10)return;var s=10,b=document.getElementById("btnCalAmistosa");hablarP("Coloca el movil en meta y retirate, calibrando en 10 segundos");_tCal10=setInterval(function(){if(b)b.textContent="⏳ CALIBRANDO EN "+s+"s...";if(s<=5&&s>=1)hablarP(String(s));if(s<=0){clearInterval(_tCal10);_tCal10=null;Object.keys(salaObj.antenas||{}).forEach(function(aid){fetch(FB+"/sala/cmd.json",{method:"PUT",body:JSON.stringify({ts:ahoraP(),antId:aid,calibrar:true})});});if(b){b.textContent="✅ PISTA CALIBRADA OK";b.style.background="#20c997";}hablarP("Pista vacia calibrada");}s--;},1000);} function cmdAntDir(px) {
   var idA = document.getElementById("selAntDir").value; if (!idA) return;
   var cmd = { ts: ahoraP(), antId: idA };
   if (px > 0) { cmd.posX = px; document.getElementById("linAntDir").style.left = px + "%"; } else cmd.calibrar = true;
@@ -442,7 +442,7 @@ actualizarRango();
 setInterval(function() {
   fetch(FB + ".json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(root) {
     if (!root) return;
-    salaObj = root.sala || {}; pilotosAll = root.pilotos || {}; garajesAll = root.garaje || {};
+    salaObj = root.sala || {}; salaObj.antenas = root.antenas || {}; pilotosAll = root.pilotos || {}; garajesAll = root.garaje || {};
     var ants = root.antenas || {}, aks = Object.keys(ants).filter(function(k) { return Math.abs(ahoraP() - Number(ants[k].ts || 0)) < 15000; });
     var lAnt = document.getElementById("lblAntVivo");
     lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
