@@ -114,28 +114,53 @@ function registrarVisita(rol, nom) {
 }
 registrarVisita("PORTADA", localStorage.getItem("mxp_nom") || "Visitante");
 function procesarAuth() {
-  var nom = document.getElementById("aNom").value.trim(), uid = nom.toLowerCase().replace(/[^a-z0-9]/g, ""), clv = document.getElementById("aClv").value, pin = document.getElementById("aPin").value.trim(), msg = document.getElementById("mAuth");
+  var nom = document.getElementById("aNom").value.trim();
+  var uid = nom.toLowerCase().replace(/[^a-z0-9]/g, "");
+  var clv = document.getElementById("aClv").value.trim();
+  var pin = document.getElementById("aPin").value.trim();
+  var msg = document.getElementById("mAuth");
   if (!uid || !clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Rellena nombre y clave"; return; }
   if (modA === "REG" && (pin.length !== 4 || isNaN(Number(pin)))) { msg.style.color = "#ff4d5e"; msg.textContent = "Pon un PIN de 4 numeros"; return; }
-  msg.style.color = "#0dcaf0"; msg.textContent = "Verificando...";
-  fetch(FB + "/cuentas/" + uid + ".json").then(function(r) { return r.json(); }).then(function(u) {
+  msg.style.color = "#0dcaf0"; msg.textContent = "Conectando...";
+
+  var locCtas = {};
+  try { locCtas = JSON.parse(localStorage.getItem("mxp_cuentas_loc") || "{}"); } catch (e) {}
+
+  fetch(FB + "/cuentas/" + uid + ".json").then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(u) {
     if (modA === "REG") {
-      if (u) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre ya existe"; return; }
+      if (u) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre ya existe, pulsa ENTRAR"; return; }
       var nw = { nombre: nom, clave: clv, pin: pin, rol: rolSel, bloqueado: false, ultAcceso: Date.now() };
-      fetch(FB + "/cuentas/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) }).then(function() { finalizarAcceso(uid, nw); });
+      locCtas[uid] = nw; localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+      fetch(FB + "/cuentas/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) }).finally(function() { finalizarAcceso(uid, nw); });
       return;
     }
-    if (!u || u.clave !== clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Nombre o clave incorrectos"; return; }
-    if (u.bloqueado) { msg.style.color = "#ff4d5e"; msg.textContent = "Cuenta suspendida por Direccion"; return; }
-    fetch(FB + "/cuentas/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ ultAcceso: Date.now(), rol: rolSel }) });
-    finalizarAcceso(uid, u);
-  }).catch(function() { msg.style.color = "#ff4d5e"; msg.textContent = "Sin conexion"; });
+    var acc = u || locCtas[uid];
+    if (!acc || acc.clave !== clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Usuario o clave incorrectos (si eres nuevo pulsa CREAR CUENTA)"; return; }
+    if (acc.bloqueado) { msg.style.color = "#ff4d5e"; msg.textContent = "Cuenta suspendida por Direccion"; return; }
+    locCtas[uid] = acc; localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+    fetch(FB + "/cuentas/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ ultAcceso: Date.now(), rol: rolSel }) }).catch(function(){});
+    finalizarAcceso(uid, acc);
+  }).catch(function() {
+    if (modA === "REG") {
+      var nw2 = { nombre: nom, clave: clv, pin: pin, rol: rolSel, bloqueado: false, ultAcceso: Date.now() };
+      locCtas[uid] = nw2; localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+      finalizarAcceso(uid, nw2);
+    } else if (locCtas[uid] && locCtas[uid].clave === clv) {
+      finalizarAcceso(uid, locCtas[uid]);
+    } else {
+      msg.style.color = "#ff4d5e"; msg.textContent = "Sin red o cuenta no creada";
+    }
+  });
 }
 function finalizarAcceso(uid, u) {
   localStorage.setItem("mxp_rec_nom", u.nombre); localStorage.setItem("mxp_rec_clv", u.clave);
   localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", u.nombre);
   registrarVisita(rolSel, u.nombre);
-  verificarZonaYEntrar(uid, u);
+  if (rolSel === "PILOTO") location.href = "piloto.html";
+  else location.href = "vivo.html";
 }
 function recuperarClave() {
   var pin = document.getElementById("rPin").value.trim(), nomB = document.getElementById("rNom").value.trim().toLowerCase(), ncl = document.getElementById("rClv").value, msg = document.getElementById("mRec");
