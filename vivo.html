@@ -20,7 +20,7 @@
   <div class="top">
     <b style="color:#20c997;font-size:14px">🔴 PISTA EN DIRECTO MX</b>
     <div style="display:flex;gap:5px">
-      <button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 8px;font-size:10px">☀️ SOL</button>
+      <button onclick="ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button><button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 8px;font-size:10px">☀️ SOL</button>
       <button onclick="location.href='index.html'" style="background:#dc3545;color:#fff;padding:6px 9px;font-size:10px">Salir</button>
     </div>
   </div>
@@ -59,7 +59,7 @@ var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebas
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, ultReacMs = 0;
 
-function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+function ayudaVivo(){var en=!(navigator.language||"es").toLowerCase().startsWith("es");alert(en?"LIVE VIEW:\n• Tap any rider to inspect their bike & setup.\n• Vote for the fastest lap before race start.\n• Send live cheers to the track!":"PANTALLA EN VIVO:\n• Toca cualquier piloto para ver su moto y reglaje.\n• Vota en la porra antes de la salida.\n• Manda animos en directo a la pista.");} function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
 
 function enviarReac(txt) {
   if ((Date.now() - ultReacMs) < 3000) return;

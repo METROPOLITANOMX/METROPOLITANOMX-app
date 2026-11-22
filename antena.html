@@ -36,7 +36,7 @@
   <div class="top">
     <b id="lblNomAnt" style="color:#a370f7;font-size:14px">📡 ANTENA MX</b>
     <div style="display:flex;gap:5px">
-      <button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 9px;font-size:10px">Cambiar</button>
+      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 9px;font-size:10px">? GUIA</button><button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 9px;font-size:10px">Cambiar</button>
       <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:7px 9px;font-size:10px">Voz ON</button>
       <button onclick="salirAntena()" style="background:#dc3545;color:#fff;padding:7px 9px;font-size:10px">Salir</button>
     </div>
@@ -76,7 +76,7 @@ if (antId && antNom) {
   document.getElementById("modalRanura").style.display = "none";
   document.getElementById("lblNomAnt").textContent = "📡 " + antNom;
 }
-function elegirRanura(id, nom) {
+function ayudaAnt(){var en=!(navigator.language||"es").toLowerCase().startsWith("es");alert(en?"ANTENNA SETUP:\n1. Place phone steady in landscape pointing at the finish line.\n2. Tap CALIBRATE EMPTY TRACK with no bike in frame.\n3. It will auto-detect laps during Warm-Up, Race or Test.":"GUIA DE ANTENA:\n1. Coloca el movil quieto en horizontal apuntando a la linea de meta.\n2. Pulsa CALIBRAR PISTA VACIA sin motos delante.\n3. Contara vueltas automaticamente en Warm-Up, Manga o Test.");} function elegirRanura(id, nom) {
   antId = id; antNom = nom;
   localStorage.setItem("mxp_ant_id", id); localStorage.setItem("mxp_ant_nom", nom);
   document.getElementById("modalRanura").style.display = "none";

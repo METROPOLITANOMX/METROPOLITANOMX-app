@@ -35,7 +35,7 @@
       <span id="badgeRango" style="background:#20c997;color:#000;font-size:10px;padding:2px 6px;border-radius:5px;margin-left:5px;font-weight:bold">ROOKIE</span>
     </div>
     <div style="display:flex;gap:4px">
-      <button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 7px;font-size:10px">☀️</button>
+      <button onclick="ayudaTab()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button><button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 7px;font-size:10px">☀️</button>
       <button id="btnVozP" onclick="toggleVozP()" style="background:#20c997;color:#000;padding:6px 8px;font-size:10px">Voz ON</button>
       <button onclick="salirPiloto()" style="background:#dc3545;color:#fff;padding:6px 8px;font-size:10px">Salir</button>
     </div>
@@ -123,7 +123,7 @@
 
       <!-- GESTION DE CUENTAS Y ESTADISTICAS CLUB -->
       <div style="margin-top:10px;border-top:1px solid #2b3a4a;padding-top:8px">
-        <button onclick="cargarClubDir()" style="width:100%;background:#262626;color:#ffc107;font-size:11px">👥 GESTIONAR CUENTAS Y VISITANTES</button>
+        <button onclick="cargarClubDir()" style="width:100%;background:#262626;color:#ffc107;font-size:11px">👥 GESTIONAR CUENTAS Y VISITANTES</button><button onclick="verReportesDir()" style="width:100%;margin-top:5px;background:#262626;color:#ff4d5e;font-size:11px">🛠️ VER REPORTES DE PROBLEMAS</button><div id="boxRepDir" style="display:none;margin-top:6px;font-size:11px"></div>
         <div id="boxClubDir" style="display:none;margin-top:8px;font-size:11px"></div>
       </div>
     </div>
@@ -216,7 +216,7 @@ function hablarP(t) { if (!vozP || !("speechSynthesis" in window)) return; try {
 function toggleVozP() { vozP = !vozP; var b = document.getElementById("btnVozP"); b.textContent = vozP ? "Voz ON" : "Voz OFF"; b.style.background = vozP ? "#20c997" : "#444"; }
 function salirPiloto() { localStorage.removeItem("mxp_uid"); localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; }
 
-function verTab(t) {
+var _tabAct="sala";function ayudaTab(){var en=!(navigator.language||"es").toLowerCase().startsWith("es");var g={sala:en?"TRACK TAB:\n1. Wait for Warm-Up or 30s Start lights.\n2. Keep phone in pocket (Lock Mode) for voice lap calls.\n3. Use + Manual Lap if no antenna is active.":"PESTAÑA SALA:\n1. Espera el Warm-Up o el semaforo de 30s.\n2. Usa Modo Bolsillo para llevar el movil encima escuchando tus tiempos por voz.\n3. Si ruedas sin antena, usa + Vuelta Manual.",garaje:en?"GARAGE TAB:\n1. Set your bike model, race number & MX/SM discipline.\n2. Tap CAPTURE COLORS (2 sides or color palette) so antennas identify your bike.\n3. Save your setup so others can see it in World Records.":"PESTAÑA GARAJE:\n1. Configura modelo, dorsal y disciplina (MX Tierra / SM Asfalto).\n2. Pulsa CAPTURAR COLORES (2 lados o paleta) para que las antenas reconozcan tu moto.\n3. Guarda tu setup para compartirlo en los records mundiales.",tiempos:en?"TIMES TAB:\n1. Check your Best Lap, Consistency % and Global Rank.\n2. Compare 1v1 against rivals and view their exact bike setup.\n3. Export any day as a PNG social card.":"PESTAÑA TIEMPOS:\n1. Consulta tu Mejor Vuelta, Regularidad % y Rango.\n2. Comparate 1 vs 1 con rivales viendo su moto y reglaje exacto.\n3. Descarga tarjetas PNG de tus jornadas."};alert(g[_tabAct]||g.sala);} function verTab(t) { _tabAct = t;
   ["sala", "garaje", "tiempos"].forEach(function(x) { document.getElementById("sec_" + x).style.display = (x === t) ? "block" : "none"; });
   document.getElementById("tSala").className = "tab" + (t === "sala" ? " act" : "");
   document.getElementById("tGar").className = "tab" + (t === "garaje" ? " act" : "");
@@ -353,7 +353,7 @@ function cmdAntDir(px) {
   if (px > 0) { cmd.posX = px; document.getElementById("linAntDir").style.left = px + "%"; } else cmd.calibrar = true;
   fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify(cmd) });
 }
-function cargarClubDir() {
+function verReportesDir(){var bx=document.getElementById("boxRepDir");bx.style.display=(bx.style.display==="block")?"none":"block";if(bx.style.display==="none")return;fetch(FB_ROOT+"/reportes.json").then(function(r){return r.json();}).then(function(rp){if(!rp){bx.innerHTML="<div style='color:#888'>Sin reportes pendientes ✓</div>";return;}bx.innerHTML=Object.keys(rp).reverse().map(function(k){var x=rp[k];return"<div class='fila'><div><b style='color:#ffc107'>"+x.autor+"</b> ("+x.fecha+")<br>"+x.texto+"</div><button onclick=\"delRepDir('"+k+"')\" style='background:#dc3545;color:#fff;padding:3px 6px;font-size:10px'>OK</button></div>";}).join("");});}function delRepDir(k){fetch(FB_ROOT+"/reportes/"+k+".json",{method:"DELETE"}).then(verReportesDir);} function cargarClubDir() {
   var bx = document.getElementById("boxClubDir"); bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
   fetch(FB_ROOT + ".json").then(function(r) { return r.json(); }).then(function(root) {

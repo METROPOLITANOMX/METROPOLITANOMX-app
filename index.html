@@ -39,7 +39,7 @@
     <button class="b-afi" onclick="abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (VER Y ANIMAR)</button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button style="background:#1c1c1c;color:#ccc;border:1px solid #333;padding:10px;font-size:11px" onclick="abrir('pGuia')">📲 INSTALAR / GUIA</button>
-      <button style="background:#1c1c1c;color:#0dcaf0;border:1px solid #333;padding:10px;font-size:11px" onclick="invitarAmigo()">💬 INVITAR AMIGO</button>
+      <button style="background:#1c1c1c;color:#0dcaf0;border:1px solid #333;padding:10px;font-size:11px" onclick="invitarAmigo()">💬 INVITAR AMIGO</button><button style="grid-column:span 2;background:#1c1c1c;color:#ff4d5e;border:1px solid #444;padding:9px;font-size:11px" onclick="reportarProblema()">🛠️ INFORMAR DE UN PROBLEMA / BUG</button>
     </div>
   </div>
   <div id="pAuth" class="card">
@@ -156,7 +156,7 @@ function entrarDir() {
   if (!localStorage.getItem("mxp_uid")) { localStorage.setItem("mxp_uid", "director"); localStorage.setItem("mxp_nom", "Director MX"); }
   location.href = "piloto.html";
 }
-function invitarAmigo() {
+function reportarProblema(){var tx=prompt(esIngles?"Describe the issue or suggestion:":"Describe el problema o sugerencia para el administrador:");if(!tx||!tx.trim())return;var idR="r_"+Date.now();fetch(FB+"/reportes/"+idR+".json",{method:"PUT",body:JSON.stringify({ts:Date.now(),fecha:new Date().toLocaleString("es-ES"),autor:localStorage.getItem("mxp_nom")||"Usuario",circ:circAct,texto:tx.trim()})}).then(function(){alert(esIngles?"Report sent! Thank you.":"¡Aviso enviado al administrador! Muchas gracias.");});} function invitarAmigo() {
   var u = location.href.split("?")[0];
   var t = "🏍️ *METROPOLITANO MX CIRCUIT (1/4 RC)*\n¡Ven a conocer el circuito y rodar con tu moto!\n📲 Instala la app, consulta la guia y mira los tiempos en vivo:\n" + u;
   window.open("https://whatsapp.com" + encodeURIComponent(t), "_blank");
