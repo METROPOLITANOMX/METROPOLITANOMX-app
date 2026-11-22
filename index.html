@@ -3,70 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Metropolitano MX Circuit - App Oficial</title>
+<title>Metropolitano MX Pro</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d0d0d">
 <style>
-  body { margin:0; background:#050505 url("logo.png") center 18% / min(92vw, 520px) auto no-repeat; color:#fff; font-family:Arial, sans-serif; min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; text-align:center; padding:24px 20px 36px 20px; box-sizing:border-box; box-shadow:inset 0 -220px 140px -40px rgba(0,0,0,0.92); }
-  .logo-app { width:160px; max-width:60%; border-radius:16px; margin-bottom:16px; border:2px solid #ffc107; }
-  h1 { color:#ffc107; font-size:24px; margin:0 0 6px 0; text-transform:uppercase; }
-  .sub { color:#aaa; font-size:14px; margin-bottom:26px; }
-  .caja-botones { width:100%; max-width:360px; display:flex; flex-direction:column; gap:14px; }
-  button { width:100%; padding:16px; font-size:17px; font-weight:bold; border:none; border-radius:12px; cursor:pointer; text-transform:uppercase; }
-  .btn-publico { background:#20c997; color:#000; }
-  .btn-piloto { background:#ffc107; color:#000; }
-  .btn-volver { background:#333; color:#fff; font-size:14px; padding:12px; margin-top:8px; }
-  .panel-oculto { display:none; width:100%; max-width:360px; background:#181818; border:2px solid #333; border-radius:14px; padding:20px; box-sizing:border-box; margin-top:10px; }
-  input[type="text"], input[type="password"] { width:100%; padding:12px; margin-bottom:12px; border-radius:8px; border:1px solid #444; background:#000; color:#fff; font-size:15px; box-sizing:border-box; }
-  .fila-check { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#ccc; margin-bottom:14px; }
-  .link-olvido { color:#0dcaf0; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; font-size:13px; width:auto; text-transform:none; font-weight:normal; }
-  .msg-estado { font-size:14px; color:#ffc107; margin-top:12px; font-weight:bold; }
-  .tabs-auth { display:flex; gap:8px; margin-bottom:14px; }
-  .tab-btn { flex:1; padding:10px; font-size:13px; background:#222; color:#aaa; border-radius:8px; }
-  .tab-btn.activa { background:#0d6efd; color:#fff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#070707 url("logo.png") center 13% / min(84vw,440px) auto no-repeat;color:#fff;font-family:Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:16px 16px 28px;text-align:center}
+  .top-bar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:20}
+  .btn-mini{background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #333;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:bold;text-transform:uppercase;cursor:pointer}
+  .box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px}
+  button{width:100%;padding:15px;font-size:15px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;text-transform:uppercase}
+  .b-pil{background:#ffc107;color:#000;font-size:17px;padding:17px}
+  .b-afi{background:#20c997;color:#000}
+  .b-vivo{display:none;background:#dc3545;color:#fff;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.75}}
+  .banner{background:rgba(20,20,20,0.92);border:1px solid #333;border-radius:10px;padding:9px;font-size:12px;color:#0dcaf0}
+  .card{display:none;width:100%;max-width:380px;background:#141414;border:1px solid #333;border-radius:14px;padding:18px;text-align:left}
+  input{width:100%;padding:12px;margin-bottom:10px;border-radius:8px;border:1px solid #444;background:#000;color:#fff;font-size:14px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tab{flex:1;padding:9px;font-size:12px;background:#222;color:#999;border-radius:8px}
+  .tab.act{background:#0d6efd;color:#fff}
+  .msg{font-size:13px;font-weight:bold;margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
-  
-  
-
-  <div id="menuPrincipal" class="caja-botones">
-    <button class="btn-publico" onclick="entrarComoPublico()">👀 SOY PUBLICO</button>
-    <button class="btn-piloto" onclick="mostrarLoginPiloto()">🏍️ SOY PILOTO</button><button style="background:#6f42c1;color:#fff;" onclick="location.href='antena.html'">📡 SOY ANTENA</button>
-    <div id="estadoConexion" class="msg-estado"></div>
+  <div class="top-bar">
+    <button class="btn-mini" style="width:auto" onclick="abrir('pDir')">🏁 DIRECCION</button>
+    <button class="btn-mini" style="width:auto" onclick="location.href='antena.html'">📡 ANTENAS</button>
   </div>
 
-  <div id="panelDirAuth" class="panel-oculto"><h3 style="color:#ffc107;margin:0 0 12px 0;font-size:16px;">🏁 TORRE DE DIRECCION</h3><input type="text" id="dirUsuario" placeholder="Nombre de Director (ej. Director MX)"><input type="password" id="dirClave" placeholder="Clave de Direccion"><div class="fila-check"><label><input type="checkbox" id="chkRecDir" checked> Recordar clave</label></div><button class="btn-piloto" onclick="procesarAccesoDir()">ENTRAR A TORRE DE CONTROL</button><div id="msgDirAuth" class="msg-estado" style="color:#ff4d5e;"></div><button class="btn-volver" onclick="volverInicio()">VOLVER</button></div><div id="panelPilotoAuth" class="panel-oculto">
-    <div class="tabs-auth">
-      <button id="tabEntrar" class="tab-btn activa" onclick="cambiarModoAuth('LOGIN')">ENTRAR</button>
-      <button id="tabRegistro" class="tab-btn" onclick="cambiarModoAuth('REGISTRO')">CREAR CUENTA</button>
+  <div id="menu" class="box">
+    <div id="banGps" class="banner" style="display:none;border-color:#20c997;color:#20c997"></div>
+    <div id="banHotlap" class="banner">👑 HOTLAP SEMANAL: Cargando...</div>
+    <button id="btnVivo" class="b-vivo" onclick="location.href='vivo.html'">🔴 RODANDO AHORA — VER EN VIVO</button>
+    <button class="b-pil" onclick="abrirAuth('PILOTO')">🏍️ PILOTO PROMOTO</button>
+    <button class="b-afi" onclick="abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (VER Y ANIMAR)</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button style="background:#1c1c1c;color:#ccc;border:1px solid #333;padding:10px;font-size:11px" onclick="abrir('pGuia')">📲 INSTALAR / GUIA</button>
+      <button style="background:#1c1c1c;color:#0dcaf0;border:1px solid #333;padding:10px;font-size:11px" onclick="invitarAmigo()">💬 INVITAR AMIGO</button>
     </div>
-    <input type="text" id="inpUsuario" placeholder="Nombre de Piloto (ej. Carlos22)">
-    <input type="password" id="inpClave" placeholder="Contrasena">
-    <input type="text" id="inpPinReg" placeholder="PIN recuperacion (4 numeros, ej. 2012)" maxlength="4" inputmode="numeric" style="display:none;">
-    <div id="filaOpcionesLogin" class="fila-check">
-      <label><input type="checkbox" id="chkRecordar" checked> Recordar clave</label>
-      <button type="button" class="link-olvido" onclick="mostrarRecuperar()">Olvide mi clave</button>
+  </div>
+  <div id="pAuth" class="card">
+    <h3 id="titAuth" style="color:#ffc107;margin:0 0 10px;text-align:center">ACCESO PILOTO PROMOTO</h3>
+    <div class="tabs">
+      <button id="tLog" class="tab act" onclick="modoAuth('LOGIN')">ENTRAR</button>
+      <button id="tReg" class="tab" onclick="modoAuth('REG')">CREAR CUENTA</button>
     </div>
-    <button id="btnAccionAuth" class="btn-piloto" onclick="procesarAccesoPiloto()">ACCEDER A MI TELEMETRIA</button>
-    <div id="msgAuth" class="msg-estado" style="color:#ff4d5e;"></div>
-    <button class="btn-volver" onclick="volverInicio()">VOLVER</button>
+    <input id="aNom" type="text" placeholder="Nombre (ej. Carlos22)">
+    <input id="aClv" type="password" placeholder="Contrasena">
+    <input id="aPin" type="text" placeholder="PIN recuperacion (4 numeros)" maxlength="4" inputmode="numeric" style="display:none">
+    <button id="bEntrar" class="b-pil" style="padding:13px;font-size:15px" onclick="procesarAuth()">ENTRAR</button>
+    <div style="text-align:center;margin-top:8px"><a href="#" onclick="abrir('pRec');return false" style="color:#0dcaf0;font-size:12px">¿Olvidaste tu nombre o clave?</a></div>
+    <button style="background:#333;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <div id="mAuth" class="msg"></div>
   </div>
 
-  <div id="panelRecuperar" class="panel-oculto">
-    <h3 style="color:#ffc107; margin:0 0 12px 0; font-size:16px;">RECUPERAR CONTRASENA</h3>
-    <input type="text" id="recUsuario" placeholder="Tu Nombre de Piloto">
-    <input type="text" id="recPin" placeholder="Tu PIN de 4 numeros" maxlength="4" inputmode="numeric">
-    <input type="password" id="recNuevaClave" placeholder="Nueva Contrasena">
-    <button class="btn-publico" onclick="procesarRecuperacion()">CAMBIAR CONTRASENA</button>
-    <div id="msgRec" class="msg-estado" style="color:#ff4d5e;"></div>
-    <button class="btn-volver" onclick="volverALogin()">VOLVER A ENTRAR</button>
+  <div id="pRec" class="card">
+    <h3 style="color:#0dcaf0;margin:0 0 10px;text-align:center">RECUPERAR ACCESO</h3>
+    <input id="rPin" type="text" placeholder="Tu PIN de 4 numeros" maxlength="4" inputmode="numeric">
+    <input id="rNom" type="text" placeholder="Tu Nombre (opcional)">
+    <input id="rClv" type="password" placeholder="Nueva Contrasena">
+    <button class="b-afi" style="padding:13px" onclick="recuperarClave()">RESTABLECER Y ENTRAR</button>
+    <button style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('pAuth')">VOLVER</button>
+    <div id="mRec" class="msg"></div>
   </div>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}var sc=document.createElement('script');sc.src='estado.js?t='+Date.now();document.body.appendChild(sc);var FB_CTA='https://app-servidor-9bb38-default-rtdb.europe-west1.firebasedatabase.app/antenas_vivo/cuentas_pilotos',modoAuth='LOGIN';function cargarDatosRecordados(){var u=localStorage.getItem('metro_rec_user'),p=localStorage.getItem('metro_rec_pass');if(u&&p){document.getElementById('inpUsuario').value=u;document.getElementById('inpClave').value=p;document.getElementById('chkRecordar').checked=true;}}cargarDatosRecordados();function mostrarLoginPiloto(){document.getElementById('menuPrincipal').style.display='none';document.getElementById('panelRecuperar').style.display='none';document.getElementById('panelDirAuth').style.display='none';document.getElementById('panelPilotoAuth').style.display='block';cargarDatosRecordados();}function volverInicio(){document.getElementById('panelPilotoAuth').style.display='none';document.getElementById('panelRecuperar').style.display='none';document.getElementById('panelDirAuth').style.display='none';document.getElementById('menuPrincipal').style.display='flex';document.getElementById('estadoConexion').textContent='';}function mostrarRecuperar(){document.getElementById('panelPilotoAuth').style.display='none';document.getElementById('panelRecuperar').style.display='block';document.getElementById('msgRec').textContent='';}function volverALogin(){document.getElementById('panelRecuperar').style.display='none';document.getElementById('panelPilotoAuth').style.display='block';}function cambiarModoAuth(m){modoAuth=m;document.getElementById('tabEntrar').className=(m==='LOGIN')?'tab-btn activa':'tab-btn';document.getElementById('tabRegistro').className=(m==='REGISTRO')?'tab-btn activa':'tab-btn';var pEl=document.getElementById('inpPinReg');if(pEl)pEl.style.display=(m==='REGISTRO')?'block':'none';document.getElementById('filaOpcionesLogin').style.display=(m==='LOGIN')?'flex':'none';document.getElementById('btnAccionAuth').textContent=(m==='LOGIN')?'ACCEDER A MI TELEMETRIA':'REGISTRARME COMO PILOTO';document.getElementById('msgAuth').textContent='';if(m==='REGISTRO'){document.getElementById('inpUsuario').value='';document.getElementById('inpClave').value='';}else{cargarDatosRecordados();}}function entrarComoPublico(){var est=document.getElementById('estadoConexion');est.style.color='#0dcaf0';est.textContent='Conectando con el circuito...';var s=document.createElement('script');s.src='estado.js?t='+Date.now();s.onload=function(){var info=window.ESTADO_CIRCUITO||{activo:false,url:''};if(info.activo&&info.url&&info.url.indexOf('http')===0){window.location.href=info.url;}else{est.style.color='#ffc107';est.textContent='CIRCUITO CERRADO - Solo modo entreno en Soy Piloto.';}};s.onerror=function(){est.style.color='#ff4d5e';est.textContent='Sin conexion con el servidor.';};document.body.appendChild(s);}function abrirAccesoDirMix(){document.getElementById('menuPrincipal').style.display='none';document.getElementById('panelPilotoAuth').style.display='none';document.getElementById('panelRecuperar').style.display='none';document.getElementById('panelDirAuth').style.display='block';var du=localStorage.getItem('metro_dir_user'),dp=localStorage.getItem('metro_dir_pass');if(du)document.getElementById('dirUsuario').value=du;if(dp)document.getElementById('dirClave').value=dp;}function procesarAccesoDir(){var nm=(document.getElementById('dirUsuario').value||'').trim()||'Director MX',cl=document.getElementById('dirClave').value,rec=document.getElementById('chkRecDir').checked,ms=document.getElementById('msgDirAuth');if(cl!=='2026'){ms.textContent='Clave de direccion incorrecta.';return;}if(rec){localStorage.setItem('metro_dir_user',nm);localStorage.setItem('metro_dir_pass',cl);}else{localStorage.removeItem('metro_dir_user');localStorage.removeItem('metro_dir_pass');}localStorage.setItem('metro_uid','dir_'+nm.toLowerCase().replace(/[^a-z0-9]/g,''));localStorage.setItem('metro_nombre',nm);localStorage.setItem('metro_dorsal','0');location.href='torre_control.html';}function entrarFinalPiloto(uk,nom,cl,dor,rec,pin){var ct={};try{ct=JSON.parse(localStorage.getItem('metro_cuentas')||'{}');}catch(e){}ct[uk]={nombre:nom,clave:cl,dorsal:dor||'',pin:pin||''};localStorage.setItem('metro_cuentas',JSON.stringify(ct));if(rec){localStorage.setItem('metro_rec_user',nom);localStorage.setItem('metro_rec_pass',cl);}else{localStorage.removeItem('metro_rec_user');localStorage.removeItem('metro_rec_pass');}localStorage.setItem('metro_uid',uk);localStorage.setItem('metro_nombre',nom);localStorage.setItem('metro_dorsal',dor||'');fetch(FB_CTA+'/'+uk+'.json',{method:'PATCH',body:JSON.stringify({nombre:nom,clave:cl,pin:pin||''})}).catch(function(){});window.location.href='zona_piloto.html';}function procesarAccesoPiloto(){var nom=document.getElementById('inpUsuario').value.trim(),uk=nom.toLowerCase().replace(/[^a-z0-9]/g,''),cl=document.getElementById('inpClave').value,rec=document.getElementById('chkRecordar').checked,msg=document.getElementById('msgAuth');if(!uk||!cl){msg.style.color='#ff4d5e';msg.textContent='Rellena usuario y contrasena.';return;}var ct={};try{ct=JSON.parse(localStorage.getItem('metro_cuentas')||'{}');}catch(e){}if(modoAuth==='REGISTRO'){var pin=(document.getElementById('inpPinReg')?document.getElementById('inpPinReg').value:'').trim();if(pin.length!==4||isNaN(Number(pin))){msg.style.color='#ff4d5e';msg.textContent='Escribe un PIN de 4 numeros.';return;}msg.style.color='#0dcaf0';msg.textContent='Creando cuenta...';fetch(FB_CTA+'/'+uk+'.json').then(function(r){return r.json();}).then(function(pf){if(pf||ct[uk]){msg.style.color='#ff4d5e';msg.textContent='Ese nombre ya existe.';return;}entrarFinalPiloto(uk,nom,cl,'',rec,pin);}).catch(function(){entrarFinalPiloto(uk,nom,cl,'',rec,pin);});return;}msg.style.color='#0dcaf0';msg.textContent='Verificando cuenta...';fetch(FB_CTA+'/'+uk+'.json').then(function(r){return r.json();}).then(function(pf){var u=pf||ct[uk];if(!u||u.clave!==cl){msg.style.color='#ff4d5e';msg.textContent='Usuario o contrasena incorrectos.';return;}if(u.bloqueado){msg.style.color='#ff4d5e';msg.textContent='Cuenta bloqueada por Direccion.';return;}entrarFinalPiloto(uk,u.nombre||nom,cl,u.dorsal||'',rec,u.pin||'');}).catch(function(){var u=ct[uk];if(u&&u.clave===cl){entrarFinalPiloto(uk,u.nombre||nom,cl,u.dorsal||'',rec,u.pin||'');}else{msg.style.color='#ff4d5e';msg.textContent='Usuario o contrasena incorrectos.';}});}function procesarRecuperacion(){var nom=document.getElementById('recUsuario').value.trim(),uk=nom.toLowerCase().replace(/[^a-z0-9]/g,''),pin=(document.getElementById('recPin')?document.getElementById('recPin').value:'').trim(),ncl=document.getElementById('recNuevaClave').value,msg=document.getElementById('msgRec');if(!uk||!pin||!ncl){msg.style.color='#ff4d5e';msg.textContent='Rellena todos los campos.';return;}msg.style.color='#0dcaf0';msg.textContent='Comprobando PIN...';fetch(FB_CTA+'/'+uk+'.json').then(function(r){return r.json();}).then(function(pf){var ct={};try{ct=JSON.parse(localStorage.getItem('metro_cuentas')||'{}');}catch(e){}var u=pf||ct[uk];if(!u){msg.style.color='#ff4d5e';msg.textContent='Piloto no encontrado.';return;}if(u.pin&&String(u.pin)!==String(pin)){msg.style.color='#ff4d5e';msg.textContent='El PIN no coincide.';return;}var nmOk=u.nombre||nom;ct[uk]={nombre:nmOk,clave:ncl,dorsal:u.dorsal||'',pin:pin};localStorage.setItem('metro_cuentas',JSON.stringify(ct));localStorage.setItem('metro_rec_user',nmOk);localStorage.setItem('metro_rec_pass',ncl);fetch(FB_CTA+'/'+uk+'.json',{method:'PATCH',body:JSON.stringify({nombre:nmOk,clave:ncl,pin:pin})}).catch(function(){});msg.style.color='#20c997';msg.textContent='Clave cambiada! Ya puedes entrar.';setTimeout(function(){volverALogin();cargarDatosRecordados();},1100);}).catch(function(){msg.style.color='#ff4d5e';msg.textContent='Error de red.';});}</script><div style="position:fixed;top:12px;left:12px;z-index:50;"><a href="#" onclick="abrirAccesoDirMix();return false;" style="color:#888;background:rgba(15,15,15,0.85);font-size:11px;text-decoration:none;border:1px solid #333;padding:6px 10px;border-radius:8px;display:inline-block;">🏁 ACCESO DIRECCION</a></div><button onclick="if(window.caches){caches.keys().then(function(k){k.forEach(function(x){caches.delete(x);});});}location.reload(true);" style="position:fixed;top:12px;right:12px;z-index:50;width:auto;color:#888;background:rgba(15,15,15,0.85);font-size:11px;border:1px solid #333;padding:6px 10px;border-radius:8px;">🔄 Actualizar</button></body>
+
+  <div id="pDir" class="card">
+    <h3 style="color:#0dcaf0;margin:0 0 10px;text-align:center">ACCESO DIRECCION</h3>
+    <input id="dClv" type="password" placeholder="Clave de Direccion">
+    <button style="background:#0dcaf0;color:#000;padding:13px" onclick="entrarDir()">ENTRAR A CONTROL</button>
+    <button style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <div id="mDir" class="msg"></div>
+  </div>
+
+  <div id="pGuia" class="card" style="font-size:13px;line-height:1.5;color:#ddd">
+    <h3 style="color:#ffc107;margin:0 0 8px">📲 INSTALAR APP Y GUIA</h3>
+    <b>1. Instalar en movil:</b><br>• <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) arriba y elige <i>"Instalar aplicacion"</i>.<br>• <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> y elige <i>"Añadir a pantalla de inicio"</i>.<br><br>
+    <b>2. Categoria 1/4 MX:</b><br>Circuito para motos RC escala 1/4 (Losi Promoto-MX). Trae tu moto, baterias LiPo cargadas y unete a nuestras mangas.<br>
+    <button style="background:#20c997;color:#000;margin-top:10px;padding:11px;font-size:12px" onclick="verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
+    <button style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">CERRAR</button>
+  </div>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null;
+
+function abrir(id) {
+  ["menu", "pAuth", "pRec", "pDir", "pGuia"].forEach(function(x) {
+    document.getElementById(x).style.display = (x === id) ? (x === "menu" ? "flex" : "block") : "none";
+  });
+}
+function abrirAuth(rol) {
+  rolSel = rol;
+  document.getElementById("titAuth").textContent = (rol === "PILOTO") ? "ACCESO PILOTO PROMOTO" : "CLUB AFICIONADOS MX";
+  document.getElementById("aNom").value = localStorage.getItem("mxp_rec_nom") || "";
+  document.getElementById("aClv").value = localStorage.getItem("mxp_rec_clv") || "";
+  modoAuth("LOGIN");
+  abrir("pAuth");
+}
+function modoAuth(m) {
+  modA = m;
+  document.getElementById("tLog").className = "tab" + (m === "LOGIN" ? " act" : "");
+  document.getElementById("tReg").className = "tab" + (m === "REG" ? " act" : "");
+  document.getElementById("aPin").style.display = (m === "REG") ? "block" : "none";
+  document.getElementById("bEntrar").textContent = (m === "LOGIN") ? "ENTRAR" : "CREAR MI CUENTA";
+  document.getElementById("mAuth").textContent = "";
+}
+function registrarVisita(rol, nom) {
+  var idV = "v_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5);
+  fetch(FB + "/visitas/" + idV + ".json", { method: "PUT", body: JSON.stringify({ ts: Date.now(), fecha: new Date().toLocaleString("es-ES"), rol: rol, nom: nom || "Visitante" }) }).catch(function(){});
+}
+registrarVisita("PORTADA", localStorage.getItem("mxp_nom") || "Visitante");
+function procesarAuth() {
+  var nom = document.getElementById("aNom").value.trim(), uid = nom.toLowerCase().replace(/[^a-z0-9]/g, ""), clv = document.getElementById("aClv").value, pin = document.getElementById("aPin").value.trim(), msg = document.getElementById("mAuth");
+  if (!uid || !clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Rellena nombre y clave"; return; }
+  if (modA === "REG" && (pin.length !== 4 || isNaN(Number(pin)))) { msg.style.color = "#ff4d5e"; msg.textContent = "Pon un PIN de 4 numeros"; return; }
+  msg.style.color = "#0dcaf0"; msg.textContent = "Verificando...";
+  fetch(FB + "/cuentas/" + uid + ".json").then(function(r) { return r.json(); }).then(function(u) {
+    if (modA === "REG") {
+      if (u) { msg.style.color = "#ff4d5e"; msg.textContent = "Ese nombre ya existe"; return; }
+      var nw = { nombre: nom, clave: clv, pin: pin, rol: rolSel, bloqueado: false, ultAcceso: Date.now() };
+      fetch(FB + "/cuentas/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) }).then(function() { finalizarAcceso(uid, nw); });
+      return;
+    }
+    if (!u || u.clave !== clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Nombre o clave incorrectos"; return; }
+    if (u.bloqueado) { msg.style.color = "#ff4d5e"; msg.textContent = "Cuenta suspendida por Direccion"; return; }
+    fetch(FB + "/cuentas/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ ultAcceso: Date.now(), rol: rolSel }) });
+    finalizarAcceso(uid, u);
+  }).catch(function() { msg.style.color = "#ff4d5e"; msg.textContent = "Sin conexion"; });
+}
+function finalizarAcceso(uid, u) {
+  localStorage.setItem("mxp_rec_nom", u.nombre); localStorage.setItem("mxp_rec_clv", u.clave);
+  localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", u.nombre);
+  registrarVisita(rolSel, u.nombre);
+  location.href = (rolSel === "PILOTO") ? "piloto.html" : "vivo.html";
+}
+function recuperarClave() {
+  var pin = document.getElementById("rPin").value.trim(), nomB = document.getElementById("rNom").value.trim().toLowerCase(), ncl = document.getElementById("rClv").value, msg = document.getElementById("mRec");
+  if (pin.length !== 4 || !ncl) { msg.style.color = "#ff4d5e"; msg.textContent = "Introduce tu PIN y nueva clave"; return; }
+  fetch(FB + "/cuentas.json").then(function(r) { return r.json(); }).then(function(ct) {
+    if (!ct) return;
+    var encUid = Object.keys(ct).find(function(k) { return String(ct[k].pin) === pin && (!nomB || k.indexOf(nomB.replace(/[^a-z0-9]/g, "")) >= 0); });
+    if (!encUid) { msg.style.color = "#ff4d5e"; msg.textContent = "PIN no encontrado"; return; }
+    fetch(FB + "/cuentas/" + encUid + ".json", { method: "PATCH", body: JSON.stringify({ clave: ncl }) }).then(function() {
+      msg.style.color = "#20c997"; msg.textContent = "Usuario: " + ct[encUid].nombre + " — Clave actualizada ✓";
+      localStorage.setItem("mxp_rec_nom", ct[encUid].nombre); localStorage.setItem("mxp_rec_clv", ncl);
+    });
+  });
+}
+function entrarDir() {
+  if (document.getElementById("dClv").value !== "2026") { document.getElementById("mDir").textContent = "Clave incorrecta"; return; }
+  localStorage.setItem("mxp_dir_ok", "1");
+  if (!localStorage.getItem("mxp_uid")) { localStorage.setItem("mxp_uid", "director"); localStorage.setItem("mxp_nom", "Director MX"); }
+  location.href = "piloto.html";
+}
+function invitarAmigo() {
+  var u = location.href.split("?")[0];
+  var t = "🏍️ *METROPOLITANO MX CIRCUIT (1/4 RC)*\n¡Ven a conocer el circuito y rodar con tu moto!\n📲 Instala la app, consulta la guia y mira los tiempos en vivo:\n" + u;
+  window.open("https://whatsapp.com" + encodeURIComponent(t), "_blank");
+}
+function verMapaCircuito() {
+  if (gpsCirc && gpsCirc.lat) window.open("https://google.com" + gpsCirc.lat + "," + gpsCirc.lng, "_blank");
+  else alert("La ubicacion exacta del circuito aun no ha sido fijada por Direccion.");
+}
+setInterval(function() {
+  fetch(FB + "/sala.json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(s) {
+    if (!s) return;
+    if (s.gps) gpsCirc = s.gps;
+    var bv = document.getElementById("btnVivo");
+    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || (s.ultPasoTs && (Date.now() - Number(s.ultPasoTs)) < 600000));
+    bv.style.display = activo ? "block" : "none";
+    if (activo && s.ultPasoTxt) bv.textContent = "🔴 EN VIVO: " + s.ultPasoTxt + " — VER";
+    var bh = document.getElementById("banHotlap");
+    if (bh) bh.textContent = (s.hotlapTxt) ? ("👑 HOTLAP SEMANAL: " + s.hotlapTxt) : "👑 HOTLAP SEMANAL: ¡Se el primero en marcar tiempo!";
+  }).catch(function(){});
+}, 2000);
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(function(p) {
+    fetch(FB + "/sala/gps.json").then(function(r) { return r.json(); }).then(function(g) {
+      if (!g || !g.lat) return;
+      var dLat = (p.coords.latitude - g.lat) * 111000, dLng = (p.coords.longitude - g.lng) * 85000;
+      if (Math.sqrt(dLat * dLat + dLng * dLng) < 550) {
+        var bg = document.getElementById("banGps");
+        bg.style.display = "block";
+        bg.textContent = "📍 ¡Estas junto al Metropolitano Circuit! Pulsa PILOTO PROMOTO para rodar.";
+      }
+    }).catch(function(){});
+  }, function(){}, { timeout: 5000 });
+}
+</script>
+</body>
 </html>
-
-
-
-
-
-
