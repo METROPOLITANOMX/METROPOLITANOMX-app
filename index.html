@@ -177,7 +177,7 @@ setInterval(function() {
     if (bh) bh.textContent = (s.hotlapTxt) ? ("👑 HOTLAP SEMANAL: " + s.hotlapTxt) : "👑 HOTLAP SEMANAL: ¡Se el primero en marcar tiempo!";
   }).catch(function(){});
 }, 2000);
-if ("geolocation" in navigator) {
+location.href = "piloto.html"; return; if ("geolocation" in navigator) {
   navigator.geolocation.getCurrentPosition(function(p) {
     fetch(FB + "/sala/gps.json").then(function(r) { return r.json(); }).then(function(g) {
       if (!g || !g.lat) return;
@@ -250,7 +250,7 @@ function verificarZonaYEntrar(uid, u) {
     abrir("pCirc");
     return;
   }
-  if ("geolocation" in navigator) {
+  location.href = "piloto.html"; return; if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(function(p) {
       fetch(FB + "/circuitos/METROPOLITANO/sala/gps.json").then(function(r) { return r.json(); }).then(function(g) {
         if (g && g.lat) {
