@@ -316,7 +316,7 @@ var _offP = 0, ultEvP = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false
 fetch("https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/.info/serverTimeOffset.json").then(function(r){return r.json();}).then(function(o){if(typeof o==="number")_offP=o;}).catch(function(){});
 function ahoraP() { return Date.now() + _offP; }
 
-function cmdSala(est) {
+function cmdSala(est) { if (est === "WARMUP" || est === "SALIDA_30") { var txtA = document.getElementById("lblTelAntDir").textContent || ""; if (txtA.indexOf("SIN CALIBRAR") >= 0) { alert("⚠️ Calibra primero la pista vacia en las antenas antes de iniciar."); return; } }
   var pay = { estado: est, dirTs: ahoraP() };
   if (est === "WARMUP") { pay.tsInicio = ahoraP() + 180000; hablarP("Warm-up de 3 minutos iniciado"); }
   if (est === "SALIDA_30") { pay.tsInicio = ahoraP() + 30000; hablarP("Atencion pilotos, 30 segundos para la salida"); }
@@ -337,7 +337,7 @@ function guardarGpsPista() {
     fetch(FB + "/sala/gps.json", { method: "PUT", body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) }).then(function() { alert("GPS del circuito guardado ✓"); });
   });
 }
-function toggleTestAntenas() {
+function toggleTestAntenas() { if (!testOn) { var txtA = document.getElementById("lblTelAntDir").textContent || ""; if (txtA.indexOf("SIN CALIBRAR") >= 0) { alert("⚠️ Pulsa RE-CALIBRAR PISTA VACIA antes de activar el test."); return; } }
   testOn = !testOn; var b = document.getElementById("btnToggleTest");
   b.textContent = testOn ? "DETENER TEST" : "ACTIVAR TEST"; b.style.background = testOn ? "#dc3545" : "#6f42c1";
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: testOn ? "TEST" : "ESPERA", verVivo: testOn, dirTs: ahoraP() }) });
@@ -459,7 +459,7 @@ setInterval(function() {
       if (a0) {
         if (a0.img) document.getElementById("imgAntDir").src = a0.img;
         if (a0.posX) document.getElementById("linAntDir").style.left = a0.posX + "%";
-        document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
+        document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
       }
     }
 

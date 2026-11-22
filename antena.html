@@ -69,7 +69,7 @@ function ahoraSrv() { return Date.now() + _offSrv; }
 var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, posX = 50, fondo = null, calHasta = 0;
-var est = "CAL", ultMs = 0, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
+var est = "SIN_CAL", calibradaOk = false, ultMs = 0, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
 var cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, garajes: {} };
 
 if (antId && antNom) {
@@ -102,7 +102,7 @@ function toggleVoz() {
   b.style.background = vozOn ? "#20c997" : "#444";
 }
 function setPosX(p) { posX = p; document.getElementById("lin").style.left = p + "%"; calibrarFondo(); }
-function calibrarFondo() { fondo = null; swCol = {}; framesHit = 0; est = "CAL"; calHasta = Date.now() + 1400; hablar("Calibrando pista vacia"); }
+function calibrarFondo() { fondo = null; swCol = {}; framesHit = 0; est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; hablar("Calibrando pista vacia"); }
 function salirAntena() {
   if (antId) fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }).finally(function(){ location.href = "index.html"; });
   else location.href = "index.html";
@@ -139,7 +139,7 @@ function proc() {
   var cx = Math.max(50, Math.min(334, Math.round((posX / 100) * 384)));
   var d = ctx.getImageData(cx - 45, 28, 90, 160).data, nPx = 14400, ah = Date.now();
 
-  if (!fondo || fondo.length !== d.length || ah < calHasta) {
+  if (!calibradaOk) { document.getElementById("lblEstado").textContent = "COLOCA EL MOVIL Y PULSA CALIBRAR"; document.getElementById("lblEstado").style.color = "#ffc107"; return; } if (!fondo || fondo.length !== d.length || ah < calHasta) {
     fondo = new Uint8ClampedArray(d); est = "CAL";
     document.getElementById("lblEstado").textContent = "CALIBRANDO PISTA VACIA...";
     document.getElementById("lblEstado").style.color = "#0dcaf0";
@@ -221,7 +221,7 @@ setInterval(function() {
   }
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, img: snap })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, img: snap })
   }).catch(function(){});
   fetch(FB + ".json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(root) {
     if (!root) return;
@@ -237,7 +237,7 @@ setInterval(function() {
 }, 650);
 navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60, min: 30 } }, audio: false }).then(function(st) {
   var v = document.getElementById("vid"); v.srcObject = st; return v.play();
-}).then(function() { camOk = true; calibrarFondo(); setInterval(proc, 45); }).catch(function(e) { document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
+}).then(function() { camOk = true; setInterval(proc, 45); }).catch(function(e) { document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
 </script>
 </body>
 </html>
