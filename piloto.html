@@ -437,3 +437,90 @@ function descargarPngDia(ix) {
   cx.fillStyle = "#0dcaf0"; cx.font = "bold 24px Arial"; cx.fillText("Fecha: " + d.fecha + " • Vueltas: " + d.vtas.length, 360, 280);
   var a = document.createElement("a"); a.download = "MetroMX_" + d.fecha.replace(/\//g, "-") + ".png"; a.href = cv.toDataURL("image/png"); a.click();
 }
+subirGarajeNube();
+actualizarRango();
+setInterval(function() {
+  fetch(FB + ".json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(root) {
+    if (!root) return;
+    salaObj = root.sala || {}; pilotosAll = root.pilotos || {}; garajesAll = root.garaje || {};
+    var ants = root.antenas || {}, aks = Object.keys(ants).filter(function(k) { return Math.abs(ahoraP() - Number(ants[k].ts || 0)) < 15000; });
+    var lAnt = document.getElementById("lblAntVivo");
+    lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
+    lAnt.style.color = aks.length ? "#00e676" : "#ff4d5e";
+
+    if (esDir && aks.length) {
+      var sA = document.getElementById("selAntDir");
+      if (document.activeElement !== sA) {
+        var pv = sA.value;
+        sA.innerHTML = aks.map(function(k) { return '<option value="' + k + '">' + (ants[k].nom || k) + '</option>'; }).join("");
+        if (pv && aks.indexOf(pv) >= 0) sA.value = pv;
+      }
+      var a0 = ants[sA.value] || ants[aks[0]];
+      if (a0) {
+        if (a0.img) document.getElementById("imgAntDir").src = a0.img;
+        if (a0.posX) document.getElementById("linAntDir").style.left = a0.posX + "%";
+        document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
+      }
+    }
+
+    var dirOnline = (salaObj.dirTs && Math.abs(ahoraP() - Number(salaObj.dirTs)) < 30000);
+    document.getElementById("boxAmistosa").style.display = (!esDir && !dirOnline) ? "block" : "none";
+    document.body.style.boxShadow = (salaObj.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+
+    var br = document.getElementById("banReacVivo");
+    if (salaObj.reaccion && (Date.now() - Number(salaObj.reaccion.ts || 0)) < 8000) {
+      br.style.display = "block"; br.textContent = "📣 " + salaObj.reaccion.autor + ": " + salaObj.reaccion.texto;
+    } else br.style.display = "none";
+
+    var pils = Object.keys(pilotosAll).filter(function(k) { return pilotosAll[k] && pilotosAll[k].nombre; }).map(function(k) { return Object.assign({ id: k }, pilotosAll[k]); });
+    pils.sort(function(a, b) { return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+    var h = "";
+    pils.forEach(function(p, ix) {
+      if (p.id === uid) document.getElementById("vivoPos").textContent = (ix + 1) + "º / " + pils.length;
+      h += '<div class="fila' + (p.id === uid ? ' yo' : '') + '"><span><b>' + (ix + 1) + 'º #' + (p.dorsal || '--') + ' ' + p.nombre + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b></div>';
+    });
+    document.getElementById("listaSala").innerHTML = h || "Esperando pilotos...";
+
+    var evs = root.eventos || {};
+    Object.keys(evs).forEach(function(aid) {
+      var ev = evs[aid];
+      if (ev && ev.ts && ultEvP[aid] !== ev.ts) {
+        ultEvP[aid] = ev.ts;
+        if (Math.abs(ahoraP() - Number(ev.ts)) < 6000) {
+          var target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
+          if (esDir || target === uid) registrarVuelta(target);
+        }
+      }
+    });
+
+    var est = salaObj.estado || "ESPERA", t0 = Number(salaObj.tsInicio || 0), ov = document.getElementById("overlaySem");
+    document.getElementById("lblEstadoSala").textContent = est;
+    if (est === "SALIDA_30" && t0 > 0) {
+      var df = t0 - ahoraP();
+      if (df > 0 && df <= 31000) {
+        var s = Math.ceil(df / 1000);
+        ov.style.display = "flex"; document.getElementById("numSem").textContent = "00:" + (s < 10 ? "0" : "") + s;
+        ov.style.background = (s > 10) ? "#c9182b" : (s > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
+        if (s !== ultSegSemP) { ultSegSemP = s; if (s <= 5) hablarP(String(s)); }
+      } else if (df <= 0 && df > -4000) {
+        ov.style.display = "flex"; ov.style.background = "#00c853"; document.getElementById("numSem").textContent = "¡SALIDA!";
+        if (esDir) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) });
+      } else ov.style.display = "none";
+    } else ov.style.display = "none";
+  }).catch(function(){});
+}, 900);
+
+setInterval(function() {
+  var yo = pilotosAll[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(salaObj.tsInicio || 0);
+  var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol");
+  if (!b || ahoraP() < b || salaObj.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
+  var d = (ahoraP() - b) / 1000;
+  el.textContent = d.toFixed(1) + "s";
+  if (rb) rb.textContent = d.toFixed(1) + "s";
+  if (salaObj.tsInicio && (ahoraP() - Number(salaObj.tsInicio)) >= 720000 && !avisoLipoP) {
+    avisoLipoP = true; hablarP("Llevas 12 minutos rodando, revisa bateria LiPo");
+  }
+}, 120);
+</script>
+</body>
+</html>
