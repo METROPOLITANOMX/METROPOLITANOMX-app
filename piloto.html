@@ -74,7 +74,7 @@
       <div id="txtCircTop" style="font-size:10px;color:#0dcaf0;margin-top:3px">🏁 METROPOLITANO</div>
     </div>
     <div style="display:flex;gap:4px">
-      <button onclick="ayudaTab()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
+      <button onclick="pedirDirRapido()" style="background:#ffc107;color:#000;padding:6px 7px;font-size:10px">👑</button><button onclick="ayudaTab()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
       <button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 7px;font-size:10px">☀️</button>
       <button id="btnVozP" onclick="toggleVozP()" style="background:#20c997;color:#000;padding:6px 8px;font-size:10px">Voz ON</button>
       <button onclick="salirPiloto()" style="background:#dc3545;color:#fff;padding:6px 8px;font-size:10px">Salir</button>
@@ -337,7 +337,7 @@ function salirPiloto() {
   localStorage.removeItem("mxp_dir_ok");
   location.href = "index.html";
 }
-function ayudaTab() {
+function pedirDirRapido(){if(esDir){esDir=false;localStorage.removeItem("mxp_dir_ok");document.getElementById("panelDir").style.display="none";return;}var c=prompt("Clave Direccion:");if(c==="2026"){esDir=true;localStorage.setItem("mxp_dir_ok","1");document.getElementById("panelDir").style.display="block";}} function ayudaTab() {
   var g = {
     sala: "PESTAÑA SALA PISTA:\n1. Quedas inscrito automaticamente al entrar (incluido Director).\n2. En Modo Amistoso puedes calibrar con cuenta atras de 10s, lanzar Warm-Up 3 min o Salida 30s.\n3. Activa Modo Bolsillo para llevar el movil encima escuchando tus vueltas por voz.",
     garaje: "PESTAÑA GARAJE:\n1. Elige disciplina MX Tierra o SM Supermoto y guarda tus reglajes.\n2. Toca cualquiera de los 4 recuadros para hacer fotos de tu moto con la camara en directo.\n3. Pulsa CAPTURAR COLORES para escanear los 2 lados de la moto en vivo y que las antenas la identifiquen.",
@@ -619,7 +619,7 @@ function compartirSetupWa() {
 function cmdSala(est) {
   if (est === "WARMUP" || est === "SALIDA_30") {
     var ants = salaObj.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
     var algunaSinCal = aks.some(function(k){ return !ants[k].calibrada; });
     if (aks.length && algunaSinCal) {
       alert("⚠️ Calibra primero la pista vacia en la(s) antena(s) antes de iniciar.");
@@ -709,7 +709,7 @@ function calibrarConCuenta10() {
       clearInterval(_tCal10);
       _tCal10 = null;
       var ants = salaObj.antenas || {};
-      var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+      var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
       if (!aks.length) aks = ["ant_1"];
       aks.forEach(function(aid, ix) {
         setTimeout(function() {
@@ -954,7 +954,7 @@ setInterval(function() {
     }
 
     var ants = root.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
     var lAnt = document.getElementById("lblAntVivo");
     lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
     lAnt.style.color = aks.length ? "#00e676" : "#ff4d5e";
