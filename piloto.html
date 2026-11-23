@@ -136,7 +136,14 @@
           <option value="0">Entreno Libre</option>
         </select>
       </div>
-      <div class="grid2" style="margin-top:4px">
+      <select id="selMinLap" onchange="cfgDir()">
+        <option value="4">Anti-rebote vuelta min: 4s (Pista corta)</option>
+        <option value="5" selected>Anti-rebote vuelta min: 5s (Normal)</option>
+        <option value="8">Anti-rebote vuelta min: 8s (Media)</option>
+        <option value="12">Anti-rebote vuelta min: 12s (Circuito 1/4 MX)</option>
+        <option value="18">Anti-rebote vuelta min: 18s (Pista larga)</option>
+      </select>
+      <div class="grid2" style="margin-top:2px">
         <button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
         <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 DAR SALIDA 30s</button>
         <button onclick="cmdSala('ESPERA')" style="background:#dc3545;color:#fff">🛑 PARAR MANGA</button>
@@ -279,6 +286,7 @@ var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
 var FB = FB_ROOT + "/circuitos/" + circId;
+var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
 
 var _offSrv = 0;
 fetch(FB_BASE + ".info/serverTimeOffset.json")
@@ -296,14 +304,22 @@ document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 if (esDir) document.getElementById("panelDir").style.display = "block";
 
-var vozP = true, salaObj = {}, garajesAll = {}, pilotosAll = {}, motosGar = [], idxMoto = 0, colsTmpGar = [], ladoCap = 1, histDias = [];
+var vozP = true, salaObj = {}, antsAll = {}, garajesAll = {}, pilotosAll = {}, motosGar = [], idxMoto = 0, colsTmpGar = [], ladoCap = 1, histDias = [];
 try { motosGar = JSON.parse(localStorage.getItem("mxp_gar_" + uid) || "[]"); } catch (e) {}
 try { histDias = JSON.parse(localStorage.getItem("mxp_hist_" + uid) || "[]"); } catch (e) {}
 if (!motosGar.length) motosGar = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} }];
 
 var _streamFoto = null, _streamCol = null, _slotFotoAct = 0;
 var _tabAct = "sala", _ultEvP = {}, _lockVtaLocal = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false, avisoFinManga = false;
-var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
+var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null, _lastImgFetch = 0;
+
+function activarWakeLock() {
+  if ("wakeLock" in navigator) navigator.wakeLock.request("screen").catch(function(){});
+}
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible") activarWakeLock();
+});
+activarWakeLock();
 
 function esc(s) {
   return String(s || "").replace(/[&<>"']/g, function(c) {
@@ -339,8 +355,8 @@ function salirPiloto() {
 }
 function ayudaTab() {
   var g = {
-    sala: "PESTAÑA SALA PISTA:\n1. Quedas inscrito automaticamente al entrar (incluido Director).\n2. En Modo Amistoso puedes calibrar con cuenta atras de 10s, lanzar Warm-Up 3 min o Salida 30s.\n3. Activa Modo Bolsillo para llevar el movil encima escuchando tus vueltas por voz.",
-    garaje: "PESTAÑA GARAJE:\n1. Elige disciplina MX Tierra o SM Supermoto y guarda tus reglajes.\n2. Toca cualquiera de los 4 recuadros para hacer fotos de tu moto con la camara en directo.\n3. Pulsa CAPTURAR COLORES para escanear los 2 lados de la moto en vivo y que las antenas la identifiquen.",
+    sala: "PESTAÑA SALA PISTA:\n1. Quedas inscrito automaticamente al entrar (incluido Director).\n2. En Modo Amistoso puedes calibrar con cuenta atras de 10s, lanzar Warm-Up 3 min o Salida 30s.\n3. El tiempo de vuelta usa el reloj exacto de la antena para precision a la centesima.",
+    garaje: "PESTAÑA GARAJE:\n1. Elige disciplina MX Tierra o SM Supermoto y guarda tus reglajes.\n2. Toca los 4 recuadros para hacer fotos con la camara en directo.\n3. Pulsa CAPTURAR COLORES (prioriza casco y guardabarros trasero flúor).",
     tiempos: "PESTAÑA TIEMPOS:\n1. Consulta tu Mejor Vuelta, Regularidad %, Vueltas Totales y Rango.\n2. Selecciona un rival para ver el Duelo 1 vs 1 y su setup exacto.\n3. Descarga la tarjeta resumen PNG de cualquier jornada."
   };
   alert(g[_tabAct] || g.sala);
@@ -615,9 +631,8 @@ function compartirSetupWa() {
 
 function cmdSala(est) {
   if (est === "WARMUP" || est === "SALIDA_30") {
-    var ants = salaObj.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
-    var algunaSinCal = aks.some(function(k){ return !ants[k].calibrada; });
+    var aks = Object.keys(antsAll).filter(function(k){ return Math.abs(ahoraSrv() - Number(antsAll[k].ts || 0)) < 15000; });
+    var algunaSinCal = aks.some(function(k){ return !antsAll[k].calibrada; });
     if (aks.length && algunaSinCal) {
       alert("⚠️ Calibra primero la pista vacia en la(s) antena(s) antes de iniciar.");
       return;
@@ -639,6 +654,7 @@ function cfgDir() {
     body: JSON.stringify({
       modoJuego: document.getElementById("selJuego").value,
       duracionMin: Number(document.getElementById("selDur").value) || 0,
+      minLapSec: Number(document.getElementById("selMinLap").value) || 5,
       dirTs: ahoraSrv()
     })
   }).catch(function(){});
@@ -655,7 +671,21 @@ function nuevaMangaDir() {
   _ultLapSinc = 0;
   _lockVtaLocal = {};
   fetch(FB + "/pasos_lock.json", { method: "DELETE" }).catch(function(){});
+  fetch(FB + "/eventos.json", { method: "DELETE" }).catch(function(){});
+  fetch(FB + "/sala/porra.json", { method: "DELETE" }).catch(function(){});
   cmdSala("ESPERA");
+}
+
+function restarVueltaDir(pUid) {
+  var p = pilotosAll[pUid];
+  if (!p || !p.vueltas) return;
+  var oldV = Number(p.vueltas);
+  var newV = Math.max(0, oldV - 1);
+  var pay = { vueltas: newV, ultimaMs: 0 };
+  if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
+  fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
+  fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
+  hablarP("Vuelta anulada a " + p.nombre);
 }
 
 function ponerBandera(col) {
@@ -710,8 +740,7 @@ function calibrarConCuenta10() {
     if (s <= 0) {
       clearInterval(_tCal10);
       _tCal10 = null;
-      var ants = salaObj.antenas || {};
-      var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+      var aks = Object.keys(antsAll).filter(function(k){ return Math.abs(ahoraSrv() - Number(antsAll[k].ts || 0)) < 15000; });
       if (!aks.length) aks = ["ant_1"];
       aks.forEach(function(aid, ix) {
         setTimeout(function() {
@@ -754,8 +783,8 @@ function cargarClubDir() {
   bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
   bx.innerHTML = "<div style='color:#888'>Cargando club...</div>";
-  fbJson(FB_ROOT + ".json").then(function(root) {
-    var ct = (root && root.cuentas) || {}, vs = (root && root.visitas) || {};
+  Promise.all([fbJson(FB_ROOT + "/cuentas.json"), fbJson(FB_ROOT + "/visitas.json")]).then(function(res) {
+    var ct = res[0] || {}, vs = res[1] || {};
     var vKeys = Object.keys(vs).sort().reverse().slice(0, 8);
     var h = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas totales: <b>" + Object.keys(vs).length + "</b> | Cuentas: <b>" + Object.keys(ct).length + "</b></div>";
     Object.keys(ct).forEach(function(k) {
@@ -775,11 +804,12 @@ function cargarClubDir() {
 function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir).catch(function(){}); }
 function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir).catch(function(){}); }
 
-function registrarVuelta(pUid) {
+function registrarVuelta(pUid, evTs) {
   var p = pilotosAll[pUid];
   if (!p) return;
-  var ah = ahoraSrv(), st = salaObj.estado || "ESPERA";
-  if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < 4500) return;
+  var ah = Number(evTs || ahoraSrv()), st = salaObj.estado || "ESPERA";
+  var minLapMs = (Number(salaObj.minLapSec || 5)) * 1000;
+  if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minLapMs) return;
 
   if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
     _lockVtaLocal[pUid] = ah;
@@ -789,10 +819,11 @@ function registrarVuelta(pUid) {
     return;
   }
   var ult = Number(p.tsUltimoPaso || 0);
-  if (ult && (ah - ult) < 4500) return;
+  if (ult && (ah - ult) < minLapMs) return;
   _lockVtaLocal[pUid] = ah;
 
-  var baseT = ult || Number(salaObj.tsInicio || 0) || ah, lap = ah - baseT;
+  var baseT = ult || Number(salaObj.tsInicio || 0) || ah;
+  var lap = ah - baseT;
   if (lap < 1500) {
     p.tsUltimoPaso = ah;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){});
@@ -820,12 +851,20 @@ function registrarVuelta(pUid) {
   }).catch(function(){});
 }
 
-function sumarVueltaManual() { registrarVuelta(uid); }
+function sumarVueltaManual() { registrarVuelta(uid, ahoraSrv()); }
 
 function procesarMiVueltaLocal(lap, mej) {
+  var todasPrev = [];
+  histDias.forEach(function(d){ if (Array.isArray(d.vtas)) todasPrev = todasPrev.concat(d.vtas); });
+  var mejorHist = todasPrev.length ? Math.min.apply(null, todasPrev) : 0;
+  var esRecordPers = (!mejorHist || lap < mejorHist);
+
   guardarVtaLocal(lap);
   var v = pilotosAll[uid] ? pilotosAll[uid].vueltas : 1;
-  hablarP("Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos");
+  var voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
+  if (esRecordPers && v > 1) voz += ", mejor vuelta personal";
+  hablarP(voz);
+
   var mAct = motosGar[idxMoto] || motosGar[0], stM = mAct.setup || {};
   var stTx = [stM.terr, stM.horq, stM.amort, stM.des, stM.neum, stM.gyro].filter(Boolean).join(" • ") || "Serie";
   var totM = histDias.reduce(function(s, d){ return s + (d.vtas ? d.vtas.length : 0); }, 0);
@@ -936,6 +975,149 @@ function descargarPngDia(ix) {
   a.click();
 }
 
+function ordenarPilotos() {
+  var pils = Object.keys(pilotosAll).filter(function(k){ return pilotosAll[k] && pilotosAll[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pilotosAll[k]); });
+  if ((salaObj.modoJuego || "NORMAL") === "REY") {
+    pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
+  } else {
+    pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+  }
+  return pils;
+}
+
+function manejarEventoAntena(ev) {
+  if (!ev || !ev.ts || !ev.antId) return;
+  if (_ultEvP[ev.antId] === ev.ts) return;
+  _ultEvP[ev.antId] = ev.ts;
+  if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
+    var pils = ordenarPilotos();
+    var target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
+    if (esDir || target === uid) registrarVuelta(target, Number(ev.ts));
+  }
+}
+
+function pintarSalaUI() {
+  if (pilotosAll[uid]) {
+    var vAct = Number(pilotosAll[uid].vueltas || 0);
+    var lAct = Number(pilotosAll[uid].ultimaMs || 0);
+    var tsP = Number(pilotosAll[uid].tsUltimoPaso || 0);
+    if (_ultVtasSinc >= 0 && vAct > _ultVtasSinc && lAct > 0 && tsP !== _ultLapSinc) {
+      _ultLapSinc = tsP;
+      procesarMiVueltaLocal(lAct, Number(pilotosAll[uid].mejorMs || lAct));
+    }
+    _ultVtasSinc = vAct;
+  }
+
+  var aks = Object.keys(antsAll).filter(function(k){ return Math.abs(ahoraSrv() - Number(antsAll[k].ts || 0)) < 15000; });
+  var lAnt = document.getElementById("lblAntVivo");
+  lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
+  lAnt.style.color = aks.length ? "#00e676" : "#ff4d5e";
+
+  if (esDir) {
+    if (salaObj.modoJuego && document.activeElement !== document.getElementById("selJuego")) document.getElementById("selJuego").value = salaObj.modoJuego;
+    if (typeof salaObj.duracionMin === "number" && document.activeElement !== document.getElementById("selDur")) document.getElementById("selDur").value = String(salaObj.duracionMin);
+    if (salaObj.minLapSec && document.activeElement !== document.getElementById("selMinLap")) document.getElementById("selMinLap").value = String(salaObj.minLapSec);
+    var md = salaObj.modoDet || "TODO";
+    document.getElementById("bModTodo").style.background = (md === "TODO") ? "#ffc107" : "#2b2b2b";
+    document.getElementById("bModTodo").style.color = (md === "TODO") ? "#000" : "#fff";
+    document.getElementById("bModCar").style.background = (md === "CAR") ? "#ffc107" : "#2b2b2b";
+    document.getElementById("bModCar").style.color = (md === "CAR") ? "#000" : "#fff";
+
+    if (aks.length) {
+      var sA = document.getElementById("selAntDir");
+      if (document.activeElement !== sA) {
+        var pv = sA.value;
+        sA.innerHTML = aks.map(function(k){ return '<option value="' + esc(k) + '">' + esc(antsAll[k].nom || k) + '</option>'; }).join("");
+        if (pv && aks.indexOf(pv) >= 0) sA.value = pv;
+      }
+      var selId = sA.value || aks[0];
+      var a0 = antsAll[selId];
+      if (a0) {
+        if (a0.posX) document.getElementById("linAntDir").style.left = a0.posX + "%";
+        document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
+        if ((testOn || !a0.calibrada) && (Date.now() - _lastImgFetch) > 900) {
+          _lastImgFetch = Date.now();
+          fetch(FB_IMG + "/" + selId + ".json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(imObj){
+            if (imObj && imObj.img) document.getElementById("imgAntDir").src = imObj.img;
+          }).catch(function(){});
+        }
+      }
+    } else {
+      document.getElementById("lblTelAntDir").textContent = "Sin antenas conectadas";
+    }
+  }
+
+  var dirOnline = (salaObj.dirTs && Math.abs(ahoraSrv() - Number(salaObj.dirTs)) < 30000);
+  document.getElementById("boxAmistosa").style.display = (!esDir && !dirOnline) ? "block" : "none";
+  document.body.style.boxShadow = (salaObj.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+
+  var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "⚡ ELIMINACION (60s)", REY: "👑 REY DE LA PISTA" };
+  document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[salaObj.modoJuego || "NORMAL"] || "NORMAL") + (salaObj.bandera === "AMARILLA" ? " • 🟨 BANDERA AMARILLA" : "");
+
+  var br = document.getElementById("banReacVivo");
+  if (salaObj.reaccion && (ahoraSrv() - Number(salaObj.reaccion.ts || 0)) < 8000) {
+    br.style.display = "block";
+    br.textContent = "📣 " + salaObj.reaccion.autor + ": " + salaObj.reaccion.texto;
+  } else br.style.display = "none";
+
+  var pils = ordenarPilotos(), h = "";
+  pils.forEach(function(p, ix) {
+    if (p.id === uid) document.getElementById("vivoPos").textContent = (ix + 1) + "º / " + pils.length;
+    var btnMenos = (esDir && p.vueltas > 0) ? ' <button onclick="restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:2px 6px;font-size:10px;margin-left:4px">-1v</button>' : '';
+    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + '"><span><b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + btnMenos + '</span></div>';
+  });
+  document.getElementById("listaSala").innerHTML = h || "Esperando pilotos...";
+
+  var est = salaObj.estado || "ESPERA", t0 = Number(salaObj.tsInicio || 0), ov = document.getElementById("overlaySem");
+  var estTxt = est;
+
+  if (est === "WARMUP" && t0 > 0) {
+    var dfW = t0 - ahoraSrv();
+    if (dfW > 0) {
+      var mw = Math.floor(dfW / 60000), sw = Math.floor((dfW % 60000) / 1000);
+      estTxt = "WARM-UP " + mw + ":" + (sw < 10 ? "0" : "") + sw;
+    } else if (esDir) {
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
+    }
+  } else if (est === "EN_CURSO" && t0 > 0 && Number(salaObj.duracionMin || 0) > 0) {
+    var fin = t0 + Number(salaObj.duracionMin) * 60000;
+    var rem = fin - ahoraSrv();
+    if (rem > 0) {
+      var mr = Math.floor(rem / 60000), sr = Math.floor((rem % 60000) / 1000);
+      estTxt = "MANGA " + mr + ":" + (sr < 10 ? "0" : "") + sr;
+    } else {
+      estTxt = "FIN MANGA";
+      if (!avisoFinManga) {
+        avisoFinManga = true;
+        hablarP("Tiempo de manga cumplido, bandera a cuadros");
+      }
+    }
+  }
+  document.getElementById("lblEstadoSala").textContent = estTxt;
+
+  if (est === "SALIDA_30" && t0 > 0) {
+    var df = t0 - ahoraSrv();
+    if (df > 0 && df <= 31000) {
+      var s = Math.ceil(df / 1000);
+      ov.style.display = "flex";
+      document.getElementById("numSem").textContent = "00:" + (s < 10 ? "0" : "") + s;
+      document.getElementById("txtSem").textContent = "PREPARADOS";
+      ov.style.background = (s > 10) ? "#c9182b" : (s > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
+      if (s !== ultSegSemP) { ultSegSemP = s; if (s <= 5) hablarP(String(s)); }
+    } else if (df <= 0 && df > -4000) {
+      ov.style.display = "flex";
+      ov.style.background = "#00c853";
+      document.getElementById("numSem").textContent = "¡SALIDA!";
+      document.getElementById("txtSem").textContent = "A TOPE";
+      if (esDir || !dirOnline) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
+    } else {
+      ov.style.display = "none";
+    }
+  } else {
+    ov.style.display = "none";
+  }
+}
+
 inscribirPilotoAuto();
 actualizarRango();
 
@@ -945,147 +1127,58 @@ if (esDir) {
   }, 15000);
 }
 
+try {
+  var esEv = new EventSource(FB + "/eventos.json");
+  var onEvSse = function(e) {
+    try {
+      var m = JSON.parse(e.data);
+      if (!m || !m.data) return;
+      if (m.path === "/") {
+        Object.keys(m.data).forEach(function(aid){ manejarEventoAntena(m.data[aid]); });
+      } else {
+        manejarEventoAntena(m.data);
+      }
+      pintarSalaUI();
+    } catch (er) {}
+  };
+  esEv.addEventListener("put", onEvSse);
+  esEv.addEventListener("patch", onEvSse);
+
+  var esSalaP = new EventSource(FB + "/sala.json");
+  var onSalaSse = function(e) {
+    try {
+      var m = JSON.parse(e.data);
+      if (!m || !m.path) return;
+      if (m.path === "/") {
+        if (e.type === "put") salaObj = m.data || {};
+        else Object.assign(salaObj, m.data || {});
+      } else {
+        var key = m.path.slice(1).split("/")[0];
+        if (m.path === "/" + key) salaObj[key] = m.data;
+        else if (key) {
+          if (typeof salaObj[key] !== "object" || !salaObj[key]) salaObj[key] = {};
+          if (m.data && typeof m.data === "object") Object.assign(salaObj[key], m.data);
+        }
+      }
+      pintarSalaUI();
+    } catch (er) {}
+  };
+  esSalaP.addEventListener("put", onSalaSse);
+  esSalaP.addEventListener("patch", onSalaSse);
+} catch (e) {}
+
 setInterval(function() {
   fbJson(FB + ".json?t=" + Date.now()).then(function(root) {
     if (!root) return;
     salaObj = root.sala || {};
-    salaObj.antenas = root.antenas || {};
+    antsAll = root.antenas || {};
     pilotosAll = root.pilotos || {};
     garajesAll = root.garaje || {};
-
-    if (pilotosAll[uid]) {
-      var vAct = Number(pilotosAll[uid].vueltas || 0);
-      var lAct = Number(pilotosAll[uid].ultimaMs || 0);
-      var tsP = Number(pilotosAll[uid].tsUltimoPaso || 0);
-      if (_ultVtasSinc >= 0 && vAct > _ultVtasSinc && lAct > 0 && tsP !== _ultLapSinc) {
-        _ultLapSinc = tsP;
-        procesarMiVueltaLocal(lAct, Number(pilotosAll[uid].mejorMs || lAct));
-      }
-      _ultVtasSinc = vAct;
-    }
-
-    var ants = root.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
-    var lAnt = document.getElementById("lblAntVivo");
-    lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
-    lAnt.style.color = aks.length ? "#00e676" : "#ff4d5e";
-
-    if (esDir) {
-      if (salaObj.modoJuego && document.activeElement !== document.getElementById("selJuego")) document.getElementById("selJuego").value = salaObj.modoJuego;
-      if (typeof salaObj.duracionMin === "number" && document.activeElement !== document.getElementById("selDur")) document.getElementById("selDur").value = String(salaObj.duracionMin);
-      var md = salaObj.modoDet || "TODO";
-      document.getElementById("bModTodo").style.background = (md === "TODO") ? "#ffc107" : "#2b2b2b";
-      document.getElementById("bModTodo").style.color = (md === "TODO") ? "#000" : "#fff";
-      document.getElementById("bModCar").style.background = (md === "CAR") ? "#ffc107" : "#2b2b2b";
-      document.getElementById("bModCar").style.color = (md === "CAR") ? "#000" : "#fff";
-
-      if (aks.length) {
-        var sA = document.getElementById("selAntDir");
-        if (document.activeElement !== sA) {
-          var pv = sA.value;
-          sA.innerHTML = aks.map(function(k){ return '<option value="' + esc(k) + '">' + esc(ants[k].nom || k) + '</option>'; }).join("");
-          if (pv && aks.indexOf(pv) >= 0) sA.value = pv;
-        }
-        var a0 = ants[sA.value] || ants[aks[0]];
-        if (a0) {
-          if (a0.img) document.getElementById("imgAntDir").src = a0.img;
-          if (a0.posX) document.getElementById("linAntDir").style.left = a0.posX + "%";
-          document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
-        }
-      } else {
-        document.getElementById("lblTelAntDir").textContent = "Sin antenas conectadas";
-      }
-    }
-
-    var dirOnline = (salaObj.dirTs && Math.abs(ahoraSrv() - Number(salaObj.dirTs)) < 30000);
-    document.getElementById("boxAmistosa").style.display = (!esDir && !dirOnline) ? "block" : "none";
-    document.body.style.boxShadow = (salaObj.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
-
-    var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "⚡ ELIMINACION (60s)", REY: "👑 REY DE LA PISTA" };
-    document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[salaObj.modoJuego || "NORMAL"] || "NORMAL") + (salaObj.bandera === "AMARILLA" ? " • 🟨 BANDERA AMARILLA" : "");
-
-    var br = document.getElementById("banReacVivo");
-    if (salaObj.reaccion && (ahoraSrv() - Number(salaObj.reaccion.ts || 0)) < 8000) {
-      br.style.display = "block";
-      br.textContent = "📣 " + salaObj.reaccion.autor + ": " + salaObj.reaccion.texto;
-    } else br.style.display = "none";
-
-    var pils = Object.keys(pilotosAll).filter(function(k){ return pilotosAll[k] && pilotosAll[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pilotosAll[k]); });
-    if ((salaObj.modoJuego || "NORMAL") === "REY") {
-      pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
-    } else {
-      pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
-    }
-
-    var h = "";
-    pils.forEach(function(p, ix) {
-      if (p.id === uid) document.getElementById("vivoPos").textContent = (ix + 1) + "º / " + pils.length;
-      h += '<div class="fila' + (p.id === uid ? ' yo' : '') + '"><span><b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b></div>';
-    });
-    document.getElementById("listaSala").innerHTML = h || "Esperando pilotos...";
-
     var evs = root.eventos || {};
-    Object.keys(evs).forEach(function(aid) {
-      var ev = evs[aid];
-      if (ev && ev.ts && _ultEvP[aid] !== ev.ts) {
-        _ultEvP[aid] = ev.ts;
-        if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
-          var target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
-          if (esDir || target === uid) registrarVuelta(target);
-        }
-      }
-    });
-
-    var est = salaObj.estado || "ESPERA", t0 = Number(salaObj.tsInicio || 0), ov = document.getElementById("overlaySem");
-    var estTxt = est;
-
-    if (est === "WARMUP" && t0 > 0) {
-      var dfW = t0 - ahoraSrv();
-      if (dfW > 0) {
-        var mw = Math.floor(dfW / 60000), sw = Math.floor((dfW % 60000) / 1000);
-        estTxt = "WARM-UP " + mw + ":" + (sw < 10 ? "0" : "") + sw;
-      } else if (esDir) {
-        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
-      }
-    } else if (est === "EN_CURSO" && t0 > 0 && Number(salaObj.duracionMin || 0) > 0) {
-      var fin = t0 + Number(salaObj.duracionMin) * 60000;
-      var rem = fin - ahoraSrv();
-      if (rem > 0) {
-        var mr = Math.floor(rem / 60000), sr = Math.floor((rem % 60000) / 1000);
-        estTxt = "MANGA " + mr + ":" + (sr < 10 ? "0" : "") + sr;
-      } else {
-        estTxt = "FIN MANGA";
-        if (!avisoFinManga) {
-          avisoFinManga = true;
-          hablarP("Tiempo de manga cumplido, bandera a cuadros");
-        }
-      }
-    }
-    document.getElementById("lblEstadoSala").textContent = estTxt;
-
-    if (est === "SALIDA_30" && t0 > 0) {
-      var df = t0 - ahoraSrv();
-      if (df > 0 && df <= 31000) {
-        var s = Math.ceil(df / 1000);
-        ov.style.display = "flex";
-        document.getElementById("numSem").textContent = "00:" + (s < 10 ? "0" : "") + s;
-        document.getElementById("txtSem").textContent = "PREPARADOS";
-        ov.style.background = (s > 10) ? "#c9182b" : (s > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
-        if (s !== ultSegSemP) { ultSegSemP = s; if (s <= 5) hablarP(String(s)); }
-      } else if (df <= 0 && df > -4000) {
-        ov.style.display = "flex";
-        ov.style.background = "#00c853";
-        document.getElementById("numSem").textContent = "¡SALIDA!";
-        document.getElementById("txtSem").textContent = "A TOPE";
-        if (esDir || !dirOnline) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
-      } else {
-        ov.style.display = "none";
-      }
-    } else {
-      ov.style.display = "none";
-    }
+    Object.keys(evs).forEach(function(aid){ manejarEventoAntena(evs[aid]); });
+    pintarSalaUI();
   }).catch(function(){});
-}, 900);
+}, 1400);
 
 setInterval(function() {
   var yo = pilotosAll[uid] || {};

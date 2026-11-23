@@ -86,7 +86,7 @@ fetch(FB_BASE + ".info/serverTimeOffset.json")
 function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
-var votoHecho = false, ultReacMs = 0, _garajeCache = {}, _pilotosCache = {};
+var votoHecho = false, ultReacMs = 0, _salaCache = {}, _garajeCache = {}, _pilotosCache = {};
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
 document.getElementById("lblCircV").textContent = "🏁 " + circNom;
@@ -157,89 +157,150 @@ function verSetupRival(pid) {
   document.getElementById("modalSetupV").style.display = "flex";
 }
 
+function pintarVivo() {
+  var s = _salaCache || {}, pObj = _pilotosCache || {}, gObj = _garajeCache || {};
+  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+
+  var est = s.estado || "ESPERA";
+  var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
+  var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
+  var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
+
+  if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) {
+    var df = Number(s.tsInicio) - ahoraSrv();
+    if (df > 0) {
+      var seg = Math.ceil(df / 1000);
+      estTxt += " • " + Math.floor(seg / 60) + ":" + ((seg % 60) < 10 ? "0" : "") + (seg % 60);
+    }
+  } else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) {
+    var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ahoraSrv();
+    if (rem > 0) {
+      var segR = Math.ceil(rem / 1000);
+      estTxt += " • " + Math.floor(segR / 60) + ":" + ((segR % 60) < 10 ? "0" : "") + (segR % 60);
+    }
+  }
+  document.getElementById("lblEstV").textContent = estTxt;
+  document.getElementById("lblSubV").textContent = s.hotlapTxt
+    ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt)
+    : circNom;
+  document.getElementById("lblModV").textContent = (s.modoJuego && s.modoJuego !== "NORMAL")
+    ? ((esIngles ? "MODE: " : "MODO: ") + s.modoJuego)
+    : "";
+
+  var pils = Object.keys(pObj).filter(function(k){ return pObj[k] && pObj[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pObj[k]); });
+  if ((s.modoJuego || "NORMAL") === "REY") {
+    pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
+  } else {
+    pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+  }
+
+  var bp = document.getElementById("boxPorra");
+  if (bp) {
+    var mostrarPorra = (est === "SALIDA_30" || est === "WARMUP" || est === "ESPERA") && pils.length > 0;
+    bp.style.display = mostrarPorra ? "block" : "none";
+    if (!votoHecho && pils.length) {
+      document.getElementById("listaPorra").innerHTML = pils.map(function(p) {
+        return '<button onclick="votarFavorito(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>';
+      }).join("");
+    }
+    var porraObj = s.porra || {}, votos = {};
+    Object.keys(porraObj).forEach(function(k) {
+      var n = porraObj[k] && porraObj[k].pilotoNom;
+      if (n) votos[n] = (votos[n] || 0) + 1;
+    });
+    var vResumen = Object.keys(votos).sort(function(a, b){ return votos[b] - votos[a]; }).map(function(n){ return esc(n) + " (" + votos[n] + ")"; }).join(" • ");
+    document.getElementById("resPorra").textContent = vResumen ? ((esIngles ? "Poll votes: " : "Votos porra: ") + vResumen) : "";
+  }
+
+  var p1 = pils.length ? pils[0] : null;
+  var h = "";
+  pils.forEach(function(p, ix) {
+    var g = gObj[p.id] || {};
+    var mod = g.modelo || "Losi Promoto-MX";
+    var difTxt = "";
+    if (ix > 0 && p1) {
+      if ((s.modoJuego || "NORMAL") === "REY" && p.mejorMs && p1.mejorMs) {
+        difTxt = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
+      } else if ((p1.vueltas || 0) > (p.vueltas || 0)) {
+        difTxt = " • -" + ((p1.vueltas || 0) - (p.vueltas || 0)) + "v";
+      } else if (p.mejorMs && p1.mejorMs && p.mejorMs > p1.mejorMs) {
+        difTxt = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
+      }
+    }
+    h += '<div class="fila" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
+      '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(difTxt) + ')</span>' +
+      '<div style="font-size:10px;color:#888">🏍️ ' + esc(mod) + ' (' + esc(g.disc || "MX") + ') • ' + (esIngles ? "Tap for setup" : "Toca para ver setup") + '</div></div>' +
+      '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">' + (esIngles ? "Last: " : "Ult: ") + fmt(p.ultimaMs) + '</div></div></div>';
+  });
+  document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">' + (esIngles ? "No riders on track right now." : "Ningun piloto rodando ahora mismo.") + '</div>';
+
+  var mr = document.getElementById("muroReac");
+  if (mr && s.reaccion && s.reaccion.texto) {
+    mr.innerHTML = (esIngles ? "Latest cheer: " : "Ultimo animo: ") + '<b style="color:#ffc107">' + esc(s.reaccion.autor) + ':</b> ' + esc(s.reaccion.texto);
+  }
+}
+
 function refrescarVivo() {
   fetch(FB + ".json?t=" + Date.now()).then(function(r){
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
   }).then(function(root) {
     if (!root) return;
-    var s = root.sala || {}, pObj = root.pilotos || {}, gObj = root.garaje || {};
-    _pilotosCache = pObj;
-    _garajeCache = gObj;
-
-    document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
-
-    var est = s.estado || "ESPERA";
-    var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
-    var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
-    var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
-
-    if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) {
-      var df = Number(s.tsInicio) - ahoraSrv();
-      if (df > 0) {
-        var seg = Math.ceil(df / 1000);
-        estTxt += " • " + Math.floor(seg / 60) + ":" + ((seg % 60) < 10 ? "0" : "") + (seg % 60);
-      }
-    } else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) {
-      var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ahoraSrv();
-      if (rem > 0) {
-        var segR = Math.ceil(rem / 1000);
-        estTxt += " • " + Math.floor(segR / 60) + ":" + ((segR % 60) < 10 ? "0" : "") + (segR % 60);
-      }
-    }
-    document.getElementById("lblEstV").textContent = estTxt;
-    document.getElementById("lblSubV").textContent = s.hotlapTxt
-      ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt)
-      : circNom;
-    document.getElementById("lblModV").textContent = (s.modoJuego && s.modoJuego !== "NORMAL")
-      ? ((esIngles ? "MODE: " : "MODO: ") + s.modoJuego)
-      : "";
-
-    var pils = Object.keys(pObj).filter(function(k){ return pObj[k] && pObj[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pObj[k]); });
-    if ((s.modoJuego || "NORMAL") === "REY") {
-      pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
-    } else {
-      pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
-    }
-
-    var bp = document.getElementById("boxPorra");
-    if (bp) {
-      var mostrarPorra = (est === "SALIDA_30" || est === "WARMUP" || est === "ESPERA") && pils.length > 0;
-      bp.style.display = mostrarPorra ? "block" : "none";
-      if (!votoHecho && pils.length) {
-        document.getElementById("listaPorra").innerHTML = pils.map(function(p) {
-          return '<button onclick="votarFavorito(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>';
-        }).join("");
-      }
-      var porraObj = s.porra || {}, votos = {};
-      Object.keys(porraObj).forEach(function(k) {
-        var n = porraObj[k] && porraObj[k].pilotoNom;
-        if (n) votos[n] = (votos[n] || 0) + 1;
-      });
-      var vResumen = Object.keys(votos).sort(function(a, b){ return votos[b] - votos[a]; }).map(function(n){ return esc(n) + " (" + votos[n] + ")"; }).join(" • ");
-      document.getElementById("resPorra").textContent = vResumen ? ((esIngles ? "Poll votes: " : "Votos porra: ") + vResumen) : "";
-    }
-
-    var h = "";
-    pils.forEach(function(p, ix) {
-      var g = gObj[p.id] || {};
-      var mod = g.modelo || "Losi Promoto-MX";
-      h += '<div class="fila" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
-        '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span>' +
-        '<div style="font-size:10px;color:#888">🏍️ ' + esc(mod) + ' (' + esc(g.disc || "MX") + ') • ' + (esIngles ? "Tap for setup" : "Toca para ver setup") + '</div></div>' +
-        '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">' + (esIngles ? "Last: " : "Ult: ") + fmt(p.ultimaMs) + '</div></div></div>';
-    });
-    document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">' + (esIngles ? "No riders on track right now." : "Ningun piloto rodando ahora mismo.") + '</div>';
-
-    var mr = document.getElementById("muroReac");
-    if (mr && s.reaccion && s.reaccion.texto) {
-      mr.innerHTML = (esIngles ? "Latest cheer: " : "Ultimo animo: ") + '<b style="color:#ffc107">' + esc(s.reaccion.autor) + ':</b> ' + esc(s.reaccion.texto);
-    }
+    _salaCache = root.sala || {};
+    _pilotosCache = root.pilotos || {};
+    _garajeCache = root.garaje || {};
+    pintarVivo();
   }).catch(function(){});
 }
 
+try {
+  var esSalaV = new EventSource(FB + "/sala.json");
+  var onSalaV = function(e) {
+    try {
+      var m = JSON.parse(e.data);
+      if (!m || !m.path) return;
+      if (m.path === "/") {
+        if (e.type === "put") _salaCache = m.data || {};
+        else Object.assign(_salaCache, m.data || {});
+      } else {
+        var k = m.path.slice(1).split("/")[0];
+        if (m.path === "/" + k) _salaCache[k] = m.data;
+        else if (k) {
+          if (typeof _salaCache[k] !== "object" || !_salaCache[k]) _salaCache[k] = {};
+          if (m.data && typeof m.data === "object") Object.assign(_salaCache[k], m.data);
+        }
+      }
+      pintarVivo();
+    } catch (er) {}
+  };
+  esSalaV.addEventListener("put", onSalaV);
+  esSalaV.addEventListener("patch", onSalaV);
+
+  var esPilV = new EventSource(FB + "/pilotos.json");
+  var onPilV = function(e) {
+    try {
+      var m = JSON.parse(e.data);
+      if (!m || !m.path) return;
+      if (m.path === "/") {
+        if (e.type === "put") _pilotosCache = m.data || {};
+        else Object.assign(_pilotosCache, m.data || {});
+      } else {
+        var k = m.path.slice(1).split("/")[0];
+        if (m.path === "/" + k) _pilotosCache[k] = m.data;
+        else if (k) {
+          if (typeof _pilotosCache[k] !== "object" || !_pilotosCache[k]) _pilotosCache[k] = {};
+          if (m.data && typeof m.data === "object") Object.assign(_pilotosCache[k], m.data);
+        }
+      }
+      pintarVivo();
+    } catch (er) {}
+  };
+  esPilV.addEventListener("put", onPilV);
+  esPilV.addEventListener("patch", onPilV);
+} catch (e) {}
+
 refrescarVivo();
-setInterval(refrescarVivo, 1200);
+setInterval(refrescarVivo, 2000);
 </script>
 </body>
 </html>

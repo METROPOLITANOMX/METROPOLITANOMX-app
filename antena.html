@@ -10,17 +10,24 @@
   .top{display:flex;justify-content:space-between;align-items:center;background:#151515;border-bottom:3px solid #6f42c1;padding:10px;border-radius:12px;margin-bottom:8px}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:999;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px}
   .caja{background:#161616;border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px}
-  .visor{position:relative;width:100%;height:56vh;background:#000;border:2px solid #333;border-radius:12px;overflow:hidden;margin-bottom:8px}
+  .visor{position:relative;width:100%;height:54vh;background:#000;border:2px solid #333;border-radius:12px;overflow:hidden;margin-bottom:8px}
   video{width:100%;height:100%;object-fit:cover;display:block}
   .marco{position:absolute;top:14%;bottom:14%;left:15%;right:15%;border:2px dashed rgba(255,230,0,0.6);border-radius:10px;pointer-events:none}
   .lin{position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a;pointer-events:none}
   .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676}
   .panel{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px}
-  button{padding:13px;font-size:13px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
-  @media(orientation:landscape){.visor{height:68vh}}
+  button{padding:12px;font-size:13px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
+  #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2a2a2a;user-select:none}
+  @media(orientation:landscape){.visor{height:66vh}}
 </style>
 </head>
 <body>
+  <div id="oledBlack" ondblclick="toggleOled(false)">
+    <div style="font-size:26px">🌙</div>
+    <div id="txtOledEst" style="font-size:14px;font-weight:bold;margin:8px">ANTENA ACTIVA (AHORRO OLED)</div>
+    <div style="font-size:11px">DOBLE TOQUE PARA VER VISOR</div>
+  </div>
+
   <div id="modalRanura" class="modal">
     <div class="caja">
       <div style="font-size:17px;font-weight:bold;color:#ffc107;margin-bottom:6px">📡 CONFIGURAR ANTENA</div>
@@ -31,27 +38,32 @@
       <button onclick="location.href='index.html'" style="width:100%;background:#333;color:#ccc;padding:9px;font-size:11px">VOLVER</button>
     </div>
   </div>
+
   <div class="top">
-    <b id="lblNomAnt" style="color:#a370f7;font-size:14px">📡 ANTENA MX</b>
-    <div style="display:flex;gap:5px">
-      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 9px;font-size:10px">? GUIA</button>
-      <button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 9px;font-size:10px">Puesto</button>
-      <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:7px 9px;font-size:10px">Voz ON</button>
-      <button onclick="salirAntena()" style="background:#dc3545;color:#fff;padding:7px 9px;font-size:10px">Salir</button>
+    <b id="lblNomAnt" style="color:#a370f7;font-size:13px">📡 ANTENA MX</b>
+    <div style="display:flex;gap:4px">
+      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">?</button>
+      <button onclick="toggleOled(true)" style="background:#262626;color:#20c997;padding:7px 8px;font-size:10px">🌙 OLED</button>
+      <button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 8px;font-size:10px">Puesto</button>
+      <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:7px 8px;font-size:10px">Voz ON</button>
+      <button onclick="salirAntena()" style="background:#dc3545;color:#fff;padding:7px 8px;font-size:10px">Salir</button>
     </div>
   </div>
+
   <div class="visor"><video id="vid" autoplay playsinline muted></video><div class="marco"></div><div id="lin" class="lin"></div><div id="bar" class="bar"></div></div>
   <canvas id="cnv" width="384" height="216" style="display:none"></canvas>
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
     <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | PASOS: 0</div>
-    <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal. Control remoto desde el movil principal.</div>
+    <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal y en sombra si es posible. Control 100% remoto desde Direccion.</div>
   </div>
+
 <script>
 var FB_BASE = "https://metropolitano-mx-circuit-default-rtdb.firebaseio.com/";
 var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var FB = FB_ROOT + "/circuitos/" + circId;
+var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 
 var _offSrv = 0;
@@ -65,7 +77,22 @@ var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, posX = 50, fondo = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
-var cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, garajes: {} };
+var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _wakeLock = null;
+var salaCache = {}, cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, garajes: {} };
+
+function activarWakeLock() {
+  if ("wakeLock" in navigator) {
+    navigator.wakeLock.request("screen").then(function(wl){ _wakeLock = wl; }).catch(function(){});
+  }
+}
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible") activarWakeLock();
+});
+activarWakeLock();
+
+function toggleOled(on) {
+  document.getElementById("oledBlack").style.display = on ? "flex" : "none";
+}
 
 if (antId && antNom) {
   document.getElementById("modalRanura").style.display = "none";
@@ -76,7 +103,7 @@ function elegirRanura(id, nom) {
   localStorage.setItem("mxp_ant_id", id); localStorage.setItem("mxp_ant_nom", nom);
   document.getElementById("modalRanura").style.display = "none";
   document.getElementById("lblNomAnt").textContent = "📡 " + nom;
-  calibradaOk = false; est = "SIN_CAL";
+  calibradaOk = false; est = "SIN_CAL"; _imgCleared = false;
   hablar(nom + " conectada, esperando calibracion desde direccion");
 }
 function elegirTemporal() {
@@ -85,7 +112,7 @@ function elegirTemporal() {
   elegirRanura("tmp_" + Math.random().toString(36).slice(2, 6), n.trim().toUpperCase());
 }
 function ayudaAnt() {
-  alert("GUIA DE ANTENA:\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal.\n3. Calibra desde el movil principal.");
+  alert("GUIA DE ANTENA (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en zona plana.\n3. Calibra desde el movil principal.\n4. Usa 🌙 OLED para apagar pantalla bajo el sol y evitar calor.");
 }
 function hablar(t) {
   if (!vozOn || !("speechSynthesis" in window)) return;
@@ -100,12 +127,16 @@ function toggleVoz() {
 }
 function setPosX(p) { posX = p; document.getElementById("lin").style.left = p + "%"; calibrarFondo(); }
 function calibrarFondo() {
-  fondo = null; swCol = {}; framesHit = 0; est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400;
+  fondo = null; swCol = {}; framesHit = 0; est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
   hablar("Calibrando pista vacia");
 }
 function salirAntena() {
-  if (antId) fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }).finally(function(){ location.href = "index.html"; });
-  else location.href = "index.html";
+  if (antId) {
+    Promise.all([
+      fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }).catch(function(){}),
+      fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){})
+    ]).finally(function(){ location.href = "index.html"; });
+  } else location.href = "index.html";
 }
 function rgbLab(r, g, b) {
   r /= 255; g /= 255; b /= 255;
@@ -130,18 +161,33 @@ function emitirPaso(pid) {
     body: JSON.stringify({ ts: ahoraSrv(), antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos })
   }).catch(function(){});
   if (!pid) hablar("Paso " + pasos);
+  document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
 }
-function proc() {
-  var v = document.getElementById("vid"), cnv = document.getElementById("cnv"), ctx = cnv.getContext("2d");
+
+var _cnv = document.getElementById("cnv");
+var _ctx = _cnv.getContext("2d", { willReadFrequently: true });
+
+function procFrame() {
+  var v = document.getElementById("vid");
   if (!camOk || !antId || !v || v.videoWidth <= 0) return;
+
+  _fpsCnt++;
+  var ah = Date.now();
+  if ((ah - _fpsTs) >= 1000) {
+    _fpsVal = _fpsCnt;
+    _fpsCnt = 0;
+    _fpsTs = ah;
+  }
+
   if (!calibradaOk) {
     document.getElementById("lblEstado").textContent = "COLOCADA — ESPERANDO CALIBRACION";
     document.getElementById("lblEstado").style.color = "#ffc107";
     return;
   }
-  ctx.drawImage(v, 0, 0, 384, 216);
+  _ctx.drawImage(v, 0, 0, 384, 216);
   var cx = Math.max(50, Math.min(334, Math.round((posX / 100) * 384)));
-  var d = ctx.getImageData(cx - 45, 28, 90, 160).data, nPx = 14400, ah = Date.now();
+  var d = _ctx.getImageData(cx - 45, 28, 90, 160).data;
+  var nSamples = 7200;
 
   if (!fondo || fondo.length !== d.length || ah < calHasta) {
     fondo = new Uint8ClampedArray(d); est = "CAL";
@@ -152,101 +198,191 @@ function proc() {
   var activa = (cfg.estado === "EN_CURSO" || cfg.estado === "WARMUP" || cfg.estado === "TEST");
   if (!activa) {
     est = "LIBRE";
-    document.getElementById("lblEstado").textContent = "CALIBRADA ✓ — EN REPOSO";
+    document.getElementById("lblEstado").textContent = "CALIBRADA ✓ — EN REPOSO (" + _fpsVal + " fps)";
     document.getElementById("lblEstado").style.color = "#20c997";
     document.getElementById("bar").style.width = "0%";
-    for (var u0 = 0; u0 < d.length; u0++) fondo[u0] = Math.round(fondo[u0] * 0.94 + d[u0] * 0.06);
+    for (var u0 = 0; u0 < d.length; u0 += 8) {
+      fondo[u0] = Math.round(fondo[u0] * 0.94 + d[u0] * 0.06);
+      fondo[u0 + 1] = Math.round(fondo[u0 + 1] * 0.94 + d[u0 + 1] * 0.06);
+      fondo[u0 + 2] = Math.round(fondo[u0 + 2] * 0.94 + d[u0 + 2] * 0.06);
+    }
     return;
   }
+
   var sr = 0, sg = 0, sb = 0;
-  for (var q = 0; q < d.length; q += 4) { sr += d[q]; sg += d[q + 1]; sb += d[q + 2]; }
-  var av = (sr + sg + sb) / (3 * nPx) || 1, kr = av / (sr / nPx || 1), kg = av / (sg / nPx || 1), kb = av / (sb / nPx || 1);
+  for (var q = 0; q < d.length; q += 8) { sr += d[q]; sg += d[q + 1]; sb += d[q + 2]; }
+  var av = (sr + sg + sb) / (3 * nSamples) || 1;
+  var kr = av / (sr / nSamples || 1), kg = av / (sg / nSamples || 1), kb = av / (sb / nSamples || 1);
+
   var mov = 0, gObj = cfg.garajes || {}, ks = Object.keys(gObj), cnt = {};
-  for (var i = 0; i < d.length; i += 4) {
+  for (var i = 0; i < d.length; i += 8) {
     var dr = Math.abs(d[i] - fondo[i]) + Math.abs(d[i + 1] - fondo[i + 1]) + Math.abs(d[i + 2] - fondo[i + 2]);
     if (dr < 55) continue;
     mov++;
     if (cfg.modoDet === "CAR" && ks.length) {
       var py = Math.floor((i / 4) / 90), zn = (py < 72) ? "SUP" : "INF";
       var lb = rgbLab(Math.min(255, d[i] * kr), Math.min(255, d[i + 1] * kg), Math.min(255, d[i + 2] * kb));
-      if (lb.L < 10) continue;
+      if (lb.L < 12) continue;
+      var cPx = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
       for (var j = 0; j < ks.length; j++) {
         var k = ks[j], cs = (gObj[k] && gObj[k].colores) || [];
         for (var ci = 0; ci < cs.length; ci++) {
           var c0 = cs[ci], z0 = c0.zona || "CAR";
           if ((z0 === "SUP" && zn !== "SUP") || (z0 === "INF" && zn !== "INF")) continue;
           var r0 = parseRgb(c0), l0 = c0.lab || rgbLab(r0.r, r0.g, r0.b);
+          var c0C = Math.sqrt(l0.a * l0.a + l0.b * l0.b);
+          if (c0C >= 18 && cPx < 14) continue;
           var dL = lb.L - l0.L, da = lb.a - l0.a, db = lb.b - l0.b;
-          if (Math.sqrt(dL * dL * 0.25 + da * da + db * db) < 28) { cnt[k] = (cnt[k] || 0) + 1; break; }
+          if (Math.sqrt(dL * dL * 0.25 + da * da + db * db) < 28) {
+            cnt[k] = (cnt[k] || 0) + (c0C >= 18 ? 3 : 1);
+            break;
+          }
         }
       }
     }
   }
-  var pct = mov / nPx, pctInt = Math.round(pct * 100);
+
+  var pct = mov / nSamples, pctInt = Math.round(pct * 100);
   window._movVivo = pctInt;
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / 0.08) * 100)) + "%";
-  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | MOV: " + pctInt + "% | PASOS: " + pasos;
+  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | MOV: " + pctInt + "% | PASOS: " + pasos + " | " + _fpsVal + "fps";
 
-  if (pct < 0.02) {
+  if (pct < 0.025) {
     est = "LIBRE"; swCol = {}; framesHit = 0;
     document.getElementById("lblEstado").textContent = "VIGILANDO META (LIBRE)";
     document.getElementById("lblEstado").style.color = "#00e676";
-    for (var u = 0; u < d.length; u++) fondo[u] = Math.round(fondo[u] * 0.92 + d[u] * 0.08);
+    for (var u = 0; u < d.length; u += 8) {
+      fondo[u] = Math.round(fondo[u] * 0.92 + d[u] * 0.08);
+      fondo[u + 1] = Math.round(fondo[u + 1] * 0.92 + d[u + 1] * 0.08);
+      fondo[u + 2] = Math.round(fondo[u + 2] * 0.92 + d[u + 2] * 0.08);
+    }
     return;
   }
-  if (pct >= 0.08) framesHit++; else framesHit = 0;
+
+  if (pct >= 0.07) framesHit++; else framesHit = 0;
+  var picoRapido = (pct >= 0.14);
 
   if (cfg.modoDet === "TODO") {
-    if (est === "LIBRE" && framesHit >= 2 && (ah - ultMs) > 1200) {
+    if (est === "LIBRE" && (framesHit >= 2 || picoRapido) && (ah - ultMs) > 1200) {
       est = "CRUCE"; ultMs = ah;
       document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!";
       emitirPaso("");
     }
   } else {
+    var bestPid = "", bestVal = 0, secondVal = 0;
     for (var m = 0; m < ks.length; m++) {
       var pid = ks[m];
       swCol[pid] = (swCol[pid] || 0) + (cnt[pid] || 0);
-      if (est === "LIBRE" && framesHit >= 2 && swCol[pid] >= 180 && (ah - ultMs) > 1200) {
-        est = "CRUCE"; ultMs = ah;
-        document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!";
-        emitirPaso(pid);
-        break;
-      }
+      var sc = swCol[pid];
+      if (sc > bestVal) { secondVal = bestVal; bestVal = sc; bestPid = pid; }
+      else if (sc > secondVal) { secondVal = sc; }
+    }
+    if (est === "LIBRE" && bestPid && (framesHit >= 2 || picoRapido) && bestVal >= 160 && bestVal >= secondVal * 1.15 && (ah - ultMs) > 1200) {
+      est = "CRUCE"; ultMs = ah;
+      document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!";
+      emitirPaso(bestPid);
     }
   }
 }
+
+function iniciarBucleVision() {
+  var v = document.getElementById("vid");
+  if (v && "requestVideoFrameCallback" in v) {
+    var cb = function() { procFrame(); v.requestVideoFrameCallback(cb); };
+    v.requestVideoFrameCallback(cb);
+  } else {
+    var raf = function() { procFrame(); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+}
+
+function procesarSala(s) {
+  if (!s) return;
+  if (s.modoDet && s.modoDet !== cfg.modoDet) hablar(s.modoDet === "TODO" ? "Modo cualquier paso" : "Modo color carenado");
+  cfg.estado = s.estado || "ESPERA";
+  cfg.modoDet = s.modoDet || "TODO";
+  cfg.verVivo = !!s.verVivo;
+  if (s.cmd && s.cmd.antId === antId && s.cmd.ts !== ultCmd) {
+    ultCmd = s.cmd.ts;
+    if (Math.abs(ahoraSrv() - Number(s.cmd.ts || 0)) < 20000) {
+      if (s.cmd.posX) setPosX(Number(s.cmd.posX));
+      if (s.cmd.calibrar) calibrarFondo();
+    }
+  }
+}
+
+try {
+  var esSala = new EventSource(FB + "/sala.json");
+  var onSse = function(ev) {
+    try {
+      var msg = JSON.parse(ev.data);
+      if (!msg || !msg.path) return;
+      if (msg.path === "/") {
+        if (ev.type === "put") salaCache = msg.data || {};
+        else Object.assign(salaCache, msg.data || {});
+      } else {
+        var key = msg.path.slice(1).split("/")[0];
+        if (msg.path === "/" + key) salaCache[key] = msg.data;
+        else if (key) {
+          if (typeof salaCache[key] !== "object" || !salaCache[key]) salaCache[key] = {};
+          if (msg.data && typeof msg.data === "object") Object.assign(salaCache[key], msg.data);
+        }
+      }
+      procesarSala(salaCache);
+    } catch (e) {}
+  };
+  esSala.addEventListener("put", onSse);
+  esSala.addEventListener("patch", onSse);
+} catch (e) {}
+
 setInterval(function() {
   if (!antId) return;
-  var snap = "", v = document.getElementById("vid");
-  if ((cfg.verVivo || !calibradaOk) && camOk && v && v.videoWidth > 0) {
-    var c2 = document.createElement("canvas"); c2.width = 426; c2.height = 240;
-    c2.getContext("2d").drawImage(v, 0, 0, 426, 240);
-    snap = c2.toDataURL("image/jpeg", 0.58);
-  }
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, img: snap })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk })
   }).catch(function(){});
-  fetch(FB + ".json?t=" + Date.now()).then(function(r){
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r.json();
-  }).then(function(root) {
-    if (!root) return;
-    var s = root.sala || {};
-    if (s.modoDet && s.modoDet !== cfg.modoDet) hablar(s.modoDet === "TODO" ? "Modo cualquier paso" : "Modo color carenado");
-    cfg = { estado: s.estado || "ESPERA", modoDet: s.modoDet || "TODO", verVivo: !!s.verVivo, garajes: root.garaje || {} };
-    if (s.cmd && s.cmd.antId === antId && s.cmd.ts !== ultCmd) {
-      ultCmd = s.cmd.ts;
-      if (Math.abs(ahoraSrv() - Number(s.cmd.ts || 0)) < 20000) {
-        if (s.cmd.posX) setPosX(Number(s.cmd.posX));
-        if (s.cmd.calibrar) calibrarFondo();
-      }
-    }
+
+  var v = document.getElementById("vid");
+  if ((cfg.verVivo || !calibradaOk) && camOk && v && v.videoWidth > 0) {
+    _imgCleared = false;
+    var c2 = document.createElement("canvas"); c2.width = 426; c2.height = 240;
+    c2.getContext("2d").drawImage(v, 0, 0, 426, 240);
+    fetch(FB_IMG + "/" + antId + ".json", {
+      method: "PUT",
+      body: JSON.stringify({ ts: ahoraSrv(), img: c2.toDataURL("image/jpeg", 0.56) })
+    }).catch(function(){});
+  } else if (!_imgCleared && calibradaOk && !cfg.verVivo) {
+    _imgCleared = true;
+    fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
+  }
+}, 800);
+
+setInterval(function() {
+  fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
+    if (s) { salaCache = s; procesarSala(salaCache); }
   }).catch(function(){});
-}, 650);
-navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60, min: 30 } }, audio: false }).then(function(st) {
-  var v = document.getElementById("vid"); v.srcObject = st; return v.play();
-}).then(function() { camOk = true; setInterval(proc, 45); }).catch(function(e) { document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
+  fetch(FB + "/garaje.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(g){
+    if (g) cfg.garajes = g;
+  }).catch(function(){});
+}, 2500);
+
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60, min: 30 } },
+  audio: false
+}).then(function(st) {
+  var v = document.getElementById("vid");
+  v.srcObject = st;
+  try {
+    var tr = st.getVideoTracks()[0];
+    if (tr && tr.applyConstraints) tr.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function(){});
+  } catch (e) {}
+  return v.play();
+}).then(function() {
+  camOk = true;
+  iniciarBucleVision();
+}).catch(function(e) {
+  document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message;
+});
 </script>
 </body>
 </html>

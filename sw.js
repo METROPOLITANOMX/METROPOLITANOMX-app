@@ -1,17 +1,27 @@
-﻿self.addEventListener("install", function() {
+﻿var CACHE_NAME = "mxp-cache-v202611230412";
+var APP_SHELL = [
+  "./",
+  "./index.html",
+  "./antena.html",
+  "./piloto.html",
+  "./vivo.html",
+  "./manifest.json",
+  "./logo.png"
+];
+
+self.addEventListener("install", function(e) {
   self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(function(cache) {
+      return Promise.all(
+        APP_SHELL.map(function(url) {
+          return cache.add(url).catch(function() {});
+        })
+      );
+    })
+  );
 });
 
 self.addEventListener("activate", function(e) {
   e.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.map(function(k) {
-          return caches.delete(k);
-        })
-      );
-    }).then(function() {
-      return self.clients.claim();
-    })
-  );
-}); // v_20261123034300
+    caches.keys()

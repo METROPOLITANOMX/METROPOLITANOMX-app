@@ -619,7 +619,7 @@ function actualizarEstadoSala() {
       return;
     }
     if (s.gps) gpsCirc = s.gps;
-    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || (s.ultPasoTs && (ahoraSrv() - Number(s.ultPasoTs)) < 600000));
+    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || s.estado === "SALIDA_30" || (s.ultPasoTs && (ahoraSrv() - Number(s.ultPasoTs)) < 600000));
     bv.style.display = activo ? "block" : "none";
     if (activo) {
       bv.textContent = s.ultPasoTxt
@@ -688,7 +688,7 @@ aplicarIdioma();
 cargarListaCircuitos();
 actualizarEstadoSala();
 comprobarGpsCercano();
-setInterval(actualizarEstadoSala, 2000);
+setInterval(actualizarEstadoSala, 2500);
 </script>
 </body>
 </html>
