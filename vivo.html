@@ -8,120 +8,228 @@
   *{box-sizing:border-box}
   body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif;padding:10px;text-align:center}
   body.sol{background:#f5f5f5;color:#000}
-  body.sol .card{background:#fff;border-color:#000;color:#000}
-  .top{display:flex;justify-content:space-between;align-items:center;background:#161616;border-bottom:3px solid #20c997;padding:10px;border-radius:12px;margin-bottom:8px;max-width:560px;margin-left:auto;margin-right:auto}
+  body.sol .card,body.sol .top,body.sol .modal-box{background:#fff;border-color:#000;color:#000}
+  .top{display:flex;justify-content:space-between;align-items:center;background:#161616;border-bottom:3px solid #20c997;padding:10px;border-radius:12px;margin:0 auto 8px;max-width:560px}
   .card{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px;margin:0 auto 8px;max-width:560px;text-align:left}
   button{padding:9px 12px;font-size:12px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
   .fila{display:flex;justify-content:space-between;align-items:center;padding:9px 6px;border-bottom:1px solid #222;font-size:13px}
   .reac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:999;justify-content:center;align-items:center;padding:16px}
+  .modal-box{width:100%;max-width:380px;background:#161616;border:2px solid #0dcaf0;border-radius:14px;padding:16px;text-align:left}
 </style>
 </head>
 <body>
+  <div id="modalSetupV" class="modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box">
+      <div id="mSetTit" style="font-size:16px;font-weight:bold;color:#ffc107;margin-bottom:6px">🏍️ PILOTO</div>
+      <div id="mSetBody" style="font-size:13px;line-height:1.5;color:#ddd;margin-bottom:12px"></div>
+      <button id="btnCerrarSet" onclick="document.getElementById('modalSetupV').style.display='none'" style="width:100%;background:#0dcaf0;color:#000">CERRAR</button>
+    </div>
+  </div>
+
   <div class="top">
-    <b style="color:#20c997;font-size:14px">🔴 PISTA EN DIRECTO MX</b>
+    <div style="text-align:left">
+      <b id="titTopV" style="color:#20c997;font-size:14px">🔴 PISTA EN DIRECTO MX</b>
+      <div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div>
+    </div>
     <div style="display:flex;gap:5px">
-      <button onclick="ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button><button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 8px;font-size:10px">☀️ SOL</button>
-      <button onclick="location.href='index.html'" style="background:#dc3545;color:#fff;padding:6px 9px;font-size:10px">Salir</button>
+      <button id="btnGuiaV" onclick="ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
+      <button id="btnSolV" onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 8px;font-size:10px">☀️ SOL</button>
+      <button id="btnSalirV" onclick="location.href='index.html'" style="background:#dc3545;color:#fff;padding:6px 9px;font-size:10px">Salir</button>
     </div>
   </div>
 
   <div class="card" style="text-align:center;border-color:#ffc107">
     <div id="lblEstV" style="font-size:16px;font-weight:bold;color:#ffc107">CONECTANDO CON PISTA...</div>
     <div id="lblSubV" style="font-size:12px;color:#0dcaf0;margin-top:4px">Sincronizando tiempos en vivo</div>
+    <div id="lblModV" style="font-size:11px;color:#aaa;margin-top:4px"></div>
   </div>
 
   <div id="boxPorra" class="card" style="display:none;border-color:#0dcaf0">
-    <b style="color:#0dcaf0;font-size:12px">🎯 PORRA DE SALIDA: ¿QUIEN MARCARA LA VUELTA RAPIDA?</b>
+    <b id="titPorraV" style="color:#0dcaf0;font-size:12px">🎯 PORRA DE SALIDA: ¿QUIEN MARCARA LA VUELTA RAPIDA?</b>
     <div id="listaPorra" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
     <div id="txtPorraOk" style="font-size:11px;color:#20c997;margin-top:6px;font-weight:bold"></div>
+    <div id="resPorra" style="font-size:11px;color:#aaa;margin-top:4px"></div>
   </div>
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <b style="color:#ffc107;font-size:12px">CLASIFICACION Y SETUPS EN PISTA</b>
-      <span style="font-size:10px;color:#888">Toca un piloto para ver reglaje</span>
+      <b id="titClasV" style="color:#ffc107;font-size:12px">CLASIFICACION Y SETUPS EN PISTA</b>
+      <span id="subClasV" style="font-size:10px;color:#888">Toca un piloto para ver reglaje</span>
     </div>
     <div id="listaVivo">Cargando pilotos...</div>
   </div>
 
   <div class="card">
-    <b style="color:#20c997;font-size:12px">👏 ANIMAR A LOS PILOTOS EN PISTA</b>
+    <b id="titReacV" style="color:#20c997;font-size:12px">👏 ANIMAR A LOS PILOTOS EN PISTA</b>
     <div class="reac-grid">
-      <button onclick="enviarReac('🔥 ¡Vaya tiempazo!')" style="background:#262626;color:#ffc107;padding:10px 4px;font-size:11px">🔥 TIEMPAZO</button>
-      <button onclick="enviarReac('👏 ¡Vamos a tope!')" style="background:#262626;color:#20c997;padding:10px 4px;font-size:11px">👏 ¡VAMOS!</button>
-      <button onclick="enviarReac('⚡ ¡A por el record!')" style="background:#262626;color:#0dcaf0;padding:10px 4px;font-size:11px">⚡ RECORD</button>
-      <button onclick="enviarReac('💣 ¡Cuidado bomba!')" style="background:#262626;color:#ff4d5e;padding:10px 4px;font-size:11px">💣 BOMBA</button>
+      <button id="bReac1" onclick="enviarReac('🔥 ¡Vaya tiempazo!')" style="background:#262626;color:#ffc107;padding:10px 4px;font-size:11px">🔥 TIEMPAZO</button>
+      <button id="bReac2" onclick="enviarReac('👏 ¡Vamos a tope!')" style="background:#262626;color:#20c997;padding:10px 4px;font-size:11px">👏 ¡VAMOS!</button>
+      <button id="bReac3" onclick="enviarReac('⚡ ¡A por el record!')" style="background:#262626;color:#0dcaf0;padding:10px 4px;font-size:11px">⚡ RECORD</button>
+      <button id="bReac4" onclick="enviarReac('💣 ¡Cuidado bomba!')" style="background:#262626;color:#ff4d5e;padding:10px 4px;font-size:11px">💣 BOMBA</button>
     </div>
     <div id="muroReac" style="font-size:11px;color:#aaa;margin-top:8px"></div>
   </div>
-<script>
-var FB = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro/circuitos/" + (localStorage.getItem("mxp_circ_id") || "METROPOLITANO");
-var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
-var votoHecho = false, ultReacMs = 0;
 
-function ayudaVivo(){var en=!(navigator.language||"es").toLowerCase().startsWith("es");alert(en?"LIVE VIEW:\n• Tap any rider to inspect their bike & setup.\n• Vote for the fastest lap before race start.\n• Send live cheers to the track!":"PANTALLA EN VIVO:\n• Toca cualquier piloto para ver su moto y reglaje.\n• Vota en la porra antes de la salida.\n• Manda animos en directo a la pista.");} function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+<script>
+var FB_ROOT = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
+var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
+var FB = FB_ROOT + "/circuitos/" + circId;
+
+var _offSrv = 0;
+fetch("https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/.info/serverTimeOffset.json")
+  .then(function(r){ return r.json(); })
+  .then(function(o){ if (typeof o === "number") _offSrv = o; })
+  .catch(function(){});
+function ahoraSrv() { return Date.now() + _offSrv; }
+
+var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
+var votoHecho = false, ultReacMs = 0, _garajeCache = {}, _pilotosCache = {};
+var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
+
+document.getElementById("lblCircV").textContent = "🏁 " + circNom;
+
+if (esIngles) {
+  document.documentElement.lang = "en";
+  document.getElementById("titTopV").textContent = "🔴 LIVE MX TRACK";
+  document.getElementById("btnGuiaV").textContent = "? GUIDE";
+  document.getElementById("btnSolV").textContent = "☀️ SUN";
+  document.getElementById("btnSalirV").textContent = "Exit";
+  document.getElementById("lblEstV").textContent = "CONNECTING TO TRACK...";
+  document.getElementById("lblSubV").textContent = "Syncing live timing";
+  document.getElementById("titPorraV").textContent = "🎯 PRE-START POLL: WHO SETS FASTEST LAP?";
+  document.getElementById("titClasV").textContent = "LIVE STANDINGS & TRACK SETUPS";
+  document.getElementById("subClasV").textContent = "Tap a rider to inspect setup";
+  document.getElementById("titReacV").textContent = "👏 CHEER RIDERS ON TRACK";
+  document.getElementById("bReac1").textContent = "🔥 FAST LAP!";
+  document.getElementById("bReac2").textContent = "👏 LET'S GO!";
+  document.getElementById("bReac3").textContent = "⚡ RECORD!";
+  document.getElementById("bReac4").textContent = "💣 BOMB!";
+  document.getElementById("btnCerrarSet").textContent = "CLOSE";
+}
+
+function esc(s) {
+  return String(s || "").replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+  });
+}
+function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+
+function ayudaVivo() {
+  alert(esIngles
+    ? "LIVE VIEW:\n• Tap any rider to inspect their bike & setup.\n• Vote in the fastest lap poll before race start.\n• Send live cheers directly to the riders!"
+    : "PANTALLA EN VIVO:\n• Toca cualquier piloto para ver su moto y reglaje.\n• Vota en la porra antes de la salida.\n• Manda animos en directo a la pista.");
+}
 
 function enviarReac(txt) {
-  if ((Date.now() - ultReacMs) < 3000) return;
-  ultReacMs = Date.now();
+  var ah = ahoraSrv();
+  if ((ah - ultReacMs) < 3000) return;
+  ultReacMs = ah;
   fetch(FB + "/sala/reaccion.json", {
     method: "PUT",
-    body: JSON.stringify({ ts: Date.now(), autor: miNomV, texto: txt })
+    body: JSON.stringify({ ts: ah, autor: miNomV, texto: txt })
   }).catch(function(){});
 }
 
 function votarFavorito(uidP, nomP) {
   votoHecho = true;
-  document.getElementById("txtPorraOk").textContent = "✅ Has votado por " + nomP + " para la vuelta rapida";
-  fetch(FB + "/sala/porra/" + encodeURIComponent(miNomV) + ".json", {
+  document.getElementById("txtPorraOk").textContent = esIngles
+    ? ("✅ You voted for " + nomP + " for fastest lap")
+    : ("✅ Has votado por " + nomP + " para la vuelta rapida");
+  var keyV = miNomV.toLowerCase().replace(/[^a-z0-9]/g, "_") || ("fan_" + Math.random().toString(36).slice(2, 6));
+  fetch(FB + "/sala/porra/" + keyV + ".json", {
     method: "PUT",
-    body: JSON.stringify({ pilotoUid: uidP, pilotoNom: nomP, ts: Date.now() })
+    body: JSON.stringify({ pilotoUid: uidP, pilotoNom: nomP, ts: ahoraSrv() })
   }).catch(function(){});
 }
 
-function verSetupRival(nom, mod, setTxt) {
-  alert("🏍️ PILOTO: " + nom + "\nModelo: " + (mod || "Losi Promoto-MX") + "\n\n🔧 REGLAJE ACTIVO:\n" + (setTxt || "Setup estandar de serie"));
+function verSetupRival(pid) {
+  var p = _pilotosCache[pid] || {};
+  var g = _garajeCache[pid] || {};
+  document.getElementById("mSetTit").textContent = "🏍️ #" + (p.dorsal || g.dorsal || "--") + " " + (p.nombre || "Piloto");
+  document.getElementById("mSetBody").innerHTML =
+    "<b>" + (esIngles ? "Bike:" : "Moto:") + "</b> " + esc(g.modelo || "Losi Promoto-MX") + " (" + esc(g.disc || "MX") + ")<br>" +
+    "<b>" + (esIngles ? "Best Lap:" : "Mejor Vuelta:") + "</b> <span style='color:#20c997'>" + fmt(p.mejorMs) + "</span> (" + (p.vueltas || 0) + "v)<br><br>" +
+    "<b style='color:#0dcaf0'>" + (esIngles ? "🔧 ACTIVE SETUP:" : "🔧 REGLAJE ACTIVO:") + "</b><br>" +
+    esc(g.setupTxt || (esIngles ? "Stock setup" : "Setup estandar de serie"));
+  document.getElementById("modalSetupV").style.display = "flex";
 }
 
-setInterval(function() {
-  fetch(FB + ".json?t=" + Date.now()).then(function(r) { return r.json(); }).then(function(root) {
+function refrescarVivo() {
+  fetch(FB + ".json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(root) {
     if (!root) return;
     var s = root.sala || {}, pObj = root.pilotos || {}, gObj = root.garaje || {};
-    var est = s.estado || "ESPERA";
-    var tit = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
-    document.getElementById("lblEstV").textContent = tit[est] || est;
-    document.getElementById("lblSubV").textContent = s.hotlapTxt ? ("👑 Hotlap Semana: " + s.hotlapTxt) : "Metropolitano MX Circuit";
+    _pilotosCache = pObj;
+    _garajeCache = gObj;
 
-    var pils = Object.keys(pObj).filter(function(k) { return pObj[k] && pObj[k].nombre; }).map(function(k) { return Object.assign({ id: k }, pObj[k]); });
-    pils.sort(function(a, b) { return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+    document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+
+    var est = s.estado || "ESPERA";
+    var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
+    var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
+    var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
+
+    if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) {
+      var df = Number(s.tsInicio) - ahoraSrv();
+      if (df > 0) {
+        var seg = Math.ceil(df / 1000);
+        estTxt += " • " + Math.floor(seg / 60) + ":" + ((seg % 60) < 10 ? "0" : "") + (seg % 60);
+      }
+    }
+    document.getElementById("lblEstV").textContent = estTxt;
+    document.getElementById("lblSubV").textContent = s.hotlapTxt
+      ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt)
+      : circNom;
+    document.getElementById("lblModV").textContent = (s.modoJuego && s.modoJuego !== "NORMAL")
+      ? ((esIngles ? "MODE: " : "MODO: ") + s.modoJuego)
+      : "";
+
+    var pils = Object.keys(pObj).filter(function(k){ return pObj[k] && pObj[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pObj[k]); });
+    if ((s.modoJuego || "NORMAL") === "REY") {
+      pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
+    } else {
+      pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+    }
 
     var bp = document.getElementById("boxPorra");
     if (bp) {
-      bp.style.display = (est === "SALIDA_30" || est === "WARMUP") && pils.length ? "block" : "none";
+      var mostrarPorra = (est === "SALIDA_30" || est === "WARMUP" || est === "ESPERA") && pils.length > 0;
+      bp.style.display = mostrarPorra ? "block" : "none";
       if (!votoHecho && pils.length) {
         document.getElementById("listaPorra").innerHTML = pils.map(function(p) {
-          return '<button onclick="votarFavorito(\'' + p.id + '\',\'' + p.nombre + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + (p.dorsal || "--") + ' ' + p.nombre + '</button>';
+          return '<button onclick="votarFavorito(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>';
         }).join("");
       }
+      var porraObj = s.porra || {}, votos = {};
+      Object.keys(porraObj).forEach(function(k) {
+        var n = porraObj[k] && porraObj[k].pilotoNom;
+        if (n) votos[n] = (votos[n] || 0) + 1;
+      });
+      var vResumen = Object.keys(votos).sort(function(a, b){ return votos[b] - votos[a]; }).map(function(n){ return esc(n) + " (" + votos[n] + ")"; }).join(" • ");
+      document.getElementById("resPorra").textContent = vResumen ? ((esIngles ? "Poll votes: " : "Votos porra: ") + vResumen) : "";
     }
 
     var h = "";
     pils.forEach(function(p, ix) {
       var g = gObj[p.id] || {};
       var mod = g.modelo || "Losi Promoto-MX";
-      var st = g.setupTxt || "Setup de serie";
-      h += '<div class="fila" style="cursor:pointer" onclick="verSetupRival(\'' + p.nombre + '\',\'' + mod + '\',\'' + st.replace(/'/g, "") + '\')">' +
-           '<div><b>' + (ix + 1) + 'º #' + (p.dorsal || "--") + ' ' + p.nombre + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v)</span><div style="font-size:10px;color:#888">🏍️ ' + mod + ' • Toca para ver setup</div></div>' +
-           '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: ' + fmt(p.ultimaMs) + '</div></div></div>';
+      h += '<div class="fila" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
+        '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span>' +
+        '<div style="font-size:10px;color:#888">🏍️ ' + esc(mod) + ' (' + esc(g.disc || "MX") + ') • ' + (esIngles ? "Tap for setup" : "Toca para ver setup") + '</div></div>' +
+        '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">' + (esIngles ? "Last: " : "Ult: ") + fmt(p.ultimaMs) + '</div></div></div>';
     });
-    document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">Ningun piloto rodando ahora mismo.</div>';
+    document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">' + (esIngles ? "No riders on track right now." : "Ningun piloto rodando ahora mismo.") + '</div>';
 
     var mr = document.getElementById("muroReac");
     if (mr && s.reaccion && s.reaccion.texto) {
-      mr.innerHTML = 'Ultimo animo: <b style="color:#ffc107">' + s.reaccion.autor + ':</b> ' + s.reaccion.texto;
+      mr.innerHTML = (esIngles ? "Latest cheer: " : "Ultimo animo: ") + '<b style="color:#ffc107">' + esc(s.reaccion.autor) + ':</b> ' + esc(s.reaccion.texto);
     }
   }).catch(function(){});
-}, 1200);
+}
+
+refrescarVivo();
+setInterval(refrescarVivo, 1200);
 </script>
 </body>
 </html>
