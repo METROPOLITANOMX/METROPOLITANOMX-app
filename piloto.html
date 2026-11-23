@@ -74,7 +74,7 @@
       <div id="txtCircTop" style="font-size:10px;color:#0dcaf0;margin-top:3px">🏁 METROPOLITANO</div>
     </div>
     <div style="display:flex;gap:4px">
-      <button onclick="pedirDirRapido()" style="background:#ffc107;color:#000;padding:6px 7px;font-size:10px">👑</button><button onclick="ayudaTab()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
+      <button onclick="ayudaTab()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
       <button onclick="document.body.classList.toggle('sol')" style="background:#fff;color:#000;padding:6px 7px;font-size:10px">☀️</button>
       <button id="btnVozP" onclick="toggleVozP()" style="background:#20c997;color:#000;padding:6px 8px;font-size:10px">Voz ON</button>
       <button onclick="salirPiloto()" style="background:#dc3545;color:#fff;padding:6px 8px;font-size:10px">Salir</button>
@@ -281,13 +281,14 @@
   <canvas id="cnvPng" width="720" height="720" style="display:none"></canvas>
 
 <script>
-var FB_ROOT = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var FB_BASE = "https://metropolitano-mx-circuit-default-rtdb.firebaseio.com/";
+var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
 var FB = FB_ROOT + "/circuitos/" + circId;
 
 var _offSrv = 0;
-fetch("https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/.info/serverTimeOffset.json")
+fetch(FB_BASE + ".info/serverTimeOffset.json")
   .then(function(r){ return r.json(); })
   .then(function(o){ if (typeof o === "number") _offSrv = o; })
   .catch(function(){});
@@ -337,7 +338,7 @@ function salirPiloto() {
   localStorage.removeItem("mxp_dir_ok");
   location.href = "index.html";
 }
-function pedirDirRapido(){if(esDir){esDir=false;localStorage.removeItem("mxp_dir_ok");document.getElementById("panelDir").style.display="none";return;}var c=prompt("Clave Direccion:");if(c==="2026"){esDir=true;localStorage.setItem("mxp_dir_ok","1");document.getElementById("panelDir").style.display="block";}} function ayudaTab() {
+function ayudaTab() {
   var g = {
     sala: "PESTAÑA SALA PISTA:\n1. Quedas inscrito automaticamente al entrar (incluido Director).\n2. En Modo Amistoso puedes calibrar con cuenta atras de 10s, lanzar Warm-Up 3 min o Salida 30s.\n3. Activa Modo Bolsillo para llevar el movil encima escuchando tus vueltas por voz.",
     garaje: "PESTAÑA GARAJE:\n1. Elige disciplina MX Tierra o SM Supermoto y guarda tus reglajes.\n2. Toca cualquiera de los 4 recuadros para hacer fotos de tu moto con la camara en directo.\n3. Pulsa CAPTURAR COLORES para escanear los 2 lados de la moto en vivo y que las antenas la identifiquen.",
@@ -358,7 +359,6 @@ function verTab(t) {
   if (t === "tiempos") pintarTiempos();
 }
 
-/* ===== INSCRIPCION AUTOMATICA EN SALA (PILOTO O DIRECTOR) ===== */
 function inscribirPilotoAuto() {
   var m = motosGar[idxMoto] || motosGar[0];
   var dor = (m && m.dorsal) ? m.dorsal : "1";
@@ -380,7 +380,6 @@ function inscribirPilotoAuto() {
   }).catch(function(){});
 }
 
-/* ===== GARAJE (4 FOTOS + MX/SM + SETUPS + COLORES GETUSERMEDIA) ===== */
 function pintarGaraje() {
   var s = document.getElementById("selMotoGar");
   s.innerHTML = motosGar.map(function(m, i) {
@@ -615,11 +614,10 @@ function compartirSetupWa() {
   window.open("https://wa.me/?text=" + encodeURIComponent(t), "_blank");
 }
 
-/* ===== CONTROL DE SALA, MODOS DE JUEGO, ANTENAS Y DIRECCION ===== */
 function cmdSala(est) {
   if (est === "WARMUP" || est === "SALIDA_30") {
     var ants = salaObj.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
+    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     var algunaSinCal = aks.some(function(k){ return !ants[k].calibrada; });
     if (aks.length && algunaSinCal) {
       alert("⚠️ Calibra primero la pista vacia en la(s) antena(s) antes de iniciar.");
@@ -709,7 +707,7 @@ function calibrarConCuenta10() {
       clearInterval(_tCal10);
       _tCal10 = null;
       var ants = salaObj.antenas || {};
-      var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
+      var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
       if (!aks.length) aks = ["ant_1"];
       aks.forEach(function(aid, ix) {
         setTimeout(function() {
@@ -773,7 +771,6 @@ function cargarClubDir() {
 function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir); }
 function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir); }
 
-/* ===== REGISTRO DE VUELTAS Y TIEMPOS ===== */
 function registrarVuelta(pUid) {
   var p = pilotosAll[pUid];
   if (!p) return;
@@ -924,7 +921,6 @@ function descargarPngDia(ix) {
   a.click();
 }
 
-/* ===== SINCRONIZACION PERIODICA Y RELOJ ===== */
 inscribirPilotoAuto();
 actualizarRango();
 
@@ -954,7 +950,7 @@ setInterval(function() {
     }
 
     var ants = root.antenas || {};
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 45000; });
+    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     var lAnt = document.getElementById("lblAntVivo");
     lAnt.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
     lAnt.style.color = aks.length ? "#00e676" : "#ff4d5e";

@@ -48,13 +48,14 @@
     <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal. Control remoto desde el movil principal.</div>
   </div>
 <script>
-var FB_ROOT = "https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/mx_pro";
+var FB_BASE = "https://metropolitano-mx-circuit-default-rtdb.firebaseio.com/";
+var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var FB = FB_ROOT + "/circuitos/" + circId;
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 
 var _offSrv = 0;
-fetch("https://" + "app-servidor-9bb38-default-rtdb.europe-west1." + "firebasedatabase.app/.info/serverTimeOffset.json").then(function(r){return r.json();}).then(function(o){if(typeof o==="number")_offSrv=o;}).catch(function(){});
+fetch(FB_BASE + ".info/serverTimeOffset.json").then(function(r){return r.json();}).then(function(o){if(typeof o==="number")_offSrv=o;}).catch(function(){});
 function ahoraSrv() { return Date.now() + _offSrv; }
 
 var antId = localStorage.getItem("mxp_ant_id") || "";
