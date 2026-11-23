@@ -44,7 +44,6 @@
     <div id="txtSem" style="font-size:20px;font-weight:bold;color:#fff">PREPARADOS</div>
   </div>
 
-  <!-- MODO BOLSILLO ANTI-ROCES (MANTENER 2s PARA DESBLOQUEAR) -->
   <div id="bolsillo">
     <div style="font-size:12px;color:#444">MODO BOLSILLO ACTIVO</div>
     <div>
@@ -64,7 +63,6 @@
     </div>
   </div>
 
-  <!-- MODAL CAMARA EN DIRECTO PARA FOTOS DE GARAJE (SIN INPUT FILE) -->
   <div id="modalCamFoto" class="cam-modal">
     <div class="cam-box">
       <div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div>
@@ -78,7 +76,6 @@
     </div>
   </div>
 
-  <!-- MODAL FOTO-FINISH -->
   <div id="modalFf" class="cam-modal" onclick="if(event.target===this)this.style.display='none'">
     <div class="cam-box" style="border-color:#ffc107">
       <div id="titFf" style="font-size:13px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
@@ -111,7 +108,6 @@
     <button id="tTmp" class="tab" onclick="verTab('tiempos')">⏱️ TIEMPOS</button>
   </div>
 
-  <!-- PESTAÑA 1: SALA PISTA -->
   <div id="sec_sala">
     <button id="btnUnlockAudioP" onclick="desbloquearAudioP(true)" style="width:100%;max-width:560px;margin:0 auto 8px;background:#ffc107;color:#000;display:block;padding:11px;font-size:12px">
       🔊 TOCA AQUI PARA ACTIVAR AUDIO Y VOZ EN PISTA
@@ -151,8 +147,17 @@
     </div>
 
     <div class="card">
-      <b style="color:#ffc107;font-size:12px">CLASIFICACION EN VIVO</b>
-      <div id="listaSala" style="margin-top:6px">Inscribiendo piloto...</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div>
+          <b style="color:#ffc107;font-size:12px">CLASIFICACION EN VIVO</b>
+          <div id="lblPistaStatus" style="font-size:11px;color:#20c997;font-weight:bold">Comprobando pista...</div>
+        </div>
+        <div id="btnsLimpiezaDir" style="display:none;gap:4px">
+          <button id="btnSoloDir" onclick="toggleSoloDirector()" style="background:#2b2b2b;color:#0dcaf0;padding:4px 7px;font-size:10px">👑 SOLO DIR</button>
+          <button onclick="limpiarOfflineDir()" style="background:#3a1c1c;color:#ff4d5e;padding:4px 7px;font-size:10px">🧹 LIMPIAR</button>
+        </div>
+      </div>
+      <div id="listaSala">Inscribiendo piloto...</div>
     </div>
 
     <div id="panelDir" class="card" style="display:none;border-color:#0dcaf0;background:#111822">
@@ -173,20 +178,13 @@
           <option value="0">Entreno Libre</option>
         </select>
       </div>
-      <div class="grid2">
-        <select id="selMinLap" onchange="cfgDir()">
-          <option value="4">Vuelta min: 4s</option>
-          <option value="5" selected>Vuelta min: 5s</option>
-          <option value="8">Vuelta min: 8s</option>
-          <option value="12">Vuelta min: 12s (MX 1/4)</option>
-          <option value="18">Vuelta min: 18s</option>
-        </select>
-        <select id="selSensDir" onchange="cfgDir()">
-          <option value="5">Sensibilidad: Alta (5%)</option>
-          <option value="7" selected>Sensibilidad: Normal (7%)</option>
-          <option value="11">Anti-sombras (11%)</option>
-        </select>
-      </div>
+      <select id="selMinLap" onchange="cfgDir()">
+        <option value="4">Anti-rebote vuelta min: 4s</option>
+        <option value="5" selected>Anti-rebote vuelta min: 5s</option>
+        <option value="8">Anti-rebote vuelta min: 8s</option>
+        <option value="12">Anti-rebote vuelta min: 12s (Circuito MX 1/4)</option>
+        <option value="18">Anti-rebote vuelta min: 18s (Pista larga)</option>
+      </select>
       <div class="grid2" style="margin-top:2px">
         <button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
         <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 SALIDA 30s</button>
@@ -203,16 +201,16 @@
 
       <div style="margin-top:10px;border-top:1px solid #2b3a4a;padding-top:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <b style="color:#ffc107;font-size:11px">📡 TEST Y CALIBRACION ANTENAS</b>
+          <b style="color:#ffc107;font-size:11px">📡 TEST Y CALIBRACION EN TIEMPO REAL</b>
           <button id="btnToggleTest" onclick="toggleTestAntenas()" style="background:#6f42c1;color:#fff;padding:5px 9px;font-size:10px">ACTIVAR TEST</button>
         </div>
-        <select id="selAntDir"></select>
+        <select id="selAntDir" onchange="pintarSalaUI()"></select>
         <div class="grid2">
           <button id="bModTodo" onclick="setModoAnt('TODO')" style="background:#ffc107;color:#000;font-size:10px">⚡ CUALQUIER PASO</button>
           <button id="bModCar" onclick="setModoAnt('CAR')" style="background:#2b2b2b;color:#fff;font-size:10px">🏍️ COLOR CARENADO</button>
         </div>
-        <div style="position:relative;height:175px;background:#000;border-radius:8px;overflow:hidden;margin-top:6px;border:1px solid #444">
-          <img id="imgAntDir" style="width:100%;height:100%;object-fit:cover">
+        <div style="position:relative;height:190px;background:#000;border-radius:8px;overflow:hidden;margin-top:6px;border:1px solid #444">
+          <img id="imgAntDir" style="width:100%;height:100%;object-fit:cover;display:block">
           <div id="linAntDir" style="position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a"></div>
           <div id="lblTelAntDir" style="position:absolute;bottom:6px;left:6px;right:6px;background:rgba(0,0,0,0.85);color:#00e676;padding:5px;border-radius:5px;font-size:11px;font-family:monospace">Esperando antena...</div>
         </div>
@@ -220,9 +218,17 @@
           <div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0;margin-bottom:2px">
             <span>AJUSTE FINO LINEA ROJA:</span><b id="lblPosXDir">50%</b>
           </div>
-          <input id="rngPosX" type="range" min="15" max="85" value="50" oninput="document.getElementById('lblPosXDir').textContent=this.value+'%';document.getElementById('linAntDir').style.left=this.value+'%'" onchange="cmdAntDir(Number(this.value))" style="margin:0">
+          <input id="rngPosX" type="range" min="15" max="85" value="50" oninput="document.getElementById('lblPosXDir').textContent=this.value+'%';document.getElementById('linAntDir').style.left=this.value+'%'" onchange="cmdAntDir(Number(this.value))" style="margin:0 0 8px">
+
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107;margin-bottom:2px">
+            <span>UMBRAL DETECCION (CUALQUIER PASO):</span><b id="lblSensDir">7%</b>
+          </div>
+          <input id="rngSens" type="range" min="2" max="25" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()" style="margin:0">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#888;margin-top:2px">
+            <span>2% Ultra sensible</span><span>7% Normal</span><span>25% Muy estricto</span>
+          </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:6px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px">
           <button onclick="cmdAntDir(25)" style="background:#2b2b2b;color:#fff;font-size:10px">◀ 25%</button>
           <button onclick="cmdAntDir(50)" style="background:#0dcaf0;color:#000;font-size:10px">50%</button>
           <button onclick="cmdAntDir(75)" style="background:#2b2b2b;color:#fff;font-size:10px">75% ▶</button>
@@ -240,7 +246,6 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 2: GARAJE -->
   <div id="sec_garaje" style="display:none">
     <div class="card" style="border-color:#20c997">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -307,7 +312,6 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 3: TIEMPOS Y TELEMETRIA -->
   <div id="sec_tiempos" style="display:none">
     <div class="card" style="border-color:#ffc107">
       <b style="color:#ffc107;font-size:12px">📊 ESTADISTICAS GLOBALES</b>
@@ -364,7 +368,10 @@ if (!uid) location.href = "index.html";
 
 document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
-if (esDir) document.getElementById("panelDir").style.display = "block";
+if (esDir) {
+  document.getElementById("panelDir").style.display = "block";
+  document.getElementById("btnsLimpiezaDir").style.display = "flex";
+}
 
 var vozP = true, salaObj = {}, antsAll = {}, garajesAll = {}, pilotosAll = {}, campObj = {}, motosGar = [], idxMoto = 0, colsTmpGar = [], ladoCap = 1, histDias = [];
 try { motosGar = JSON.parse(localStorage.getItem("mxp_gar_" + uid) || "[]"); } catch (e) {}
@@ -373,8 +380,9 @@ if (!motosGar.length) motosGar = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc
 
 var _streamFoto = null, _streamCol = null, _slotFotoAct = 0;
 var _tabAct = "sala", _ultEvP = {}, _lockVtaLocal = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false, avisoFinManga = false;
-var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null, _lastImgFetch = 0, _audioCtxP = null, _audioUnlocked = false;
+var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null, _audioCtxP = null, _soloDirector = false;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMovidaAviso = 0;
+var _esImg = null, _esImgId = "";
 
 function activarWakeLock() {
   if ("wakeLock" in navigator) navigator.wakeLock.request("screen").catch(function(){});
@@ -383,6 +391,15 @@ document.addEventListener("visibilitychange", function(){
   if (document.visibilityState === "visible") activarWakeLock();
 });
 activarWakeLock();
+
+window.addEventListener("beforeunload", function() {
+  var yo = pilotosAll[uid];
+  if (yo && !(yo.vueltas > 0)) {
+    fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
+  } else {
+    fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", keepalive: true, body: JSON.stringify({ enPista: false, tsActivo: 0 }) }).catch(function(){});
+  }
+});
 
 function esc(s) {
   return String(s || "").replace(/[&<>"']/g, function(c) {
@@ -402,7 +419,6 @@ function desbloquearAudioP(hablarConfirm) {
     if (!_audioCtxP) _audioCtxP = new (window.AudioContext || window.webkitAudioContext)();
     if (_audioCtxP && _audioCtxP.state === "suspended") _audioCtxP.resume();
   } catch (e) {}
-  _audioUnlocked = true;
   var b = document.getElementById("btnUnlockAudioP");
   if (b) b.style.display = "none";
   if (hablarConfirm) { beepP(880, 90); hablarP("Audio de pista activado"); }
@@ -456,17 +472,27 @@ function detenerCamaras() {
   if (_streamFoto) { _streamFoto.getTracks().forEach(function(t){ t.stop(); }); _streamFoto = null; }
   if (_streamCol) { _streamCol.getTracks().forEach(function(t){ t.stop(); }); _streamCol = null; }
 }
+function cerrarEsImg() {
+  if (_esImg) { try { _esImg.close(); } catch (e) {} _esImg = null; _esImgId = ""; }
+}
 function salirPiloto() {
   detenerCamaras();
-  localStorage.removeItem("mxp_uid");
-  localStorage.removeItem("mxp_dir_ok");
-  location.href = "index.html";
+  cerrarEsImg();
+  var yo = pilotosAll[uid];
+  var op = (yo && yo.vueltas > 0)
+    ? fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: false, tsActivo: 0 }) })
+    : fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" });
+  op.catch(function(){}).finally(function(){
+    localStorage.removeItem("mxp_uid");
+    localStorage.removeItem("mxp_dir_ok");
+    location.href = "index.html";
+  });
 }
 function ayudaTab() {
   var g = {
-    sala: "PESTAÑA SALA PISTA:\n1. Toca primero el boton amarillo para activar la voz en tu movil.\n2. Al entrar quedas inscrito automaticamente (incluido Director).\n3. Salidas: Semaforo 30s o VALLA MX ALEATORIA (tras cartel 5s suelta la salida por sorpresa).\n4. Modos: Normal, Bomba 45s (explota al llegar a 0), Eliminacion 60s (elimina al ultimo), Rey, Superpole y Ruleta Loca MX.\n5. Usa 🔒 BOLSILLO (manten 2s para desbloquear) para escuchar Delta en el oido.\n6. Pulsa 📸 FOTO-FINISH para ver la captura de meta.\n7. Direccion: deslizador fino 15-85%, sensibilidad anti-sombras, -1v y Guardar Manga al Campeonato.",
+    sala: "PESTAÑA SALA PISTA:\n1. Toca el boton amarillo para activar audio/voz en tu movil.\n2. Al entrar quedas inscrito (🟢 EN PISTA). Si usas el movil solo para dirigir, pulsa 👑 SOLO DIR.\n3. En Direccion tienes deslizador fino para la linea roja y deslizador de UMBRAL (2%-25%) para calibrar cualquier paso mirando el video en directo.\n4. Usa 🧹 LIMPIAR o ✕ para borrar pilotos fantasma desconectados.\n5. Salidas: Semaforo 30s o VALLA MX ALEATORIA. Modos: Normal, Bomba 45s, Eliminacion 60s, Rey, Superpole y Ruleta Loca MX.",
     garaje: "PESTAÑA GARAJE:\n1. Elige MX Tierra o SM Supermoto y guarda tu setup.\n2. Toca los 4 recuadros para hacer fotos con la camara en directo.\n3. Pulsa CAPTURAR COLORES y escanea ambos lados (usa vinilo fluor en casco y guardabarros trasero).",
-    tiempos: "PESTAÑA TIEMPOS:\n1. Consulta Mejor Vuelta, Regularidad %, Vueltas Totales y Rango.\n2. Revisa la tabla del Campeonato del Dia (25-22-20 pts...) y descarga el PODIO PNG.\n3. Haz Duelo 1 vs 1 viendo moto y setup del rival, y descarga tarjetas PNG diarias."
+    tiempos: "PESTAÑA TIEMPOS:\n1. Consulta Mejor Vuelta, Regularidad %, Vueltas Totales y Rango.\n2. Revisa el Campeonato del Dia (25-22-20 pts...) y descarga el PODIO PNG.\n3. Duelo 1 vs 1 viendo moto y setup del rival, y tarjetas PNG diarias."
   };
   alert(g[_tabAct] || g.sala);
 }
@@ -501,6 +527,7 @@ function verFotoFinish() {
 }
 
 function inscribirPilotoAuto() {
+  if (_soloDirector) return;
   var m = motosGar[idxMoto] || motosGar[0];
   var dor = (m && m.dorsal) ? m.dorsal : "1";
   document.getElementById("badgeDor").textContent = "#" + dor;
@@ -509,16 +536,52 @@ function inscribirPilotoAuto() {
     if (!ex) {
       return fetch(FB + "/pilotos/" + uid + ".json", {
         method: "PUT",
-        body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, tsAlta: ahoraSrv() })
+        body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ahoraSrv() })
       });
     } else {
       _ultVtasSinc = Number(ex.vueltas || 0);
       return fetch(FB + "/pilotos/" + uid + ".json", {
         method: "PATCH",
-        body: JSON.stringify({ nombre: miNom, dorsal: dor, tsAlta: ahoraSrv() })
+        body: JSON.stringify({ nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() })
       });
     }
   }).catch(function(){});
+}
+
+function toggleSoloDirector() {
+  _soloDirector = !_soloDirector;
+  var b = document.getElementById("btnSoloDir");
+  if (_soloDirector) {
+    b.textContent = "🏍️ ENTRAR PISTA";
+    b.style.background = "#20c997"; b.style.color = "#000";
+    fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){});
+    delete pilotosAll[uid];
+    pintarSalaUI();
+  } else {
+    b.textContent = "👑 SOLO DIR";
+    b.style.background = "#2b2b2b"; b.style.color = "#0dcaf0";
+    inscribirPilotoAuto();
+  }
+}
+
+function expulsarPilotoDir(pUid) {
+  fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).catch(function(){});
+  delete pilotosAll[pUid];
+  pintarSalaUI();
+}
+
+function limpiarOfflineDir() {
+  var ah = ahoraSrv();
+  Object.keys(pilotosAll).forEach(function(k) {
+    var p = pilotosAll[k];
+    if (!p) return;
+    var act = (p.enPista !== false) && p.tsActivo && Math.abs(ah - Number(p.tsActivo)) < 25000;
+    if (!act) {
+      fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" }).catch(function(){});
+      delete pilotosAll[k];
+    }
+  });
+  pintarSalaUI();
 }
 
 function pintarGaraje() {
@@ -736,17 +799,16 @@ function subirGarajeNube() {
   fetch(FB + "/garaje/" + uid + ".json", {
     method: "PUT",
     body: JSON.stringify({
-      modelo: m.modelo,
-      dorsal: m.dorsal || "1",
-      disc: m.disc || "MX",
-      colores: m.colores || [],
-      setupTxt: stTxt
+      modelo: m.modelo, dorsal: m.dorsal || "1", disc: m.disc || "MX",
+      colores: m.colores || [], setupTxt: stTxt
     })
   }).catch(function(){});
-  fetch(FB + "/pilotos/" + uid + ".json", {
-    method: "PATCH",
-    body: JSON.stringify({ nombre: miNom, dorsal: m.dorsal || "1" })
-  }).catch(function(){});
+  if (!_soloDirector) {
+    fetch(FB + "/pilotos/" + uid + ".json", {
+      method: "PATCH",
+      body: JSON.stringify({ nombre: miNom, dorsal: m.dorsal || "1" })
+    }).catch(function(){});
+  }
 }
 
 function compartirSetupWa() {
@@ -782,7 +844,7 @@ function cfgDir() {
       modoJuego: document.getElementById("selJuego").value,
       duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5,
-      sensPct: Number(document.getElementById("selSensDir").value) || 7,
+      sensPct: Number(document.getElementById("rngSens").value) || 7,
       dirTs: ahoraSrv()
     })
   }).catch(function(){});
@@ -870,6 +932,7 @@ function toggleTestAntenas() {
     method: "PATCH",
     body: JSON.stringify({ estado: testOn ? "TEST" : "ESPERA", verVivo: testOn, dirTs: ahoraSrv() })
   }).catch(function(){});
+  pintarSalaUI();
 }
 
 function setModoAnt(m) {
@@ -967,9 +1030,11 @@ function registrarVuelta(pUid, evTs) {
 
   if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
     _lockVtaLocal[pUid] = ah;
+    p.sensorOk = true;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) }).catch(function(){});
     hablarP("Prueba OK: " + p.nombre);
+    pintarSalaUI();
     return;
   }
   var ult = Number(p.tsUltimoPaso || 0);
@@ -988,9 +1053,15 @@ function registrarVuelta(pUid, evTs) {
     if (ex && ex.ok) return;
     return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
       p.tsUltimoPaso = ah; p.vueltas = v; p.ultimaMs = lap; p.mejorMs = mej;
+      if (pUid === uid && _ultLapSinc !== ah) {
+        _ultLapSinc = ah;
+        _ultVtasSinc = v;
+        procesarMiVueltaLocal(lap, mej);
+      }
+      pintarSalaUI();
       fetch(FB + "/pilotos/" + pUid + ".json", {
         method: "PATCH",
-        body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah })
+        body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah, enPista: true, tsActivo: ahoraSrv() })
       }).catch(function(){});
       var patchSala = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
       if (!salaObj.hotlapMs || lap < Number(salaObj.hotlapMs)) {
@@ -1002,7 +1073,11 @@ function registrarVuelta(pUid, evTs) {
   }).catch(function(){});
 }
 
-function sumarVueltaManual() { desbloquearAudioP(false); registrarVuelta(uid, ahoraSrv()); }
+function sumarVueltaManual() {
+  desbloquearAudioP(false);
+  if (_soloDirector) toggleSoloDirector();
+  registrarVuelta(uid, ahoraSrv());
+}
 
 function procesarMiVueltaLocal(lap, mej) {
   _bombaExplotada = false;
@@ -1203,8 +1278,17 @@ function descargarPngDia(ix) {
   a.click();
 }
 
+function esPilotoActivo(p) {
+  return p && (p.enPista !== false) && p.tsActivo && Math.abs(ahoraSrv() - Number(p.tsActivo)) < 25000;
+}
+
 function ordenarPilotos() {
-  var pils = Object.keys(pilotosAll).filter(function(k){ return pilotosAll[k] && pilotosAll[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pilotosAll[k]); });
+  var pils = Object.keys(pilotosAll).filter(function(k){
+    var p = pilotosAll[k];
+    if (!p || !p.nombre) return false;
+    return esPilotoActivo(p) || (Number(p.vueltas || 0) > 0);
+  }).map(function(k){ return Object.assign({ id: k, activo: esPilotoActivo(pilotosAll[k]) }, pilotosAll[k]); });
+
   var mj = salaObj.modoJuego || "NORMAL";
   if (mj === "REY" || mj === "SUPERPOLE") {
     pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
@@ -1225,6 +1309,29 @@ function manejarEventoAntena(ev) {
     var target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
     if (esDir || target === uid) registrarVuelta(target, Number(ev.ts));
   }
+}
+
+function gestionarStreamImagen(selId, activo) {
+  if (!esDir || !selId || !activo) {
+    cerrarEsImg();
+    return;
+  }
+  if (_esImg && _esImgId === selId) return;
+  cerrarEsImg();
+  _esImgId = selId;
+  try {
+    _esImg = new EventSource(FB_IMG + "/" + selId + ".json");
+    var onImg = function(e) {
+      try {
+        var m = JSON.parse(e.data);
+        if (!m || !m.data) return;
+        var im = (m.path === "/") ? m.data.img : (m.path === "/img" ? m.data : null);
+        if (im) document.getElementById("imgAntDir").src = im;
+      } catch (er) {}
+    };
+    _esImg.addEventListener("put", onImg);
+    _esImg.addEventListener("patch", onImg);
+  } catch (e) {}
 }
 
 function pintarSalaUI() {
@@ -1248,7 +1355,10 @@ function pintarSalaUI() {
     if (salaObj.modoJuego && document.activeElement !== document.getElementById("selJuego")) document.getElementById("selJuego").value = salaObj.modoJuego;
     if (typeof salaObj.duracionMin === "number" && document.activeElement !== document.getElementById("selDur")) document.getElementById("selDur").value = String(salaObj.duracionMin);
     if (salaObj.minLapSec && document.activeElement !== document.getElementById("selMinLap")) document.getElementById("selMinLap").value = String(salaObj.minLapSec);
-    if (salaObj.sensPct && document.activeElement !== document.getElementById("selSensDir")) document.getElementById("selSensDir").value = String(salaObj.sensPct);
+    if (salaObj.sensPct && document.activeElement !== document.getElementById("rngSens")) {
+      document.getElementById("rngSens").value = salaObj.sensPct;
+      document.getElementById("lblSensDir").textContent = salaObj.sensPct + "%";
+    }
 
     var md = salaObj.modoDet || "TODO";
     document.getElementById("bModTodo").style.background = (md === "TODO") ? "#ffc107" : "#2b2b2b";
@@ -1285,15 +1395,13 @@ function pintarSalaUI() {
           tel.style.color = "#00e676";
           tel.textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
         }
-        if ((testOn || !a0.calibrada) && (Date.now() - _lastImgFetch) > 900) {
-          _lastImgFetch = Date.now();
-          fetch(FB_IMG + "/" + selId + ".json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(imObj){
-            if (imObj && imObj.img) document.getElementById("imgAntDir").src = imObj.img;
-          }).catch(function(){});
-        }
+        gestionarStreamImagen(selId, testOn || !a0.calibrada);
+      } else {
+        gestionarStreamImagen("", false);
       }
     } else {
       document.getElementById("lblTelAntDir").textContent = "Sin antenas conectadas";
+      gestionarStreamImagen("", false);
     }
   }
 
@@ -1321,13 +1429,25 @@ function pintarSalaUI() {
     br.textContent = "📣 " + salaObj.reaccion.autor + ": " + salaObj.reaccion.texto;
   } else br.style.display = "none";
 
-  var pils = ordenarPilotos(), h = "";
+  var pils = ordenarPilotos(), activosCnt = 0, h = "";
   pils.forEach(function(p, ix) {
+    if (p.activo) activosCnt++;
     if (p.id === uid) document.getElementById("vivoPos").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
-    var btnMenos = (esDir && p.vueltas > 0) ? ' <button onclick="restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:2px 6px;font-size:10px;margin-left:4px">-1v</button>' : '';
-    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span><b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + btnMenos + '</span></div>';
+    var dot = p.activo ? "🟢" : "⚪";
+    var btnMenos = (esDir && p.vueltas > 0) ? ' <button onclick="restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:2px 6px;font-size:10px;margin-left:3px">-1v</button>' : '';
+    var btnKick = esDir ? ' <button onclick="expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:2px 6px;font-size:10px;margin-left:3px">✕</button>' : '';
+    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + btnMenos + btnKick + '</span></div>';
   });
-  document.getElementById("listaSala").innerHTML = h || "Esperando pilotos...";
+  var lStat = document.getElementById("lblPistaStatus");
+  if (activosCnt > 0) {
+    lStat.style.color = "#20c997";
+    lStat.textContent = "🟢 " + activosCnt + (activosCnt === 1 ? " PILOTO EN PISTA" : " PILOTOS EN PISTA");
+  } else {
+    lStat.style.color = "#888";
+    lStat.textContent = "⚪ PISTA VACIA (0 PILOTOS CONECTADOS)";
+  }
+  if (_soloDirector && !pilotosAll[uid]) document.getElementById("vivoPos").textContent = "👑 DIR";
+  document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando en pista ahora mismo.";
 
   var est = salaObj.estado || "ESPERA", t0 = Number(salaObj.tsInicio || 0), ov = document.getElementById("overlaySem");
   var estTxt = est;
@@ -1422,10 +1542,45 @@ function pintarSalaUI() {
 inscribirPilotoAuto();
 actualizarRango();
 
-if (esDir) {
-  setInterval(function() {
+setInterval(function() {
+  if (!_soloDirector) {
+    fetch(FB + "/pilotos/" + uid + ".json", {
+      method: "PATCH",
+      body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() })
+    }).catch(function(){});
+  }
+  if (esDir) {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirTs: ahoraSrv() }) }).catch(function(){});
-  }, 15000);
+  }
+}, 7000);
+
+function bindSseNode(nodePath, getObj, setObj, onDone) {
+  try {
+    var es = new EventSource(FB + nodePath);
+    var handler = function(e) {
+      try {
+        var m = JSON.parse(e.data);
+        if (!m || !m.path) return;
+        var target = getObj();
+        if (m.path === "/") {
+          if (e.type === "put") { target = m.data || {}; setObj(target); }
+          else Object.assign(target, m.data || {});
+        } else {
+          var key = m.path.slice(1).split("/")[0];
+          if (m.path === "/" + key) {
+            if (m.data === null) delete target[key];
+            else target[key] = m.data;
+          } else if (key) {
+            if (typeof target[key] !== "object" || !target[key]) target[key] = {};
+            if (m.data && typeof m.data === "object") Object.assign(target[key], m.data);
+          }
+        }
+        onDone();
+      } catch (er) {}
+    };
+    es.addEventListener("put", handler);
+    es.addEventListener("patch", handler);
+  } catch (e) {}
 }
 
 try {
@@ -1442,27 +1597,9 @@ try {
   esEv.addEventListener("put", onEvSse);
   esEv.addEventListener("patch", onEvSse);
 
-  var esSalaP = new EventSource(FB + "/sala.json");
-  var onSalaSse = function(e) {
-    try {
-      var m = JSON.parse(e.data);
-      if (!m || !m.path) return;
-      if (m.path === "/") {
-        if (e.type === "put") salaObj = m.data || {};
-        else Object.assign(salaObj, m.data || {});
-      } else {
-        var key = m.path.slice(1).split("/")[0];
-        if (m.path === "/" + key) salaObj[key] = m.data;
-        else if (key) {
-          if (typeof salaObj[key] !== "object" || !salaObj[key]) salaObj[key] = {};
-          if (m.data && typeof m.data === "object") Object.assign(salaObj[key], m.data);
-        }
-      }
-      pintarSalaUI();
-    } catch (er) {}
-  };
-  esSalaP.addEventListener("put", onSalaSse);
-  esSalaP.addEventListener("patch", onSalaSse);
+  bindSseNode("/sala.json", function(){ return salaObj; }, function(v){ salaObj = v; }, pintarSalaUI);
+  bindSseNode("/pilotos.json", function(){ return pilotosAll; }, function(v){ pilotosAll = v; }, pintarSalaUI);
+  bindSseNode("/antenas.json", function(){ return antsAll; }, function(v){ antsAll = v; }, pintarSalaUI);
 } catch (e) {}
 
 setInterval(function() {
@@ -1478,7 +1615,7 @@ setInterval(function() {
     pintarSalaUI();
     if (_tabAct === "tiempos") pintarTiempos();
   }).catch(function(){});
-}, 1400);
+}, 2200);
 
 setInterval(function() {
   var yo = pilotosAll[uid] || {};

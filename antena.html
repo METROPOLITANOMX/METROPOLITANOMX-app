@@ -56,7 +56,7 @@
   <canvas id="cnvFf" width="320" height="180" style="display:none"></canvas>
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
-    <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | PASOS: 0</div>
+    <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | UMBRAL: 7%</div>
     <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal y zona plana. Control 100% remoto desde Direccion.</div>
   </div>
 
@@ -81,6 +81,7 @@ var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, posX = 50, fondo = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _golpeFrames = 0, _movidaTs = 0, _audioCtx = null;
+var _telBusy = false, _imgBusy = false;
 var salaCache = {}, cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, sensPct: 0.07, garajes: {} };
 
 function activarWakeLock() {
@@ -90,6 +91,13 @@ document.addEventListener("visibilitychange", function(){
   if (document.visibilityState === "visible") activarWakeLock();
 });
 activarWakeLock();
+
+window.addEventListener("beforeunload", function() {
+  if (antId) {
+    fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
+    fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
+  }
+});
 
 function desbloquearAudio(avisar) {
   try {
@@ -117,6 +125,7 @@ function elegirRanura(id, nom) {
   document.getElementById("modalRanura").style.display = "none";
   document.getElementById("lblNomAnt").textContent = "📡 " + nom;
   calibradaOk = false; est = "SIN_CAL"; _imgCleared = false;
+  enviarTelemetria();
   hablar(nom + " conectada, esperando calibracion desde direccion");
 }
 function elegirTemporal() {
@@ -125,7 +134,7 @@ function elegirTemporal() {
   elegirRanura("tmp_" + Math.random().toString(36).slice(2, 6), n.trim().toUpperCase());
 }
 function ayudaAnt() {
-  alert("GUIA DE ANTENA PRO (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en recta/zona plana (no en recepcion de salto). Si usas 2, pon una a cada lado para cruces en paralelo.\n3. Pulsa 🔊 AUDIO para activar la voz en Android.\n4. Calibra desde Direccion (o cuenta 10s amistosa).\n5. Tras calibrar, pulsa 🌙 OLED para apagar la pantalla bajo el sol.\n• Si el viento o un golpe mueve el tripode, la antena avisa y se recalibra sola.\n• Cada paso guarda un Foto-Finish automatico.");
+  alert("GUIA DE ANTENA PRO (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en recta/zona plana.\n3. Pulsa 🔊 AUDIO para activar la voz.\n4. Desde Direccion puedes ver el video fluido, mover la linea roja y ajustar el deslizador de umbral (2%-25%) para cualquier paso.\n5. Tras calibrar, pulsa 🌙 OLED para apagar la pantalla bajo el sol.");
 }
 function hablar(t) {
   if (!vozOn || !("speechSynthesis" in window)) return;
@@ -149,6 +158,7 @@ function setPosX(p) { posX = p; document.getElementById("lin").style.left = p + 
 function calibrarFondo() {
   fondo = null; swCol = {}; framesHit = 0; _golpeFrames = 0; ultMsPorPiloto = {};
   est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
+  enviarTelemetria();
   hablar("Calibrando pista vacia");
 }
 function salirAntena() {
@@ -180,6 +190,9 @@ var _cnv = document.getElementById("cnv");
 var _ctx = _cnv.getContext("2d", { willReadFrequently: true });
 var _cnvFf = document.getElementById("cnvFf");
 var _ctxFf = _cnvFf.getContext("2d");
+var _cnvLive = document.createElement("canvas");
+_cnvLive.width = 480; _cnvLive.height = 270;
+var _ctxLive = _cnvLive.getContext("2d");
 
 function emitirPaso(pid) {
   pasos++; beep();
@@ -188,6 +201,7 @@ function emitirPaso(pid) {
     method: "PUT",
     body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos })
   }).catch(function(){});
+  enviarTelemetria();
 
   try {
     _ctxFf.drawImage(_cnv, 0, 0, 320, 180);
@@ -195,7 +209,7 @@ function emitirPaso(pid) {
     _ctxFf.fillRect(Math.round((posX / 100) * 320) - 1, 0, 2, 180);
     fetch(FB_FF, {
       method: "PUT",
-      body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.55) })
+      body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.58) })
     }).catch(function(){});
   } catch (e) {}
 
@@ -253,7 +267,7 @@ function procFrame() {
   var mov = 0, gObj = cfg.garajes || {}, ks = Object.keys(gObj), cnt = {};
   for (var i = 0; i < d.length; i += 8) {
     var dr = Math.abs(d[i] - fondo[i]) + Math.abs(d[i + 1] - fondo[i + 1]) + Math.abs(d[i + 2] - fondo[i + 2]);
-    if (dr < 55) continue;
+    if (dr < 45) continue;
     mov++;
     if (cfg.modoDet === "CAR" && ks.length) {
       var py = Math.floor((i / 4) / 90), zn = (py < 72) ? "SUP" : "INF";
@@ -280,9 +294,10 @@ function procFrame() {
 
   var pct = mov / nSamples, pctInt = Math.round(pct * 100);
   var sens = cfg.sensPct || 0.07;
+  var resetPct = Math.min(0.025, sens * 0.45);
   window._movVivo = pctInt;
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
-  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | MOV: " + pctInt + "% | PASOS: " + pasos + " | " + _fpsVal + "fps";
+  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | MOV: " + pctInt + "% / MIN: " + Math.round(sens * 100) + "% | PASOS: " + pasos + " | " + _fpsVal + "fps";
 
   if (pct >= 0.48) {
     _golpeFrames++;
@@ -299,7 +314,7 @@ function procFrame() {
     _golpeFrames = 0;
   }
 
-  if (pct < 0.025) {
+  if (pct < resetPct) {
     est = "LIBRE"; swCol = {}; framesHit = 0;
     document.getElementById("lblEstado").textContent = "VIGILANDO META (LIBRE)";
     document.getElementById("lblEstado").style.color = "#00e676";
@@ -312,7 +327,7 @@ function procFrame() {
   }
 
   if (pct >= sens) framesHit++; else framesHit = 0;
-  var picoRapido = (pct >= Math.max(0.14, sens * 2));
+  var picoRapido = (pct >= Math.max(0.10, sens * 1.8));
 
   if (cfg.modoDet === "TODO") {
     if (est === "LIBRE" && (framesHit >= 2 || picoRapido) && (ah - ultMs) > 1200) {
@@ -369,6 +384,15 @@ function procesarSala(s) {
   }
 }
 
+function enviarTelemetria() {
+  if (!antId || _telBusy) return;
+  _telBusy = true;
+  fetch(FB + "/antenas/" + antId + ".json", {
+    method: "PUT",
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs })
+  }).catch(function(){}).finally(function(){ _telBusy = false; });
+}
+
 try {
   var esSala = new EventSource(FB + "/sala.json");
   var onSse = function(ev) {
@@ -393,27 +417,25 @@ try {
   esSala.addEventListener("patch", onSse);
 } catch (e) {}
 
+setInterval(enviarTelemetria, 350);
+
 setInterval(function() {
   if (!antId) return;
-  fetch(FB + "/antenas/" + antId + ".json", {
-    method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs })
-  }).catch(function(){});
-
   var v = document.getElementById("vid");
   if ((cfg.verVivo || !calibradaOk) && camOk && v && v.videoWidth > 0) {
+    if (_imgBusy) return;
+    _imgBusy = true;
     _imgCleared = false;
-    var c2 = document.createElement("canvas"); c2.width = 426; c2.height = 240;
-    c2.getContext("2d").drawImage(v, 0, 0, 426, 240);
+    _ctxLive.drawImage(v, 0, 0, 480, 270);
     fetch(FB_IMG + "/" + antId + ".json", {
       method: "PUT",
-      body: JSON.stringify({ ts: ahoraSrv(), img: c2.toDataURL("image/jpeg", 0.56) })
-    }).catch(function(){});
+      body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.68) })
+    }).catch(function(){}).finally(function(){ _imgBusy = false; });
   } else if (!_imgCleared && calibradaOk && !cfg.verVivo) {
     _imgCleared = true;
     fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
   }
-}, 800);
+}, 250);
 
 setInterval(function() {
   fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){

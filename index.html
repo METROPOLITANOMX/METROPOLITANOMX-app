@@ -547,10 +547,14 @@ function verMapaCircuito() {
   }
 }
 
+function limpiarIcono(txt) {
+  return String(txt || "").replace(/^(🏁|🌍)\s*/, "").trim();
+}
+
 function cambiarCircuitoIdx(val) {
   var s = document.getElementById("selCircuitoIdx");
   circAct = val || "METROPOLITANO";
-  circNom = (s && s.options[s.selectedIndex]) ? s.options[s.selectedIndex].text.replace(/^[^\w]+/, "").trim() : circAct;
+  circNom = (s && s.options[s.selectedIndex]) ? limpiarIcono(s.options[s.selectedIndex].text) : circAct;
   localStorage.setItem("mxp_circ_id", circAct);
   localStorage.setItem("mxp_circ_nom", circNom);
   gpsCirc = null;
@@ -580,7 +584,7 @@ function cargarListaCircuitos() {
       localStorage.setItem("mxp_circ_nom", circNom);
       s.value = circAct;
     } else {
-      circNom = s.options[s.selectedIndex].text.replace(/^[^\w]+/, "").trim();
+      circNom = limpiarIcono(s.options[s.selectedIndex].text);
       localStorage.setItem("mxp_circ_nom", circNom);
     }
   }).catch(function(){});
@@ -624,22 +628,38 @@ function guardarNuevoCircuito() {
 }
 
 function actualizarEstadoSala() {
-  fbJson(FB_CIRC() + "/sala.json?t=" + Date.now()).then(function(s) {
+  var t = Date.now();
+  Promise.all([
+    fbJson(FB_CIRC() + "/sala.json?t=" + t).catch(function(){ return null; }),
+    fbJson(FB_CIRC() + "/antenas.json?t=" + t).catch(function(){ return null; }),
+    fbJson(FB_CIRC() + "/pilotos.json?t=" + t).catch(function(){ return null; })
+  ]).then(function(res) {
+    var s = res[0] || {}, ants = res[1] || {}, pils = res[2] || {};
     var bv = document.getElementById("btnVivo");
     var bh = document.getElementById("banHotlap");
-    if (!s) {
-      gpsCirc = null;
-      bv.style.display = "none";
-      if (bh) bh.textContent = esIngles ? "👑 WEEKLY HOTLAP: Be the first to set a time!" : "👑 HOTLAP SEMANAL: ¡Se el primero en marcar tiempo!";
-      return;
-    }
-    if (s.gps) gpsCirc = s.gps;
-    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || s.estado === "SALIDA_30" || s.estado === "VALLA_MX" || (s.ultPasoTs && (ahoraSrv() - Number(s.ultPasoTs)) < 600000));
-    bv.style.display = activo ? "block" : "none";
-    if (activo) {
-      bv.textContent = s.ultPasoTxt
-        ? ("🔴 " + (esIngles ? "LIVE: " : "EN VIVO: ") + s.ultPasoTxt + (esIngles ? " — WATCH" : " — VER"))
-        : (esIngles ? "🔴 RIDING NOW — WATCH LIVE" : "🔴 RODANDO AHORA — VER EN VIVO");
+    gpsCirc = s.gps || null;
+
+    var ah = ahoraSrv();
+    var antOk = Object.keys(ants).some(function(k) {
+      return ants[k] && Math.abs(ah - Number(ants[k].ts || 0)) < 15000;
+    });
+    var pilActivos = Object.keys(pils).filter(function(k) {
+      var p = pils[k];
+      return p && (p.enPista !== false) && p.tsActivo && Math.abs(ah - Number(p.tsActivo)) < 25000;
+    }).length;
+    var pasoReciente = !!(s.ultPasoTs && (ah - Number(s.ultPasoTs)) < 600000);
+    var sesionActiva = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || s.estado === "SALIDA_30" || s.estado === "VALLA_MX" || pasoReciente);
+
+    var mostrarVivo = antOk && (pilActivos > 0 || sesionActiva);
+    bv.style.display = mostrarVivo ? "block" : "none";
+    if (mostrarVivo) {
+      if (pasoReciente && s.ultPasoTxt) {
+        bv.textContent = "🔴 " + (esIngles ? "LIVE: " : "EN VIVO: ") + s.ultPasoTxt + (esIngles ? " — WATCH" : " — VER");
+      } else if (pilActivos > 0) {
+        bv.textContent = "🔴 " + pilActivos + (esIngles ? " ON TRACK — WATCH LIVE" : " EN PISTA — VER EN VIVO");
+      } else {
+        bv.textContent = esIngles ? "🔴 TRACK LIVE — WATCH NOW" : "🔴 PISTA EN DIRECTO — VER EN VIVO";
+      }
     }
     if (bh) {
       bh.textContent = s.hotlapTxt

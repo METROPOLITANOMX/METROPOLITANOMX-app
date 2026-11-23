@@ -66,7 +66,10 @@
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <b id="titClasV" style="color:#ffc107;font-size:12px">CLASIFICACION Y SETUPS EN PISTA</b>
+      <div>
+        <b id="titClasV" style="color:#ffc107;font-size:12px">CLASIFICACION Y SETUPS EN PISTA</b>
+        <div id="lblPistaVivo" style="font-size:11px;color:#888;font-weight:bold">Comprobando pista...</div>
+      </div>
       <span id="subClasV" style="font-size:10px;color:#888">Toca un piloto para ver reglaje</span>
     </div>
     <div id="listaVivo">Cargando pilotos...</div>
@@ -141,8 +144,8 @@ function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"
 
 function ayudaVivo() {
   alert(esIngles
-    ? "LIVE FAN SCREEN:\n• Watch live lap times & deltas for every game mode (Normal, Bomb 45s, Elimination 60s, King, Superpole & Crazy Roulette).\n• Tap any rider to inspect their bike & setup.\n• Tap 📸 VIEW LATEST FINISH PHOTO to see the exact crossing frame.\n• Vote in the fastest lap poll before race start & send live cheers!"
-    : "PANTALLA EN VIVO:\n• Sigue los tiempos y diferencias al lider en directo (Normal, Bomba 45s, Eliminacion 60s, Rey, Superpole y Ruleta Loca MX).\n• Toca cualquier piloto para ver su moto y reglaje.\n• Pulsa 📸 VER ULTIMO FOTO-FINISH para ver la captura de meta.\n• Vota en la porra antes de la salida, mira los puntos del Campeonato y manda animos en directo.");
+    ? "LIVE FAN SCREEN:\n• Green dot 🟢 shows riders currently live on track.\n• Watch live lap times & deltas for all game modes (Normal, Bomb 45s, Elimination 60s, King, Superpole & Crazy Roulette).\n• Tap any rider to inspect their bike & setup.\n• Tap 📸 VIEW LATEST FINISH PHOTO to see the exact crossing frame.\n• Vote in the fastest lap poll before race start & send live cheers!"
+    : "PANTALLA EN VIVO:\n• El punto verde 🟢 indica quien esta conectado ahora mismo en pista.\n• Sigue tiempos y diferencias al instante (Normal, Bomba 45s, Eliminacion 60s, Rey, Superpole y Ruleta Loca MX).\n• Toca cualquier piloto para ver su moto y reglaje.\n• Pulsa 📸 VER ULTIMO FOTO-FINISH para ver la captura de meta.\n• Vota en la porra antes de la salida, mira el Campeonato y manda animos en directo.");
 }
 
 function verFotoFinishV() {
@@ -196,6 +199,10 @@ function verSetupRival(pid) {
   document.getElementById("modalSetupV").style.display = "flex";
 }
 
+function esPilotoActivoV(p) {
+  return p && (p.enPista !== false) && p.tsActivo && Math.abs(ahoraSrv() - Number(p.tsActivo)) < 25000;
+}
+
 function pintarVivo() {
   var s = _salaCache || {}, pObj = _pilotosCache || {}, gObj = _garajeCache || {};
   document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
@@ -232,7 +239,12 @@ function pintarVivo() {
     brV.textContent = "🎲 " + s.ruleta.texto;
   } else brV.style.display = "none";
 
-  var pils = Object.keys(pObj).filter(function(k){ return pObj[k] && pObj[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pObj[k]); });
+  var pils = Object.keys(pObj).filter(function(k){
+    var p = pObj[k];
+    if (!p || !p.nombre) return false;
+    return esPilotoActivoV(p) || (Number(p.vueltas || 0) > 0);
+  }).map(function(k){ return Object.assign({ id: k, activo: esPilotoActivoV(pObj[k]) }, pObj[k]); });
+
   var mj = s.modoJuego || "NORMAL";
   if (mj === "REY" || mj === "SUPERPOLE") {
     pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
@@ -258,9 +270,9 @@ function pintarVivo() {
     document.getElementById("resPorra").textContent = vResumen ? ((esIngles ? "Poll votes: " : "Votos porra: ") + vResumen) : "";
   }
 
-  var p1 = pils.length ? pils[0] : null;
-  var h = "";
+  var p1 = pils.length ? pils[0] : null, activosCnt = 0, h = "";
   pils.forEach(function(p, ix) {
+    if (p.activo) activosCnt++;
     var g = gObj[p.id] || {};
     var mod = g.modelo || "Losi Promoto-MX";
     var difTxt = "";
@@ -273,11 +285,20 @@ function pintarVivo() {
         difTxt = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
       }
     }
+    var dot = p.activo ? "🟢" : "⚪";
     h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
-      '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + esc(difTxt) + ')</span>' +
+      '<div>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + esc(difTxt) + ')</span>' +
       '<div style="font-size:10px;color:#888">🏍️ ' + esc(mod) + ' (' + esc(g.disc || "MX") + ') • ' + (esIngles ? "Tap for setup" : "Toca para ver setup") + '</div></div>' +
       '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">' + (esIngles ? "Last: " : "Ult: ") + fmt(p.ultimaMs) + '</div></div></div>';
   });
+  var lpv = document.getElementById("lblPistaVivo");
+  if (activosCnt > 0) {
+    lpv.style.color = "#20c997";
+    lpv.textContent = "🟢 " + activosCnt + (esIngles ? " RIDER(S) ON TRACK" : (activosCnt === 1 ? " PILOTO EN PISTA" : " PILOTOS EN PISTA"));
+  } else {
+    lpv.style.color = "#888";
+    lpv.textContent = esIngles ? "⚪ TRACK EMPTY (0 RIDERS)" : "⚪ PISTA VACIA (0 PILOTOS)";
+  }
   document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">' + (esIngles ? "No riders on track right now." : "Ningun piloto rodando ahora mismo.") + '</div>';
 
   var mp = {}, mKeys = Object.keys(_campCache || {});
@@ -319,54 +340,42 @@ function refrescarVivo() {
   }).catch(function(){});
 }
 
-try {
-  var esSalaV = new EventSource(FB + "/sala.json");
-  var onSalaV = function(e) {
-    try {
-      var m = JSON.parse(e.data);
-      if (!m || !m.path) return;
-      if (m.path === "/") {
-        if (e.type === "put") _salaCache = m.data || {};
-        else Object.assign(_salaCache, m.data || {});
-      } else {
-        var k = m.path.slice(1).split("/")[0];
-        if (m.path === "/" + k) _salaCache[k] = m.data;
-        else if (k) {
-          if (typeof _salaCache[k] !== "object" || !_salaCache[k]) _salaCache[k] = {};
-          if (m.data && typeof m.data === "object") Object.assign(_salaCache[k], m.data);
+function bindSseV(nodePath, getObj, setObj) {
+  try {
+    var es = new EventSource(FB + nodePath);
+    var handler = function(e) {
+      try {
+        var m = JSON.parse(e.data);
+        if (!m || !m.path) return;
+        var target = getObj();
+        if (m.path === "/") {
+          if (e.type === "put") { target = m.data || {}; setObj(target); }
+          else Object.assign(target, m.data || {});
+        } else {
+          var k = m.path.slice(1).split("/")[0];
+          if (m.path === "/" + k) {
+            if (m.data === null) delete target[k];
+            else target[k] = m.data;
+          } else if (k) {
+            if (typeof target[k] !== "object" || !target[k]) target[k] = {};
+            if (m.data && typeof m.data === "object") Object.assign(target[k], m.data);
+          }
         }
-      }
-      pintarVivo();
-    } catch (er) {}
-  };
-  esSalaV.addEventListener("put", onSalaV);
-  esSalaV.addEventListener("patch", onSalaV);
+        pintarVivo();
+      } catch (er) {}
+    };
+    es.addEventListener("put", handler);
+    es.addEventListener("patch", handler);
+  } catch (e) {}
+}
 
-  var esPilV = new EventSource(FB + "/pilotos.json");
-  var onPilV = function(e) {
-    try {
-      var m = JSON.parse(e.data);
-      if (!m || !m.path) return;
-      if (m.path === "/") {
-        if (e.type === "put") _pilotosCache = m.data || {};
-        else Object.assign(_pilotosCache, m.data || {});
-      } else {
-        var k = m.path.slice(1).split("/")[0];
-        if (m.path === "/" + k) _pilotosCache[k] = m.data;
-        else if (k) {
-          if (typeof _pilotosCache[k] !== "object" || !_pilotosCache[k]) _pilotosCache[k] = {};
-          if (m.data && typeof m.data === "object") Object.assign(_pilotosCache[k], m.data);
-        }
-      }
-      pintarVivo();
-    } catch (er) {}
-  };
-  esPilV.addEventListener("put", onPilV);
-  esPilV.addEventListener("patch", onPilV);
-} catch (e) {}
+bindSseV("/sala.json", function(){ return _salaCache; }, function(v){ _salaCache = v; });
+bindSseV("/pilotos.json", function(){ return _pilotosCache; }, function(v){ _pilotosCache = v; });
+bindSseV("/garaje.json", function(){ return _garajeCache; }, function(v){ _garajeCache = v; });
+bindSseV("/campeonato.json", function(){ return _campCache; }, function(v){ _campCache = v; });
 
 refrescarVivo();
-setInterval(refrescarVivo, 2000);
+setInterval(refrescarVivo, 2200);
 </script>
 </body>
 </html>
