@@ -13,6 +13,7 @@
   .card{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px;margin:0 auto 8px;max-width:560px;text-align:left}
   button{padding:9px 12px;font-size:12px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
   .fila{display:flex;justify-content:space-between;align-items:center;padding:9px 6px;border-bottom:1px solid #222;font-size:13px}
+  .elim{opacity:0.45;text-decoration:line-through}
   .reac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
   .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:999;justify-content:center;align-items:center;padding:16px}
   .modal-box{width:100%;max-width:380px;background:#161616;border:2px solid #0dcaf0;border-radius:14px;padding:16px;text-align:left}
@@ -24,6 +25,15 @@
       <div id="mSetTit" style="font-size:16px;font-weight:bold;color:#ffc107;margin-bottom:6px">🏍️ PILOTO</div>
       <div id="mSetBody" style="font-size:13px;line-height:1.5;color:#ddd;margin-bottom:12px"></div>
       <button id="btnCerrarSet" onclick="document.getElementById('modalSetupV').style.display='none'" style="width:100%;background:#0dcaf0;color:#000">CERRAR</button>
+    </div>
+  </div>
+
+  <div id="modalFfV" class="modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="border-color:#ffc107;text-align:center">
+      <div id="titFfV" style="font-size:14px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
+      <img id="imgFfV" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
+      <div id="txtFfInfoV" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
+      <button id="btnCerrarFfV" onclick="document.getElementById('modalFfV').style.display='none'" style="width:100%;background:#ffc107;color:#000">CERRAR</button>
     </div>
   </div>
 
@@ -43,6 +53,8 @@
     <div id="lblEstV" style="font-size:16px;font-weight:bold;color:#ffc107">CONECTANDO CON PISTA...</div>
     <div id="lblSubV" style="font-size:12px;color:#0dcaf0;margin-top:4px">Sincronizando tiempos en vivo</div>
     <div id="lblModV" style="font-size:11px;color:#aaa;margin-top:4px"></div>
+    <div id="banRuletaV" style="display:none;background:#3a164a;border:1px solid #d63384;border-radius:7px;padding:6px;margin-top:6px;font-size:12px;color:#ffc107;font-weight:bold"></div>
+    <button id="btnFfV" onclick="verFotoFinishV()" style="width:100%;margin-top:8px;background:#1c2530;color:#0dcaf0;border:1px solid #0dcaf0;padding:8px;font-size:11px">📸 VER ULTIMO FOTO-FINISH EN META</button>
   </div>
 
   <div id="boxPorra" class="card" style="display:none;border-color:#0dcaf0">
@@ -58,6 +70,11 @@
       <span id="subClasV" style="font-size:10px;color:#888">Toca un piloto para ver reglaje</span>
     </div>
     <div id="listaVivo">Cargando pilotos...</div>
+  </div>
+
+  <div id="boxCampVivo" class="card" style="display:none;border-color:#20c997">
+    <b id="titCampV" style="color:#20c997;font-size:12px">🏆 CAMPEONATO DEL DIA (MANGAS)</b>
+    <div id="listaCampV" style="margin-top:6px;font-size:12px"></div>
   </div>
 
   <div class="card">
@@ -77,6 +94,7 @@ var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
 var FB = FB_ROOT + "/circuitos/" + circId;
+var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 
 var _offSrv = 0;
 fetch(FB_BASE + ".info/serverTimeOffset.json")
@@ -86,7 +104,7 @@ fetch(FB_BASE + ".info/serverTimeOffset.json")
 function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
-var votoHecho = false, ultReacMs = 0, _salaCache = {}, _garajeCache = {}, _pilotosCache = {};
+var votoHecho = false, ultReacMs = 0, _salaCache = {}, _garajeCache = {}, _pilotosCache = {}, _campCache = {};
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
 document.getElementById("lblCircV").textContent = "🏁 " + circNom;
@@ -99,9 +117,13 @@ if (esIngles) {
   document.getElementById("btnSalirV").textContent = "Exit";
   document.getElementById("lblEstV").textContent = "CONNECTING TO TRACK...";
   document.getElementById("lblSubV").textContent = "Syncing live timing";
+  document.getElementById("btnFfV").textContent = "📸 VIEW LATEST FINISH PHOTO";
+  document.getElementById("titFfV").textContent = "📸 FINISH LINE PHOTO";
+  document.getElementById("btnCerrarFfV").textContent = "CLOSE";
   document.getElementById("titPorraV").textContent = "🎯 PRE-START POLL: WHO SETS FASTEST LAP?";
   document.getElementById("titClasV").textContent = "LIVE STANDINGS & TRACK SETUPS";
   document.getElementById("subClasV").textContent = "Tap a rider to inspect setup";
+  document.getElementById("titCampV").textContent = "🏆 TODAY'S CHAMPIONSHIP (HEATS)";
   document.getElementById("titReacV").textContent = "👏 CHEER RIDERS ON TRACK";
   document.getElementById("bReac1").textContent = "🔥 FAST LAP!";
   document.getElementById("bReac2").textContent = "👏 LET'S GO!";
@@ -119,8 +141,25 @@ function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"
 
 function ayudaVivo() {
   alert(esIngles
-    ? "LIVE VIEW:\n• Tap any rider to inspect their bike & setup.\n• Vote in the fastest lap poll before race start.\n• Send live cheers directly to the riders!"
-    : "PANTALLA EN VIVO:\n• Toca cualquier piloto para ver su moto y reglaje.\n• Vota en la porra antes de la salida.\n• Manda animos en directo a la pista.");
+    ? "LIVE FAN SCREEN:\n• Watch live lap times & deltas for every game mode (Normal, Bomb 45s, Elimination 60s, King, Superpole & Crazy Roulette).\n• Tap any rider to inspect their bike & setup.\n• Tap 📸 VIEW LATEST FINISH PHOTO to see the exact crossing frame.\n• Vote in the fastest lap poll before race start & send live cheers!"
+    : "PANTALLA EN VIVO:\n• Sigue los tiempos y diferencias al lider en directo (Normal, Bomba 45s, Eliminacion 60s, Rey, Superpole y Ruleta Loca MX).\n• Toca cualquier piloto para ver su moto y reglaje.\n• Pulsa 📸 VER ULTIMO FOTO-FINISH para ver la captura de meta.\n• Vota en la porra antes de la salida, mira los puntos del Campeonato y manda animos en directo.");
+}
+
+function verFotoFinishV() {
+  document.getElementById("modalFfV").style.display = "flex";
+  document.getElementById("txtFfInfoV").textContent = esIngles ? "Loading Photo-Finish..." : "Cargando ultimo Foto-Finish...";
+  document.getElementById("imgFfV").src = "";
+  fetch(FB_FF).then(function(r){ return r.ok ? r.json() : null; }).then(function(ff) {
+    if (!ff || !ff.img) {
+      document.getElementById("txtFfInfoV").textContent = esIngles ? "No finish photo yet." : "Aun no hay captura de Foto-Finish.";
+      return;
+    }
+    document.getElementById("imgFfV").src = ff.img;
+    var nomP = (ff.pid && _pilotosCache[ff.pid]) ? _pilotosCache[ff.pid].nombre : (ff.modo === "TODO" ? (esIngles ? "Any bike" : "Cualquier moto") : (esIngles ? "Crossing" : "Paso en meta"));
+    document.getElementById("txtFfInfoV").textContent = (ff.antNom || "Meta") + " • " + nomP + " • " + new Date(ff.ts).toLocaleTimeString(esIngles ? "en-US" : "es-ES");
+  }).catch(function() {
+    document.getElementById("txtFfInfoV").textContent = esIngles ? "Photo unavailable." : "Sin foto disponible.";
+  });
 }
 
 function enviarReac(txt) {
@@ -162,8 +201,8 @@ function pintarVivo() {
   document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
 
   var est = s.estado || "ESPERA";
-  var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
-  var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
+  var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
+  var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY (RANDOM DROP)", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
   var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
 
   if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) {
@@ -187,16 +226,23 @@ function pintarVivo() {
     ? ((esIngles ? "MODE: " : "MODO: ") + s.modoJuego)
     : "";
 
+  var brV = document.getElementById("banRuletaV");
+  if (s.modoJuego === "RULETA" && s.ruleta && s.ruleta.texto) {
+    brV.style.display = "block";
+    brV.textContent = "🎲 " + s.ruleta.texto;
+  } else brV.style.display = "none";
+
   var pils = Object.keys(pObj).filter(function(k){ return pObj[k] && pObj[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pObj[k]); });
-  if ((s.modoJuego || "NORMAL") === "REY") {
+  var mj = s.modoJuego || "NORMAL";
+  if (mj === "REY" || mj === "SUPERPOLE") {
     pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
   } else {
-    pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+    pils.sort(function(a, b){ return ((a.eliminado ? 1 : 0) - (b.eliminado ? 1 : 0)) || ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
   }
 
   var bp = document.getElementById("boxPorra");
   if (bp) {
-    var mostrarPorra = (est === "SALIDA_30" || est === "WARMUP" || est === "ESPERA") && pils.length > 0;
+    var mostrarPorra = (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP" || est === "ESPERA") && pils.length > 0;
     bp.style.display = mostrarPorra ? "block" : "none";
     if (!votoHecho && pils.length) {
       document.getElementById("listaPorra").innerHTML = pils.map(function(p) {
@@ -219,7 +265,7 @@ function pintarVivo() {
     var mod = g.modelo || "Losi Promoto-MX";
     var difTxt = "";
     if (ix > 0 && p1) {
-      if ((s.modoJuego || "NORMAL") === "REY" && p.mejorMs && p1.mejorMs) {
+      if ((mj === "REY" || mj === "SUPERPOLE") && p.mejorMs && p1.mejorMs) {
         difTxt = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
       } else if ((p1.vueltas || 0) > (p.vueltas || 0)) {
         difTxt = " • -" + ((p1.vueltas || 0) - (p.vueltas || 0)) + "v";
@@ -227,12 +273,31 @@ function pintarVivo() {
         difTxt = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
       }
     }
-    h += '<div class="fila" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
-      '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(difTxt) + ')</span>' +
+    h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="verSetupRival(\'' + esc(p.id) + '\')">' +
+      '<div><b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + esc(difTxt) + ')</span>' +
       '<div style="font-size:10px;color:#888">🏍️ ' + esc(mod) + ' (' + esc(g.disc || "MX") + ') • ' + (esIngles ? "Tap for setup" : "Toca para ver setup") + '</div></div>' +
       '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">' + (esIngles ? "Last: " : "Ult: ") + fmt(p.ultimaMs) + '</div></div></div>';
   });
   document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">' + (esIngles ? "No riders on track right now." : "Ningun piloto rodando ahora mismo.") + '</div>';
+
+  var mp = {}, mKeys = Object.keys(_campCache || {});
+  mKeys.forEach(function(mk) {
+    var m = _campCache[mk];
+    if (!m || !Array.isArray(m.res)) return;
+    m.res.forEach(function(r) {
+      if (!mp[r.id]) mp[r.id] = { nombre: r.nombre, dorsal: r.dorsal || "1", pts: 0, mejorMs: 0 };
+      mp[r.id].pts += Number(r.puntos || 0);
+      if (r.mejorMs && (!mp[r.id].mejorMs || r.mejorMs < mp[r.id].mejorMs)) mp[r.id].mejorMs = r.mejorMs;
+    });
+  });
+  var campArr = Object.keys(mp).map(function(k){ return mp[k]; }).sort(function(a, b){ return (b.pts - a.pts) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+  var bc = document.getElementById("boxCampVivo");
+  if (campArr.length) {
+    bc.style.display = "block";
+    document.getElementById("listaCampV").innerHTML = campArr.map(function(x, i){
+      return '<div class="fila"><span><b>' + (i + 1) + 'º #' + esc(x.dorsal) + ' ' + esc(x.nombre) + '</b></span><b style="color:#ffc107">' + x.pts + ' pts</b></div>';
+    }).join("");
+  } else bc.style.display = "none";
 
   var mr = document.getElementById("muroReac");
   if (mr && s.reaccion && s.reaccion.texto) {
@@ -249,6 +314,7 @@ function refrescarVivo() {
     _salaCache = root.sala || {};
     _pilotosCache = root.pilotos || {};
     _garajeCache = root.garaje || {};
+    _campCache = root.campeonato || {};
     pintarVivo();
   }).catch(function(){});
 }

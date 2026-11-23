@@ -133,11 +133,22 @@
     <div id="mRep" class="msg"></div>
   </div>
 
-  <div id="pGuia" class="card" style="font-size:13px;line-height:1.5;color:#ddd">
-    <h3 id="titGuia" style="color:#ffc107;margin:0 0 8px">📲 INSTALAR APP Y GUIA</h3>
-    <div id="txtGuiaBody">
-      <b>1. Instalar en movil:</b><br>• <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) arriba y elige <i>"Instalar aplicacion"</i>.<br>• <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> y elige <i>"Añadir a pantalla de inicio"</i>.<br><br>
-      <b>2. Categoria 1/4 MX:</b><br>Circuito para motos RC escala 1/4 (Losi Promoto-MX). Trae tu moto, baterias LiPo cargadas y unete a nuestras mangas.<br>
+  <div id="pGuia" class="card" style="font-size:12px;line-height:1.5;color:#ddd">
+    <h3 id="titGuia" style="color:#ffc107;margin:0 0 8px">📲 INSTALAR APP Y GUIA COMPLETA</h3>
+    <div id="txtGuiaBody" class="list-scroll" style="max-height:54vh;padding:8px">
+      <b>1. Instalar en movil (PWA Offline):</b><br>
+      • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) arriba y elige <i>"Instalar aplicacion"</i>.<br>
+      • <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> y elige <i>"Añadir a pantalla de inicio"</i>.<br><br>
+      <b>2. Motos 1/4 RC (Losi Promoto-MX y SM):</b><br>
+      • Registra tu moto en <b>GARAJE</b>, elige <b>MX Tierra</b> o <b>SM Supermoto</b>, haz hasta 4 fotos y captura los colores en directo.<br>
+      • <i>Consejo PRO:</i> Poned un vinilo fluor diferente en la visera/casco y guardabarros trasero para que las antenas os distingan incluso con polvo.<br><br>
+      <b>3. Antenas de Meta (60 fps):</b><br>
+      • Coloca los moviles en zona plana y firme (no en recepcion de salto). Si usas 2, pon uno a cada lado de la recta para Foto-Finish doble.<br>
+      • Activa <b>🌙 OLED</b> en la antena tras calibrar para evitar calor bajo el sol.<br><br>
+      <b>4. Modos de Carrera y Salidas:</b><br>
+      • <b>Salidas:</b> Semaforo 30s o <b>Valla MX Aleatoria</b> (soltado sorpresa tras el cartel 5s).<br>
+      • <b>Modos:</b> Normal, Bomba 45s, Eliminacion 60s, Rey de la Pista, Superpole y <b>Ruleta Loca MX</b>.<br>
+      • Incluye <b>Delta por voz en el oido</b>, <b>Modo Bolsillo</b> (mantener 2s para desbloquear), <b>Foto-Finish</b> y <b>Campeonato por Mangas (Podio PNG)</b>.
     </div>
     <button id="btnMapaCirc" style="background:#20c997;color:#000;margin-top:10px;padding:11px;font-size:12px" onclick="verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
     <button id="btnGuiaCer" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">CERRAR</button>
@@ -226,8 +237,12 @@ function aplicarIdioma() {
   document.getElementById("repTxt").placeholder = "Write details here...";
   document.getElementById("btnEnviarRep").textContent = "SEND REPORT";
 
-  document.getElementById("titGuia").textContent = "📲 INSTALL APP & GUIDE";
-  document.getElementById("txtGuiaBody").innerHTML = "<b>1. Install on phone:</b><br>• <b>Android (Chrome):</b> Tap the 3 dots (⋮) and choose <i>\"Install app\"</i>.<br>• <b>iPhone (Safari):</b> Tap <i>Share</i> and choose <i>\"Add to Home Screen\"</i>.<br><br><b>2. 1/4 MX Class:</b><br>Track app for 1/4 scale RC motorcycles (Losi Promoto-MX). Bring your bike, charged LiPo packs and join the heats.<br>";
+  document.getElementById("titGuia").textContent = "📲 INSTALL APP & FULL GUIDE";
+  document.getElementById("txtGuiaBody").innerHTML =
+    "<b>1. Install PWA (Offline Ready):</b><br>• <b>Android (Chrome):</b> Tap the 3 dots (⋮) and choose <i>\"Install app\"</i>.<br>• <b>iPhone (Safari):</b> Tap <i>Share</i> and choose <i>\"Add to Home Screen\"</i>.<br><br>" +
+    "<b>2. 1/4 RC Bikes (Losi Promoto-MX & SM):</b><br>• Set up your bike in <b>GARAGE</b> (MX Dirt or SM Supermoto), take 4 live photos & capture side colors.<br>• <i>PRO Tip:</i> Use bright neon tape on helmet visor & rear fender for dust-proof color detection.<br><br>" +
+    "<b>3. Finish Antennas (60 fps):</b><br>• Place phones on a flat straight (never on jump landings). Use 🌙 <b>OLED</b> mode under direct sunlight.<br><br>" +
+    "<b>4. Race Modes & Features:</b><br>• Starts: 30s Grid or <b>Random MX Gate Drop</b>.<br>• Modes: Normal, Time Bomb 45s, Elimination 60s, King of Track, Superpole & <b>Crazy Roulette</b>.<br>• Includes live voice delta, 2s hold Pocket Lock, Photo-Finish & Overall Championship Podium PNG.";
   document.getElementById("btnMapaCirc").textContent = "📍 VIEW TRACK LOCATION";
   document.getElementById("btnGuiaCer").textContent = "CLOSE";
 
@@ -619,7 +634,7 @@ function actualizarEstadoSala() {
       return;
     }
     if (s.gps) gpsCirc = s.gps;
-    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || s.estado === "SALIDA_30" || (s.ultPasoTs && (ahoraSrv() - Number(s.ultPasoTs)) < 600000));
+    var activo = (s.estado === "EN_CURSO" || s.estado === "WARMUP" || s.estado === "SALIDA_30" || s.estado === "VALLA_MX" || (s.ultPasoTs && (ahoraSrv() - Number(s.ultPasoTs)) < 600000));
     bv.style.display = activo ? "block" : "none";
     if (activo) {
       bv.textContent = s.ultPasoTxt

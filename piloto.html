@@ -20,6 +20,7 @@
   input,select{width:100%;background:#202020;border:1px solid #444;color:#fff;padding:8px;border-radius:7px;font-size:12px;margin-bottom:6px}
   .fila{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #222;font-size:13px}
   .yo{background:#142b24;border-left:4px solid #20c997;border-radius:6px}
+  .elim{opacity:0.45;text-decoration:line-through}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .grid4{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
   .stat{background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:10px;text-align:center}
@@ -34,22 +35,36 @@
   .cam-guia{position:absolute;inset:14% 16%;border:2px dashed #ffc107;border-radius:8px;pointer-events:none}
   .cam-div{position:absolute;left:16%;right:16%;top:48%;border-top:1px dashed rgba(13,202,240,0.85);pointer-events:none}
   #overlaySem{display:none;position:fixed;inset:0;background:#c9182b;z-index:9999;flex-direction:column;justify-content:center;align-items:center}
-  #bolsillo{display:none;position:fixed;inset:0;background:#000;z-index:9998;flex-direction:column;justify-content:center;align-items:center}
+  #bolsillo{display:none;position:fixed;inset:0;background:#000;z-index:9998;flex-direction:column;justify-content:space-between;align-items:center;padding:40px 20px;user-select:none;-webkit-user-select:none}
 </style>
 </head>
 <body>
   <div id="overlaySem">
-    <div id="numSem" style="font-size:24vw;font-weight:bold;color:#fff">00:30</div>
+    <div id="numSem" style="font-size:21vw;font-weight:bold;color:#fff">00:30</div>
     <div id="txtSem" style="font-size:20px;font-weight:bold;color:#fff">PREPARADOS</div>
   </div>
 
-  <div id="bolsillo" ondblclick="this.style.display='none'">
-    <div style="font-size:40px">🔒</div>
-    <div style="color:#ffc107;font-weight:bold;margin:8px">MODO BOLSILLO</div>
-    <div id="relBol" style="font-size:36px;color:#20c997;font-weight:bold">EN PISTA</div>
-    <div style="font-size:11px;color:#777;margin-top:10px">DOBLE TOQUE PARA DESBLOQUEAR</div>
+  <!-- MODO BOLSILLO ANTI-ROCES (MANTENER 2s PARA DESBLOQUEAR) -->
+  <div id="bolsillo">
+    <div style="font-size:12px;color:#444">MODO BOLSILLO ACTIVO</div>
+    <div>
+      <div style="font-size:38px">🔒</div>
+      <div id="relBol" style="font-size:40px;color:#20c997;font-weight:bold;margin-top:8px">EN PISTA</div>
+      <div id="deltaBol" style="font-size:14px;color:#ffc107;margin-top:6px"></div>
+    </div>
+    <div style="width:100%;max-width:300px">
+      <div style="height:6px;background:#1a1a1a;border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div id="barUnlockBol" style="height:100%;width:0%;background:#ffc107"></div>
+      </div>
+      <button id="btnUnlockBol"
+        onpointerdown="iniciarUnlockBol()" onpointerup="cancelarUnlockBol()" onpointerleave="cancelarUnlockBol()" onpointercancel="cancelarUnlockBol()"
+        style="width:100%;background:#1a1a1a;color:#bbb;border:1px solid #333;padding:14px;font-size:11px">
+        MANTEN PULSADO 2s PARA DESBLOQUEAR
+      </button>
+    </div>
   </div>
 
+  <!-- MODAL CAMARA EN DIRECTO PARA FOTOS DE GARAJE (SIN INPUT FILE) -->
   <div id="modalCamFoto" class="cam-modal">
     <div class="cam-box">
       <div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div>
@@ -60,6 +75,16 @@
         <button onclick="capturarFotoSlot()" style="background:#20c997;color:#000">📸 HACER FOTO</button>
         <button onclick="cerrarCamFoto()" style="background:#dc3545;color:#fff">CANCELAR</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL FOTO-FINISH -->
+  <div id="modalFf" class="cam-modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="cam-box" style="border-color:#ffc107">
+      <div id="titFf" style="font-size:13px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
+      <img id="imgFf" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
+      <div id="txtFfInfo" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
+      <button onclick="document.getElementById('modalFf').style.display='none'" style="width:100%;background:#ffc107;color:#000">CERRAR</button>
     </div>
   </div>
 
@@ -88,20 +113,29 @@
 
   <!-- PESTAÑA 1: SALA PISTA -->
   <div id="sec_sala">
+    <button id="btnUnlockAudioP" onclick="desbloquearAudioP(true)" style="width:100%;max-width:560px;margin:0 auto 8px;background:#ffc107;color:#000;display:block;padding:11px;font-size:12px">
+      🔊 TOCA AQUI PARA ACTIVAR AUDIO Y VOZ EN PISTA
+    </button>
+
     <div class="card" style="border-color:#0dcaf0;text-align:center">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span id="lblAntVivo" style="font-size:11px;font-weight:bold;color:#ff4d5e">📡 ANTENAS: BUSCANDO...</span>
         <span id="lblEstadoSala" style="font-size:14px;font-weight:bold;color:#20c997">ESPERA</span>
       </div>
       <div id="lblModoSala" style="font-size:11px;color:#ffc107;margin-top:4px;font-weight:bold">MODO: CARRERA NORMAL</div>
+      <div id="banRuleta" style="display:none;background:#3a164a;border:1px solid #d63384;border-radius:7px;padding:6px;margin-top:6px;font-size:12px;color:#ffc107;font-weight:bold"></div>
       <div id="banReacVivo" style="display:none;background:#1e2618;border:1px solid #20c997;border-radius:7px;padding:5px;margin-top:6px;font-size:11px;color:#20c997;font-weight:bold"></div>
+
       <div class="grid2" style="margin-top:8px">
         <div class="stat"><div style="font-size:10px;color:#888">POSICION / SALA</div><div id="vivoPos" style="font-size:19px;font-weight:bold;color:#ffc107">--</div></div>
         <div class="stat"><div style="font-size:10px;color:#888">VUELTA EN CURSO</div><div id="vivoReloj" style="font-size:19px;font-weight:bold;color:#20c997">00.0s</div></div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:8px">
-        <button onclick="document.getElementById('bolsillo').style.display='flex'" style="flex:1;background:#262626;color:#ffc107;font-size:11px">🔒 MODO BOLSILLO</button>
-        <button onclick="sumarVueltaManual()" style="flex:1;background:#20c997;color:#000;font-size:11px">+ VUELTA MANUAL</button>
+      <div id="lblDeltaVivo" style="font-size:12px;font-weight:bold;color:#aaa;margin-top:6px">Ultima: --</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+        <button onclick="abrirBolsillo()" style="background:#262626;color:#ffc107;font-size:10px;padding:10px 4px">🔒 BOLSILLO</button>
+        <button onclick="verFotoFinish()" style="background:#1c2530;color:#0dcaf0;font-size:10px;padding:10px 4px">📸 FOTO-FINISH</button>
+        <button onclick="sumarVueltaManual()" style="background:#20c997;color:#000;font-size:10px;padding:10px 4px">+ VUELTA</button>
       </div>
     </div>
 
@@ -111,7 +145,8 @@
         <button id="btnCalAmistosa" onclick="calibrarConCuenta10()" style="grid-column:span 2;background:#0dcaf0;color:#000;margin-bottom:2px">📍 CALIBRAR ANTENA (CUENTA ATRAS 10s)</button>
         <button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
         <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 SALIDA 30s</button>
-        <button onclick="cmdSala('ESPERA')" style="grid-column:span 2;background:#333;color:#fff;font-size:11px">🛑 PARAR / ESPERA</button>
+        <button onclick="cmdSala('VALLA_MX')" style="background:#6f42c1;color:#fff">🚧 VALLA MX</button>
+        <button onclick="cmdSala('ESPERA')" style="background:#333;color:#fff">🛑 PARAR</button>
       </div>
     </div>
 
@@ -125,9 +160,11 @@
       <div class="grid2" style="margin-top:8px">
         <select id="selJuego" onchange="cfgDir()">
           <option value="NORMAL">Carrera Normal</option>
-          <option value="BOMBA">Bomba Reloj (45s)</option>
-          <option value="ELIM">Eliminacion (60s)</option>
-          <option value="REY">Rey de la Pista</option>
+          <option value="BOMBA">💣 Bomba Reloj (45s)</option>
+          <option value="ELIM">💀 Eliminacion (60s)</option>
+          <option value="REY">👑 Rey de la Pista</option>
+          <option value="SUPERPOLE">⏱️ Superpole (1 Vuelta)</option>
+          <option value="RULETA">🎲 Ruleta Loca MX</option>
         </select>
         <select id="selDur" onchange="cfgDir()">
           <option value="5">5 Minutos</option>
@@ -136,18 +173,27 @@
           <option value="0">Entreno Libre</option>
         </select>
       </div>
-      <select id="selMinLap" onchange="cfgDir()">
-        <option value="4">Anti-rebote vuelta min: 4s (Pista corta)</option>
-        <option value="5" selected>Anti-rebote vuelta min: 5s (Normal)</option>
-        <option value="8">Anti-rebote vuelta min: 8s (Media)</option>
-        <option value="12">Anti-rebote vuelta min: 12s (Circuito 1/4 MX)</option>
-        <option value="18">Anti-rebote vuelta min: 18s (Pista larga)</option>
-      </select>
+      <div class="grid2">
+        <select id="selMinLap" onchange="cfgDir()">
+          <option value="4">Vuelta min: 4s</option>
+          <option value="5" selected>Vuelta min: 5s</option>
+          <option value="8">Vuelta min: 8s</option>
+          <option value="12">Vuelta min: 12s (MX 1/4)</option>
+          <option value="18">Vuelta min: 18s</option>
+        </select>
+        <select id="selSensDir" onchange="cfgDir()">
+          <option value="5">Sensibilidad: Alta (5%)</option>
+          <option value="7" selected>Sensibilidad: Normal (7%)</option>
+          <option value="11">Anti-sombras (11%)</option>
+        </select>
+      </div>
       <div class="grid2" style="margin-top:2px">
         <button onclick="cmdSala('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
-        <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 DAR SALIDA 30s</button>
+        <button onclick="cmdSala('SALIDA_30')" style="background:#20c997;color:#000">🚦 SALIDA 30s</button>
+        <button onclick="cmdSala('VALLA_MX')" style="background:#6f42c1;color:#fff">🚧 VALLA MX ALEATORIA</button>
         <button onclick="cmdSala('ESPERA')" style="background:#dc3545;color:#fff">🛑 PARAR MANGA</button>
         <button onclick="nuevaMangaDir()" style="background:#0dcaf0;color:#000">🔄 NUEVA MANGA</button>
+        <button onclick="guardarMangaCamp()" style="background:#ffc107;color:#000">🏆 GUARDAR MANGA</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px">
         <button onclick="ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:10px">🟨 AMARILLA</button>
@@ -170,15 +216,22 @@
           <div id="linAntDir" style="position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a"></div>
           <div id="lblTelAntDir" style="position:absolute;bottom:6px;left:6px;right:6px;background:rgba(0,0,0,0.85);color:#00e676;padding:5px;border-radius:5px;font-size:11px;font-family:monospace">Esperando antena...</div>
         </div>
+        <div style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0;margin-bottom:2px">
+            <span>AJUSTE FINO LINEA ROJA:</span><b id="lblPosXDir">50%</b>
+          </div>
+          <input id="rngPosX" type="range" min="15" max="85" value="50" oninput="document.getElementById('lblPosXDir').textContent=this.value+'%';document.getElementById('linAntDir').style.left=this.value+'%'" onchange="cmdAntDir(Number(this.value))" style="margin:0">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:6px">
-          <button onclick="cmdAntDir(25)" style="background:#2b2b2b;color:#fff;font-size:10px">◀ IZQ</button>
-          <button onclick="cmdAntDir(50)" style="background:#0dcaf0;color:#000;font-size:10px">CENTRO</button>
-          <button onclick="cmdAntDir(75)" style="background:#2b2b2b;color:#fff;font-size:10px">DER ▶</button>
+          <button onclick="cmdAntDir(25)" style="background:#2b2b2b;color:#fff;font-size:10px">◀ 25%</button>
+          <button onclick="cmdAntDir(50)" style="background:#0dcaf0;color:#000;font-size:10px">50%</button>
+          <button onclick="cmdAntDir(75)" style="background:#2b2b2b;color:#fff;font-size:10px">75% ▶</button>
         </div>
         <button onclick="cmdAntDir(-1)" style="width:100%;margin-top:5px;background:#20c997;color:#000;font-size:11px">📍 RE-CALIBRAR PISTA VACIA</button>
       </div>
 
       <div style="margin-top:10px;border-top:1px solid #2b3a4a;padding-top:8px">
+        <button onclick="resetCampDir()" style="width:100%;background:#3a1c1c;color:#ff4d5e;font-size:11px;margin-bottom:6px">🗑️ REINICIAR CAMPEONATO DEL DIA</button>
         <button onclick="cargarClubDir()" style="width:100%;background:#262626;color:#ffc107;font-size:11px">👥 GESTIONAR CUENTAS Y VISITAS</button>
         <div id="boxClubDir" style="display:none;margin-top:8px;font-size:11px;max-height:260px;overflow-y:auto"></div>
         <button onclick="verReportesDir()" style="width:100%;margin-top:6px;background:#262626;color:#ff4d5e;font-size:11px">🛠️ VER REPORTES DE PROBLEMAS</button>
@@ -223,7 +276,7 @@
           <div class="cam-div"></div>
         </div>
         <button onclick="capturarColorVivo()" style="width:100%;background:#0dcaf0;color:#000;margin-bottom:8px">📸 CAPTURAR COLORES DEL VISOR</button>
-        <div style="font-size:10px;color:#aaa;margin-bottom:4px">O ajusta colores manualmente (casco arriba / carenado abajo):</div>
+        <div style="font-size:10px;color:#aaa;margin-bottom:4px">O ajusta colores manualmente (casco arriba / guardabarros abajo):</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
           <button onclick="addColManual(235,25,25,'SUP')" style="background:#eb1919;width:28px;height:26px;padding:0"></button>
           <button onclick="addColManual(255,140,0,'INF')" style="background:#ff8c00;width:28px;height:26px;padding:0"></button>
@@ -266,6 +319,14 @@
       </div>
     </div>
 
+    <div class="card" style="border-color:#20c997">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b style="color:#20c997;font-size:12px">🏆 CAMPEONATO DEL DIA (MANGAS MXGP)</b>
+        <button onclick="descargarPodioPng()" style="background:#ffc107;color:#000;padding:4px 8px;font-size:10px">🖼️ PODIO PNG</button>
+      </div>
+      <div id="boxCampDia" style="margin-top:6px;font-size:12px;color:#ccc">Aun no hay mangas guardadas hoy.</div>
+    </div>
+
     <div class="card" style="border-color:#0dcaf0">
       <b style="color:#0dcaf0;font-size:12px">⚔️ DUELO 1 VS 1 Y SETUPS RIVALES</b>
       <select id="selRivalDuelo" onchange="pintarDuelo()" style="margin-top:6px"></select>
@@ -287,6 +348,7 @@ var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
 var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
+var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 
 var _offSrv = 0;
 fetch(FB_BASE + ".info/serverTimeOffset.json")
@@ -304,14 +366,15 @@ document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 if (esDir) document.getElementById("panelDir").style.display = "block";
 
-var vozP = true, salaObj = {}, antsAll = {}, garajesAll = {}, pilotosAll = {}, motosGar = [], idxMoto = 0, colsTmpGar = [], ladoCap = 1, histDias = [];
+var vozP = true, salaObj = {}, antsAll = {}, garajesAll = {}, pilotosAll = {}, campObj = {}, motosGar = [], idxMoto = 0, colsTmpGar = [], ladoCap = 1, histDias = [];
 try { motosGar = JSON.parse(localStorage.getItem("mxp_gar_" + uid) || "[]"); } catch (e) {}
 try { histDias = JSON.parse(localStorage.getItem("mxp_hist_" + uid) || "[]"); } catch (e) {}
 if (!motosGar.length) motosGar = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} }];
 
 var _streamFoto = null, _streamCol = null, _slotFotoAct = 0;
 var _tabAct = "sala", _ultEvP = {}, _lockVtaLocal = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false, avisoFinManga = false;
-var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null, _lastImgFetch = 0;
+var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null, _lastImgFetch = 0, _audioCtxP = null, _audioUnlocked = false;
+var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMovidaAviso = 0;
 
 function activarWakeLock() {
   if ("wakeLock" in navigator) navigator.wakeLock.request("screen").catch(function(){});
@@ -333,16 +396,62 @@ function fbJson(url, opt) {
   });
 }
 function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
+
+function desbloquearAudioP(hablarConfirm) {
+  try {
+    if (!_audioCtxP) _audioCtxP = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtxP && _audioCtxP.state === "suspended") _audioCtxP.resume();
+  } catch (e) {}
+  _audioUnlocked = true;
+  var b = document.getElementById("btnUnlockAudioP");
+  if (b) b.style.display = "none";
+  if (hablarConfirm) { beepP(880, 90); hablarP("Audio de pista activado"); }
+}
+function beepP(freq, ms) {
+  try {
+    if (!_audioCtxP) _audioCtxP = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtxP.state === "suspended") _audioCtxP.resume();
+    var o = _audioCtxP.createOscillator(), g = _audioCtxP.createGain();
+    o.frequency.value = freq || 740; g.gain.value = 0.25; o.connect(g); g.connect(_audioCtxP.destination);
+    o.start(); setTimeout(function(){ o.stop(); }, ms || 160);
+  } catch (e) {}
+}
 function hablarP(t) {
   if (!vozP || !("speechSynthesis" in window)) return;
   try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.06; speechSynthesis.speak(u); } catch (e) {}
 }
 function toggleVozP() {
+  desbloquearAudioP(false);
   vozP = !vozP;
   var b = document.getElementById("btnVozP");
   b.textContent = vozP ? "Voz ON" : "Voz OFF";
   b.style.background = vozP ? "#20c997" : "#444";
 }
+
+function abrirBolsillo() {
+  desbloquearAudioP(false);
+  document.getElementById("bolsillo").style.display = "flex";
+  try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); } catch (e) {}
+}
+function iniciarUnlockBol() {
+  if (_tUnlockBol) return;
+  _pctUnlockBol = 0;
+  _tUnlockBol = setInterval(function() {
+    _pctUnlockBol += 5;
+    document.getElementById("barUnlockBol").style.width = _pctUnlockBol + "%";
+    if (_pctUnlockBol >= 100) {
+      cancelarUnlockBol();
+      document.getElementById("bolsillo").style.display = "none";
+      try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch (e) {}
+    }
+  }, 90);
+}
+function cancelarUnlockBol() {
+  if (_tUnlockBol) { clearInterval(_tUnlockBol); _tUnlockBol = null; }
+  _pctUnlockBol = 0;
+  document.getElementById("barUnlockBol").style.width = "0%";
+}
+
 function detenerCamaras() {
   if (_streamFoto) { _streamFoto.getTracks().forEach(function(t){ t.stop(); }); _streamFoto = null; }
   if (_streamCol) { _streamCol.getTracks().forEach(function(t){ t.stop(); }); _streamCol = null; }
@@ -355,9 +464,9 @@ function salirPiloto() {
 }
 function ayudaTab() {
   var g = {
-    sala: "PESTAÑA SALA PISTA:\n1. Quedas inscrito automaticamente al entrar (incluido Director).\n2. En Modo Amistoso puedes calibrar con cuenta atras de 10s, lanzar Warm-Up 3 min o Salida 30s.\n3. El tiempo de vuelta usa el reloj exacto de la antena para precision a la centesima.",
-    garaje: "PESTAÑA GARAJE:\n1. Elige disciplina MX Tierra o SM Supermoto y guarda tus reglajes.\n2. Toca los 4 recuadros para hacer fotos con la camara en directo.\n3. Pulsa CAPTURAR COLORES (prioriza casco y guardabarros trasero flúor).",
-    tiempos: "PESTAÑA TIEMPOS:\n1. Consulta tu Mejor Vuelta, Regularidad %, Vueltas Totales y Rango.\n2. Selecciona un rival para ver el Duelo 1 vs 1 y su setup exacto.\n3. Descarga la tarjeta resumen PNG de cualquier jornada."
+    sala: "PESTAÑA SALA PISTA:\n1. Toca primero el boton amarillo para activar la voz en tu movil.\n2. Al entrar quedas inscrito automaticamente (incluido Director).\n3. Salidas: Semaforo 30s o VALLA MX ALEATORIA (tras cartel 5s suelta la salida por sorpresa).\n4. Modos: Normal, Bomba 45s (explota al llegar a 0), Eliminacion 60s (elimina al ultimo), Rey, Superpole y Ruleta Loca MX.\n5. Usa 🔒 BOLSILLO (manten 2s para desbloquear) para escuchar Delta en el oido.\n6. Pulsa 📸 FOTO-FINISH para ver la captura de meta.\n7. Direccion: deslizador fino 15-85%, sensibilidad anti-sombras, -1v y Guardar Manga al Campeonato.",
+    garaje: "PESTAÑA GARAJE:\n1. Elige MX Tierra o SM Supermoto y guarda tu setup.\n2. Toca los 4 recuadros para hacer fotos con la camara en directo.\n3. Pulsa CAPTURAR COLORES y escanea ambos lados (usa vinilo fluor en casco y guardabarros trasero).",
+    tiempos: "PESTAÑA TIEMPOS:\n1. Consulta Mejor Vuelta, Regularidad %, Vueltas Totales y Rango.\n2. Revisa la tabla del Campeonato del Dia (25-22-20 pts...) y descarga el PODIO PNG.\n3. Haz Duelo 1 vs 1 viendo moto y setup del rival, y descarga tarjetas PNG diarias."
   };
   alert(g[_tabAct] || g.sala);
 }
@@ -374,6 +483,23 @@ function verTab(t) {
   if (t === "tiempos") pintarTiempos();
 }
 
+function verFotoFinish() {
+  document.getElementById("modalFf").style.display = "flex";
+  document.getElementById("txtFfInfo").textContent = "Cargando ultimo Foto-Finish...";
+  document.getElementById("imgFf").src = "";
+  fbJson(FB_FF).then(function(ff) {
+    if (!ff || !ff.img) {
+      document.getElementById("txtFfInfo").textContent = "Aun no hay captura de Foto-Finish.";
+      return;
+    }
+    document.getElementById("imgFf").src = ff.img;
+    var nomP = (ff.pid && pilotosAll[ff.pid]) ? pilotosAll[ff.pid].nombre : (ff.modo === "TODO" ? "Cualquier moto" : "Paso en meta");
+    document.getElementById("txtFfInfo").textContent = (ff.antNom || "Meta") + " • " + nomP + " • " + new Date(ff.ts).toLocaleTimeString("es-ES");
+  }).catch(function() {
+    document.getElementById("txtFfInfo").textContent = "Sin foto disponible.";
+  });
+}
+
 function inscribirPilotoAuto() {
   var m = motosGar[idxMoto] || motosGar[0];
   var dor = (m && m.dorsal) ? m.dorsal : "1";
@@ -383,7 +509,7 @@ function inscribirPilotoAuto() {
     if (!ex) {
       return fetch(FB + "/pilotos/" + uid + ".json", {
         method: "PUT",
-        body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, tsAlta: ahoraSrv() })
+        body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, tsAlta: ahoraSrv() })
       });
     } else {
       _ultVtasSinc = Number(ex.vueltas || 0);
@@ -630,7 +756,8 @@ function compartirSetupWa() {
 }
 
 function cmdSala(est) {
-  if (est === "WARMUP" || est === "SALIDA_30") {
+  desbloquearAudioP(false);
+  if (est === "WARMUP" || est === "SALIDA_30" || est === "VALLA_MX") {
     var aks = Object.keys(antsAll).filter(function(k){ return Math.abs(ahoraSrv() - Number(antsAll[k].ts || 0)) < 15000; });
     var algunaSinCal = aks.some(function(k){ return !antsAll[k].calibrada; });
     if (aks.length && algunaSinCal) {
@@ -638,12 +765,12 @@ function cmdSala(est) {
       return;
     }
   }
-  avisoFinManga = false;
-  avisoLipoP = false;
-  var pay = { estado: est, tsInicio: 0 };
+  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0;
+  var pay = { estado: est, tsInicio: 0, ruleta: null };
   if (esDir) pay.dirTs = ahoraSrv();
   if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; hablarP("Warm-up de 3 minutos iniciado"); }
   if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; hablarP("Atencion pilotos, 30 segundos para la salida"); }
+  if (est === "VALLA_MX") { pay.tsInicio = ahoraSrv() + 16000 + Math.floor(Math.random() * 2500); hablarP("Valla de motocross activada, 15 segundos y caida aleatoria"); }
   if (est === "ESPERA") { pay.tsInicio = 0; hablarP("Manga detenida"); }
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
 }
@@ -655,6 +782,7 @@ function cfgDir() {
       modoJuego: document.getElementById("selJuego").value,
       duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5,
+      sensPct: Number(document.getElementById("selSensDir").value) || 7,
       dirTs: ahoraSrv()
     })
   }).catch(function(){});
@@ -664,23 +792,45 @@ function nuevaMangaDir() {
   Object.keys(pilotosAll).forEach(function(k) {
     fetch(FB + "/pilotos/" + k + ".json", {
       method: "PATCH",
-      body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false })
+      body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false })
     }).catch(function(){});
   });
-  _ultVtasSinc = 0;
-  _ultLapSinc = 0;
-  _lockVtaLocal = {};
+  _ultVtasSinc = 0; _ultLapSinc = 0; _lockVtaLocal = {};
   fetch(FB + "/pasos_lock.json", { method: "DELETE" }).catch(function(){});
   fetch(FB + "/eventos.json", { method: "DELETE" }).catch(function(){});
   fetch(FB + "/sala/porra.json", { method: "DELETE" }).catch(function(){});
   cmdSala("ESPERA");
 }
 
+function guardarMangaCamp() {
+  var pils = ordenarPilotos();
+  if (!pils.length) { alert("No hay pilotos en clasificacion"); return; }
+  var pts = [25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+  var res = pils.map(function(p, i) {
+    return { id: p.id, nombre: p.nombre, dorsal: p.dorsal || "1", puntos: pts[i] || 1, vtas: p.vueltas || 0, mejorMs: p.mejorMs || 0 };
+  });
+  var mid = "m_" + ahoraSrv();
+  fbJson(FB + "/campeonato/" + mid + ".json", {
+    method: "PUT",
+    body: JSON.stringify({ ts: ahoraSrv(), res: res })
+  }).then(function() {
+    hablarP("Manga guardada en el campeonato");
+    alert("Manga guardada en el Campeonato del Dia ✓");
+  }).catch(function() { alert("Error guardando manga"); });
+}
+
+function resetCampDir() {
+  if (!confirm("¿Reiniciar todas las mangas del Campeonato del Dia?")) return;
+  fetch(FB + "/campeonato.json", { method: "DELETE" }).then(function(){
+    campObj = {};
+    alert("Campeonato reiniciado ✓");
+  }).catch(function(){});
+}
+
 function restarVueltaDir(pUid) {
   var p = pilotosAll[pUid];
   if (!p || !p.vueltas) return;
-  var oldV = Number(p.vueltas);
-  var newV = Math.max(0, oldV - 1);
+  var oldV = Number(p.vueltas), newV = Math.max(0, oldV - 1);
   var pay = { vueltas: newV, ultimaMs: 0 };
   if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
   fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
@@ -731,6 +881,7 @@ function setModoAnt(m) {
 }
 
 function calibrarConCuenta10() {
+  desbloquearAudioP(false);
   if (_tCal10) return;
   var s = 10, b = document.getElementById("btnCalAmistosa");
   hablarP("Coloca el movil en meta y retirate, calibrando en 10 segundos");
@@ -738,8 +889,7 @@ function calibrarConCuenta10() {
     if (b) b.textContent = "⏳ CALIBRANDO EN " + s + "s...";
     if (s <= 5 && s >= 1) hablarP(String(s));
     if (s <= 0) {
-      clearInterval(_tCal10);
-      _tCal10 = null;
+      clearInterval(_tCal10); _tCal10 = null;
       var aks = Object.keys(antsAll).filter(function(k){ return Math.abs(ahoraSrv() - Number(antsAll[k].ts || 0)) < 15000; });
       if (!aks.length) aks = ["ant_1"];
       aks.forEach(function(aid, ix) {
@@ -758,8 +908,12 @@ function cmdAntDir(px) {
   var idA = document.getElementById("selAntDir").value;
   if (!idA) return;
   var cmd = { ts: ahoraSrv(), antId: idA };
-  if (px > 0) { cmd.posX = px; document.getElementById("linAntDir").style.left = px + "%"; }
-  else cmd.calibrar = true;
+  if (px > 0) {
+    cmd.posX = px;
+    document.getElementById("linAntDir").style.left = px + "%";
+    document.getElementById("rngPosX").value = px;
+    document.getElementById("lblPosXDir").textContent = px + "%";
+  } else cmd.calibrar = true;
   fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify(cmd) }).catch(function(){});
 }
 
@@ -806,7 +960,7 @@ function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuenta
 
 function registrarVuelta(pUid, evTs) {
   var p = pilotosAll[pUid];
-  if (!p) return;
+  if (!p || p.eliminado) return;
   var ah = Number(evTs || ahoraSrv()), st = salaObj.estado || "ESPERA";
   var minLapMs = (Number(salaObj.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minLapMs) return;
@@ -833,10 +987,7 @@ function registrarVuelta(pUid, evTs) {
   fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
     if (ex && ex.ok) return;
     return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
-      p.tsUltimoPaso = ah;
-      p.vueltas = v;
-      p.ultimaMs = lap;
-      p.mejorMs = mej;
+      p.tsUltimoPaso = ah; p.vueltas = v; p.ultimaMs = lap; p.mejorMs = mej;
       fetch(FB + "/pilotos/" + pUid + ".json", {
         method: "PATCH",
         body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah })
@@ -851,19 +1002,42 @@ function registrarVuelta(pUid, evTs) {
   }).catch(function(){});
 }
 
-function sumarVueltaManual() { registrarVuelta(uid, ahoraSrv()); }
+function sumarVueltaManual() { desbloquearAudioP(false); registrarVuelta(uid, ahoraSrv()); }
 
 function procesarMiVueltaLocal(lap, mej) {
+  _bombaExplotada = false;
   var todasPrev = [];
   histDias.forEach(function(d){ if (Array.isArray(d.vtas)) todasPrev = todasPrev.concat(d.vtas); });
   var mejorHist = todasPrev.length ? Math.min.apply(null, todasPrev) : 0;
   var esRecordPers = (!mejorHist || lap < mejorHist);
-
-  guardarVtaLocal(lap);
+  var p1 = ordenarPilotos()[0];
   var v = pilotosAll[uid] ? pilotosAll[uid].vueltas : 1;
+
+  var difHtml = "Ultima: " + fmt(lap), difBol = fmt(lap);
   var voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
-  if (esRecordPers && v > 1) voz += ", mejor vuelta personal";
+
+  if (esRecordPers && v > 1 && mejorHist > 0) {
+    var dec = Math.max(1, Math.round((mejorHist - lap) / 100));
+    voz += ", record personal, " + dec + " decimas menos";
+    difHtml = "Ultima: <span style='color:#20c997'>" + fmt(lap) + " (-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢 RP)</span>";
+    difBol = "-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢";
+  } else if (p1 && p1.mejorMs) {
+    var dL = lap - Number(p1.mejorMs);
+    if (dL <= 0) {
+      voz += ", vuelta rapida de pista";
+      difHtml = "Ultima: <span style='color:#ffc107'>" + fmt(lap) + " (VUELTA RAPIDA 👑)</span>";
+      difBol = "LIDER 👑";
+    } else {
+      var decL = Math.max(1, Math.round(dL / 100));
+      voz += ", a " + decL + " decimas del mejor";
+      difHtml = "Ultima: <span style='color:#ff9f43'>" + fmt(lap) + " (+" + (dL / 1000).toFixed(2) + "s)</span>";
+      difBol = "+" + (dL / 1000).toFixed(2) + "s";
+    }
+  }
+  document.getElementById("lblDeltaVivo").innerHTML = difHtml;
+  document.getElementById("deltaBol").textContent = difBol;
   hablarP(voz);
+  guardarVtaLocal(lap);
 
   var mAct = motosGar[idxMoto] || motosGar[0], stM = mAct.setup || {};
   var stTx = [stM.terr, stM.horq, stM.amort, stM.des, stM.neum, stM.gyro].filter(Boolean).join(" • ") || "Serie";
@@ -873,14 +1047,9 @@ function procesarMiVueltaLocal(lap, mej) {
   fetch(FB_ROOT + "/mundial/" + uid + "_" + circId + ".json", {
     method: "PUT",
     body: JSON.stringify({
-      nombre: miNom,
-      circuito: circNom,
-      disc: mAct.disc || "MX",
+      nombre: miNom, circuito: circNom, disc: mAct.disc || "MX",
       sup: (mAct.disc === "SM" ? "SM Asfalto" : "MX Tierra"),
-      mejorMs: mej,
-      regPct: regM,
-      setupTxt: stTx,
-      ts: ahoraSrv()
+      mejorMs: mej, regPct: regM, setupTxt: stTx, ts: ahoraSrv()
     })
   }).catch(function(){});
 }
@@ -902,6 +1071,21 @@ function actualizarRango() {
   return { tot: tot, rng: rng };
 }
 
+function calcularCampeonato() {
+  var mp = {}, mKeys = Object.keys(campObj || {}).sort();
+  mKeys.forEach(function(mk) {
+    var m = campObj[mk];
+    if (!m || !Array.isArray(m.res)) return;
+    m.res.forEach(function(r) {
+      if (!mp[r.id]) mp[r.id] = { nombre: r.nombre, dorsal: r.dorsal || "1", pts: 0, mangas: 0, mejorMs: 0 };
+      mp[r.id].pts += Number(r.puntos || 0);
+      mp[r.id].mangas++;
+      if (r.mejorMs && (!mp[r.id].mejorMs || r.mejorMs < mp[r.id].mejorMs)) mp[r.id].mejorMs = r.mejorMs;
+    });
+  });
+  return { nMangas: mKeys.length, tabla: Object.keys(mp).map(function(k){ return mp[k]; }).sort(function(a, b){ return (b.pts - a.pts) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); }) };
+}
+
 function pintarTiempos() {
   var infoR = actualizarRango(), todas = [];
   histDias.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
@@ -911,6 +1095,14 @@ function pintarTiempos() {
   document.getElementById("stReg").textContent = med > 0 ? Math.max(50, Math.min(100, Math.round((mej / med) * 100))) + "%" : "--%";
   document.getElementById("stVtas").textContent = infoR.tot;
   document.getElementById("stRango").textContent = infoR.rng;
+
+  var cInfo = calcularCampeonato();
+  document.getElementById("boxCampDia").innerHTML = cInfo.tabla.length
+    ? ("<div style='font-size:10px;color:#0dcaf0;margin-bottom:4px'>Mangas puntuadas: <b>" + cInfo.nMangas + "</b></div>" +
+      cInfo.tabla.map(function(x, i){
+        return "<div class='fila'><span><b>" + (i + 1) + "º #" + esc(x.dorsal) + " " + esc(x.nombre) + "</b> (" + x.mangas + "m)</span><b style='color:#ffc107'>" + x.pts + " pts</b></div>";
+      }).join(""))
+    : "Aun no hay mangas guardadas hoy.";
 
   var sRiv = document.getElementById("selRivalDuelo");
   var rivs = Object.keys(pilotosAll).filter(function(k){ return k !== uid && pilotosAll[k] && pilotosAll[k].nombre; });
@@ -942,6 +1134,42 @@ function pintarDuelo() {
   }
   bx.innerHTML = "<div style='background:#111;padding:9px;border-radius:8px;margin-top:6px'><b>" + esc(miNom) + ":</b> " + fmt(yo.mejorMs) + " vs <b>" + esc(rv.nombre) + ":</b> " + fmt(rv.mejorMs) + difHtml +
     "<br><span style='color:#0dcaf0;font-size:11px'>Moto rival (" + esc(gR.disc || "MX") + "): " + esc(gR.modelo || "Losi Promoto-MX") + "<br>Setup: " + esc(gR.setupTxt || "Serie") + "</span></div>";
+}
+
+function descargarPodioPng() {
+  var cInfo = calcularCampeonato();
+  if (!cInfo.tabla.length) { alert("Guarda al menos una manga en el campeonato."); return; }
+  var cv = document.getElementById("cnvPng"), cx = cv.getContext("2d");
+  cx.fillStyle = "#0b0b0b"; cx.fillRect(0, 0, 720, 720);
+  cx.fillStyle = "#ffc107"; cx.fillRect(0, 0, 720, 18); cx.fillRect(0, 702, 720, 18);
+  cx.textAlign = "center";
+  cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial"; cx.fillText("PODIO OFICIAL — " + circNom.toUpperCase(), 360, 74);
+  cx.fillStyle = "#0dcaf0"; cx.font = "bold 20px Arial"; cx.fillText("CAMPEONATO (" + cInfo.nMangas + " MANGAS) • " + new Date().toLocaleDateString("es-ES"), 360, 112);
+
+  var t = cInfo.tabla;
+  var drawCol = function(ix, x, hBox, col, medalla) {
+    if (!t[ix]) return;
+    var yTop = 430 - hBox;
+    cx.fillStyle = "#181818"; cx.fillRect(x - 95, yTop, 190, hBox);
+    cx.strokeStyle = col; cx.lineWidth = 4; cx.strokeRect(x - 95, yTop, 190, hBox);
+    cx.fillStyle = col; cx.font = "bold 40px Arial"; cx.fillText(medalla, x, yTop - 48);
+    cx.fillStyle = "#fff"; cx.font = "bold 22px Arial"; cx.fillText(t[ix].nombre.slice(0, 12).toUpperCase(), x, yTop - 16);
+    cx.fillStyle = col; cx.font = "bold 32px Arial"; cx.fillText(t[ix].pts + " PTS", x, yTop + 48);
+    cx.fillStyle = "#aaa"; cx.font = "16px Arial"; cx.fillText("VR: " + fmt(t[ix].mejorMs), x, yTop + 82);
+  };
+  drawCol(1, 145, 130, "#c0c0c0", "2º");
+  drawCol(0, 360, 180, "#ffc107", "1º 👑");
+  drawCol(2, 575, 110, "#cd7f32", "3º");
+
+  cx.textAlign = "left";
+  cx.fillStyle = "#ccc"; cx.font = "18px Arial";
+  t.slice(3, 8).forEach(function(r, k){
+    cx.fillText((k + 4) + "º #" + r.dorsal + " " + r.nombre + " — " + r.pts + " pts (VR " + fmt(r.mejorMs) + ")", 80, 490 + k * 34);
+  });
+  var a = document.createElement("a");
+  a.download = "Podio_" + circId + ".png";
+  a.href = cv.toDataURL("image/png");
+  a.click();
 }
 
 function descargarPngDia(ix) {
@@ -977,10 +1205,13 @@ function descargarPngDia(ix) {
 
 function ordenarPilotos() {
   var pils = Object.keys(pilotosAll).filter(function(k){ return pilotosAll[k] && pilotosAll[k].nombre; }).map(function(k){ return Object.assign({ id: k }, pilotosAll[k]); });
-  if ((salaObj.modoJuego || "NORMAL") === "REY") {
+  var mj = salaObj.modoJuego || "NORMAL";
+  if (mj === "REY" || mj === "SUPERPOLE") {
     pils.sort(function(a, b){ return (a.mejorMs || 9e9) - (b.mejorMs || 9e9); });
   } else {
-    pils.sort(function(a, b){ return ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9)); });
+    pils.sort(function(a, b){
+      return ((a.eliminado ? 1 : 0) - (b.eliminado ? 1 : 0)) || ((b.vueltas || 0) - (a.vueltas || 0)) || ((a.mejorMs || 9e9) - (b.mejorMs || 9e9));
+    });
   }
   return pils;
 }
@@ -1017,6 +1248,8 @@ function pintarSalaUI() {
     if (salaObj.modoJuego && document.activeElement !== document.getElementById("selJuego")) document.getElementById("selJuego").value = salaObj.modoJuego;
     if (typeof salaObj.duracionMin === "number" && document.activeElement !== document.getElementById("selDur")) document.getElementById("selDur").value = String(salaObj.duracionMin);
     if (salaObj.minLapSec && document.activeElement !== document.getElementById("selMinLap")) document.getElementById("selMinLap").value = String(salaObj.minLapSec);
+    if (salaObj.sensPct && document.activeElement !== document.getElementById("selSensDir")) document.getElementById("selSensDir").value = String(salaObj.sensPct);
+
     var md = salaObj.modoDet || "TODO";
     document.getElementById("bModTodo").style.background = (md === "TODO") ? "#ffc107" : "#2b2b2b";
     document.getElementById("bModTodo").style.color = (md === "TODO") ? "#000" : "#fff";
@@ -1030,11 +1263,28 @@ function pintarSalaUI() {
         sA.innerHTML = aks.map(function(k){ return '<option value="' + esc(k) + '">' + esc(antsAll[k].nom || k) + '</option>'; }).join("");
         if (pv && aks.indexOf(pv) >= 0) sA.value = pv;
       }
-      var selId = sA.value || aks[0];
-      var a0 = antsAll[selId];
+      var selId = sA.value || aks[0], a0 = antsAll[selId];
       if (a0) {
-        if (a0.posX) document.getElementById("linAntDir").style.left = a0.posX + "%";
-        document.getElementById("lblTelAntDir").textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
+        if (a0.posX) {
+          document.getElementById("linAntDir").style.left = a0.posX + "%";
+          if (document.activeElement !== document.getElementById("rngPosX")) {
+            document.getElementById("rngPosX").value = a0.posX;
+            document.getElementById("lblPosXDir").textContent = a0.posX + "%";
+          }
+        }
+        var movidaReciente = (a0.movidaTs && (ahoraSrv() - Number(a0.movidaTs)) < 12000);
+        var tel = document.getElementById("lblTelAntDir");
+        if (movidaReciente) {
+          tel.style.color = "#ff4d5e";
+          tel.textContent = "⚠️ " + (a0.nom || "ANT") + " MOVIDA POR VIENTO/GOLPE — RECALIBRANDO";
+          if (a0.movidaTs !== _ultMovidaAviso) {
+            _ultMovidaAviso = a0.movidaTs;
+            hablarP("Alerta, antena movida, recalibrando");
+          }
+        } else {
+          tel.style.color = "#00e676";
+          tel.textContent = (a0.nom || "ANT") + (a0.calibrada ? " [✅ CALIBRADA]" : " [⚠️ SIN CALIBRAR]") + " | MOV: " + (a0.mov || 0) + "% | PASOS: " + (a0.pasos || 0);
+        }
         if ((testOn || !a0.calibrada) && (Date.now() - _lastImgFetch) > 900) {
           _lastImgFetch = Date.now();
           fetch(FB_IMG + "/" + selId + ".json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(imObj){
@@ -1051,8 +1301,19 @@ function pintarSalaUI() {
   document.getElementById("boxAmistosa").style.display = (!esDir && !dirOnline) ? "block" : "none";
   document.body.style.boxShadow = (salaObj.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
 
-  var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "⚡ ELIMINACION (60s)", REY: "👑 REY DE LA PISTA" };
+  var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE (1 VUELTA)", RULETA: "🎲 RULETA LOCA MX" };
   document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[salaObj.modoJuego || "NORMAL"] || "NORMAL") + (salaObj.bandera === "AMARILLA" ? " • 🟨 BANDERA AMARILLA" : "");
+
+  var brul = document.getElementById("banRuleta");
+  if ((salaObj.modoJuego === "RULETA") && salaObj.ruleta && salaObj.ruleta.texto) {
+    brul.style.display = "block";
+    brul.textContent = "🎲 " + salaObj.ruleta.texto;
+    if (salaObj.ruleta.ronda && salaObj.ruleta.ronda !== _ultRondaRuleta) {
+      _ultRondaRuleta = salaObj.ruleta.ronda;
+      beepP(660, 200);
+      hablarP(salaObj.ruleta.texto);
+    }
+  } else brul.style.display = "none";
 
   var br = document.getElementById("banReacVivo");
   if (salaObj.reaccion && (ahoraSrv() - Number(salaObj.reaccion.ts || 0)) < 8000) {
@@ -1062,9 +1323,9 @@ function pintarSalaUI() {
 
   var pils = ordenarPilotos(), h = "";
   pils.forEach(function(p, ix) {
-    if (p.id === uid) document.getElementById("vivoPos").textContent = (ix + 1) + "º / " + pils.length;
+    if (p.id === uid) document.getElementById("vivoPos").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
     var btnMenos = (esDir && p.vueltas > 0) ? ' <button onclick="restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:2px 6px;font-size:10px;margin-left:4px">-1v</button>' : '';
-    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + '"><span><b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + btnMenos + '</span></div>';
+    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span><b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + btnMenos + '</span></div>';
   });
   document.getElementById("listaSala").innerHTML = h || "Esperando pilotos...";
 
@@ -1079,36 +1340,76 @@ function pintarSalaUI() {
     } else if (esDir) {
       fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
     }
-  } else if (est === "EN_CURSO" && t0 > 0 && Number(salaObj.duracionMin || 0) > 0) {
-    var fin = t0 + Number(salaObj.duracionMin) * 60000;
-    var rem = fin - ahoraSrv();
-    if (rem > 0) {
-      var mr = Math.floor(rem / 60000), sr = Math.floor((rem % 60000) / 1000);
-      estTxt = "MANGA " + mr + ":" + (sr < 10 ? "0" : "") + sr;
-    } else {
-      estTxt = "FIN MANGA";
-      if (!avisoFinManga) {
-        avisoFinManga = true;
-        hablarP("Tiempo de manga cumplido, bandera a cuadros");
+  } else if (est === "EN_CURSO" && t0 > 0) {
+    var elapsed = ahoraSrv() - t0;
+    if (salaObj.modoJuego === "ELIM" && (esDir || !dirOnline)) {
+      var rElim = Math.floor(elapsed / 60000);
+      if (rElim > _ultRondaElim && rElim >= 1) {
+        _ultRondaElim = rElim;
+        var activos = pils.filter(function(x){ return !x.eliminado; });
+        if (activos.length > 1) {
+          var ultP = activos[activos.length - 1];
+          fetch(FB + "/pilotos/" + ultP.id + ".json", { method: "PATCH", body: JSON.stringify({ eliminado: true }) }).catch(function(){});
+          hablarP("Eliminado: " + ultP.nombre);
+        }
+      }
+    }
+    if (salaObj.modoJuego === "RULETA" && (esDir || !dirOnline)) {
+      var rRul = Math.floor(elapsed / 75000);
+      if (rRul > _ultRondaRuleta && rRul >= 1) {
+        _ultRondaRuleta = rRul;
+        var retos = [
+          "🔥 ¡PROXIMA VUELTA VALE DOBLE!",
+          "🟨 ¡PRECAUCION 10 SEGUNDOS SIN ADELANTAR!",
+          "⚡ ¡SPRINT A FONDO! EL MAS RAPIDO MANDA",
+          "🔧 ¡PIT-STOP RAPIDO: FRENA 2s EN META!",
+          "💣 ¡BOMBA DE 35s ACTIVADA EN ESTA VUELTA!"
+        ];
+        var txtR = retos[Math.floor(Math.random() * retos.length)];
+        fetch(FB + "/sala/ruleta.json", { method: "PUT", body: JSON.stringify({ ronda: rRul, texto: txtR, ts: ahoraSrv() }) }).catch(function(){});
+      }
+    }
+    if (Number(salaObj.duracionMin || 0) > 0) {
+      var fin = t0 + Number(salaObj.duracionMin) * 60000, rem = fin - ahoraSrv();
+      if (rem > 0) {
+        var mr = Math.floor(rem / 60000), sr = Math.floor((rem % 60000) / 1000);
+        estTxt = "MANGA " + mr + ":" + (sr < 10 ? "0" : "") + sr;
+      } else {
+        estTxt = "FIN MANGA";
+        if (!avisoFinManga) {
+          avisoFinManga = true;
+          hablarP("Tiempo de manga cumplido, bandera a cuadros");
+        }
       }
     }
   }
   document.getElementById("lblEstadoSala").textContent = estTxt;
 
-  if (est === "SALIDA_30" && t0 > 0) {
+  if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
     var df = t0 - ahoraSrv();
     if (df > 0 && df <= 31000) {
       var s = Math.ceil(df / 1000);
       ov.style.display = "flex";
-      document.getElementById("numSem").textContent = "00:" + (s < 10 ? "0" : "") + s;
-      document.getElementById("txtSem").textContent = "PREPARADOS";
-      ov.style.background = (s > 10) ? "#c9182b" : (s > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
-      if (s !== ultSegSemP) { ultSegSemP = s; if (s <= 5) hablarP(String(s)); }
+      if (est === "VALLA_MX" && df <= 4500) {
+        document.getElementById("numSem").textContent = "5s";
+        document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!";
+        ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107";
+      } else {
+        document.getElementById("numSem").textContent = "00:" + (s < 10 ? "0" : "") + s;
+        document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "CARTEL EN PARRILLA" : "PREPARADOS";
+        ov.style.background = (s > 10) ? "#c9182b" : (s > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
+        if (s !== ultSegSemP) {
+          ultSegSemP = s;
+          if (est === "SALIDA_30" && s <= 5) hablarP(String(s));
+          if (est === "VALLA_MX" && s === 5) hablarP("Cartel cinco segundos, atentos a la valla");
+        }
+      }
     } else if (df <= 0 && df > -4000) {
       ov.style.display = "flex";
       ov.style.background = "#00c853";
       document.getElementById("numSem").textContent = "¡SALIDA!";
-      document.getElementById("txtSem").textContent = "A TOPE";
+      document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+      if (ultSegSemP !== -999) { ultSegSemP = -999; beepP(1100, 260); }
       if (esDir || !dirOnline) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
     } else {
       ov.style.display = "none";
@@ -1133,11 +1434,8 @@ try {
     try {
       var m = JSON.parse(e.data);
       if (!m || !m.data) return;
-      if (m.path === "/") {
-        Object.keys(m.data).forEach(function(aid){ manejarEventoAntena(m.data[aid]); });
-      } else {
-        manejarEventoAntena(m.data);
-      }
+      if (m.path === "/") Object.keys(m.data).forEach(function(aid){ manejarEventoAntena(m.data[aid]); });
+      else manejarEventoAntena(m.data);
       pintarSalaUI();
     } catch (er) {}
   };
@@ -1174,9 +1472,11 @@ setInterval(function() {
     antsAll = root.antenas || {};
     pilotosAll = root.pilotos || {};
     garajesAll = root.garaje || {};
+    campObj = root.campeonato || {};
     var evs = root.eventos || {};
     Object.keys(evs).forEach(function(aid){ manejarEventoAntena(evs[aid]); });
     pintarSalaUI();
+    if (_tabAct === "tiempos") pintarTiempos();
   }).catch(function(){});
 }, 1400);
 
@@ -1189,16 +1489,31 @@ setInterval(function() {
     if (rb) rb.textContent = "EN ESPERA";
     return;
   }
+  if (yo.eliminado) {
+    el.textContent = "💀 ELIMINADO";
+    if (rb) rb.textContent = "💀 ELIM";
+    return;
+  }
   var d = (ahoraSrv() - b) / 1000;
   var mj = salaObj.modoJuego || "NORMAL";
   if (mj === "BOMBA" && salaObj.estado === "EN_CURSO") {
     var rB = Math.max(0, 45 - d);
-    el.textContent = "💣 " + rB.toFixed(1) + "s";
-    if (rb) rb.textContent = "💣 " + rB.toFixed(1) + "s";
+    if (rB <= 0) {
+      el.textContent = "💥 ¡BOOM!";
+      if (rb) rb.textContent = "💥 BOOM";
+      if (!_bombaExplotada) {
+        _bombaExplotada = true;
+        beepP(280, 450);
+        hablarP("Bomba explotada, cruza meta");
+      }
+    } else {
+      el.textContent = "💣 " + rB.toFixed(1) + "s";
+      if (rb) rb.textContent = "💣 " + rB.toFixed(1) + "s";
+    }
   } else if (mj === "ELIM" && salaObj.estado === "EN_CURSO") {
-    var rE = Math.max(0, 60 - d);
-    el.textContent = "⚡ " + rE.toFixed(1) + "s";
-    if (rb) rb.textContent = "⚡ " + rE.toFixed(1) + "s";
+    var rE = 60 - ((ahoraSrv() - Number(salaObj.tsInicio || b)) / 1000) % 60;
+    el.textContent = "💀 " + rE.toFixed(1) + "s";
+    if (rb) rb.textContent = "💀 " + rE.toFixed(1) + "s";
   } else {
     el.textContent = d.toFixed(1) + "s";
     if (rb) rb.textContent = d.toFixed(1) + "s";

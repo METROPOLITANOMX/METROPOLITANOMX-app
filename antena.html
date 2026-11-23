@@ -17,7 +17,7 @@
   .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676}
   .panel{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px}
   button{padding:12px;font-size:13px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
-  #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2a2a2a;user-select:none}
+  #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2b2b2b;user-select:none}
   @media(orientation:landscape){.visor{height:66vh}}
 </style>
 </head>
@@ -41,8 +41,9 @@
 
   <div class="top">
     <b id="lblNomAnt" style="color:#a370f7;font-size:13px">📡 ANTENA MX</b>
-    <div style="display:flex;gap:4px">
-      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">?</button>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">? GUIA</button>
+      <button id="btnAudioAnt" onclick="desbloquearAudio(true)" style="background:#ffc107;color:#000;padding:7px 8px;font-size:10px">🔊 AUDIO</button>
       <button onclick="toggleOled(true)" style="background:#262626;color:#20c997;padding:7px 8px;font-size:10px">🌙 OLED</button>
       <button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 8px;font-size:10px">Puesto</button>
       <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:7px 8px;font-size:10px">Voz ON</button>
@@ -52,10 +53,11 @@
 
   <div class="visor"><video id="vid" autoplay playsinline muted></video><div class="marco"></div><div id="lin" class="lin"></div><div id="bar" class="bar"></div></div>
   <canvas id="cnv" width="384" height="216" style="display:none"></canvas>
+  <canvas id="cnvFf" width="320" height="180" style="display:none"></canvas>
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
     <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | PASOS: 0</div>
-    <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal y en sombra si es posible. Control 100% remoto desde Direccion.</div>
+    <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal y zona plana. Control 100% remoto desde Direccion.</div>
   </div>
 
 <script>
@@ -64,6 +66,7 @@ var FB_ROOT = FB_BASE + "mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
+var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 
 var _offSrv = 0;
@@ -76,21 +79,30 @@ function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, posX = 50, fondo = null, calHasta = 0;
-var est = "SIN_CAL", calibradaOk = false, ultMs = 0, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
-var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _wakeLock = null;
-var salaCache = {}, cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, garajes: {} };
+var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
+var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _golpeFrames = 0, _movidaTs = 0, _audioCtx = null;
+var salaCache = {}, cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, sensPct: 0.07, garajes: {} };
 
 function activarWakeLock() {
-  if ("wakeLock" in navigator) {
-    navigator.wakeLock.request("screen").then(function(wl){ _wakeLock = wl; }).catch(function(){});
-  }
+  if ("wakeLock" in navigator) navigator.wakeLock.request("screen").catch(function(){});
 }
 document.addEventListener("visibilitychange", function(){
   if (document.visibilityState === "visible") activarWakeLock();
 });
 activarWakeLock();
 
+function desbloquearAudio(avisar) {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtx && _audioCtx.state === "suspended") _audioCtx.resume();
+  } catch (e) {}
+  var b = document.getElementById("btnAudioAnt");
+  if (b) { b.textContent = "🔊 OK"; b.style.background = "#20c997"; }
+  if (avisar) { beep(); hablar("Audio de antena activado"); }
+}
+
 function toggleOled(on) {
+  desbloquearAudio(false);
   document.getElementById("oledBlack").style.display = on ? "flex" : "none";
 }
 
@@ -99,6 +111,7 @@ if (antId && antNom) {
   document.getElementById("lblNomAnt").textContent = "📡 " + antNom;
 }
 function elegirRanura(id, nom) {
+  desbloquearAudio(false);
   antId = id; antNom = nom;
   localStorage.setItem("mxp_ant_id", id); localStorage.setItem("mxp_ant_nom", nom);
   document.getElementById("modalRanura").style.display = "none";
@@ -112,22 +125,30 @@ function elegirTemporal() {
   elegirRanura("tmp_" + Math.random().toString(36).slice(2, 6), n.trim().toUpperCase());
 }
 function ayudaAnt() {
-  alert("GUIA DE ANTENA (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en zona plana.\n3. Calibra desde el movil principal.\n4. Usa 🌙 OLED para apagar pantalla bajo el sol y evitar calor.");
+  alert("GUIA DE ANTENA PRO (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en recta/zona plana (no en recepcion de salto). Si usas 2, pon una a cada lado para cruces en paralelo.\n3. Pulsa 🔊 AUDIO para activar la voz en Android.\n4. Calibra desde Direccion (o cuenta 10s amistosa).\n5. Tras calibrar, pulsa 🌙 OLED para apagar la pantalla bajo el sol.\n• Si el viento o un golpe mueve el tripode, la antena avisa y se recalibra sola.\n• Cada paso guarda un Foto-Finish automatico.");
 }
 function hablar(t) {
   if (!vozOn || !("speechSynthesis" in window)) return;
   try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.08; speechSynthesis.speak(u); } catch (e) {}
 }
 function beep() {
-  try { var a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain(); o.frequency.value = 940; g.gain.value = 0.2; o.connect(g); g.connect(a.destination); o.start(); setTimeout(function(){ o.stop(); a.close(); }, 110); } catch (e) {}
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtx.state === "suspended") _audioCtx.resume();
+    var o = _audioCtx.createOscillator(), g = _audioCtx.createGain();
+    o.frequency.value = 940; g.gain.value = 0.2; o.connect(g); g.connect(_audioCtx.destination);
+    o.start(); setTimeout(function(){ o.stop(); }, 110);
+  } catch (e) {}
 }
 function toggleVoz() {
+  desbloquearAudio(false);
   vozOn = !vozOn; var b = document.getElementById("btnVoz");
   b.textContent = vozOn ? "Voz ON" : "Voz OFF"; b.style.background = vozOn ? "#20c997" : "#444";
 }
 function setPosX(p) { posX = p; document.getElementById("lin").style.left = p + "%"; calibrarFondo(); }
 function calibrarFondo() {
-  fondo = null; swCol = {}; framesHit = 0; est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
+  fondo = null; swCol = {}; framesHit = 0; _golpeFrames = 0; ultMsPorPiloto = {};
+  est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
   hablar("Calibrando pista vacia");
 }
 function salirAntena() {
@@ -154,18 +175,33 @@ function parseRgb(c) {
   var m = String(c.hex || "").match(/\d+/g);
   return (m && m.length >= 3) ? { r: +m[0], g: +m[1], b: +m[2] } : { r: 0, g: 0, b: 0 };
 }
-function emitirPaso(pid) {
-  pasos++; beep();
-  fetch(FB + "/eventos/" + antId + ".json", {
-    method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos })
-  }).catch(function(){});
-  if (!pid) hablar("Paso " + pasos);
-  document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
-}
 
 var _cnv = document.getElementById("cnv");
 var _ctx = _cnv.getContext("2d", { willReadFrequently: true });
+var _cnvFf = document.getElementById("cnvFf");
+var _ctxFf = _cnvFf.getContext("2d");
+
+function emitirPaso(pid) {
+  pasos++; beep();
+  var tsPaso = ahoraSrv();
+  fetch(FB + "/eventos/" + antId + ".json", {
+    method: "PUT",
+    body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos })
+  }).catch(function(){});
+
+  try {
+    _ctxFf.drawImage(_cnv, 0, 0, 320, 180);
+    _ctxFf.fillStyle = "rgba(255,42,42,0.8)";
+    _ctxFf.fillRect(Math.round((posX / 100) * 320) - 1, 0, 2, 180);
+    fetch(FB_FF, {
+      method: "PUT",
+      body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.55) })
+    }).catch(function(){});
+  } catch (e) {}
+
+  if (!pid) hablar("Paso " + pasos);
+  document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
+}
 
 function procFrame() {
   var v = document.getElementById("vid");
@@ -197,7 +233,7 @@ function procFrame() {
   }
   var activa = (cfg.estado === "EN_CURSO" || cfg.estado === "WARMUP" || cfg.estado === "TEST");
   if (!activa) {
-    est = "LIBRE";
+    est = "LIBRE"; _golpeFrames = 0;
     document.getElementById("lblEstado").textContent = "CALIBRADA ✓ — EN REPOSO (" + _fpsVal + " fps)";
     document.getElementById("lblEstado").style.color = "#20c997";
     document.getElementById("bar").style.width = "0%";
@@ -243,9 +279,25 @@ function procFrame() {
   }
 
   var pct = mov / nSamples, pctInt = Math.round(pct * 100);
+  var sens = cfg.sensPct || 0.07;
   window._movVivo = pctInt;
-  document.getElementById("bar").style.width = Math.min(100, Math.round((pct / 0.08) * 100)) + "%";
+  document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
   document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | MOV: " + pctInt + "% | PASOS: " + pasos + " | " + _fpsVal + "fps";
+
+  if (pct >= 0.48) {
+    _golpeFrames++;
+    if (_golpeFrames >= 45) {
+      _golpeFrames = 0;
+      _movidaTs = ahoraSrv();
+      fondo = null; swCol = {}; framesHit = 0; calHasta = Date.now() + 1800;
+      hablar("Atencion, antena movida, recalibrando");
+      document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA — RECALIBRANDO";
+      document.getElementById("lblEstado").style.color = "#ff4d5e";
+      return;
+    }
+  } else {
+    _golpeFrames = 0;
+  }
 
   if (pct < 0.025) {
     est = "LIBRE"; swCol = {}; framesHit = 0;
@@ -259,8 +311,8 @@ function procFrame() {
     return;
   }
 
-  if (pct >= 0.07) framesHit++; else framesHit = 0;
-  var picoRapido = (pct >= 0.14);
+  if (pct >= sens) framesHit++; else framesHit = 0;
+  var picoRapido = (pct >= Math.max(0.14, sens * 2));
 
   if (cfg.modoDet === "TODO") {
     if (est === "LIBRE" && (framesHit >= 2 || picoRapido) && (ah - ultMs) > 1200) {
@@ -277,10 +329,15 @@ function procFrame() {
       if (sc > bestVal) { secondVal = bestVal; bestVal = sc; bestPid = pid; }
       else if (sc > secondVal) { secondVal = sc; }
     }
-    if (est === "LIBRE" && bestPid && (framesHit >= 2 || picoRapido) && bestVal >= 160 && bestVal >= secondVal * 1.15 && (ah - ultMs) > 1200) {
-      est = "CRUCE"; ultMs = ah;
-      document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!";
-      emitirPaso(bestPid);
+    if (bestPid && (framesHit >= 2 || picoRapido) && bestVal >= 160 && bestVal >= secondVal * 1.15) {
+      var ultP = ultMsPorPiloto[bestPid] || 0;
+      if ((ah - ultP) > 1500) {
+        est = "CRUCE";
+        ultMsPorPiloto[bestPid] = ah;
+        swCol[bestPid] = 0;
+        document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!";
+        emitirPaso(bestPid);
+      }
     }
   }
 }
@@ -302,6 +359,7 @@ function procesarSala(s) {
   cfg.estado = s.estado || "ESPERA";
   cfg.modoDet = s.modoDet || "TODO";
   cfg.verVivo = !!s.verVivo;
+  cfg.sensPct = (Number(s.sensPct || 7)) / 100;
   if (s.cmd && s.cmd.antId === antId && s.cmd.ts !== ultCmd) {
     ultCmd = s.cmd.ts;
     if (Math.abs(ahoraSrv() - Number(s.cmd.ts || 0)) < 20000) {
@@ -339,7 +397,7 @@ setInterval(function() {
   if (!antId) return;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs })
   }).catch(function(){});
 
   var v = document.getElementById("vid");
