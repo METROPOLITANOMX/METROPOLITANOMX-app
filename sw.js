@@ -14,4 +14,4 @@ self.addEventListener("activate", function(e) {
       return self.clients.claim();
     })
   );
-}); // v_20261123031900
+}); // v_20261123034300

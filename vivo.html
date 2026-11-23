@@ -80,10 +80,10 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 
 var _offSrv = 0;
 fetch(FB_BASE + ".info/serverTimeOffset.json")
-  .then(function(r){ return r.json(); })
+  .then(function(r){ return r.ok ? r.json() : 0; })
   .then(function(o){ if (typeof o === "number") _offSrv = o; })
   .catch(function(){});
-function ahoraSrv() { return Date.now() + _offSrv; }
+function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, ultReacMs = 0, _garajeCache = {}, _pilotosCache = {};
@@ -158,7 +158,10 @@ function verSetupRival(pid) {
 }
 
 function refrescarVivo() {
-  fetch(FB + ".json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(root) {
+  fetch(FB + ".json?t=" + Date.now()).then(function(r){
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(root) {
     if (!root) return;
     var s = root.sala || {}, pObj = root.pilotos || {}, gObj = root.garaje || {};
     _pilotosCache = pObj;
@@ -176,6 +179,12 @@ function refrescarVivo() {
       if (df > 0) {
         var seg = Math.ceil(df / 1000);
         estTxt += " • " + Math.floor(seg / 60) + ":" + ((seg % 60) < 10 ? "0" : "") + (seg % 60);
+      }
+    } else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) {
+      var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ahoraSrv();
+      if (rem > 0) {
+        var segR = Math.ceil(rem / 1000);
+        estTxt += " • " + Math.floor(segR / 60) + ":" + ((segR % 60) < 10 ? "0" : "") + (segR % 60);
       }
     }
     document.getElementById("lblEstV").textContent = estTxt;

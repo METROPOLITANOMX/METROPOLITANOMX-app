@@ -55,8 +55,11 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 
 var _offSrv = 0;
-fetch(FB_BASE + ".info/serverTimeOffset.json").then(function(r){return r.json();}).then(function(o){if(typeof o==="number")_offSrv=o;}).catch(function(){});
-function ahoraSrv() { return Date.now() + _offSrv; }
+fetch(FB_BASE + ".info/serverTimeOffset.json")
+  .then(function(r){ return r.ok ? r.json() : 0; })
+  .then(function(o){ if (typeof o === "number") _offSrv = o; })
+  .catch(function(){});
+function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
 var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
@@ -224,15 +227,20 @@ setInterval(function() {
     method: "PUT",
     body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: posX, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, img: snap })
   }).catch(function(){});
-  fetch(FB + ".json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(root) {
+  fetch(FB + ".json?t=" + Date.now()).then(function(r){
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(root) {
     if (!root) return;
     var s = root.sala || {};
     if (s.modoDet && s.modoDet !== cfg.modoDet) hablar(s.modoDet === "TODO" ? "Modo cualquier paso" : "Modo color carenado");
     cfg = { estado: s.estado || "ESPERA", modoDet: s.modoDet || "TODO", verVivo: !!s.verVivo, garajes: root.garaje || {} };
     if (s.cmd && s.cmd.antId === antId && s.cmd.ts !== ultCmd) {
       ultCmd = s.cmd.ts;
-      if (s.cmd.posX) setPosX(Number(s.cmd.posX));
-      if (s.cmd.calibrar) calibrarFondo();
+      if (Math.abs(ahoraSrv() - Number(s.cmd.ts || 0)) < 20000) {
+        if (s.cmd.posX) setPosX(Number(s.cmd.posX));
+        if (s.cmd.calibrar) calibrarFondo();
+      }
     }
   }).catch(function(){});
 }, 650);

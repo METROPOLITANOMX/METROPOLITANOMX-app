@@ -50,7 +50,6 @@
     <div style="font-size:11px;color:#777;margin-top:10px">DOBLE TOQUE PARA DESBLOQUEAR</div>
   </div>
 
-  <!-- MODAL CAMARA EN DIRECTO PARA FOTOS DE GARAJE (SIN INPUT FILE) -->
   <div id="modalCamFoto" class="cam-modal">
     <div class="cam-box">
       <div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div>
@@ -97,7 +96,7 @@
       <div id="lblModoSala" style="font-size:11px;color:#ffc107;margin-top:4px;font-weight:bold">MODO: CARRERA NORMAL</div>
       <div id="banReacVivo" style="display:none;background:#1e2618;border:1px solid #20c997;border-radius:7px;padding:5px;margin-top:6px;font-size:11px;color:#20c997;font-weight:bold"></div>
       <div class="grid2" style="margin-top:8px">
-        <div class="stat"><div style="font-size:10px;color:#888">POSICION / MODO</div><div id="vivoPos" style="font-size:19px;font-weight:bold;color:#ffc107">--</div></div>
+        <div class="stat"><div style="font-size:10px;color:#888">POSICION / SALA</div><div id="vivoPos" style="font-size:19px;font-weight:bold;color:#ffc107">--</div></div>
         <div class="stat"><div style="font-size:10px;color:#888">VUELTA EN CURSO</div><div id="vivoReloj" style="font-size:19px;font-weight:bold;color:#20c997">00.0s</div></div>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px">
@@ -106,7 +105,6 @@
       </div>
     </div>
 
-    <!-- MODO AMISTOSO (CUANDO DIRECCION ESTA OFFLINE) -->
     <div id="boxAmistosa" class="card" style="display:none;border-color:#fd7e14">
       <b style="color:#fd7e14;font-size:11px">MODO AMISTOSO (DIRECCION OFFLINE)</b>
       <div class="grid2" style="margin-top:6px">
@@ -122,7 +120,6 @@
       <div id="listaSala" style="margin-top:6px">Inscribiendo piloto...</div>
     </div>
 
-    <!-- PANEL EXCLUSIVO DIRECCION -->
     <div id="panelDir" class="card" style="display:none;border-color:#0dcaf0;background:#111822">
       <b style="color:#0dcaf0;font-size:13px">👑 CONTROL DE DIRECCION Y ANTENAS</b>
       <div class="grid2" style="margin-top:8px">
@@ -151,7 +148,6 @@
         <button onclick="guardarGpsPista()" style="background:#2b2b2b;color:#0dcaf0;font-size:10px">📍 GPS PISTA</button>
       </div>
 
-      <!-- CONTROL Y CALIBRACION EN DIRECTO DE ANTENAS -->
       <div style="margin-top:10px;border-top:1px solid #2b3a4a;padding-top:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <b style="color:#ffc107;font-size:11px">📡 TEST Y CALIBRACION ANTENAS</b>
@@ -175,7 +171,6 @@
         <button onclick="cmdAntDir(-1)" style="width:100%;margin-top:5px;background:#20c997;color:#000;font-size:11px">📍 RE-CALIBRAR PISTA VACIA</button>
       </div>
 
-      <!-- GESTION CUENTAS, VISITAS Y REPORTES -->
       <div style="margin-top:10px;border-top:1px solid #2b3a4a;padding-top:8px">
         <button onclick="cargarClubDir()" style="width:100%;background:#262626;color:#ffc107;font-size:11px">👥 GESTIONAR CUENTAS Y VISITAS</button>
         <div id="boxClubDir" style="display:none;margin-top:8px;font-size:11px;max-height:260px;overflow-y:auto"></div>
@@ -202,11 +197,9 @@
         <div><label style="font-size:10px;color:#aaa">DORSAL</label><input id="gDor" placeholder="46"></div>
       </div>
 
-      <!-- 4 ESPACIOS PARA FOTOS DE LA MOTO (CAMARA EN DIRECTO GETUSERMEDIA) -->
       <div style="font-size:11px;color:#0dcaf0;font-weight:bold;margin:4px 0 6px">📸 GALERIA DE TU MOTO (4 FOTOS EN DIRECTO)</div>
       <div id="gridFotosGar" class="grid4"></div>
 
-      <!-- FIRMA DE COLOR ANTENA CON CAMARA EN DIRECTO GETUSERMEDIA (SIN INPUT FILE) -->
       <div style="background:#111;padding:8px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
         <div style="font-size:11px">Firma Antena: <b id="lblFirmaGar" style="color:#ff4d5e">PENDIENTE</b><div id="muestrasGar" style="display:flex;gap:4px;margin-top:4px"></div></div>
         <button onclick="abrirCapColorGar()" style="background:#0d6efd;color:#fff;font-size:10px">📷 CAPTURAR COLORES</button>
@@ -289,10 +282,10 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 
 var _offSrv = 0;
 fetch(FB_BASE + ".info/serverTimeOffset.json")
-  .then(function(r){ return r.json(); })
+  .then(function(r){ return r.ok ? r.json() : 0; })
   .then(function(o){ if (typeof o === "number") _offSrv = o; })
   .catch(function(){});
-function ahoraSrv() { return Date.now() + _offSrv; }
+function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
 var uid = localStorage.getItem("mxp_uid");
 var miNom = localStorage.getItem("mxp_nom") || "Piloto";
@@ -309,12 +302,18 @@ try { histDias = JSON.parse(localStorage.getItem("mxp_hist_" + uid) || "[]"); } 
 if (!motosGar.length) motosGar = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} }];
 
 var _streamFoto = null, _streamCol = null, _slotFotoAct = 0;
-var _tabAct = "sala", _ultEvP = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false;
+var _tabAct = "sala", _ultEvP = {}, _lockVtaLocal = {}, testOn = false, ultSegSemP = -99, avisoLipoP = false, avisoFinManga = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 
 function esc(s) {
   return String(s || "").replace(/[&<>"']/g, function(c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+  });
+}
+function fbJson(url, opt) {
+  return fetch(url, opt).then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
   });
 }
 function fmt(ms) { return (!ms || ms <= 0) ? "--" : (ms / 1000).toFixed(2) + "s"; }
@@ -364,7 +363,7 @@ function inscribirPilotoAuto() {
   var dor = (m && m.dorsal) ? m.dorsal : "1";
   document.getElementById("badgeDor").textContent = "#" + dor;
   subirGarajeNube();
-  fetch(FB + "/pilotos/" + uid + ".json").then(function(r){ return r.json(); }).then(function(ex) {
+  fbJson(FB + "/pilotos/" + uid + ".json").then(function(ex) {
     if (!ex) {
       return fetch(FB + "/pilotos/" + uid + ".json", {
         method: "PUT",
@@ -624,12 +623,14 @@ function cmdSala(est) {
       return;
     }
   }
+  avisoFinManga = false;
+  avisoLipoP = false;
   var pay = { estado: est, tsInicio: 0 };
   if (esDir) pay.dirTs = ahoraSrv();
   if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; hablarP("Warm-up de 3 minutos iniciado"); }
   if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; hablarP("Atencion pilotos, 30 segundos para la salida"); }
   if (est === "ESPERA") { pay.tsInicio = 0; hablarP("Manga detenida"); }
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) });
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
 }
 
 function cfgDir() {
@@ -640,7 +641,7 @@ function cfgDir() {
       duracionMin: Number(document.getElementById("selDur").value) || 0,
       dirTs: ahoraSrv()
     })
-  });
+  }).catch(function(){});
 }
 
 function nuevaMangaDir() {
@@ -648,25 +649,28 @@ function nuevaMangaDir() {
     fetch(FB + "/pilotos/" + k + ".json", {
       method: "PATCH",
       body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false })
-    });
+    }).catch(function(){});
   });
   _ultVtasSinc = 0;
-  fetch(FB + "/pasos_lock.json", { method: "DELETE" });
+  _ultLapSinc = 0;
+  _lockVtaLocal = {};
+  fetch(FB + "/pasos_lock.json", { method: "DELETE" }).catch(function(){});
   cmdSala("ESPERA");
 }
 
 function ponerBandera(col) {
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ bandera: col, dirTs: ahoraSrv() }) });
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ bandera: col, dirTs: ahoraSrv() }) }).catch(function(){});
   hablarP("Bandera " + col.toLowerCase());
 }
 
 function guardarGpsPista() {
   if (!navigator.geolocation) { alert("Geolocalizacion no disponible"); return; }
   navigator.geolocation.getCurrentPosition(function(p) {
-    fetch(FB + "/sala/gps.json", {
+    fbJson(FB + "/sala/gps.json", {
       method: "PUT",
       body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude })
-    }).then(function() { alert("GPS del circuito guardado ✓"); });
+    }).then(function() { alert("GPS del circuito guardado ✓"); })
+      .catch(function() { alert("Error guardando GPS en Firebase"); });
   }, function(e) { alert("Error GPS: " + e.message); });
 }
 
@@ -685,7 +689,7 @@ function toggleTestAntenas() {
   fetch(FB + "/sala.json", {
     method: "PATCH",
     body: JSON.stringify({ estado: testOn ? "TEST" : "ESPERA", verVivo: testOn, dirTs: ahoraSrv() })
-  });
+  }).catch(function(){});
 }
 
 function setModoAnt(m) {
@@ -693,7 +697,7 @@ function setModoAnt(m) {
   document.getElementById("bModTodo").style.color = (m === "TODO") ? "#000" : "#fff";
   document.getElementById("bModCar").style.background = (m === "CAR") ? "#ffc107" : "#2b2b2b";
   document.getElementById("bModCar").style.color = (m === "CAR") ? "#000" : "#fff";
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraSrv() }) });
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraSrv() }) }).catch(function(){});
 }
 
 function calibrarConCuenta10() {
@@ -711,7 +715,7 @@ function calibrarConCuenta10() {
       if (!aks.length) aks = ["ant_1"];
       aks.forEach(function(aid, ix) {
         setTimeout(function() {
-          fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true }) });
+          fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true }) }).catch(function(){});
         }, ix * 800);
       });
       if (b) { b.textContent = "✅ PISTA CALIBRADA OK"; b.style.background = "#20c997"; }
@@ -727,7 +731,7 @@ function cmdAntDir(px) {
   var cmd = { ts: ahoraSrv(), antId: idA };
   if (px > 0) { cmd.posX = px; document.getElementById("linAntDir").style.left = px + "%"; }
   else cmd.calibrar = true;
-  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify(cmd) });
+  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify(cmd) }).catch(function(){});
 }
 
 function verReportesDir() {
@@ -735,22 +739,22 @@ function verReportesDir() {
   bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
   bx.innerHTML = "<div style='color:#888'>Cargando reportes...</div>";
-  fetch(FB_ROOT + "/reportes.json").then(function(r){ return r.json(); }).then(function(rp) {
+  fbJson(FB_ROOT + "/reportes.json").then(function(rp) {
     if (!rp) { bx.innerHTML = "<div style='color:#888'>Sin reportes pendientes ✓</div>"; return; }
     bx.innerHTML = Object.keys(rp).reverse().map(function(k) {
       var x = rp[k];
       return "<div class='fila'><div><b style='color:#ffc107'>" + esc(x.autor) + "</b> (" + esc(x.fecha) + ")<br><span style='color:#0dcaf0;font-size:10px'>" + esc(x.circ || "") + "</span> " + esc(x.texto) + "</div><button onclick=\"delRepDir('" + esc(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>OK</button></div>";
     }).join("");
-  });
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando reportes</div>"; });
 }
-function delRepDir(k) { fetch(FB_ROOT + "/reportes/" + k + ".json", { method: "DELETE" }).then(verReportesDir); }
+function delRepDir(k) { fetch(FB_ROOT + "/reportes/" + k + ".json", { method: "DELETE" }).then(verReportesDir).catch(function(){}); }
 
 function cargarClubDir() {
   var bx = document.getElementById("boxClubDir");
   bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
   bx.innerHTML = "<div style='color:#888'>Cargando club...</div>";
-  fetch(FB_ROOT + ".json").then(function(r){ return r.json(); }).then(function(root) {
+  fbJson(FB_ROOT + ".json").then(function(root) {
     var ct = (root && root.cuentas) || {}, vs = (root && root.visitas) || {};
     var vKeys = Object.keys(vs).sort().reverse().slice(0, 8);
     var h = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas totales: <b>" + Object.keys(vs).length + "</b> | Cuentas: <b>" + Object.keys(ct).length + "</b></div>";
@@ -766,43 +770,54 @@ function cargarClubDir() {
       });
     }
     bx.innerHTML = h;
-  });
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando club</div>"; });
 }
-function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir); }
-function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir); }
+function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir).catch(function(){}); }
+function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir).catch(function(){}); }
 
 function registrarVuelta(pUid) {
   var p = pilotosAll[pUid];
   if (!p) return;
   var ah = ahoraSrv(), st = salaObj.estado || "ESPERA";
+  if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < 4500) return;
+
   if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
-    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) });
-    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) });
+    _lockVtaLocal[pUid] = ah;
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) }).catch(function(){});
     hablarP("Prueba OK: " + p.nombre);
     return;
   }
   var ult = Number(p.tsUltimoPaso || 0);
   if (ult && (ah - ult) < 4500) return;
+  _lockVtaLocal[pUid] = ah;
+
   var baseT = ult || Number(salaObj.tsInicio || 0) || ah, lap = ah - baseT;
   if (lap < 1500) {
-    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) });
+    p.tsUltimoPaso = ah;
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){});
     return;
   }
   var v = (p.vueltas || 0) + 1, mej = (!p.mejorMs || lap < p.mejorMs) ? lap : p.mejorMs, lk = pUid + "_v" + v;
-  fetch(FB + "/pasos_lock/" + lk + ".json").then(function(r){ return r.json(); }).then(function(ex) {
+  fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
     if (ex && ex.ok) return;
-    fetch(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) });
-    fetch(FB + "/pilotos/" + pUid + ".json", {
-      method: "PATCH",
-      body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah })
+    return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
+      p.tsUltimoPaso = ah;
+      p.vueltas = v;
+      p.ultimaMs = lap;
+      p.mejorMs = mej;
+      fetch(FB + "/pilotos/" + pUid + ".json", {
+        method: "PATCH",
+        body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah })
+      }).catch(function(){});
+      var patchSala = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
+      if (!salaObj.hotlapMs || lap < Number(salaObj.hotlapMs)) {
+        patchSala.hotlapMs = lap;
+        patchSala.hotlapTxt = p.nombre + " — " + fmt(lap);
+      }
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(patchSala) }).catch(function(){});
     });
-    var patchSala = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
-    if (!salaObj.hotlapMs || lap < Number(salaObj.hotlapMs)) {
-      patchSala.hotlapMs = lap;
-      patchSala.hotlapTxt = p.nombre + " — " + fmt(lap);
-    }
-    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(patchSala) });
-  });
+  }).catch(function(){});
 }
 
 function sumarVueltaManual() { registrarVuelta(uid); }
@@ -931,7 +946,7 @@ if (esDir) {
 }
 
 setInterval(function() {
-  fetch(FB + ".json?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(root) {
+  fbJson(FB + ".json?t=" + Date.now()).then(function(root) {
     if (!root) return;
     salaObj = root.sala || {};
     salaObj.antenas = root.antenas || {};
@@ -1022,17 +1037,31 @@ setInterval(function() {
     });
 
     var est = salaObj.estado || "ESPERA", t0 = Number(salaObj.tsInicio || 0), ov = document.getElementById("overlaySem");
-    document.getElementById("lblEstadoSala").textContent = est;
+    var estTxt = est;
 
     if (est === "WARMUP" && t0 > 0) {
       var dfW = t0 - ahoraSrv();
       if (dfW > 0) {
         var mw = Math.floor(dfW / 60000), sw = Math.floor((dfW % 60000) / 1000);
-        document.getElementById("lblEstadoSala").textContent = "WARM-UP " + mw + ":" + (sw < 10 ? "0" : "") + sw;
+        estTxt = "WARM-UP " + mw + ":" + (sw < 10 ? "0" : "") + sw;
       } else if (esDir) {
-        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) });
+        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
+      }
+    } else if (est === "EN_CURSO" && t0 > 0 && Number(salaObj.duracionMin || 0) > 0) {
+      var fin = t0 + Number(salaObj.duracionMin) * 60000;
+      var rem = fin - ahoraSrv();
+      if (rem > 0) {
+        var mr = Math.floor(rem / 60000), sr = Math.floor((rem % 60000) / 1000);
+        estTxt = "MANGA " + mr + ":" + (sr < 10 ? "0" : "") + sr;
+      } else {
+        estTxt = "FIN MANGA";
+        if (!avisoFinManga) {
+          avisoFinManga = true;
+          hablarP("Tiempo de manga cumplido, bandera a cuadros");
+        }
       }
     }
+    document.getElementById("lblEstadoSala").textContent = estTxt;
 
     if (est === "SALIDA_30" && t0 > 0) {
       var df = t0 - ahoraSrv();
@@ -1048,7 +1077,7 @@ setInterval(function() {
         ov.style.background = "#00c853";
         document.getElementById("numSem").textContent = "¡SALIDA!";
         document.getElementById("txtSem").textContent = "A TOPE";
-        if (esDir || !dirOnline) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) });
+        if (esDir || !dirOnline) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
       } else {
         ov.style.display = "none";
       }
