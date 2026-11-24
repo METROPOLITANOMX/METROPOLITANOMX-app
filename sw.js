@@ -1,8 +1,9 @@
-﻿var CACHE_NAME = "mxp-cache-v202611230456";
+﻿var CACHE_NAME = "mxp-cache-v202611241108";
 var APP_SHELL = [
   "./",
   "./index.html",
   "./antena.html",
+  "./director.html",
   "./piloto.html",
   "./vivo.html",
   "./manifest.json",

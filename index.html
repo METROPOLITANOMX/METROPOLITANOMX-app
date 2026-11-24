@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Metropolitano MX Pro</title>
 <link rel="manifest" href="manifest.json">
 <style>
@@ -187,16 +187,13 @@
       • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) y elige <i>"Instalar aplicacion"</i>.<br>
       • <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> y elige <i>"Añadir a pantalla de inicio"</i>.<br><br>
       <b>2. Seguridad y Backup:</b><br>
-      • Tus claves y PIN viajan cifrados en SHA-256. Para recuperar clave necesitas tu <b>Nombre + PIN de 4 digitos</b>.<br>
-      • Desde Garaje/Tiempos puedes <b>Exportar/Restaurar Backup</b> de tus motos y vueltas.<br><br>
-      <b>3. Paddock Mundial y Circuito Teorico 200m:</b><br>
-      • Publica tu moto y setup desde <b>GARAJE</b> en el <b>Paddock Mundial</b>.<br>
-      • Con la cuerda y trazado de tu pista veras tu <b>Velocidad Media (km/h)</b> y <b>Tiempo Teorico 200m</b>.<br><br>
+      • Claves y PIN cifrados en SHA-256. Desde Tiempos puedes <b>Exportar/Restaurar Backup</b> de motos e historial.<br><br>
+      <b>3. Direccion Pro y Laboratorio de Meta:</b><br>
+      • Panel separado con Checklist de jornada, vista dual de Antena 1 y Antena 2, meta Vertical/Horizontal, Tunel ROI separado del disparo, sensibilidad 6%-100%, perfiles de luz y capturas multi-angulo en Warm-Up.<br><br>
       <b>4. Antenas (60 fps) y Megafonia Estereo:</b><br>
-      • Las 2 antenas hacen de altavoz comun para Direccion, retos y <b>animos del publico</b>. Si ruedas solo con 1 antena, te canta cada vuelta.<br>
-      • Usa <b>🌙 OLED</b> bajo el sol y sigue la guia de <b>Recorte de Fondo + Varita Magica</b> al capturar colores.<br><br>
-      <b>5. Salidas, Ruleta Loca MX y Aficionados:</b><br>
-      • Semáforo 30s o <b>Valla MX Aleatoria</b>. Retos en Ruleta explicados por escrito y voz (incluidos retos para rodar solo).
+      • Las 2 antenas reproducen ordenes de Direccion, Ruleta Loca MX y animos/ovaciones del publico. Modo Solo incluido.<br><br>
+      <b>5. Garaje, Paddock Mundial y Fan Club:</b><br>
+      • Recorte automatico de fondo + Varita Magica, publicar moto en Paddock Mundial, Porra, voto MVP y Modo Mecanico.
     </div>
     <button id="btnMapaCirc" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;margin-top:10px;padding:11px;font-size:12px;box-shadow:0 4px 0 #087f5b" onclick="vibrar();verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
     <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
@@ -228,10 +225,7 @@ function hashTxt(txt) {
     });
   }
   var h = 2166136261;
-  for (var i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h * 16777619) >>> 0;
-  }
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
   return Promise.resolve("fb_" + h.toString(16));
 }
 
@@ -315,10 +309,10 @@ function aplicarIdioma() {
   document.getElementById("titGuia").textContent = "📲 INSTALL APP & FULL GUIDE";
   document.getElementById("txtGuiaBody").innerHTML =
     "<b>1. Install PWA (Offline Ready):</b><br>• <b>Android (Chrome):</b> Tap 3 dots (⋮) and choose <i>\"Install app\"</i>.<br>• <b>iPhone (Safari):</b> Tap <i>Share</i> and choose <i>\"Add to Home Screen\"</i>.<br><br>" +
-    "<b>2. Security & Backup:</b><br>• Passwords & PINs are SHA-256 hashed. Recovery requires <b>Rider Name + 4-digit PIN</b>.<br>• Export/Restore your Garage & Lap History backup anytime from the app.<br><br>" +
-    "<b>3. World Paddock & 200m Theoretical Track:</b><br>• Publish your bike & setup from <b>GARAGE</b> to the <b>World Paddock</b>.<br>• Track length & layout factor compute your <b>Avg Speed (km/h)</b> and <b>200m Equivalent Lap</b>.<br><br>" +
-    "<b>4. Finish Antennas (60 fps) & Stereo PA:</b><br>• Both finish phones act as stereo loudspeakers for Race Control, challenges & live fan cheers. Solo mode calls laps automatically.<br><br>" +
-    "<b>5. Background Cutout, Gate Drop & Crazy Roulette:</b><br>• Auto-removes background + Magic Wand tap-to-erase, Random MX Gate Drop, Crazy Roulette (written & spoken, solo-friendly) & Fan Club.";
+    "<b>2. Security & Backup:</b><br>• Passwords & PINs are SHA-256 hashed. Export/Restore your Garage & Lap History backup anytime.<br><br>" +
+    "<b>3. Race Direction & Camera Lab:</b><br>• Dual camera view, V/H Finish Line, separated Trigger vs ROI Tunnel, 6%-100% sensitivity, Lighting Profiles & multi-angle Warm-Up captures.<br><br>" +
+    "<b>4. Finish Antennas (60 fps) & Stereo PA:</b><br>• Both finish phones broadcast Race Control orders, Crazy Roulette & live fan cheers/ovations.<br><br>" +
+    "<b>5. Background Cutout, World Paddock & Fan Club:</b><br>• Auto background removal + Magic Wand, World Paddock, Polls, MVP vote & Mechanic Mode.";
   document.getElementById("btnMapaCirc").textContent = "📍 VIEW TRACK LOCATION";
   document.getElementById("btnGuiaCer").textContent = "CLOSE";
 
@@ -375,14 +369,14 @@ function registrarVisita(rol, nom) {
       fecha: new Date(ts).toLocaleString(esIngles ? "en-US" : "es-ES"),
       rol: rol,
       circ: circAct,
-      nom: nom || "Visitante"
+      nom: String(nom || "Visitante").slice(0, 40)
     })
   }).catch(function(){});
 }
 registrarVisita("PORTADA", localStorage.getItem("mxp_nom") || "Visitante");
 
 function procesarAuth() {
-  var nom = document.getElementById("aNom").value.trim();
+  var nom = document.getElementById("aNom").value.trim().slice(0, 40);
   var uid = nom.toLowerCase().replace(/[^a-z0-9]/g, "");
   var clv = document.getElementById("aClv").value.trim();
   var pin = document.getElementById("aPin").value.trim();
@@ -403,7 +397,6 @@ function procesarAuth() {
 
   var locCtas = {};
   try { locCtas = JSON.parse(localStorage.getItem("mxp_cuentas_loc") || "{}"); } catch (e) {}
-  localStorage.removeItem("mxp_rec_clv");
 
   Promise.all([hashTxt(clv), hashTxt(pin)]).then(function(hs) {
     var clvHash = hs[0], pinHash = hs[1];
@@ -599,7 +592,7 @@ function entrarDir() {
         localStorage.setItem("mxp_uid", "director");
         localStorage.setItem("mxp_nom", "Director MX");
       }
-      location.href = "piloto.html";
+      location.href = "director.html";
     });
   });
 }
@@ -628,7 +621,7 @@ function enviarReporte() {
     body: JSON.stringify({
       ts: ts,
       fecha: new Date(ts).toLocaleString(esIngles ? "en-US" : "es-ES"),
-      autor: localStorage.getItem("mxp_nom") || "Usuario",
+      autor: (localStorage.getItem("mxp_nom") || "Usuario").slice(0, 40),
       circ: circAct,
       texto: tx.slice(0, 350)
     })
@@ -704,8 +697,8 @@ function cargarListaCircuitos() {
 }
 
 function guardarNuevoCircuito() {
-  var nom = document.getElementById("cNom").value.trim();
-  var pais = document.getElementById("cPais").value.trim();
+  var nom = document.getElementById("cNom").value.trim().slice(0, 50);
+  var pais = document.getElementById("cPais").value.trim().slice(0, 50);
   var sup = document.getElementById("cSup").value;
   var fac = Number(document.getElementById("cTrazado").value) || 1;
   var mts = Number(document.getElementById("cMetros").value) || 0;
