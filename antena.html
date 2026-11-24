@@ -5,18 +5,29 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Antena Meta - Metropolitano MX</title>
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;background:#070707;color:#fff;font-family:Arial,sans-serif;padding:10px;text-align:center}
-  .top{display:flex;justify-content:space-between;align-items:center;background:#151515;border-bottom:3px solid #6f42c1;padding:10px;border-radius:12px;margin-bottom:8px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;
+    background-color:#070707;
+    background-image:repeating-linear-gradient(45deg,#0c0c0c 0,#0c0c0c 6px,#070707 6px,#070707 12px);
+    color:#fff;font-family:Arial,sans-serif;padding:10px;text-align:center;font-variant-numeric:tabular-nums
+  }
+  .top{display:flex;justify-content:space-between;align-items:center;background:#151515;border:1px solid #2e2e2e;border-bottom:3px solid #6f42c1;padding:10px;border-radius:12px;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:999;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px}
-  .caja{background:#161616;border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px}
+  .caja{background:#161616;border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px;box-shadow:0 12px 30px rgba(0,0,0,0.8)}
   .visor{position:relative;width:100%;height:54vh;background:#000;border:2px solid #333;border-radius:12px;overflow:hidden;margin-bottom:8px}
   video{width:100%;height:100%;object-fit:cover;display:block}
   .marco{position:absolute;top:14%;bottom:14%;left:15%;right:15%;border:2px dashed rgba(255,230,0,0.6);border-radius:10px;pointer-events:none}
   .lin{position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a;pointer-events:none}
-  .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676}
-  .panel{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px}
-  button{padding:12px;font-size:13px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;text-transform:uppercase}
+  .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676;transition:width 0.08s linear}
+  .panel{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.45)}
+  button{
+    padding:12px;font-size:13px;font-weight:bold;border:none;border-radius:9px;
+    cursor:pointer;text-transform:uppercase;
+    box-shadow:0 4px 0 rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.22);
+    transition:transform 0.08s ease,box-shadow 0.08s ease
+  }
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,0.6)}
   #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2b2b2b;user-select:none}
   @media(orientation:landscape){.visor{height:66vh}}
 </style>
@@ -32,22 +43,23 @@
     <div class="caja">
       <div style="font-size:17px;font-weight:bold;color:#ffc107;margin-bottom:6px">📡 CONFIGURAR ANTENA</div>
       <div id="txtCircModal" style="font-size:11px;color:#0dcaf0;margin-bottom:12px">Circuito: METROPOLITANO</div>
-      <button onclick="elegirRanura('ant_1','ANTENA 1 (META)')" style="width:100%;background:#20c997;color:#000;margin-bottom:8px">📡 ANTENA 1 (META)</button>
-      <button onclick="elegirRanura('ant_2','ANTENA 2 (REFUERZO)')" style="width:100%;background:#0dcaf0;color:#000;margin-bottom:8px">📡 ANTENA 2 (REFUERZO)</button>
-      <button onclick="elegirTemporal()" style="width:100%;background:#6f42c1;color:#fff;margin-bottom:10px">📱 ANTENA TEMPORAL / PILOTO</button>
-      <button onclick="location.href='index.html'" style="width:100%;background:#333;color:#ccc;padding:9px;font-size:11px">VOLVER</button>
+      <button onclick="vibrar();elegirRanura('ant_1','ANTENA 1 (META)')" style="width:100%;background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;margin-bottom:8px;box-shadow:0 4px 0 #087f5b">📡 ANTENA 1 (META)</button>
+      <button onclick="vibrar();elegirRanura('ant_2','ANTENA 2 (REFUERZO)')" style="width:100%;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;margin-bottom:8px;box-shadow:0 4px 0 #087990">📡 ANTENA 2 (REFUERZO)</button>
+      <button onclick="vibrar();elegirTemporal()" style="width:100%;background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;margin-bottom:8px;box-shadow:0 4px 0 #362078">📱 ANTENA TEMPORAL / PILOTO</button>
+      <button onclick="vibrar(25);iniciarModoSolo()" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;margin-bottom:10px;box-shadow:0 4px 0 #996300">🏁 RODAR SOLO (1 MOVIL EN META)</button>
+      <button onclick="vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc;padding:9px;font-size:11px">VOLVER</button>
     </div>
   </div>
 
   <div class="top">
-    <b id="lblNomAnt" style="color:#a370f7;font-size:13px">📡 ANTENA MX</b>
+    <b id="lblNomAnt" style="color:#b197fc;font-size:13px">📡 ANTENA MX</b>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-      <button onclick="ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">? GUIA</button>
-      <button id="btnAudioAnt" onclick="desbloquearAudio(true)" style="background:#ffc107;color:#000;padding:7px 8px;font-size:10px">🔊 AUDIO</button>
-      <button onclick="toggleOled(true)" style="background:#262626;color:#20c997;padding:7px 8px;font-size:10px">🌙 OLED</button>
-      <button onclick="document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 8px;font-size:10px">Puesto</button>
-      <button id="btnVoz" onclick="toggleVoz()" style="background:#20c997;color:#000;padding:7px 8px;font-size:10px">Voz ON</button>
-      <button onclick="salirAntena()" style="background:#dc3545;color:#fff;padding:7px 8px;font-size:10px">Salir</button>
+      <button onclick="vibrar();ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">? GUIA</button>
+      <button id="btnAudioAnt" onclick="vibrar();desbloquearAudio(true)" style="background:#ffc107;color:#000;padding:7px 8px;font-size:10px">🔊 AUDIO</button>
+      <button onclick="vibrar();toggleOled(true)" style="background:#262626;color:#20c997;padding:7px 8px;font-size:10px">🌙 OLED</button>
+      <button onclick="vibrar();document.getElementById('modalRanura').style.display='flex'" style="background:#2b2b2b;color:#ffc107;padding:7px 8px;font-size:10px">Puesto</button>
+      <button id="btnVoz" onclick="vibrar();toggleVoz()" style="background:#20c997;color:#000;padding:7px 8px;font-size:10px">Voz ON</button>
+      <button onclick="vibrar();salirAntena()" style="background:#dc3545;color:#fff;padding:7px 8px;font-size:10px">Salir</button>
     </div>
   </div>
 
@@ -57,7 +69,8 @@
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
     <div id="lblDatos" style="font-size:12px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | UMBRAL: 7%</div>
-    <div style="font-size:11px;color:#777;margin-top:6px">Coloca el movil fijo en horizontal y zona plana. Control 100% remoto desde Direccion.</div>
+    <div id="lblMegaAnt" style="font-size:11px;color:#20c997;margin-top:4px;min-height:14px"></div>
+    <div style="font-size:11px;color:#777;margin-top:4px">Altavoz Megafonia en Estereo activo. Coloca el movil fijo en horizontal.</div>
   </div>
 
 <script>
@@ -75,13 +88,14 @@ fetch(FB_BASE + ".info/serverTimeOffset.json")
   .then(function(o){ if (typeof o === "number") _offSrv = o; })
   .catch(function(){});
 function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
+function vibrar(ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 18); } catch (e) {} }
 
 var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, posX = 50, fondo = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, swCol = {}, ultCmd = 0, framesHit = 0;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _golpeFrames = 0, _movidaTs = 0, _audioCtx = null;
-var _telBusy = false, _imgBusy = false;
+var _telBusy = false, _imgBusy = false, _ultMegaId = "", _ultPasoLocalTs = 0, _tSoloVoz = null, _tSoloCal = null, _esSala = null;
 var salaCache = {}, cfg = { estado: "ESPERA", modoDet: "TODO", verVivo: false, sensPct: 0.07, garajes: {} };
 
 function activarWakeLock() {
@@ -93,6 +107,7 @@ document.addEventListener("visibilitychange", function(){
 activarWakeLock();
 
 window.addEventListener("beforeunload", function() {
+  if (_esSala) { try { _esSala.close(); } catch (e) {} }
   if (antId) {
     fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
     fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
@@ -106,7 +121,7 @@ function desbloquearAudio(avisar) {
   } catch (e) {}
   var b = document.getElementById("btnAudioAnt");
   if (b) { b.textContent = "🔊 OK"; b.style.background = "#20c997"; }
-  if (avisar) { beep(); hablar("Audio de antena activado"); }
+  if (avisar) { beep(); hablar("Megafonia de antena activada"); }
 }
 
 function toggleOled(on) {
@@ -133,12 +148,36 @@ function elegirTemporal() {
   if (!n) return;
   elegirRanura("tmp_" + Math.random().toString(36).slice(2, 6), n.trim().toUpperCase());
 }
+function iniciarModoSolo() {
+  desbloquearAudio(false);
+  antId = "ant_1"; antNom = "ANTENA 1 (SOLO)";
+  localStorage.setItem("mxp_ant_id", antId); localStorage.setItem("mxp_ant_nom", antNom);
+  document.getElementById("modalRanura").style.display = "none";
+  document.getElementById("lblNomAnt").textContent = "📡 " + antNom;
+  if (_tSoloCal) clearInterval(_tSoloCal);
+  var s = 10;
+  hablar("Modo solo activado, coloca el movil en meta y retirate, calibrando en 10 segundos");
+  document.getElementById("lblEstado").textContent = "MODO SOLO — CALIBRANDO EN 10s...";
+  _tSoloCal = setInterval(function() {
+    document.getElementById("lblEstado").textContent = "MODO SOLO — PREPARATE (" + s + "s)";
+    if (s <= 5 && s >= 1) hablar(String(s));
+    if (s <= 0) {
+      clearInterval(_tSoloCal); _tSoloCal = null;
+      _ultPasoLocalTs = 0; pasos = 0;
+      calibrarFondo();
+      cfg.estado = "EN_CURSO";
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", modoDet: "TODO", tsInicio: ahoraSrv() }) }).catch(function(){});
+      setTimeout(function(){ hablar("Pista calibrada, crono en marcha, dale gas"); }, 1500);
+    }
+    s--;
+  }, 1000);
+}
 function ayudaAnt() {
-  alert("GUIA DE ANTENA PRO (60 FPS):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO).\n2. Coloca el movil quieto en horizontal en recta/zona plana.\n3. Pulsa 🔊 AUDIO para activar la voz.\n4. Desde Direccion puedes ver el video fluido, mover la linea roja y ajustar el deslizador de umbral (2%-25%) para cualquier paso.\n5. Tras calibrar, pulsa 🌙 OLED para apagar la pantalla bajo el sol.");
+  alert("GUIA DE ANTENA PRO (60 FPS + MEGAFONIA ESTEREO):\n1. Elige ANTENA 1 (META) o ANTENA 2 (REFUERZO), o 🏁 RODAR SOLO si vas unicamente con este movil.\n2. Coloca los moviles fijos en horizontal en recta/zona plana.\n3. Pulsa 🔊 AUDIO para activar la voz.\n4. MEGAFONIA ESTEREO: las dos antenas reproducen a la vez ordenes de Direccion, retos de Ruleta Loca, vueltas y los animos del publico.\n5. Tras calibrar, pulsa 🌙 OLED para apagar pantalla bajo el sol.");
 }
 function hablar(t) {
   if (!vozOn || !("speechSynthesis" in window)) return;
-  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.08; speechSynthesis.speak(u); } catch (e) {}
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.06; speechSynthesis.speak(u); } catch (e) {}
 }
 function beep() {
   try {
@@ -162,6 +201,7 @@ function calibrarFondo() {
   hablar("Calibrando pista vacia");
 }
 function salirAntena() {
+  if (_esSala) { try { _esSala.close(); } catch (e) {} }
   if (antId) {
     Promise.all([
       fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }).catch(function(){}),
@@ -195,8 +235,11 @@ _cnvLive.width = 480; _cnvLive.height = 270;
 var _ctxLive = _cnvLive.getContext("2d");
 
 function emitirPaso(pid) {
-  pasos++; beep();
+  pasos++; beep(); vibrar([35, 30, 35]);
   var tsPaso = ahoraSrv();
+  var lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0;
+  _ultPasoLocalTs = tsPaso;
+
   fetch(FB + "/eventos/" + antId + ".json", {
     method: "PUT",
     body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos })
@@ -209,11 +252,23 @@ function emitirPaso(pid) {
     _ctxFf.fillRect(Math.round((posX / 100) * 320) - 1, 0, 2, 180);
     fetch(FB_FF, {
       method: "PUT",
-      body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.58) })
+      body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _ctxFf.toDataURL("image/jpeg", 0.58) })
     }).catch(function(){});
   } catch (e) {}
 
-  if (!pid) hablar("Paso " + pasos);
+  if (_tSoloVoz) clearTimeout(_tSoloVoz);
+  var pasoNum = pasos;
+  _tSoloVoz = setTimeout(function() {
+    _tSoloVoz = null;
+    if (lapLocal >= 1500) {
+      var segTxt = (lapLocal / 1000).toFixed(2).replace(".", " punto ");
+      hablar("Vuelta " + Math.max(1, pasoNum - 1) + ", " + segTxt + " segundos");
+      document.getElementById("lblMegaAnt").textContent = "🔊 Vuelta: " + (lapLocal / 1000).toFixed(2) + "s";
+    } else {
+      hablar("Paso " + pasoNum + ", crono iniciado");
+    }
+  }, 750);
+
   document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
 }
 
@@ -375,11 +430,22 @@ function procesarSala(s) {
   cfg.modoDet = s.modoDet || "TODO";
   cfg.verVivo = !!s.verVivo;
   cfg.sensPct = (Number(s.sensPct || 7)) / 100;
+
   if (s.cmd && s.cmd.antId === antId && s.cmd.ts !== ultCmd) {
     ultCmd = s.cmd.ts;
     if (Math.abs(ahoraSrv() - Number(s.cmd.ts || 0)) < 20000) {
       if (s.cmd.posX) setPosX(Number(s.cmd.posX));
       if (s.cmd.calibrar) calibrarFondo();
+    }
+  }
+
+  if (s.megafonia && s.megafonia.id && s.megafonia.id !== _ultMegaId) {
+    _ultMegaId = s.megafonia.id;
+    if (Math.abs(ahoraSrv() - Number(s.megafonia.ts || 0)) < 12000 && s.megafonia.texto) {
+      if (_tSoloVoz) { clearTimeout(_tSoloVoz); _tSoloVoz = null; }
+      document.getElementById("lblMegaAnt").textContent = "📢 " + s.megafonia.texto;
+      if (s.megafonia.beep) beep();
+      hablar(s.megafonia.texto);
     }
   }
 }
@@ -393,29 +459,36 @@ function enviarTelemetria() {
   }).catch(function(){}).finally(function(){ _telBusy = false; });
 }
 
-try {
-  var esSala = new EventSource(FB + "/sala.json");
-  var onSse = function(ev) {
-    try {
-      var msg = JSON.parse(ev.data);
-      if (!msg || !msg.path) return;
-      if (msg.path === "/") {
-        if (ev.type === "put") salaCache = msg.data || {};
-        else Object.assign(salaCache, msg.data || {});
-      } else {
-        var key = msg.path.slice(1).split("/")[0];
-        if (msg.path === "/" + key) salaCache[key] = msg.data;
-        else if (key) {
-          if (typeof salaCache[key] !== "object" || !salaCache[key]) salaCache[key] = {};
-          if (msg.data && typeof msg.data === "object") Object.assign(salaCache[key], msg.data);
+function conectarSseSala() {
+  if (_esSala) { try { _esSala.close(); } catch (e) {} }
+  try {
+    _esSala = new EventSource(FB + "/sala.json");
+    var onSse = function(ev) {
+      try {
+        var msg = JSON.parse(ev.data);
+        if (!msg || !msg.path) return;
+        if (msg.path === "/") {
+          if (ev.type === "put") salaCache = msg.data || {};
+          else Object.assign(salaCache, msg.data || {});
+        } else {
+          var key = msg.path.slice(1).split("/")[0];
+          if (msg.path === "/" + key) salaCache[key] = msg.data;
+          else if (key) {
+            if (typeof salaCache[key] !== "object" || !salaCache[key]) salaCache[key] = {};
+            if (msg.data && typeof msg.data === "object") Object.assign(salaCache[key], msg.data);
+          }
         }
-      }
-      procesarSala(salaCache);
-    } catch (e) {}
-  };
-  esSala.addEventListener("put", onSse);
-  esSala.addEventListener("patch", onSse);
-} catch (e) {}
+        procesarSala(salaCache);
+      } catch (e) {}
+    };
+    _esSala.addEventListener("put", onSse);
+    _esSala.addEventListener("patch", onSse);
+    _esSala.onerror = function() {
+      if (_esSala && _esSala.readyState === 2) setTimeout(conectarSseSala, 2500);
+    };
+  } catch (e) {}
+}
+conectarSseSala();
 
 setInterval(enviarTelemetria, 350);
 

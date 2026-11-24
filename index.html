@@ -6,36 +6,58 @@
 <title>Metropolitano MX Pro</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;background:#070707 url("logo.png") center 11% / min(80vw,400px) auto no-repeat;color:#fff;font-family:Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:56px 16px 24px;text-align:center}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;
+    background-color:#070707;
+    background-image:url("logo.png"),repeating-linear-gradient(45deg,#0c0c0c 0,#0c0c0c 6px,#070707 6px,#070707 12px);
+    background-position:center 11%,0 0;
+    background-size:min(80vw,400px) auto,auto;
+    background-repeat:no-repeat,repeat;
+    color:#fff;font-family:Arial,sans-serif;min-height:100vh;
+    display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+    padding:58px 16px 24px;text-align:center;font-variant-numeric:tabular-nums
+  }
   .top-bar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:20}
-  .btn-mini{background:rgba(20,20,20,0.9);color:#aaa;border:1px solid #333;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:bold;text-transform:uppercase;cursor:pointer;width:auto}
-  .box{width:100%;max-width:390px;display:flex;flex-direction:column;gap:9px}
-  button{width:100%;padding:14px;font-size:14px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;text-transform:uppercase}
-  .b-pil{background:#ffc107;color:#000;font-size:17px;padding:16px}
-  .b-afi{background:#20c997;color:#000}
-  .b-mun{background:#18202c;color:#0dcaf0;border:1px solid #0dcaf0;padding:11px;font-size:12px}
-  .b-vivo{display:none;background:#dc3545;color:#fff;animation:pulse 1.5s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.75}}
-  .banner{background:rgba(20,20,20,0.92);border:1px solid #333;border-radius:10px;padding:9px;font-size:12px;color:#0dcaf0}
-  .circ-box{background:rgba(20,20,20,0.94);border:1px solid #333;border-radius:10px;padding:9px;text-align:left}
+  button{
+    width:100%;padding:13px;font-size:14px;font-weight:bold;border:none;border-radius:12px;
+    cursor:pointer;text-transform:uppercase;position:relative;
+    box-shadow:0 4px 0 rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.22);
+    transition:transform 0.08s ease,box-shadow 0.08s ease
+  }
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.15)}
+  .btn-mini{background:#1b1b1b;color:#bbb;border:1px solid #383838;padding:7px 11px;border-radius:9px;font-size:11px;width:auto;box-shadow:0 3px 0 #000}
+  .box{width:100%;max-width:390px;display:flex;flex-direction:column;gap:9px;animation:fadeUp 0.25s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .b-pil{background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;font-size:17px;padding:16px;box-shadow:0 5px 0 #996300,inset 0 1px 0 rgba(255,255,255,0.5)}
+  .b-pil:active{box-shadow:0 2px 0 #996300}
+  .b-afi{background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;box-shadow:0 5px 0 #087f5b,inset 0 1px 0 rgba(255,255,255,0.45)}
+  .b-afi:active{box-shadow:0 2px 0 #087f5b}
+  .b-mun{background:linear-gradient(180deg,#1e2a3a,#121a24);color:#3bc9db;border:1px solid #0dcaf0;padding:11px;font-size:12px;box-shadow:0 4px 0 #083d4c}
+  .b-pad{background:linear-gradient(180deg,#2a1f3d,#191226);color:#d0a8ff;border:1px solid #7950f2;padding:11px;font-size:12px;box-shadow:0 4px 0 #3b1d70}
+  .b-vivo{display:none;background:linear-gradient(180deg,#ff4d5e,#c92a2a);color:#fff;box-shadow:0 5px 0 #701010;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22)}}
+  .banner{background:rgba(18,18,18,0.94);border:1px solid #333;border-radius:10px;padding:9px;font-size:12px;color:#3bc9db;box-shadow:0 3px 10px rgba(0,0,0,0.4)}
+  .circ-box{background:rgba(18,18,18,0.95);border:1px solid #3a3a3a;border-radius:11px;padding:9px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
   .circ-row{display:flex;gap:6px;align-items:center;margin-top:5px}
   .circ-row select{flex:1;margin:0;padding:9px;font-size:12px}
-  .circ-row button{width:auto;padding:9px 12px;background:#262626;color:#ffc107;border:1px solid #444;border-radius:8px;font-size:12px}
-  .card{display:none;width:100%;max-width:390px;background:#141414;border:1px solid #333;border-radius:14px;padding:18px;text-align:left}
-  input,select,textarea{width:100%;padding:11px;margin-bottom:10px;border-radius:8px;border:1px solid #444;background:#000;color:#fff;font-size:13px;font-family:Arial,sans-serif}
+  .circ-row button{width:auto;padding:9px 12px;background:#262626;color:#ffc107;border:1px solid #444;border-radius:8px;font-size:12px;box-shadow:0 3px 0 #000}
+  .card{display:none;width:100%;max-width:390px;background:#141414;border:1px solid #3a3a3a;border-radius:15px;padding:18px;text-align:left;box-shadow:0 10px 28px rgba(0,0,0,0.75);animation:fadeUp 0.2s ease}
+  input,select,textarea{width:100%;padding:11px;margin-bottom:10px;border-radius:8px;border:1px solid #444;background:#050505;color:#fff;font-size:13px;font-family:Arial,sans-serif}
   .tabs{display:flex;gap:6px;margin-bottom:12px}
-  .tab{flex:1;padding:9px;font-size:12px;background:#222;color:#999;border-radius:8px}
-  .tab.act{background:#0d6efd;color:#fff}
+  .tab{flex:1;padding:9px;font-size:12px;background:#222;color:#999;border-radius:8px;box-shadow:0 3px 0 #000}
+  .tab.act{background:linear-gradient(180deg,#339af0,#1c7ed6);color:#fff;box-shadow:0 3px 0 #0b467a}
   .msg{font-size:13px;font-weight:bold;margin-top:8px;text-align:center}
   .list-scroll{max-height:52vh;overflow-y:auto;border:1px solid #262626;border-radius:8px;background:#0e0e0e;padding:6px;font-size:12px}
   .fila-mun{padding:8px;border-bottom:1px solid #262626;text-align:left}
+  .pad-card{background:#161616;border:1px solid #333;border-radius:10px;padding:8px;margin-bottom:8px;text-align:left}
+  .pad-card img{width:100%;height:150px;object-fit:contain;background:#000;border-radius:7px;margin-bottom:6px;display:block}
 </style>
 </head>
 <body>
   <div class="top-bar">
-    <button id="btnTopDir" class="btn-mini" onclick="abrir('pDir')">🏁 DIRECCION</button>
-    <button id="btnTopAnt" class="btn-mini" onclick="irAntenas()">📡 ANTENAS</button>
+    <button id="btnTopDir" class="btn-mini" onclick="vibrar();abrir('pDir')">🏁 DIRECCION</button>
+    <button id="btnTopAnt" class="btn-mini" onclick="vibrar();irAntenas()">📡 ANTENAS</button>
   </div>
 
   <div id="menu" class="box">
@@ -45,55 +67,58 @@
         <select id="selCircuitoIdx" onchange="cambiarCircuitoIdx(this.value)">
           <option value="METROPOLITANO">🏁 METROPOLITANO CIRCUIT (MADRID - SEDE)</option>
         </select>
-        <button id="btnNewCirc" onclick="abrir('pCirc')">+ CREAR</button>
+        <button id="btnNewCirc" onclick="vibrar();abrir('pCirc')">+ CREAR</button>
       </div>
     </div>
 
     <div id="banGps" class="banner" style="display:none;border-color:#20c997;color:#20c997"></div>
     <div id="banHotlap" class="banner">👑 HOTLAP SEMANAL: Cargando...</div>
-    <button id="btnVivo" class="b-vivo" onclick="location.href='vivo.html'">🔴 RODANDO AHORA — VER EN VIVO</button>
+    <button id="btnVivo" class="b-vivo" onclick="vibrar();location.href='vivo.html'">🔴 RODANDO AHORA — VER EN VIVO</button>
 
-    <button id="btnPiloto" class="b-pil" onclick="abrirAuth('PILOTO')">🏍️ PILOTO PROMOTO</button>
-    <button id="btnAfi" class="b-afi" onclick="abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (VER Y ANIMAR)</button>
-    <button id="btnMundial" class="b-mun" onclick="abrirMundial()">🌍 RANKING MUNDIAL Y SETUPS</button>
+    <button id="btnPiloto" class="b-pil" onclick="vibrar(25);abrirAuth('PILOTO')">🏍️ PILOTO PROMOTO</button>
+    <button id="btnAfi" class="b-afi" onclick="vibrar();abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (VER Y ANIMAR)</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button id="btnMundial" class="b-mun" onclick="vibrar();abrirMundial()">🌍 RANKING MUNDIAL</button>
+      <button id="btnPaddock" class="b-pad" onclick="vibrar();abrirPaddock()">🏍️ PADDOCK MUNDIAL</button>
+    </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button id="btnGuia" style="background:#1c1c1c;color:#ccc;border:1px solid #333;padding:10px;font-size:11px" onclick="abrir('pGuia')">📲 INSTALAR / GUIA</button>
-      <button id="btnInvitar" style="background:#1c1c1c;color:#0dcaf0;border:1px solid #333;padding:10px;font-size:11px" onclick="invitarAmigo()">💬 INVITAR AMIGO</button>
-      <button id="btnReportar" style="grid-column:span 2;background:#1c1c1c;color:#ff4d5e;border:1px solid #444;padding:9px;font-size:11px" onclick="abrir('pRep')">🛠️ INFORMAR DE UN PROBLEMA / BUG</button>
+      <button id="btnGuia" style="background:#1c1c1c;color:#ccc;border:1px solid #333;padding:10px;font-size:11px;box-shadow:0 3px 0 #000" onclick="vibrar();abrir('pGuia')">📲 INSTALAR / GUIA</button>
+      <button id="btnInvitar" style="background:#1c1c1c;color:#0dcaf0;border:1px solid #333;padding:10px;font-size:11px;box-shadow:0 3px 0 #000" onclick="vibrar();invitarAmigo()">💬 INVITAR AMIGO</button>
+      <button id="btnReportar" style="grid-column:span 2;background:#1c1c1c;color:#ff4d5e;border:1px solid #444;padding:9px;font-size:11px;box-shadow:0 3px 0 #000" onclick="vibrar();abrir('pRep')">🛠️ INFORMAR DE UN PROBLEMA / BUG</button>
     </div>
   </div>
 
   <div id="pAuth" class="card">
     <h3 id="titAuth" style="color:#ffc107;margin:0 0 10px;text-align:center">ACCESO PILOTO PROMOTO</h3>
     <div class="tabs">
-      <button id="tLog" class="tab act" onclick="modoAuth('LOGIN')">ENTRAR</button>
-      <button id="tReg" class="tab" onclick="modoAuth('REG')">CREAR CUENTA</button>
+      <button id="tLog" class="tab act" onclick="vibrar();modoAuth('LOGIN')">ENTRAR</button>
+      <button id="tReg" class="tab" onclick="vibrar();modoAuth('REG')">CREAR CUENTA</button>
     </div>
     <input id="aNom" type="text" placeholder="Nombre (ej. Carlos22)">
     <input id="aClv" type="password" placeholder="Contrasena">
     <input id="aPin" type="text" placeholder="PIN recuperacion (4 numeros)" maxlength="4" inputmode="numeric" style="display:none">
-    <button id="bEntrar" class="b-pil" style="padding:13px;font-size:15px" onclick="procesarAuth()">ENTRAR</button>
+    <button id="bEntrar" class="b-pil" style="padding:13px;font-size:15px" onclick="vibrar(25);procesarAuth()">ENTRAR</button>
     <div style="text-align:center;margin-top:8px"><a id="lnkOlv" href="#" onclick="abrir('pRec');return false" style="color:#0dcaf0;font-size:12px">¿Olvidaste tu nombre o clave?</a></div>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
     <div id="mAuth" class="msg"></div>
   </div>
 
   <div id="pRec" class="card">
     <h3 id="titRec" style="color:#0dcaf0;margin:0 0 10px;text-align:center">RECUPERAR ACCESO</h3>
+    <input id="rNom" type="text" placeholder="Tu Nombre de piloto (obligatorio)">
     <input id="rPin" type="text" placeholder="Tu PIN de 4 numeros" maxlength="4" inputmode="numeric">
-    <input id="rNom" type="text" placeholder="Tu Nombre (opcional)">
     <input id="rClv" type="password" placeholder="Nueva Contrasena">
-    <button id="btnRecOk" class="b-afi" style="padding:13px" onclick="recuperarClave()">RESTABLECER Y ENTRAR</button>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('pAuth')">VOLVER</button>
+    <button id="btnRecOk" class="b-afi" style="padding:13px" onclick="vibrar();recuperarClave()">RESTABLECER Y ENTRAR</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('pAuth')">VOLVER</button>
     <div id="mRec" class="msg"></div>
   </div>
 
   <div id="pDir" class="card">
     <h3 id="titDir" style="color:#0dcaf0;margin:0 0 10px;text-align:center">ACCESO DIRECCION</h3>
     <input id="dClv" type="password" placeholder="Clave de Direccion">
-    <button id="btnDirOk" style="background:#0dcaf0;color:#000;padding:13px" onclick="entrarDir()">ENTRAR A CONTROL</button>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <button id="btnDirOk" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;padding:13px;box-shadow:0 4px 0 #087990" onclick="vibrar();entrarDir()">ENTRAR A CONTROL</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
     <div id="mDir" class="msg"></div>
   </div>
 
@@ -107,29 +132,51 @@
       <option value="SM Asfalto">🏁 SM Asfalto (Tarmac)</option>
       <option value="Mixto">🔀 Mixto (Mixed)</option>
     </select>
-    <input id="cMetros" type="number" placeholder="Longitud aprox. en metros (ej. 180)" inputmode="numeric">
-    <button id="btnCircSave" class="b-afi" style="padding:13px" onclick="guardarNuevoCircuito()">CREAR Y ACTIVAR CIRCUITO</button>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <select id="cTrazado">
+      <option value="1.00">⚖️ Trazado Mixto / Estandar (x1.00)</option>
+      <option value="0.94">💨 Trazado Rapido / Rectas largas (x0.94)</option>
+      <option value="1.08">⛰️ Trazado Tecnico / Supercross (x1.08)</option>
+    </select>
+    <input id="cMetros" type="number" placeholder="Cuerda en metros (ej. 180) para comparar mundial" inputmode="numeric">
+    <button id="btnCircSave" class="b-afi" style="padding:13px" onclick="vibrar();guardarNuevoCircuito()">CREAR Y ACTIVAR CIRCUITO</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
     <div id="mCirc" class="msg"></div>
   </div>
 
   <div id="pMundial" class="card">
     <h3 id="titMun" style="color:#ffc107;margin:0 0 8px;text-align:center">🌍 RANKING MUNDIAL Y SETUPS</h3>
-    <select id="filSupMun" onchange="cargarMundial()">
-      <option value="TODOS">🌐 Todas las superficies</option>
-      <option value="MX">🏍️ MX Tierra (Motocross)</option>
-      <option value="SM">🏁 SM Asfalto (Supermoto)</option>
-    </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <select id="filSupMun" onchange="cargarMundial()">
+        <option value="TODOS">🌐 Todas</option>
+        <option value="MX">🏍️ MX Tierra</option>
+        <option value="SM">🏁 SM Asfalto</option>
+      </select>
+      <select id="ordMun" onchange="cargarMundial()">
+        <option value="TEO">🏁 Teorico 200m</option>
+        <option value="REG">📊 Regularidad + VR</option>
+      </select>
+    </div>
     <div id="listaMundial" class="list-scroll">Cargando...</div>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
+  </div>
+
+  <div id="pPaddock" class="card">
+    <h3 id="titPad" style="color:#d0a8ff;margin:0 0 8px;text-align:center">🏍️ PADDOCK MUNDIAL (MOTOS)</h3>
+    <select id="filSupPad" onchange="cargarPaddock()">
+      <option value="TODOS">🌐 Todas las disciplinas</option>
+      <option value="MX">🏍️ MX Tierra</option>
+      <option value="SM">🏁 SM Supermoto</option>
+    </select>
+    <div id="listaPaddock" class="list-scroll">Cargando motos...</div>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:10px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
   </div>
 
   <div id="pRep" class="card">
     <h3 id="titRep" style="color:#ff4d5e;margin:0 0 8px;text-align:center">🛠️ BUZON DE REPORTES</h3>
     <div id="txtRepSub" style="font-size:11px;color:#aaa;margin-bottom:8px">Describe cualquier fallo, bug o sugerencia para Direccion:</div>
     <textarea id="repTxt" rows="4" placeholder="Escribe aqui los detalles..."></textarea>
-    <button id="btnEnviarRep" style="background:#ff4d5e;color:#fff;padding:12px" onclick="enviarReporte()">ENVIAR REPORTE</button>
-    <button class="btn-volver" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">VOLVER</button>
+    <button id="btnEnviarRep" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff;padding:12px;box-shadow:0 4px 0 #7a1010" onclick="vibrar();enviarReporte()">ENVIAR REPORTE</button>
+    <button class="btn-volver" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">VOLVER</button>
     <div id="mRep" class="msg"></div>
   </div>
 
@@ -137,21 +184,22 @@
     <h3 id="titGuia" style="color:#ffc107;margin:0 0 8px">📲 INSTALAR APP Y GUIA COMPLETA</h3>
     <div id="txtGuiaBody" class="list-scroll" style="max-height:54vh;padding:8px">
       <b>1. Instalar en movil (PWA Offline):</b><br>
-      • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) arriba y elige <i>"Instalar aplicacion"</i>.<br>
+      • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) y elige <i>"Instalar aplicacion"</i>.<br>
       • <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> y elige <i>"Añadir a pantalla de inicio"</i>.<br><br>
-      <b>2. Motos 1/4 RC (Losi Promoto-MX y SM):</b><br>
-      • Registra tu moto en <b>GARAJE</b>, elige <b>MX Tierra</b> o <b>SM Supermoto</b>, haz hasta 4 fotos y captura los colores en directo.<br>
-      • <i>Consejo PRO:</i> Poned un vinilo fluor diferente en la visera/casco y guardabarros trasero para que las antenas os distingan incluso con polvo.<br><br>
-      <b>3. Antenas de Meta (60 fps):</b><br>
-      • Coloca los moviles en zona plana y firme (no en recepcion de salto). Si usas 2, pon uno a cada lado de la recta para Foto-Finish doble.<br>
-      • Activa <b>🌙 OLED</b> en la antena tras calibrar para evitar calor bajo el sol.<br><br>
-      <b>4. Modos de Carrera y Salidas:</b><br>
-      • <b>Salidas:</b> Semaforo 30s o <b>Valla MX Aleatoria</b> (soltado sorpresa tras el cartel 5s).<br>
-      • <b>Modos:</b> Normal, Bomba 45s, Eliminacion 60s, Rey de la Pista, Superpole y <b>Ruleta Loca MX</b>.<br>
-      • Incluye <b>Delta por voz en el oido</b>, <b>Modo Bolsillo</b> (mantener 2s para desbloquear), <b>Foto-Finish</b> y <b>Campeonato por Mangas (Podio PNG)</b>.
+      <b>2. Seguridad y Backup:</b><br>
+      • Tus claves y PIN viajan cifrados en SHA-256. Para recuperar clave necesitas tu <b>Nombre + PIN de 4 digitos</b>.<br>
+      • Desde Garaje/Tiempos puedes <b>Exportar/Restaurar Backup</b> de tus motos y vueltas.<br><br>
+      <b>3. Paddock Mundial y Circuito Teorico 200m:</b><br>
+      • Publica tu moto y setup desde <b>GARAJE</b> en el <b>Paddock Mundial</b>.<br>
+      • Con la cuerda y trazado de tu pista veras tu <b>Velocidad Media (km/h)</b> y <b>Tiempo Teorico 200m</b>.<br><br>
+      <b>4. Antenas (60 fps) y Megafonia Estereo:</b><br>
+      • Las 2 antenas hacen de altavoz comun para Direccion, retos y <b>animos del publico</b>. Si ruedas solo con 1 antena, te canta cada vuelta.<br>
+      • Usa <b>🌙 OLED</b> bajo el sol y sigue la guia de <b>Recorte de Fondo + Varita Magica</b> al capturar colores.<br><br>
+      <b>5. Salidas, Ruleta Loca MX y Aficionados:</b><br>
+      • Semáforo 30s o <b>Valla MX Aleatoria</b>. Retos en Ruleta explicados por escrito y voz (incluidos retos para rodar solo).
     </div>
-    <button id="btnMapaCirc" style="background:#20c997;color:#000;margin-top:10px;padding:11px;font-size:12px" onclick="verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
-    <button id="btnGuiaCer" style="background:#333;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="abrir('menu')">CERRAR</button>
+    <button id="btnMapaCirc" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;margin-top:10px;padding:11px;font-size:12px;box-shadow:0 4px 0 #087f5b" onclick="vibrar();verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
+    <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
   </div>
 
 <script>
@@ -166,6 +214,27 @@ fetch(FB_BASE + ".info/serverTimeOffset.json")
   .catch(function(){});
 function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 
+function vibrar(ms) {
+  try { if (navigator.vibrate) navigator.vibrate(ms || 18); } catch (e) {}
+}
+
+function hashTxt(txt) {
+  var s = "MXPRO_2026_SALT_" + String(txt || "");
+  if (window.crypto && crypto.subtle && window.TextEncoder) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function(b) {
+        return ("00" + b.toString(16)).slice(-2);
+      }).join("");
+    });
+  }
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return Promise.resolve("fb_" + h.toString(16));
+}
+
 var circAct = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
 localStorage.setItem("mxp_circ_id", circAct);
@@ -173,7 +242,7 @@ localStorage.setItem("mxp_circ_nom", circNom);
 
 function FB_CIRC() { return FB_ROOT + "/circuitos/" + circAct; }
 
-var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null;
+var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null, _ultRepTs = 0;
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
 function esc(s) {
@@ -199,7 +268,8 @@ function aplicarIdioma() {
   document.getElementById("banHotlap").textContent = "👑 WEEKLY HOTLAP: Loading...";
   document.getElementById("btnPiloto").textContent = "🏍️ PROMOTO RIDER";
   document.getElementById("btnAfi").textContent = "🎟️ FAN CLUB (LIVE & CHEER)";
-  document.getElementById("btnMundial").textContent = "🌍 WORLD RANKING & SETUPS";
+  document.getElementById("btnMundial").textContent = "🌍 WORLD RANKING";
+  document.getElementById("btnPaddock").textContent = "🏍️ WORLD PADDOCK";
   document.getElementById("btnGuia").textContent = "📲 INSTALL / GUIDE";
   document.getElementById("btnInvitar").textContent = "💬 INVITE FRIEND";
   document.getElementById("btnReportar").textContent = "🛠️ REPORT A BUG / ISSUE";
@@ -210,11 +280,11 @@ function aplicarIdioma() {
   document.getElementById("aClv").placeholder = "Password";
   document.getElementById("aPin").placeholder = "Recovery PIN (4 digits)";
   document.getElementById("bEntrar").textContent = "SIGN IN";
-  document.getElementById("lnkOlv").textContent = "Forgot your name or password?";
+  document.getElementById("lnkOlv").textContent = "Forgot your password?";
 
   document.getElementById("titRec").textContent = "RECOVER ACCESS";
+  document.getElementById("rNom").placeholder = "Your Rider Name (required)";
   document.getElementById("rPin").placeholder = "Your 4-digit PIN";
-  document.getElementById("rNom").placeholder = "Your Name (optional)";
   document.getElementById("rClv").placeholder = "New Password";
   document.getElementById("btnRecOk").textContent = "RESET & ENTER";
 
@@ -226,11 +296,16 @@ function aplicarIdioma() {
   document.getElementById("subCirc").textContent = "Metropolitano is exclusive to the Madrid area. Create your local track to ride and join the World Ranking.";
   document.getElementById("cNom").placeholder = "Track name (e.g. Apex Track)";
   document.getElementById("cPais").placeholder = "Country / City (e.g. USA - California)";
-  document.getElementById("cMetros").placeholder = "Approx. length in meters (e.g. 180)";
+  document.getElementById("cTrazado").innerHTML = '<option value="1.00">⚖️ Mixed / Standard Layout (x1.00)</option><option value="0.94">💨 Fast / Long Straights (x0.94)</option><option value="1.08">⛰️ Technical / Supercross (x1.08)</option>';
+  document.getElementById("cMetros").placeholder = "Track length in meters (e.g. 180) for global comparison";
   document.getElementById("btnCircSave").textContent = "CREATE & ACTIVATE TRACK";
 
   document.getElementById("titMun").textContent = "🌍 WORLD RANKING & SETUPS";
-  document.getElementById("filSupMun").innerHTML = '<option value="TODOS">🌐 All surfaces</option><option value="MX">🏍️ MX Dirt (Motocross)</option><option value="SM">🏁 SM Tarmac (Supermoto)</option>';
+  document.getElementById("filSupMun").innerHTML = '<option value="TODOS">🌐 All</option><option value="MX">🏍️ MX Dirt</option><option value="SM">🏁 SM Tarmac</option>';
+  document.getElementById("ordMun").innerHTML = '<option value="TEO">🏁 Theoretical 200m</option><option value="REG">📊 Consistency + VR</option>';
+
+  document.getElementById("titPad").textContent = "🏍️ WORLD PADDOCK (BIKES)";
+  document.getElementById("filSupPad").innerHTML = '<option value="TODOS">🌐 All classes</option><option value="MX">🏍️ MX Dirt</option><option value="SM">🏁 SM Supermoto</option>';
 
   document.getElementById("titRep").textContent = "🛠️ ISSUE / BUG REPORT";
   document.getElementById("txtRepSub").textContent = "Describe any issue, bug or suggestion for Race Control:";
@@ -239,10 +314,11 @@ function aplicarIdioma() {
 
   document.getElementById("titGuia").textContent = "📲 INSTALL APP & FULL GUIDE";
   document.getElementById("txtGuiaBody").innerHTML =
-    "<b>1. Install PWA (Offline Ready):</b><br>• <b>Android (Chrome):</b> Tap the 3 dots (⋮) and choose <i>\"Install app\"</i>.<br>• <b>iPhone (Safari):</b> Tap <i>Share</i> and choose <i>\"Add to Home Screen\"</i>.<br><br>" +
-    "<b>2. 1/4 RC Bikes (Losi Promoto-MX & SM):</b><br>• Set up your bike in <b>GARAGE</b> (MX Dirt or SM Supermoto), take 4 live photos & capture side colors.<br>• <i>PRO Tip:</i> Use bright neon tape on helmet visor & rear fender for dust-proof color detection.<br><br>" +
-    "<b>3. Finish Antennas (60 fps):</b><br>• Place phones on a flat straight (never on jump landings). Use 🌙 <b>OLED</b> mode under direct sunlight.<br><br>" +
-    "<b>4. Race Modes & Features:</b><br>• Starts: 30s Grid or <b>Random MX Gate Drop</b>.<br>• Modes: Normal, Time Bomb 45s, Elimination 60s, King of Track, Superpole & <b>Crazy Roulette</b>.<br>• Includes live voice delta, 2s hold Pocket Lock, Photo-Finish & Overall Championship Podium PNG.";
+    "<b>1. Install PWA (Offline Ready):</b><br>• <b>Android (Chrome):</b> Tap 3 dots (⋮) and choose <i>\"Install app\"</i>.<br>• <b>iPhone (Safari):</b> Tap <i>Share</i> and choose <i>\"Add to Home Screen\"</i>.<br><br>" +
+    "<b>2. Security & Backup:</b><br>• Passwords & PINs are SHA-256 hashed. Recovery requires <b>Rider Name + 4-digit PIN</b>.<br>• Export/Restore your Garage & Lap History backup anytime from the app.<br><br>" +
+    "<b>3. World Paddock & 200m Theoretical Track:</b><br>• Publish your bike & setup from <b>GARAGE</b> to the <b>World Paddock</b>.<br>• Track length & layout factor compute your <b>Avg Speed (km/h)</b> and <b>200m Equivalent Lap</b>.<br><br>" +
+    "<b>4. Finish Antennas (60 fps) & Stereo PA:</b><br>• Both finish phones act as stereo loudspeakers for Race Control, challenges & live fan cheers. Solo mode calls laps automatically.<br><br>" +
+    "<b>5. Background Cutout, Gate Drop & Crazy Roulette:</b><br>• Auto-removes background + Magic Wand tap-to-erase, Random MX Gate Drop, Crazy Roulette (written & spoken, solo-friendly) & Fan Club.";
   document.getElementById("btnMapaCirc").textContent = "📍 VIEW TRACK LOCATION";
   document.getElementById("btnGuiaCer").textContent = "CLOSE";
 
@@ -251,7 +327,7 @@ function aplicarIdioma() {
 }
 
 function abrir(id) {
-  ["menu", "pAuth", "pRec", "pDir", "pGuia", "pCirc", "pMundial", "pRep"].forEach(function(x) {
+  ["menu", "pAuth", "pRec", "pDir", "pGuia", "pCirc", "pMundial", "pPaddock", "pRep"].forEach(function(x) {
     var el = document.getElementById(x);
     if (el) el.style.display = (x === id) ? (x === "menu" ? "flex" : "block") : "none";
   });
@@ -269,7 +345,7 @@ function abrirAuth(rol) {
     ? (rol === "PILOTO" ? "PROMOTO RIDER ACCESS" : "MX FAN CLUB")
     : (rol === "PILOTO" ? "ACCESO PILOTO PROMOTO" : "CLUB AFICIONADOS MX");
   document.getElementById("aNom").value = localStorage.getItem("mxp_rec_nom") || "";
-  document.getElementById("aClv").value = localStorage.getItem("mxp_rec_clv") || "";
+  document.getElementById("aClv").value = "";
   modoAuth("LOGIN");
   abrir("pAuth");
 }
@@ -286,6 +362,10 @@ function modoAuth(m) {
 }
 
 function registrarVisita(rol, nom) {
+  try {
+    if (rol === "PORTADA" && sessionStorage.getItem("mxp_vis_ok")) return;
+    if (rol === "PORTADA") sessionStorage.setItem("mxp_vis_ok", "1");
+  } catch (e) {}
   var ts = ahoraSrv();
   var idV = "v_" + ts + "_" + Math.random().toString(36).slice(2, 5);
   fetch(FB_ROOT + "/visitas/" + idV + ".json", {
@@ -323,70 +403,78 @@ function procesarAuth() {
 
   var locCtas = {};
   try { locCtas = JSON.parse(localStorage.getItem("mxp_cuentas_loc") || "{}"); } catch (e) {}
+  localStorage.removeItem("mxp_rec_clv");
 
-  fbJson(FB_ROOT + "/cuentas/" + uid + ".json").then(function(u) {
-    var ts = ahoraSrv();
-    if (modA === "REG") {
-      if (u) {
+  Promise.all([hashTxt(clv), hashTxt(pin)]).then(function(hs) {
+    var clvHash = hs[0], pinHash = hs[1];
+    return fbJson(FB_ROOT + "/cuentas/" + uid + ".json").then(function(u) {
+      var ts = ahoraSrv();
+      if (modA === "REG") {
+        if (u) {
+          msg.style.color = "#ff4d5e";
+          msg.textContent = esIngles ? "Name already exists, tap SIGN IN" : "Ese nombre ya existe, pulsa ENTRAR";
+          return;
+        }
+        var nw = { nombre: nom, claveHash: clvHash, pinHash: pinHash, rol: rolSel, bloqueado: false, ultAcceso: ts };
+        return fbJson(FB_ROOT + "/cuentas/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) })
+          .then(function() {
+            locCtas[uid] = nw;
+            localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+            finalizarAcceso(uid, nw);
+          });
+      }
+      var acc = u || locCtas[uid];
+      var passOk = acc && ((acc.claveHash && acc.claveHash === clvHash) || (acc.clave && acc.clave === clv));
+      if (!passOk) {
         msg.style.color = "#ff4d5e";
-        msg.textContent = esIngles ? "Name already exists, tap SIGN IN" : "Ese nombre ya existe, pulsa ENTRAR";
+        msg.textContent = esIngles ? "Wrong user or password (tap SIGN UP if new)" : "Usuario o clave incorrectos (si eres nuevo pulsa CREAR CUENTA)";
         return;
       }
-      var nw = { nombre: nom, clave: clv, pin: pin, rol: rolSel, bloqueado: false, ultAcceso: ts };
-      return fbJson(FB_ROOT + "/cuentas/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) })
-        .then(function() {
-          locCtas[uid] = nw;
-          localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
-          finalizarAcceso(uid, nw);
-        });
-    }
-    var acc = u || locCtas[uid];
-    if (!acc || acc.clave !== clv) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "Wrong user or password (tap SIGN UP if new)" : "Usuario o clave incorrectos (si eres nuevo pulsa CREAR CUENTA)";
-      return;
-    }
-    if (acc.bloqueado) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "Account suspended by Race Direction" : "Cuenta suspendida por Direccion";
-      return;
-    }
-    locCtas[uid] = acc;
-    localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
-    fetch(FB_ROOT + "/cuentas/" + uid + ".json", {
-      method: "PATCH",
-      body: JSON.stringify({ ultAcceso: ts, rol: rolSel })
-    }).catch(function(){});
-    finalizarAcceso(uid, acc);
-  }).catch(function(err) {
-    var ts = ahoraSrv();
-    if (err && String(err.message).indexOf("HTTP 401") >= 0) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "Firebase write permission blocked (401)" : "Permiso de escritura denegado en Firebase (401)";
-      return;
-    }
-    if (modA === "REG") {
-      var nw2 = { nombre: nom, clave: clv, pin: pin, rol: rolSel, bloqueado: false, ultAcceso: ts };
-      locCtas[uid] = nw2;
+      if (acc.bloqueado) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = esIngles ? "Account suspended by Race Direction" : "Cuenta suspendida por Direccion";
+        return;
+      }
+      var patchAcc = { ultAcceso: ts, rol: rolSel };
+      if (!acc.claveHash) {
+        patchAcc.claveHash = clvHash;
+        patchAcc.clave = null;
+        acc.claveHash = clvHash;
+        delete acc.clave;
+      }
+      locCtas[uid] = acc;
       localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
-      finalizarAcceso(uid, nw2);
-    } else if (locCtas[uid] && locCtas[uid].clave === clv) {
-      if (locCtas[uid].bloqueado) {
+      fetch(FB_ROOT + "/cuentas/" + uid + ".json", { method: "PATCH", body: JSON.stringify(patchAcc) }).catch(function(){});
+      finalizarAcceso(uid, acc);
+    }).catch(function(err) {
+      var ts = ahoraSrv();
+      if (err && String(err.message).indexOf("HTTP 401") >= 0) {
         msg.style.color = "#ff4d5e";
-        msg.textContent = esIngles ? "Account suspended" : "Cuenta suspendida por Direccion";
+        msg.textContent = esIngles ? "Firebase write permission blocked (401)" : "Permiso de escritura denegado en Firebase (401)";
         return;
       }
-      finalizarAcceso(uid, locCtas[uid]);
-    } else {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "Offline or account not found" : "Sin red o cuenta no creada";
-    }
+      if (modA === "REG") {
+        var nw2 = { nombre: nom, claveHash: clvHash, pinHash: pinHash, rol: rolSel, bloqueado: false, ultAcceso: ts };
+        locCtas[uid] = nw2;
+        localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+        finalizarAcceso(uid, nw2);
+      } else if (locCtas[uid] && ((locCtas[uid].claveHash && locCtas[uid].claveHash === clvHash) || locCtas[uid].clave === clv)) {
+        if (locCtas[uid].bloqueado) {
+          msg.style.color = "#ff4d5e";
+          msg.textContent = esIngles ? "Account suspended" : "Cuenta suspendida por Direccion";
+          return;
+        }
+        finalizarAcceso(uid, locCtas[uid]);
+      } else {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = esIngles ? "Offline or account not found" : "Sin red o cuenta no creada";
+      }
+    });
   });
 }
 
 function finalizarAcceso(uid, u) {
   localStorage.setItem("mxp_rec_nom", u.nombre);
-  localStorage.setItem("mxp_rec_clv", u.clave);
   localStorage.setItem("mxp_uid", uid);
   localStorage.setItem("mxp_nom", u.nombre);
   registrarVisita(rolSel, u.nombre);
@@ -430,51 +518,54 @@ function verificarZonaYEntrar(uid, u) {
 }
 
 function recuperarClave() {
+  var nom = document.getElementById("rNom").value.trim();
+  var uidR = nom.toLowerCase().replace(/[^a-z0-9]/g, "");
   var pin = document.getElementById("rPin").value.trim();
-  var nomB = document.getElementById("rNom").value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
   var ncl = document.getElementById("rClv").value.trim();
   var msg = document.getElementById("mRec");
 
-  if (!/^\d{4}$/.test(pin) || !ncl) {
+  if (!uidR || !/^\d{4}$/.test(pin) || !ncl) {
     msg.style.color = "#ff4d5e";
-    msg.textContent = esIngles ? "Enter your 4-digit PIN and new password" : "Introduce tu PIN de 4 numeros y nueva clave";
+    msg.textContent = esIngles ? "Enter your rider name, 4-digit PIN and new password" : "Introduce tu nombre, tu PIN de 4 numeros y nueva clave";
     return;
   }
   msg.style.color = "#0dcaf0";
-  msg.textContent = esIngles ? "Searching..." : "Buscando...";
+  msg.textContent = esIngles ? "Verifying..." : "Verificando...";
 
-  fbJson(FB_ROOT + "/cuentas.json").then(function(ct) {
-    if (!ct) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "No accounts found" : "PIN no encontrado";
-      return;
-    }
-    var encUid = Object.keys(ct).find(function(k) {
-      return ct[k] && String(ct[k].pin) === pin && (!nomB || k.indexOf(nomB) >= 0);
-    });
-    if (!encUid) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "PIN not found" : "PIN no encontrado";
-      return;
-    }
-    if (ct[encUid].bloqueado) {
-      msg.style.color = "#ff4d5e";
-      msg.textContent = esIngles ? "Account suspended by Race Direction" : "Cuenta suspendida por Direccion";
-      return;
-    }
-    return fbJson(FB_ROOT + "/cuentas/" + encUid + ".json", {
-      method: "PATCH",
-      body: JSON.stringify({ clave: ncl, ultAcceso: ahoraSrv() })
-    }).then(function() {
-      var u = Object.assign({}, ct[encUid], { clave: ncl });
-      try {
-        var locCtas = JSON.parse(localStorage.getItem("mxp_cuentas_loc") || "{}");
-        locCtas[encUid] = u;
-        localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
-      } catch (e) {}
-      msg.style.color = "#20c997";
-      msg.textContent = (esIngles ? "Rider: " : "Usuario: ") + u.nombre + (esIngles ? " — Password updated ✓" : " — Clave actualizada ✓");
-      setTimeout(function() { finalizarAcceso(encUid, u); }, 800);
+  Promise.all([hashTxt(pin), hashTxt(ncl)]).then(function(hs) {
+    var pinHash = hs[0], nclHash = hs[1];
+    return fbJson(FB_ROOT + "/cuentas/" + uidR + ".json").then(function(u) {
+      if (!u) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = esIngles ? "Rider not found" : "Piloto no encontrado";
+        return;
+      }
+      var pinOk = (u.pinHash && u.pinHash === pinHash) || (u.pin && String(u.pin) === pin);
+      if (!pinOk) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = esIngles ? "Wrong PIN" : "PIN incorrecto";
+        return;
+      }
+      if (u.bloqueado) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = esIngles ? "Account suspended by Race Direction" : "Cuenta suspendida por Direccion";
+        return;
+      }
+      return fbJson(FB_ROOT + "/cuentas/" + uidR + ".json", {
+        method: "PATCH",
+        body: JSON.stringify({ claveHash: nclHash, pinHash: pinHash, clave: null, pin: null, ultAcceso: ahoraSrv() })
+      }).then(function() {
+        var uAct = Object.assign({}, u, { claveHash: nclHash, pinHash: pinHash });
+        delete uAct.clave; delete uAct.pin;
+        try {
+          var locCtas = JSON.parse(localStorage.getItem("mxp_cuentas_loc") || "{}");
+          locCtas[uidR] = uAct;
+          localStorage.setItem("mxp_cuentas_loc", JSON.stringify(locCtas));
+        } catch (e) {}
+        msg.style.color = "#20c997";
+        msg.textContent = (esIngles ? "Rider: " : "Usuario: ") + uAct.nombre + (esIngles ? " — Password updated ✓" : " — Clave actualizada ✓");
+        setTimeout(function() { finalizarAcceso(uidR, uAct); }, 800);
+      });
     });
   }).catch(function() {
     msg.style.color = "#ff4d5e";
@@ -483,18 +574,34 @@ function recuperarClave() {
 }
 
 function entrarDir() {
+  var clv = document.getElementById("dClv").value.trim();
   var md = document.getElementById("mDir");
-  if (document.getElementById("dClv").value !== "2026") {
-    md.style.color = "#ff4d5e";
-    md.textContent = esIngles ? "Wrong password" : "Clave incorrecta";
-    return;
-  }
-  localStorage.setItem("mxp_dir_ok", "1");
-  if (!localStorage.getItem("mxp_uid")) {
-    localStorage.setItem("mxp_uid", "director");
-    localStorage.setItem("mxp_nom", "Director MX");
-  }
-  location.href = "piloto.html";
+  if (!clv) { md.style.color = "#ff4d5e"; md.textContent = esIngles ? "Enter password" : "Introduce la clave"; return; }
+  md.style.color = "#0dcaf0"; md.textContent = esIngles ? "Checking..." : "Verificando...";
+
+  hashTxt(clv).then(function(h) {
+    return fbJson(FB_ROOT + "/config/dirHash.json").catch(function(){ return null; }).then(function(srvHash) {
+      var ok = false;
+      if (srvHash) {
+        ok = (h === srvHash);
+      } else {
+        var x = clv.split("").map(function(c){ return c.charCodeAt(0) ^ 7; }).join("-");
+        ok = (x === "53-55-53-49");
+        if (ok) fetch(FB_ROOT + "/config/dirHash.json", { method: "PUT", body: JSON.stringify(h) }).catch(function(){});
+      }
+      if (!ok) {
+        md.style.color = "#ff4d5e";
+        md.textContent = esIngles ? "Wrong password" : "Clave incorrecta";
+        return;
+      }
+      localStorage.setItem("mxp_dir_ok", "1");
+      if (!localStorage.getItem("mxp_uid")) {
+        localStorage.setItem("mxp_uid", "director");
+        localStorage.setItem("mxp_nom", "Director MX");
+      }
+      location.href = "piloto.html";
+    });
+  });
 }
 
 function enviarReporte() {
@@ -505,6 +612,12 @@ function enviarReporte() {
     msg.textContent = esIngles ? "Please describe the issue first" : "Escribe primero el problema o sugerencia";
     return;
   }
+  if ((Date.now() - _ultRepTs) < 20000) {
+    msg.style.color = "#ffc107";
+    msg.textContent = esIngles ? "Wait 20s before sending another report" : "Espera 20s antes de enviar otro aviso";
+    return;
+  }
+  _ultRepTs = Date.now();
   var ts = ahoraSrv();
   var idR = "r_" + ts + "_" + Math.random().toString(36).slice(2, 5);
   msg.style.color = "#0dcaf0";
@@ -517,7 +630,7 @@ function enviarReporte() {
       fecha: new Date(ts).toLocaleString(esIngles ? "en-US" : "es-ES"),
       autor: localStorage.getItem("mxp_nom") || "Usuario",
       circ: circAct,
-      texto: tx
+      texto: tx.slice(0, 350)
     })
   }).then(function() {
     document.getElementById("repTxt").value = "";
@@ -571,7 +684,7 @@ function cargarListaCircuitos() {
     if (ls) {
       Object.keys(ls).forEach(function(k) {
         if (k !== "METROPOLITANO" && ls[k] && ls[k].nombre) {
-          h += '<option value="' + esc(k) + '">🌍 ' + esc(ls[k].nombre) + ' (' + esc(ls[k].pais || "") + ' • ' + esc(ls[k].sup || "MX") + ')</option>';
+          h += '<option value="' + esc(k) + '">🌍 ' + esc(ls[k].nombre) + ' (' + esc(ls[k].pais || "") + ' • ' + esc(ls[k].sup || "MX") + (ls[k].metros ? (" • " + ls[k].metros + "m") : "") + ')</option>';
         }
       });
     }
@@ -594,6 +707,7 @@ function guardarNuevoCircuito() {
   var nom = document.getElementById("cNom").value.trim();
   var pais = document.getElementById("cPais").value.trim();
   var sup = document.getElementById("cSup").value;
+  var fac = Number(document.getElementById("cTrazado").value) || 1;
   var mts = Number(document.getElementById("cMetros").value) || 0;
   var msg = document.getElementById("mCirc");
 
@@ -603,7 +717,7 @@ function guardarNuevoCircuito() {
     return;
   }
   var cid = nom.toUpperCase().replace(/[^A-Z0-9]/g, "_").slice(0, 22) + "_" + Math.floor(10 + Math.random() * 89);
-  var obj = { nombre: nom, pais: pais, sup: sup, metros: mts, ts: ahoraSrv() };
+  var obj = { nombre: nom, pais: pais, sup: sup, metros: mts, factor: fac, ts: ahoraSrv() };
 
   msg.style.color = "#0dcaf0";
   msg.textContent = esIngles ? "Saving..." : "Guardando...";
@@ -697,6 +811,7 @@ function abrirMundial() {
 
 function cargarMundial() {
   var fil = document.getElementById("filSupMun").value;
+  var ord = document.getElementById("ordMun").value;
   var bx = document.getElementById("listaMundial");
   bx.innerHTML = "<div style='padding:10px;color:#888'>" + (esIngles ? "Loading..." : "Cargando...") + "</div>";
   fbJson(FB_ROOT + "/mundial.json?t=" + Date.now()).then(function(m) {
@@ -710,12 +825,69 @@ function cargarMundial() {
       var supStr = ((x.sup || "") + " " + (x.disc || "")).toUpperCase();
       return supStr.indexOf(fil) >= 0;
     });
-    arr.sort(function(a, b) { return (b.regPct || 0) - (a.regPct || 0) || (a.mejorMs - b.mejorMs); });
+    if (ord === "TEO") {
+      arr.sort(function(a, b) {
+        var ta = a.teorico200Ms || 9e9, tb = b.teorico200Ms || 9e9;
+        return (ta - tb) || ((b.regPct || 0) - (a.regPct || 0)) || (a.mejorMs - b.mejorMs);
+      });
+    } else {
+      arr.sort(function(a, b) { return (b.regPct || 0) - (a.regPct || 0) || (a.mejorMs - b.mejorMs); });
+    }
     bx.innerHTML = arr.slice(0, 30).map(function(x, i) {
-      return "<div class='fila-mun'><b>" + (i + 1) + "º " + esc(x.nombre) + "</b> <span style='color:#0dcaf0'>(" + esc(x.circuito || "Global") + ")</span><br><span style='color:#20c997'>VR: " + (x.mejorMs / 1000).toFixed(2) + "s</span> • Reg: <b>" + (x.regPct || 100) + "%</b> • " + esc(x.disc || "MX") + "<div style='font-size:10px;color:#aaa'>Setup: " + esc(x.setupTxt || "Serie") + "</div></div>";
+      var teoTxt = x.teorico200Ms ? (" • 🏁 <b>200m Teo: " + (x.teorico200Ms / 1000).toFixed(2) + "s</b> (" + (x.velKmh || "--") + " km/h)") : "";
+      return "<div class='fila-mun'><b>" + (i + 1) + "º " + esc(x.nombre) + "</b> <span style='color:#0dcaf0'>(" + esc(x.circuito || "Global") + ")</span><br><span style='color:#20c997'>VR: " + (x.mejorMs / 1000).toFixed(2) + "s</span> • Reg: <b>" + (x.regPct || 100) + "%</b> • " + esc(x.disc || "MX") + teoTxt + "<div style='font-size:10px;color:#aaa'>Setup: " + esc(x.setupTxt || "Serie") + "</div></div>";
     }).join("") || ("<div style='color:#888;padding:10px'>" + (esIngles ? "No records in this class." : "Sin registros en esta categoria.") + "</div>");
   }).catch(function() {
     bx.innerHTML = "<div style='color:#ff4d5e;padding:10px'>" + (esIngles ? "Error loading ranking" : "Error cargando ranking") + "</div>";
+  });
+}
+
+function abrirPaddock() {
+  abrir("pPaddock");
+  cargarPaddock();
+}
+
+function darLikePaddock(id) {
+  vibrar(25);
+  var kLoc = "mxp_like_" + id;
+  if (localStorage.getItem(kLoc)) return;
+  localStorage.setItem(kLoc, "1");
+  fbJson(FB_ROOT + "/paddock/" + id + ".json").then(function(p) {
+    if (!p) return;
+    var n = Number(p.likes || 0) + 1;
+    return fetch(FB_ROOT + "/paddock/" + id + ".json", { method: "PATCH", body: JSON.stringify({ likes: n }) });
+  }).then(cargarPaddock).catch(function(){});
+}
+
+function cargarPaddock() {
+  var fil = document.getElementById("filSupPad").value;
+  var bx = document.getElementById("listaPaddock");
+  bx.innerHTML = "<div style='padding:10px;color:#888'>" + (esIngles ? "Loading..." : "Cargando motos...") + "</div>";
+  Promise.all([
+    fbJson(FB_ROOT + "/paddock.json?t=" + Date.now()).catch(function(){ return null; }),
+    fbJson(FB_ROOT + "/paddock_fotos.json?t=" + Date.now()).catch(function(){ return null; })
+  ]).then(function(res) {
+    var pd = res[0], fts = res[1] || {};
+    if (!pd) {
+      bx.innerHTML = "<div style='color:#888;padding:10px'>" + (esIngles ? "No bikes published yet. Share yours from GARAGE!" : "Aun no hay motos publicadas. ¡Publica la tuya desde GARAJE!") + "</div>";
+      return;
+    }
+    var arr = Object.keys(pd).map(function(k) { return Object.assign({ id: k }, pd[k]); }).filter(function(x) {
+      if (!x || !x.modelo) return false;
+      return fil === "TODOS" || (x.disc || "MX") === fil;
+    });
+    arr.sort(function(a, b) { return (Number(b.likes || 0) - Number(a.likes || 0)) || (Number(b.ts || 0) - Number(a.ts || 0)); });
+    bx.innerHTML = arr.slice(0, 30).map(function(x) {
+      var img = fts[x.id] && fts[x.id].img ? '<img src="' + fts[x.id].img + '" alt="Moto">' : '';
+      var mvp = x.mvp ? (" • 🏆 " + x.mvp + " MVP") : "";
+      var liked = !!localStorage.getItem("mxp_like_" + x.id);
+      return "<div class='pad-card'>" + img +
+        "<div style='display:flex;justify-content:space-between;align-items:center'><b>#" + esc(x.dorsal || "1") + " " + esc(x.modelo) + "</b><button onclick=\"darLikePaddock('" + esc(x.id) + "')\" style='width:auto;padding:5px 9px;font-size:11px;background:" + (liked ? "#20c997" : "#262626") + ";color:" + (liked ? "#000" : "#ffc107") + "'>👍 " + (x.likes || 0) + "</button></div>" +
+        "<div style='font-size:11px;color:#0dcaf0'>" + esc(x.piloto) + " • " + esc(x.circuito || "Global") + " • " + esc(x.disc || "MX") + mvp + "</div>" +
+        "<div style='font-size:10px;color:#aaa;margin-top:3px'>Setup: " + esc(x.setupTxt || "Serie") + "</div></div>";
+    }).join("") || "<div style='color:#888;padding:10px'>Sin motos en esta categoria.</div>";
+  }).catch(function() {
+    bx.innerHTML = "<div style='color:#ff4d5e;padding:10px'>Error cargando Paddock</div>";
   });
 }
 
