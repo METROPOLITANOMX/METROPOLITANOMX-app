@@ -1,4 +1,4 @@
-﻿var CACHE_NAME = "mxp-cache-v202611241108";
+﻿var CACHE_NAME = "mxp-cache-v202611241408";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,9 @@ var APP_SHELL = [
   "./director.html",
   "./piloto.html",
   "./vivo.html",
+  "./mx.css",
+  "./mx-core.js",
+  "./mx-garaje.js",
   "./manifest.json",
   "./logo.png"
 ];
