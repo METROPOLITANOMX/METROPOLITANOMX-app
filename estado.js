@@ -1,1 +1,1 @@
-﻿window.ESTADO_CIRCUITO = { activo: false, url: "" };
+﻿window.ESTADO_CIRCUITO = { activo: true, url: "https://blues-paths-globe-costumes.trycloudflare.com" };
