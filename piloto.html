@@ -39,6 +39,9 @@
   button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.12)}
 
   input,select,textarea{width:100%;background:#0a0a0a;border:1px solid #444;color:#fff;padding:9px;border-radius:8px;font-size:12px;margin-bottom:6px;font-family:Arial,sans-serif}
+  input[type=range]{padding:0;touch-action:pan-y;accent-color:#0dcaf0}
+  .btn-step{padding:5px 9px;font-size:12px;background:#262626;color:#fff;border-radius:6px;box-shadow:0 2px 0 #000}
+
   .fila{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #242424;font-size:13px;gap:6px}
   .yo{background:#122922;border-left:4px solid #20c997;border-radius:6px}
   .elim{opacity:0.45;text-decoration:line-through}
@@ -250,10 +253,12 @@
           <div id="lblCalidadFrame" style="font-size:11px;font-weight:bold;margin-bottom:4px"></div>
           <div style="font-size:10px;color:#ffc107;margin-bottom:4px">🪄 <b>VARITA MÁGICA:</b> Toca cualquier zona del fondo que sobre para borrarla</div>
           <canvas id="cnvCapEdit" width="240" height="160" class="checker" style="width:100%;max-width:300px;border-radius:8px;border:2px solid #ffc107;cursor:crosshair;touch-action:none"></canvas>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-            <span style="font-size:10px;color:#aaa;white-space:nowrap">Recorte Auto:</span>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:6px">
+            <span style="font-size:10px;color:#aaa;white-space:nowrap">Fondo:</span>
+            <button class="btn-step" onclick="stepBgTol(-4)">-</button>
             <input id="rngBgTol" type="range" min="15" max="75" value="38" oninput="reaplicarAutoRecorte()" style="margin:0;flex:1">
-            <button onclick="vibrar();deshacerMagia()" style="background:#333;color:#fff;padding:5px 8px;font-size:10px">↩️ Deshacer</button>
+            <button class="btn-step" onclick="stepBgTol(4)">+</button>
+            <button onclick="vibrar();deshacerMagia()" style="background:#333;color:#fff;padding:5px 8px;font-size:10px">↩️</button>
           </div>
           <div class="grid2" style="margin-top:6px">
             <button onclick="vibrar(25);extraerColoresDeRecorte()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:11px">✅ EXTRAER COLORES</button>
@@ -353,6 +358,8 @@ var miNom = localStorage.getItem("mxp_nom") || "Piloto";
 var esDir = (localStorage.getItem("mxp_dir_ok") === "1");
 if (!uid) location.href = "index.html";
 
+try { sessionStorage.removeItem("mxp_saltando"); } catch (e) {}
+
 document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 if (esDir) {
@@ -407,6 +414,9 @@ activarWakeLock();
 
 window.addEventListener("beforeunload", function() {
   if (_esRoot) { try { _esRoot.close(); } catch (e) {} }
+  try {
+    if (sessionStorage.getItem("mxp_saltando") === "1") return;
+  } catch (e) {}
   var yo = (rootCache.pilotos || {})[uid];
   if (yo && !(yo.vueltas > 0)) {
     fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
@@ -492,6 +502,8 @@ function toggleVozP() {
 }
 
 function irADirector() {
+  try { sessionStorage.setItem("mxp_saltando", "1"); } catch (e) {}
+  localStorage.setItem("mxp_solo_dir", "0");
   location.href = "director.html";
 }
 function abrirAccesoDirectorRapido() {
@@ -558,7 +570,7 @@ function salirPiloto() {
 }
 function ayudaTab() {
   var g = {
-    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio/voz y Delta al oido.\n2. Veras presencia real (🟢 EN PISTA / ⚪ OFFLINE) y destellos al batir tu record.\n3. 🔒 BOLSILLO bloquea la pantalla 2s para rodar con el movil guardado.\n4. 🎲 RULETA LOCA MX explica cada reto por escrito y voz (incluidos retos para rodar solo).\n5. Si eres Director, pulsa 👑 DIRECTOR para abrir el laboratorio de camaras.",
+    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio/voz y Delta al oido.\n2. Veras presencia real (🟢 EN PISTA / ⚪ OFFLINE) y destellos al batir tu record.\n3. 🔒 BOLSILLO bloquea la pantalla 2s para rodar con el movil guardado.\n4. 🎲 RULETA LOCA MX explica cada reto por escrito y voz (incluidos retos para rodar solo).\n5. Si eres Director, pulsa 👑 DIRECTOR para abrir el laboratorio sin desconectarte.",
     garaje: "GARAJE PRO:\n1. Elige MX Tierra o SM Supermoto y guarda tu setup.\n2. Haz 4 fotos en directo con la camara (sin selector de archivos).\n3. Captura de Colores: sigue la guia de luz, recorta el fondo automaticamente y afina con la Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL para mostrar tu moto.",
     tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. 📤/📥 BACKUP para exportar o restaurar tus motos e historial en texto o JSON."
   };
@@ -742,6 +754,13 @@ function volverCamaraVivo() {
   document.getElementById("visorVivoCol").style.display = "block";
   document.getElementById("btnSnapCol").style.display = "block";
   document.getElementById("boxRecorteMagico").style.display = "none";
+}
+
+function stepBgTol(d) {
+  vibrar(12);
+  var el = document.getElementById("rngBgTol");
+  el.value = Math.max(15, Math.min(75, Number(el.value) + d));
+  reaplicarAutoRecorte();
 }
 
 function capturarYRecortarColor() {
@@ -950,7 +969,7 @@ function subirGarajeNube() {
     method: "PATCH",
     body: JSON.stringify({
       modelo: m.modelo, dorsal: m.dorsal || "1", disc: m.disc || "MX",
-      colores: m.colores || [], setupTxt: stTxt, ts: ahoraSrv()
+      colores: m.colores || [], setupTxt: stTxt.slice(0, 290), ts: ahoraSrv()
     })
   }).catch(function(){});
   fetch(FB + "/pilotos/" + uid + ".json", {
@@ -969,13 +988,13 @@ function publicarEnPaddock() {
   fbJson(FB_ROOT + "/paddock/" + pid + ".json", {
     method: "PATCH",
     body: JSON.stringify({
-      modelo: m.modelo || "Losi Promoto-MX",
+      modelo: (m.modelo || "Losi Promoto-MX").slice(0, 60),
       dorsal: m.dorsal || "1",
       piloto: miNom,
       circuito: circNom,
       disc: m.disc || "MX",
       mvp: rango,
-      setupTxt: stTxt,
+      setupTxt: stTxt.slice(0, 290),
       ts: ahoraSrv()
     })
   }).then(function() {

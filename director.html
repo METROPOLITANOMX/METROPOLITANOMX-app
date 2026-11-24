@@ -31,9 +31,16 @@
     transition:transform 0.08s ease,box-shadow 0.08s ease
   }
   button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.12)}
+  button:disabled{opacity:0.45;cursor:not-allowed;transform:none}
 
   input,select{width:100%;background:#0a0a0a;border:1px solid #444;color:#fff;padding:8px;border-radius:8px;font-size:12px;margin-bottom:6px;font-family:Arial,sans-serif}
-  input[type=range]{padding:0;margin:2px 0 6px;accent-color:#0dcaf0}
+  input[type=range]{padding:0;margin:0;accent-color:#0dcaf0;touch-action:pan-y}
+
+  .rng-row{display:flex;align-items:center;gap:5px;margin:2px 0 6px}
+  .rng-row input[type=range]{flex:1}
+  .btn-step{padding:5px 9px;font-size:12px;background:#262626;color:#fff;border-radius:6px;box-shadow:0 2px 0 #000;min-width:28px}
+  .sliders-locked input[type=range]{opacity:0.48;pointer-events:none}
+  .sliders-locked .btn-step{opacity:0.4;pointer-events:none}
 
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
@@ -100,11 +107,12 @@
       <div id="bodyChecklist" class="chk-grid"></div>
     </div>
 
-    <div class="card" style="border-color:#0dcaf0">
+    <div id="labCamaras" class="card sliders-locked" style="border-color:#0dcaf0">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
         <b style="color:#0dcaf0;font-size:13px">📡 LABORATORIO DE CAMARAS (META + TUNEL ROI)</b>
-        <div style="display:flex;gap:5px">
-          <button id="btnToggleTest" onclick="vibrar(25);toggleTestAntenas()" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🎥 ACTIVAR TEST EN VIVO</button>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button id="btnLockSliders" onclick="vibrar(25);toggleLockSliders()" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">🔒 CONTROLES BLOQUEADOS</button>
+          <button id="btnToggleTest" onclick="vibrar(25);toggleTestAntenas()" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🎥 ACTIVAR TEST</button>
           <button onclick="vibrar(25);calibrarAmbas10s()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000">📍 CALIBRAR AMBAS (10s)</button>
         </div>
       </div>
@@ -120,7 +128,7 @@
           <select id="selPerfilesGuardados" onchange="cargarPerfilGuardado(this.value)" style="margin:0;flex:1">
             <option value="">-- Cargar perfil guardado --</option>
           </select>
-          <button onclick="vibrar();guardarPerfilActual()" style="background:#0dcaf0;color:#000;white-space:nowrap;font-size:10px">💾 GUARDAR PERFIL</button>
+          <button onclick="vibrar();guardarPerfilActual()" style="background:#0dcaf0;color:#000;white-space:nowrap;font-size:10px">💾 GUARDAR</button>
           <button onclick="vibrar();borrarPerfilGuardado()" style="background:#3a1c1c;color:#ff4d5e;font-size:10px">🗑️</button>
         </div>
       </div>
@@ -154,31 +162,36 @@
 
         <div class="grid2">
           <div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107">
-              <span>SENSIBILIDAD DISPARO:</span><b id="lblSensDir">7%</b>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107"><span>SENSIBILIDAD DISPARO:</span><b id="lblSensDir">7%</b></div>
+            <div class="rng-row">
+              <button class="btn-step" onclick="stepSlider('rngSens',-1,cfgDir,'lblSensDir','%')">-</button>
+              <input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()">
+              <button class="btn-step" onclick="stepSlider('rngSens',1,cfgDir,'lblSensDir','%')">+</button>
             </div>
-            <input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()">
           </div>
           <div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997">
-              <span>EXIGENCIA MATCH COLOR:</span><b id="lblColorPctDir">30%</b>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>EXIGENCIA MATCH COLOR:</span><b id="lblColorPctDir">30%</b></div>
+            <div class="rng-row">
+              <button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button>
+              <input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()">
+              <button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button>
             </div>
-            <input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()">
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0">
-              <span>RETARDO LECTURA TRAS DISPARO:</span><b id="lblRetardoDir">25ms</b>
-            </div>
-            <input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()">
           </div>
           <div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff">
-              <span>TOLERANCIA LUZ (DeltaE):</span><b id="lblDeltaEDir">28</b>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0"><span>RETARDO LECTURA:</span><b id="lblRetardoDir">25ms</b></div>
+            <div class="rng-row">
+              <button class="btn-step" onclick="stepSlider('rngRetardo',-5,cfgDir,'lblRetardoDir','ms')">-</button>
+              <input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()">
+              <button class="btn-step" onclick="stepSlider('rngRetardo',5,cfgDir,'lblRetardoDir','ms')">+</button>
             </div>
-            <input id="rngDeltaE" type="range" min="16" max="48" value="28" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()">
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (DeltaE):</span><b id="lblDeltaEDir">28</b></div>
+            <div class="rng-row">
+              <button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button>
+              <input id="rngDeltaE" type="range" min="16" max="48" value="28" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()">
+              <button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button>
+            </div>
           </div>
         </div>
       </div>
@@ -196,23 +209,43 @@
             <div id="tel_ant_1" class="tel-bar">Esperando Antena 1...</div>
           </div>
           <div style="font-size:10px;color:#ff6b6b;display:flex;justify-content:space-between"><span>LINEA ROJA DISPARO:</span><b id="lblPos_ant_1">50%</b></div>
-          <input id="pos_ant_1" type="range" min="10" max="90" value="50" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+          <div class="rng-row">
+            <button class="btn-step" onclick="stepRoi('ant_1','pos',-1)">-</button>
+            <input id="pos_ant_1" type="range" min="10" max="90" value="50" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+            <button class="btn-step" onclick="stepRoi('ant_1','pos',1)">+</button>
+          </div>
           <div class="grid2">
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>TUNEL X:</span><b id="lblRx_ant_1">30%</b></div>
-              <input id="rx_ant_1" type="range" min="0" max="85" value="30" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_1','rx',-1)">-</button>
+                <input id="rx_ant_1" type="range" min="0" max="85" value="30" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+                <button class="btn-step" onclick="stepRoi('ant_1','rx',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>TUNEL Y:</span><b id="lblRy_ant_1">15%</b></div>
-              <input id="ry_ant_1" type="range" min="0" max="85" value="15" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_1','ry',-1)">-</button>
+                <input id="ry_ant_1" type="range" min="0" max="85" value="15" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+                <button class="btn-step" onclick="stepRoi('ant_1','ry',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>ANCHO W:</span><b id="lblRw_ant_1">25%</b></div>
-              <input id="rw_ant_1" type="range" min="10" max="80" value="25" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_1','rw',-1)">-</button>
+                <input id="rw_ant_1" type="range" min="10" max="80" value="25" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+                <button class="btn-step" onclick="stepRoi('ant_1','rw',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>ALTO H:</span><b id="lblRh_ant_1">65%</b></div>
-              <input id="rh_ant_1" type="range" min="10" max="85" value="65" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_1','rh',-1)">-</button>
+                <input id="rh_ant_1" type="range" min="10" max="85" value="65" oninput="previewRoi('ant_1')" onchange="enviarRoiAnt('ant_1')">
+                <button class="btn-step" onclick="stepRoi('ant_1','rh',1)">+</button>
+              </div>
             </div>
           </div>
           <div class="grid3">
@@ -234,23 +267,43 @@
             <div id="tel_ant_2" class="tel-bar">Esperando Antena 2...</div>
           </div>
           <div style="font-size:10px;color:#ff6b6b;display:flex;justify-content:space-between"><span>LINEA ROJA DISPARO:</span><b id="lblPos_ant_2">50%</b></div>
-          <input id="pos_ant_2" type="range" min="10" max="90" value="50" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+          <div class="rng-row">
+            <button class="btn-step" onclick="stepRoi('ant_2','pos',-1)">-</button>
+            <input id="pos_ant_2" type="range" min="10" max="90" value="50" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+            <button class="btn-step" onclick="stepRoi('ant_2','pos',1)">+</button>
+          </div>
           <div class="grid2">
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>TUNEL X:</span><b id="lblRx_ant_2">30%</b></div>
-              <input id="rx_ant_2" type="range" min="0" max="85" value="30" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_2','rx',-1)">-</button>
+                <input id="rx_ant_2" type="range" min="0" max="85" value="30" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+                <button class="btn-step" onclick="stepRoi('ant_2','rx',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>TUNEL Y:</span><b id="lblRy_ant_2">15%</b></div>
-              <input id="ry_ant_2" type="range" min="0" max="85" value="15" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_2','ry',-1)">-</button>
+                <input id="ry_ant_2" type="range" min="0" max="85" value="15" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+                <button class="btn-step" onclick="stepRoi('ant_2','ry',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>ANCHO W:</span><b id="lblRw_ant_2">25%</b></div>
-              <input id="rw_ant_2" type="range" min="10" max="80" value="25" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_2','rw',-1)">-</button>
+                <input id="rw_ant_2" type="range" min="10" max="80" value="25" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+                <button class="btn-step" onclick="stepRoi('ant_2','rw',1)">+</button>
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>ALTO H:</span><b id="lblRh_ant_2">65%</b></div>
-              <input id="rh_ant_2" type="range" min="10" max="85" value="65" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+              <div class="rng-row">
+                <button class="btn-step" onclick="stepRoi('ant_2','rh',-1)">-</button>
+                <input id="rh_ant_2" type="range" min="10" max="85" value="65" oninput="previewRoi('ant_2')" onchange="enviarRoiAnt('ant_2')">
+                <button class="btn-step" onclick="stepRoi('ant_2','rh',1)">+</button>
+              </div>
             </div>
           </div>
           <div class="grid3">
@@ -326,11 +379,13 @@
       </div>
 
       <div class="box-sub">
-        <b style="color:#20c997;font-size:11px">📢 MEGAFONIA ESTEREO (SUENA EN ANTENAS Y OIDO)</b>
-        <div style="display:flex;gap:5px;margin-top:5px">
-          <input id="inpMega" placeholder="Mensaje por megafonia..." style="margin:0;flex:1">
-          <button onclick="vibrar();enviarMegafonia(document.getElementById('inpMega').value,true)" style="background:#20c997;color:#000">📢 HABLAR</button>
+        <b style="color:#20c997;font-size:11px">📢 MEGAFONIA ESTEREO (MICROFONO O TEXTO)</b>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <button id="btnMicroDir" onclick="vibrar(25);toggleDictadoMicro()" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff;white-space:nowrap">🎙️ HABLAR</button>
+          <input id="inpMega" placeholder="O escribe mensaje..." style="margin:0;flex:1">
+          <button onclick="vibrar();enviarMegafonia(document.getElementById('inpMega').value,true)" style="background:#20c997;color:#000">📢 ENVIAR</button>
         </div>
+        <div id="lblMicroEst" style="font-size:10px;color:#0dcaf0;margin-top:4px;min-height:14px"></div>
         <div class="grid3" style="margin-top:5px">
           <button onclick="vibrar();enviarMegafonia('Atencion pilotos, pista abierta para rodar',true)" style="background:#262626;color:#0dcaf0;font-size:9px;padding:6px">Pista Abierta</button>
           <button onclick="vibrar();enviarMegafonia('Ultima vuelta, bandera blanca',true)" style="background:#262626;color:#ffc107;font-size:9px;padding:6px">Ultima Vuelta</button>
@@ -400,10 +455,11 @@ if (!esDirOk) document.getElementById("modalAuthDir").style.display = "flex";
 var rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
 var warmupCaps = {};
 var perfilesCam = {};
-var testOn = false, _soloDirector = true, _audioCtxD = null;
+var testOn = false, _audioCtxD = null, _slidersLocked = true;
+var _soloDirector = (localStorage.getItem("mxp_solo_dir") === "1") || (uid === "director" && localStorage.getItem("mxp_solo_dir") !== "0");
 var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMovida = {};
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
-var _roiInit = false;
+var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 
 var RULETA_RETOS = [
   { solo: true,  tit: "🎯 CLAVA EL CRONO", txt: "Haz 2 vueltas seguidas con menos de 0.30s de diferencia entre ellas.", voz: "Reto Clava el Crono: haz dos vueltas seguidas con menos de tres decimas de diferencia." },
@@ -442,6 +498,93 @@ function hashTxt(txt) {
   return Promise.resolve("fb_" + h.toString(16));
 }
 
+function aplicarLockSlidersUI() {
+  var lab = document.getElementById("labCamaras");
+  var b = document.getElementById("btnLockSliders");
+  if (_slidersLocked) {
+    lab.classList.add("sliders-locked");
+    b.textContent = "🔒 CONTROLES BLOQUEADOS";
+    b.style.background = "linear-gradient(180deg,#ffd43b,#f59f00)";
+    b.style.color = "#000";
+  } else {
+    lab.classList.remove("sliders-locked");
+    b.textContent = "🔓 EDITANDO CONTROLES";
+    b.style.background = "linear-gradient(180deg,#38d9a9,#12b886)";
+    b.style.color = "#000";
+  }
+  var rngs = lab.querySelectorAll("input[type=range]");
+  for (var i = 0; i < rngs.length; i++) rngs[i].disabled = _slidersLocked;
+}
+
+function toggleLockSliders() {
+  _slidersLocked = !_slidersLocked;
+  aplicarLockSlidersUI();
+}
+
+function stepSlider(id, delta, cb, lblId, suf) {
+  if (_slidersLocked) return;
+  vibrar(12);
+  var el = document.getElementById(id);
+  var mn = Number(el.min || 0), mx = Number(el.max || 100);
+  var nv = Math.max(mn, Math.min(mx, Number(el.value) + delta));
+  el.value = nv;
+  if (lblId) document.getElementById(lblId).textContent = nv + (suf || "");
+  if (cb) cb();
+}
+
+function stepRoi(aid, campo, delta) {
+  if (_slidersLocked) return;
+  vibrar(12);
+  var el = document.getElementById(campo + "_" + aid);
+  var mn = Number(el.min || 0), mx = Number(el.max || 100);
+  el.value = Math.max(mn, Math.min(mx, Number(el.value) + delta));
+  previewRoi(aid);
+  enviarRoiAnt(aid);
+}
+
+function toggleDictadoMicro() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var lbl = document.getElementById("lblMicroEst");
+  var btn = document.getElementById("btnMicroDir");
+  if (!SR) {
+    lbl.style.color = "#ff6b6b";
+    lbl.textContent = "Tu navegador no soporta dictado directo. Usa el microfono del teclado.";
+    return;
+  }
+  if (_escuchandoMicro && _recogMicro) {
+    try { _recogMicro.stop(); } catch (e) {}
+    return;
+  }
+  _recogMicro = new SR();
+  _recogMicro.lang = "es-ES";
+  _recogMicro.interimResults = false;
+  _recogMicro.maxAlternatives = 1;
+  _escuchandoMicro = true;
+  btn.textContent = "🔴 ESCUCHANDO...";
+  btn.style.background = "#ffc107"; btn.style.color = "#000";
+  lbl.style.color = "#20c997"; lbl.textContent = "🎙️ Habla ahora cerca del microfono...";
+
+  _recogMicro.onresult = function(ev) {
+    var txt = ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : "";
+    if (txt) {
+      document.getElementById("inpMega").value = txt;
+      enviarMegafonia(txt, true);
+      lbl.style.color = "#20c997";
+      lbl.textContent = "📢 Enviado por voz: \"" + txt + "\"";
+    }
+  };
+  _recogMicro.onerror = function(e) {
+    lbl.style.color = "#ff6b6b";
+    lbl.textContent = "Error microfono (" + (e.error || "permiso") + ")";
+  };
+  _recogMicro.onend = function() {
+    _escuchandoMicro = false;
+    btn.textContent = "🎙️ HABLAR";
+    btn.style.background = "linear-gradient(180deg,#ff6b6b,#e03131)"; btn.style.color = "#fff";
+  };
+  try { _recogMicro.start(); } catch (e) { _escuchandoMicro = false; }
+}
+
 function validarAccesoDirModal() {
   var clv = document.getElementById("inpClvDirAuth").value.trim();
   var msg = document.getElementById("msgAuthDir");
@@ -476,6 +619,7 @@ function toggleSec(id) {
 }
 
 function irAPiloto() {
+  try { sessionStorage.setItem("mxp_saltando", "1"); } catch (e) {}
   location.href = "piloto.html";
 }
 function salirDirector() {
@@ -488,21 +632,48 @@ function salirDirector() {
 }
 
 function ayudaDir() {
-  alert("PANEL DE DIRECCION PRO:\n1. Vista Dual: supervisa Antena 1 y Antena 2 a la vez.\n2. Meta Vertical/Horizontal + Linea Roja separada del Tunel ROI (azul): coloca el tunel un poco detras de la linea roja para leer carenado + piloto y evitar el guardabarros delantero.\n3. Perfiles de Luz: cambia rapido entre Sol Fuerte, Sombra o Poca Luz, o guarda tus propios perfiles.\n4. Warm-Up Multi-Angulo: pon Warm-Up, pasa cada moto y asigna varias capturas desde ambas camaras a su piloto.");
+  alert("PANEL DE DIRECCION PRO:\n1. Candado de Controles: pulsa 🔓 EDITANDO CONTROLES cuando quieras mover la linea roja o el tunel ROI, y bloquealo al terminar para hacer scroll seguro.\n2. Microfono 🎙️ HABLAR: dicta por voz y tu orden suena al instante en las dos antenas.\n3. En Parrilla / Solo Dir: si entras con tu cuenta de piloto puedes quedarte 🟢 EN PARRILLA mientras diriges.\n4. Capturas en Warm-Up: pasa motos por meta y asigna varios angulos desde Cam 1 y Cam 2.");
+}
+
+function pintarBtnSoloDir() {
+  var b = document.getElementById("btnSoloDir");
+  if (_soloDirector) {
+    b.textContent = "👑 SOLO DIR"; b.style.background = "#2b2b2b"; b.style.color = "#0dcaf0";
+  } else {
+    b.textContent = "🟢 EN PARRILLA"; b.style.background = "#20c997"; b.style.color = "#000";
+  }
+}
+
+function inscribirSiEnParrilla() {
+  if (_soloDirector) return;
+  var motos = [];
+  try { motos = JSON.parse(localStorage.getItem("mxp_gar_" + uid) || "[]"); } catch (e) {}
+  var dor = (motos[0] && motos[0].dorsal) ? motos[0].dorsal : "1";
+  fbJson(FB + "/pilotos/" + uid + ".json").then(function(ex) {
+    if (!ex) {
+      return fetch(FB + "/pilotos/" + uid + ".json", {
+        method: "PUT",
+        body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ahoraSrv() })
+      });
+    } else {
+      return fetch(FB + "/pilotos/" + uid + ".json", {
+        method: "PATCH",
+        body: JSON.stringify({ nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() })
+      });
+    }
+  }).catch(function(){});
 }
 
 function toggleSoloDirector() {
   _soloDirector = !_soloDirector;
-  var b = document.getElementById("btnSoloDir");
+  localStorage.setItem("mxp_solo_dir", _soloDirector ? "1" : "0");
+  pintarBtnSoloDir();
   if (_soloDirector) {
-    b.textContent = "👑 SOLO DIR"; b.style.background = "#2b2b2b"; b.style.color = "#0dcaf0";
     fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){});
+    if (rootCache.pilotos) delete rootCache.pilotos[uid];
+    pintarDirUI();
   } else {
-    b.textContent = "🏍️ EN PARRILLA"; b.style.background = "#20c997"; b.style.color = "#000";
-    fetch(FB + "/pilotos/" + uid + ".json", {
-      method: "PATCH",
-      body: JSON.stringify({ nombre: miNom, dorsal: "1", enPista: true, tsActivo: ahoraSrv() })
-    }).catch(function(){});
+    inscribirSiEnParrilla();
   }
 }
 
@@ -620,7 +791,7 @@ function calibrarAmbas10s() {
 function toggleTestAntenas() {
   testOn = !testOn;
   var b = document.getElementById("btnToggleTest");
-  b.textContent = testOn ? "🛑 DETENER TEST VIVO" : "🎥 ACTIVAR TEST EN VIVO";
+  b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 ACTIVAR TEST";
   b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
   fetch(FB + "/sala.json", {
     method: "PATCH",
@@ -665,9 +836,9 @@ function cfgLuz() {
 
 function aplicarPresetLuz(tipo) {
   var presets = {
-    SOL:     { nombre: "Sol Fuerte",    deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 32 },
-    NUBLADO: { nombre: "Nublado/Sombra",deltaE: 26, minChroma: 11, lGain: 1.05, sens: 8,  col: 28 },
-    BAJA:    { nombre: "Poca Luz",      deltaE: 30, minChroma: 8,  lGain: 1.24, sens: 7,  col: 24 }
+    SOL:     { nombre: "Sol Fuerte",     deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 32 },
+    NUBLADO: { nombre: "Nublado/Sombra", deltaE: 26, minChroma: 11, lGain: 1.05, sens: 8,  col: 28 },
+    BAJA:    { nombre: "Poca Luz",       deltaE: 30, minChroma: 8,  lGain: 1.24, sens: 7,  col: 24 }
   };
   var p = presets[tipo] || presets.NUBLADO;
   document.getElementById("rngSens").value = p.sens;
@@ -838,7 +1009,7 @@ function cmdSala(est) {
   _ultRondaElim = 0; _ultRondaRuleta = 0;
   var pay = { estado: est, tsInicio: 0, ruleta: null, dirTs: ahoraSrv(), verVivo: false };
   testOn = false;
-  document.getElementById("btnToggleTest").textContent = "🎥 ACTIVAR TEST EN VIVO";
+  document.getElementById("btnToggleTest").textContent = "🎥 ACTIVAR TEST";
   document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
 
   if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; hablarD("Warm-up de 3 minutos iniciado, capturando en meta"); }
@@ -926,7 +1097,7 @@ function expulsarPilotoDir(pUid) {
   pintarDirUI();
 }
 function limpiarOfflineDir() {
-  var ah = ahoraSrv(), pAll = rootCache.pilotos || {};
+  var pAll = rootCache.pilotos || {};
   Object.keys(pAll).forEach(function(k) {
     var p = pAll[k];
     if (!p) return;
@@ -1029,27 +1200,18 @@ function cargarClubDir() {
   var bx = document.getElementById("boxClubDir");
   bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
-  bx.innerHTML = "<div style='color:#888'>Cargando club...</div>";
-  Promise.all([fbJson(FB_ROOT + "/cuentas.json"), fbJson(FB_ROOT + "/visitas.json")]).then(function(res) {
-    var ct = res[0] || {}, vs = res[1] || {};
-    var vKeys = Object.keys(vs).sort().reverse().slice(0, 8);
-    var h = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas totales: <b>" + Object.keys(vs).length + "</b> | Cuentas: <b>" + Object.keys(ct).length + "</b></div>";
-    Object.keys(ct).forEach(function(k) {
-      var u = ct[k];
-      h += "<div class='fila'><span><b>" + esc(u.nombre) + "</b> (" + esc(u.rol || "PILOTO") + ") " + (u.bloqueado ? "⛔" : "✅") + "</span><div><button onclick=\"vibrar();bloqCta('" + esc(k) + "'," + (!u.bloqueado) + ")\" style='background:#ffc107;color:#000;padding:3px 6px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button><button onclick=\"vibrar();delCta('" + esc(k) + "')\" style='background:#dc3545;color:#fff;padding:3px 6px;font-size:10px'>Borrar</button></div></div>";
+  bx.innerHTML = "<div style='color:#888'>Cargando visitas...</div>";
+  fbJson(FB_ROOT + "/visitas.json").then(function(vs) {
+    vs = vs || {};
+    var vKeys = Object.keys(vs).sort().reverse().slice(0, 15);
+    var h = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas registradas: <b>" + Object.keys(vs).length + "</b></div>";
+    vKeys.forEach(function(vk) {
+      var v = vs[vk];
+      h += "<div style='font-size:10px;color:#aaa;border-bottom:1px solid #222;padding:4px 0'>" + esc(v.fecha) + " — <b>" + esc(v.nom) + "</b> (" + esc(v.rol) + ")</div>";
     });
-    if (vKeys.length) {
-      h += "<div style='color:#aaa;margin-top:8px;font-weight:bold'>Ultimas visitas:</div>";
-      vKeys.forEach(function(vk) {
-        var v = vs[vk];
-        h += "<div style='font-size:10px;color:#888;border-bottom:1px solid #222;padding:3px 0'>" + esc(v.fecha) + " — <b>" + esc(v.nom) + "</b> (" + esc(v.rol) + ")</div>";
-      });
-    }
-    bx.innerHTML = h;
-  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando club</div>"; });
+    bx.innerHTML = h || "<div style='color:#888'>Sin visitas recientes.</div>";
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando visitas</div>"; });
 }
-function bloqCta(k, st) { fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }).then(cargarClubDir).catch(function(){}); }
-function delCta(k) { if (confirm("¿Eliminar cuenta?")) fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }).then(cargarClubDir).catch(function(){}); }
 
 function cambiarClaveDir() {
   var nw = document.getElementById("inpNuevaClaveDir").value.trim();
@@ -1296,10 +1458,19 @@ function conectarSseStreams() {
 }
 
 function iniciarDirector() {
+  aplicarLockSlidersUI();
+  pintarBtnSoloDir();
+  inscribirSiEnParrilla();
   cargarListaPerfiles();
   conectarSseStreams();
   setInterval(function() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirTs: ahoraSrv() }) }).catch(function(){});
+    if (!_soloDirector) {
+      fetch(FB + "/pilotos/" + uid + ".json", {
+        method: "PATCH",
+        body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() })
+      }).catch(function(){});
+    }
   }, 7000);
   setInterval(function() {
     fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
