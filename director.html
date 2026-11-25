@@ -15,7 +15,7 @@
   .trig-line{position:absolute;background:#ff2a2a;box-shadow:0 0 8px rgba(255,42,42,0.8);pointer-events:none;z-index:3}
   .roi-tunnel{position:absolute;border:2px dashed #0dcaf0;background:rgba(13,202,240,0.14);border-radius:6px;pointer-events:none;z-index:2}
   .roi-lbl{position:absolute;top:2px;left:4px;font-size:9px;font-weight:bold;color:#0dcaf0;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:3px}
-  .tel-bar{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.85);color:#00e676;padding:4px 6px;border-radius:5px;font-size:10px;font-family:monospace;z-index:4}
+  .tel-bar{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.82);color:#00e676;padding:4px 6px;border-radius:5px;font-size:10px;font-family:monospace;z-index:4}
   .chk-grid{display:grid;grid-template-columns:1fr;gap:5px}
   @media(min-width:640px){.chk-grid{grid-template-columns:1fr 1fr}}
   .chk-item{display:flex;align-items:center;gap:8px;background:#101218;border:1px solid #2b2f3a;border-radius:8px;padding:7px 9px;font-size:11px}
@@ -26,8 +26,6 @@
 </style>
 </head>
 <body>
-  <div id="yellowRibbonDir" class="yellow-flag-ribbon"><span>BANDERA AMARILLA EN PISTA — PRECAUCION</span></div>
-
   <div id="overlaySem">
     <div id="numSem" style="font-size:21vw;font-weight:bold;color:#fff">00:30</div>
     <div id="txtSem" style="font-size:20px;font-weight:bold;color:#fff">PREPARADOS</div>
@@ -35,13 +33,7 @@
 
   <div id="bolsillo">
     <div style="font-size:12px;color:#444">MODO BOLSILLO (DIRECTOR-PILOTO)</div>
-    <div>
-      <div style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:4px">
-        <svg class="svg-ico" style="width:40px;height:40px;fill:#ffc107" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-      </div>
-      <div id="relBol" style="font-size:40px;color:#20c997;font-weight:bold;margin-top:8px">EN PISTA</div>
-      <div id="deltaBol" style="font-size:14px;color:#ffc107;margin-top:6px"></div>
-    </div>
+    <div><div style="font-size:38px">🔒</div><div id="relBol" style="font-size:40px;color:#20c997;font-weight:bold;margin-top:8px">EN PISTA</div><div id="deltaBol" style="font-size:14px;color:#ffc107;margin-top:6px"></div></div>
     <div style="width:100%;max-width:300px">
       <div style="height:7px;background:#1a1a1a;border-radius:4px;overflow:hidden;margin-bottom:8px"><div id="barUnlockBol" style="height:100%;width:0%;background:#ffc107"></div></div>
       <button onpointerdown="iniciarUnlockBol()" onpointerup="cancelarUnlockBol()" onpointerleave="cancelarUnlockBol()" onpointercancel="cancelarUnlockBol()" style="width:100%;background:#1f1f1f;color:#ccc;border:1px solid #3a3a3a;padding:15px;font-size:11px">MANTEN PULSADO 2s PARA DESBLOQUEAR</button>
@@ -149,19 +141,11 @@
             </div>
             <div class="grid2">
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107"><span>DISPARO MOV %:</span><b id="lblSensDir">7%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngSens',-1,cfgDir,'lblSensDir','%')">-</button><input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngSens',1,cfgDir,'lblSensDir','%')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">20%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="20" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">40</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="40" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:#ff6b6b"><span>FILTRO ANTI-VIENTO:</span><b id="lblAntiVientoTxt">MEDIO</b></div>
-                <select id="selAntiViento" onchange="cambiarAntiViento(this.value)" style="margin:2px 0 6px;padding:6px;font-size:11px">
-                  <option value="100">OFF (Pista Interior / Sin Viento)</option>
-                  <option value="75">Bajo (Brisa Suave)</option>
-                  <option value="60" selected>Medio (Viento Moderado)</option>
-                  <option value="45">Alto (Rachas Fuertes / Movida)</option>
-                </select>
-              </div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">30%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">45</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="45" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ff6b6b"><span>SENS. GOLPE/VIENTO:</span><b id="lblMovidaPctDir">60%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngMovidaPct',-5,cfgDir,'lblMovidaPctDir','%')">-</button><input id="rngMovidaPct" type="range" min="40" max="100" step="5" value="60" oninput="document.getElementById('lblMovidaPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngMovidaPct',5,cfgDir,'lblMovidaPctDir','%')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0"><span>RETARDO LECTURA:</span><b id="lblRetardoDir">25ms</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngRetardo',-5,cfgDir,'lblRetardoDir','ms')">-</button><input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngRetardo',5,cfgDir,'lblRetardoDir','ms')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (dE):</span><b id="lblDeltaEDir">30</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="16" max="48" value="30" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (dE):</span><b id="lblDeltaEDir">28</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="16" max="48" value="28" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
             </div>
           </div>
           <div id="dualCamsSlot" class="dual-cams"></div>
@@ -174,16 +158,13 @@
           <span id="arw_acc_wu">▶</span>
         </button>
         <div id="acc_wu" class="acc-body" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
-            <span style="font-size:11px;color:#aaa">Asigna pasadas multi-ángulo de cada cámara a los pilotos.</span>
-            <div style="display:flex;gap:4px">
-              <button onclick="vibrar();refrescarWarmupManual()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄</button>
-              <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
-            </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:11px;color:#aaa">Asigna varias pasadas de distintos angulos por camara a cada piloto.</span>
+            <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
           </div>
           <div class="dual-cams">
-            <div class="box-sub"><b id="titBandCam1" style="color:#38d9a9;font-size:11px">📷 ANTENA 1</b><div id="bandeja_ant_1" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
-            <div class="box-sub"><b id="titBandCam2" style="color:#3bc9db;font-size:11px">📷 ANTENA 2</b><div id="bandeja_ant_2" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
+            <div class="box-sub"><b style="color:#38d9a9;font-size:11px">📷 ANTENA 1</b><div id="bandeja_ant_1" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
+            <div class="box-sub"><b style="color:#3bc9db;font-size:11px">📷 ANTENA 2</b><div id="bandeja_ant_2" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
           </div>
           <div class="box-sub"><b style="color:#ffc107;font-size:11px">🎨 FIRMAS WARM-UP POR PILOTO:</b><div id="resumenFirmasWarmup" style="margin-top:4px;font-size:11px;color:#ccc">Ninguna asignada.</div></div>
         </div>
@@ -208,9 +189,10 @@
             <button onclick="vibrar();nuevaMangaDir()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000">🔄 NUEVA MANGA</button>
             <button onclick="vibrar(25);guardarMangaCamp()" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">🏆 GUARDAR MANGA</button>
           </div>
-          <div class="grid2" style="margin-top:6px">
-            <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:11px">🟨 BANDERA AMARILLA</button>
-            <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:11px">🟩 BANDERA VERDE</button>
+          <div class="grid3" style="margin-top:6px">
+            <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:10px">🟨 AMARILLA</button>
+            <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 VERDE</button>
+            <button onclick="vibrar();lanzarRuletaManual()" style="background:#9c36b5;color:#fff;font-size:10px">🎲 RETO RULETA</button>
           </div>
 
           <div class="box-sub">
@@ -237,7 +219,7 @@
 
       <div class="acc-box" style="border-color:#7950f2">
         <button class="acc-head" onclick="vibrar();toggleAcc('acc_clu')">
-          <b style="color:#d0a8ff">👥 PILOTOS, GESTION DE CUENTAS Y DESCARGAS</b>
+          <b style="color:#d0a8ff">👥 PILOTOS, BLOQUEO CUENTAS Y DESCARGAS</b>
           <span id="arw_acc_clu">▶</span>
         </button>
         <div id="acc_clu" class="acc-body" style="display:none">
@@ -266,14 +248,7 @@
             <button onclick="vibrar();verReportesDir()" style="background:#262626;color:#ff6b6b">🛠️ REPORTES BUGS</button>
             <button onclick="vibrar();guardarGpsPista()" style="background:#1c2530;color:#20c997">📍 FIJAR GPS PISTA</button>
           </div>
-
-          <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:300px;overflow-y:auto;background:#0d0f14;padding:8px;border-radius:8px;border:1px solid #2f3644">
-            <div style="display:flex;gap:4px;margin-bottom:6px">
-              <input id="inpFiltroCuentas" placeholder="🔍 Buscar por nombre..." oninput="filtrarCuentasDir(this.value)" style="margin:0;flex:1">
-              <button onclick="vibrar();cargarCuentasDir(true)" style="background:#20c997;color:#000;font-size:10px;padding:6px 8px">🔄</button>
-            </div>
-            <div id="listaCuentasRender"></div>
-          </div>
+          <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:240px;overflow-y:auto"></div>
           <div id="boxClubDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
           <div id="boxRepDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
 
@@ -340,37 +315,25 @@ var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = n
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
 var _ultSecLoc = -999, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0;
-var _cuentasCache = {}, _warmupHashPrev = "", _slotAnts = { ant_1: "ant_1", ant_2: "ant_2" };
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
 }).catch(function(){});
 
-function renderSlotsCamaras() {
-  document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(function(slotKey, ix) {
-    var tit = ix === 0 ? "CAMARA 1 (META)" : "CAMARA 2 (REFUERZO)", col = ix === 0 ? "#38d9a9" : "#3bc9db";
-    var fields = [["rx", "TUNEL X", 30, 0, 85], ["ry", "TUNEL Y", 15, 0, 85], ["rw", "ANCHO W", 25, 10, 80], ["rh", "ALTO H", 65, 10, 85]];
-    return '<div class="cam-card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">' +
-        '<b style="color:' + col + ';font-size:12px">' + tit + ' <span id="badgeModoConf_' + slotKey + '" class="cam-mode-badge diff">[SIN CONFIRMAR]</span></b>' +
-        '<button onclick="vibrar();calibrarUna(\'' + slotKey + '\')" style="background:' + col + ';color:#000;padding:5px 8px;font-size:10px">📍 CALIBRAR</button>' +
-      '</div>' +
-      '<div class="visor-dir">' +
-        '<img id="img_' + slotKey + '" alt="Sin señal">' +
-        '<div id="trig_' + slotKey + '" class="trig-line"></div>' +
-        '<div id="roi_' + slotKey + '" class="roi-tunnel"><span class="roi-lbl">TUNEL ROI</span></div>' +
-        '<div id="tel_' + slotKey + '" class="tel-bar">Esperando antena...</div>' +
-      '</div>' +
-      '<div style="font-size:10px;color:#ff6b6b;display:flex;justify-content:space-between"><span>LINEA ROJA DISPARO:</span><b id="lblPos_' + slotKey + '">50%</b></div>' +
-      '<div class="rng-row"><button class="btn-step" onclick="stepRoi(\'' + slotKey + '\',\'pos\',-1)">-</button><input id="pos_' + slotKey + '" type="range" min="10" max="90" value="50" oninput="previewRoi(\'' + slotKey + '\')" onchange="enviarRoiAnt(\'' + slotKey + '\')"><button class="btn-step" onclick="stepRoi(\'' + slotKey + '\',\'pos\',1)">+</button></div>' +
-      '<div class="grid2">' + fields.map(function(f) {
-        return '<div><div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>' + f[1] + ':</span><b id="lbl' + f[0][0].toUpperCase() + f[0].slice(1) + '_' + slotKey + '">' + f[2] + '%</b></div>' +
-          '<div class="rng-row"><button class="btn-step" onclick="stepRoi(\'' + slotKey + '\',\'' + f[0] + '\',-1)">-</button><input id="' + f[0] + '_' + slotKey + '" type="range" min="' + f[3] + '" max="' + f[4] + '" value="' + f[2] + '" oninput="previewRoi(\'' + slotKey + '\')" onchange="enviarRoiAnt(\'' + slotKey + '\')"><button class="btn-step" onclick="stepRoi(\'' + slotKey + '\',\'' + f[0] + '\',1)">+</button></div></div>';
-      }).join("") + '</div>' +
-      '<div class="grid3"><button onclick="vibrar();presetTunel(\'' + slotKey + '\',\'IZQ\')" style="background:#262626;color:#0dcaf0;padding:6px;font-size:9px">⬅️ TRAS IZQ</button><button onclick="vibrar();presetTunel(\'' + slotKey + '\',\'CEN\')" style="background:#262626;color:#ffc107;padding:6px;font-size:9px">🎯 CENTRO</button><button onclick="vibrar();presetTunel(\'' + slotKey + '\',\'DER\')" style="background:#262626;color:#0dcaf0;padding:6px;font-size:9px">TRAS DER ➡️</button></div></div>';
-  }).join("");
-}
-renderSlotsCamaras();
+document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(function(aid, ix) {
+  var tit = ix === 0 ? "📡 ANTENA 1 (META)" : "📡 ANTENA 2 (REFUERZO)", col = ix === 0 ? "#38d9a9" : "#3bc9db";
+  var fields = [["rx", "TUNEL X", 30, 0, 85], ["ry", "TUNEL Y", 15, 0, 85], ["rw", "ANCHO W", 25, 10, 80], ["rh", "ALTO H", 65, 10, 85]];
+  return '<div class="cam-card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center"><b style="color:' + col + ';font-size:12px">' + tit + '</b><button onclick="vibrar();calibrarUna(\'' + aid + '\')" style="background:' + col + ';color:#000;padding:5px 8px;font-size:10px">📍 CALIBRAR ' + (ix + 1) + '</button></div>' +
+    '<div class="visor-dir"><img id="img_' + aid + '" alt="Sin señal"><div id="trig_' + aid + '" class="trig-line"></div><div id="roi_' + aid + '" class="roi-tunnel"><span class="roi-lbl">TUNEL ROI</span></div><div id="tel_' + aid + '" class="tel-bar">Esperando antena...</div></div>' +
+    '<div style="font-size:10px;color:#ff6b6b;display:flex;justify-content:space-between"><span>LINEA ROJA DISPARO:</span><b id="lblPos_' + aid + '">50%</b></div>' +
+    '<div class="rng-row"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'pos\',-1)">-</button><input id="pos_' + aid + '" type="range" min="10" max="90" value="50" oninput="previewRoi(\'' + aid + '\')" onchange="enviarRoiAnt(\'' + aid + '\')"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'pos\',1)">+</button></div>' +
+    '<div class="grid2">' + fields.map(function(f) {
+      return '<div><div style="font-size:9px;color:#0dcaf0;display:flex;justify-content:space-between"><span>' + f[1] + ':</span><b id="lbl' + f[0][0].toUpperCase() + f[0].slice(1) + '_' + aid + '">' + f[2] + '%</b></div>' +
+        '<div class="rng-row"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'' + f[0] + '\',-1)">-</button><input id="' + f[0] + '_' + aid + '" type="range" min="' + f[3] + '" max="' + f[4] + '" value="' + f[2] + '" oninput="previewRoi(\'' + aid + '\')" onchange="enviarRoiAnt(\'' + aid + '\')"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'' + f[0] + '\',1)">+</button></div></div>';
+    }).join("") + '</div>' +
+    '<div class="grid3"><button onclick="vibrar();presetTunel(\'' + aid + '\',\'IZQ\')" style="background:#262626;color:#0dcaf0;padding:6px;font-size:9px">⬅️ TRAS IZQ</button><button onclick="vibrar();presetTunel(\'' + aid + '\',\'CEN\')" style="background:#262626;color:#ffc107;padding:6px;font-size:9px">🎯 CENTRO</button><button onclick="vibrar();presetTunel(\'' + aid + '\',\'DER\')" style="background:#262626;color:#0dcaf0;padding:6px;font-size:9px">TRAS DER ➡️</button></div></div>';
+}).join("");
 
 activarWakeLock();
 window.addEventListener("beforeunload", function() {
@@ -387,7 +350,6 @@ function toggleAcc(id) {
   var open = (el.style.display === "none");
   el.style.display = open ? "block" : "none";
   if (ar) ar.textContent = open ? "▼" : "▶";
-  if (id === "acc_wu" && open) pintarBandejasWarmup(true);
 }
 
 function hablarYAntenas(texto, conBeep, tambienLocal) {
@@ -445,7 +407,7 @@ function salirDirector() {
 }
 
 function ayudaDir() {
-  alert("PANEL DIRECCION PRO:\n1. Rendimiento optimizado: telemetria fluida sin congelar las camaras.\n2. Confirmacion [MODO REAL]: sabras al instante si la antena cambio a GAR, WARMUP o HIBRIDO.\n3. Anti-Viento: selector limpio OFF / Bajo / Medio / Alto.\n4. Warm-Up multi-camara: soporte para antenas fijas y temporales con boton 🔄 de refresco.\n5. Cuentas: buscador directo y confirmacion explicita.");
+  alert("PANEL DIRECCION PRO:\n1. Acordeones: abre solo el bloque que necesites.\n2. Candado 🔒: bloquea deslizadores para hacer scroll seguro.\n3. Megafonia unificada: todo aviso de salida, calibracion, bandera, micro o Ruleta suena en tu movil y en ambas antenas.\n4. Control de descargas y cuentas: puedes pausar o pedir codigo para nuevas altas, y bloquear/borrar cuentas.\n5. 🏍️ DIR-PILOTO: activalo si tambien ruedas.");
 }
 
 function aplicarModoDirPilotoUI() {
@@ -477,8 +439,7 @@ function aplicarLockSlidersUI() {
   lab.classList.toggle("sliders-locked", _slidersLocked);
   b.textContent = _slidersLocked ? "🔒 CONTROLES BLOQUEADOS" : "🔓 EDITANDO CONTROLES";
   b.style.background = _slidersLocked ? "linear-gradient(180deg,#ffd43b,#f59f00)" : "linear-gradient(180deg,#38d9a9,#12b886)";
-  var rngs = lab.querySelectorAll("input[type=range], select");
-  for (var i = 0; i < rngs.length; i++) rngs[i].disabled = _slidersLocked;
+  var rngs = lab.querySelectorAll("input[type=range]"); for (var i = 0; i < rngs.length; i++) rngs[i].disabled = _slidersLocked;
 }
 function toggleLockSliders() { _slidersLocked = !_slidersLocked; aplicarLockSlidersUI(); }
 function stepSlider(id, d, cb, lblId, suf) {
@@ -546,30 +507,16 @@ function presetTunel(aid, lado) {
 function leerRoiObj(aid) { return { posX: Number(document.getElementById("pos_" + aid).value || 50), x: Number(document.getElementById("rx_" + aid).value || 30), y: Number(document.getElementById("ry_" + aid).value || 15), w: Number(document.getElementById("rw_" + aid).value || 25), h: Number(document.getElementById("rh_" + aid).value || 65) }; }
 function enviarRoiAnt(aid) {
   var roi = leerRoiObj(aid);
-  var targetId = _slotAnts[aid] || aid;
-  fetch(FB + "/sala/roi/" + targetId + ".json", { method: "PUT", body: JSON.stringify(roi) }).catch(function(){});
-  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: targetId, posX: roi.posX, roi: roi }) }).catch(function(){});
+  fetch(FB + "/sala/roi/" + aid + ".json", { method: "PUT", body: JSON.stringify(roi) }).catch(function(){});
+  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, posX: roi.posX, roi: roi }) }).catch(function(){});
 }
-function calibrarUna(slotKey) {
-  var targetId = _slotAnts[slotKey] || slotKey;
-  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: targetId, calibrar: true, roi: leerRoiObj(slotKey) }) }).catch(function(){});
-  hablarYAntenas("Calibrando " + (slotKey === "ant_1" ? "camara 1" : "camara 2"), false);
-}
+function calibrarUna(aid) { fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){}); hablarYAntenas("Calibrando " + (aid === "ant_1" ? "antena 1" : "antena 2"), false); }
 function calibrarAmbas10s() {
   desbloquearAudioD(false); if (_tCalAmbas) return; var s = 10;
   hablarYAntenas("Retiren las motos de meta, calibrando en diez segundos", false);
   _tCalAmbas = setInterval(function() {
     if (s <= 5 && s >= 1) hablarYAntenas(String(s), false);
-    if (s <= 0) {
-      clearInterval(_tCalAmbas); _tCalAmbas = null;
-      ["ant_1", "ant_2"].forEach(function(slotKey, ix){
-        var targetId = _slotAnts[slotKey] || slotKey;
-        setTimeout(function(){
-          fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: targetId, calibrar: true, roi: leerRoiObj(slotKey) }) }).catch(function(){});
-        }, ix * 600);
-      });
-      hablarYAntenas("Pista vacia calibrada en ambas camaras", true);
-    }
+    if (s <= 0) { clearInterval(_tCalAmbas); _tCalAmbas = null; ["ant_1", "ant_2"].forEach(function(aid, ix){ setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){}); }, ix * 600); }); hablarYAntenas("Pista vacia calibrada en ambas camaras", true); }
     s--;
   }, 1000);
 }
@@ -582,31 +529,24 @@ function setModoAnt(m) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.
 function setOrientacion(o) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: o, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); previewRoi("ant_1"); previewRoi("ant_2"); }
 function setNColores(n) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ nColores: n, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); }
 
-function cambiarAntiViento(val) {
-  var v = Number(val) || 60;
-  var txt = { 100: "OFF (INTERIOR)", 75: "BAJO", 60: "MEDIO", 45: "ALTO" }[v] || (v + "%");
-  document.getElementById("lblAntiVientoTxt").textContent = txt;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ movidaPct: v, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
-}
-
 function cfgDir() {
   fetch(FB + "/sala.json", {
     method: "PATCH",
     body: JSON.stringify({
       modoJuego: document.getElementById("selJuego").value, duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5, sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 20, pxDiff: Number(document.getElementById("rngPxDiff").value) || 40,
-      retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
+      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      movidaPct: Number(document.getElementById("rngMovidaPct").value) || 60, retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
       dirTs: ahoraSrv(), dirSession: dirSessionId
     })
   }).catch(function(){});
 }
 function cfgLuz() {
-  var dE = Number(document.getElementById("rngDeltaE").value) || 30, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
-  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 10, lGain: prev.lGain || 1.0 }) }).catch(function(){});
+  var dE = Number(document.getElementById("rngDeltaE").value) || 28, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
+  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 12, lGain: prev.lGain || 1.0 }) }).catch(function(){});
 }
 function aplicarPresetLuz(tipo) {
-  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 24, px: 48 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 30, minChroma: 10, lGain: 1.05, sens: 8, col: 20, px: 40 }, BAJA: { nombre: "Poca Luz", deltaE: 32, minChroma: 8, lGain: 1.24, sens: 7, col: 18, px: 32 } };
+  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 32, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 26, minChroma: 11, lGain: 1.05, sens: 8, col: 28, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 30, minChroma: 8, lGain: 1.24, sens: 7, col: 24, px: 34 } };
   var p = ps[tipo] || ps.NUBLADO;
   document.getElementById("rngSens").value = p.sens; document.getElementById("lblSensDir").textContent = p.sens + "%";
   document.getElementById("rngColorPct").value = p.col; document.getElementById("lblColorPctDir").textContent = p.col + "%";
@@ -629,65 +569,41 @@ function guardarPerfilActual() {
     method: "PUT",
     body: JSON.stringify({
       nombre: nom.trim(), orientacion: s.orientacion || "V", sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 20, pxDiff: Number(document.getElementById("rngPxDiff").value) || 40,
-      movidaPct: Number(document.getElementById("selAntiViento").value) || 60, nColores: Number(s.nColores || 1),
-      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 30,
-      minChroma: pL.minChroma || 10, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
+      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      movidaPct: Number(document.getElementById("rngMovidaPct").value) || 60, nColores: Number(s.nColores || 2),
+      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 28,
+      minChroma: pL.minChroma || 12, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
     })
   }).then(function(){ cargarListaPerfiles(); alert("Perfil guardado ✓"); }).catch(function(){ alert("Error guardando perfil"); });
 }
 function cargarPerfilGuardado(pid) {
   var p = perfilesCam[pid]; if (!p) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 20, pxDiff: p.pxDiff || 40, movidaPct: p.movidaPct || 60, nColores: p.nColores || 1, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 30, minChroma: p.minChroma || 10, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 30, pxDiff: p.pxDiff || 45, movidaPct: p.movidaPct || 60, nColores: p.nColores || 2, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 28, minChroma: p.minChroma || 12, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
   if (p.roi && p.roi.ant_1) fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_1", posX: p.roi.ant_1.posX, roi: p.roi.ant_1 }) }).catch(function(){});
   if (p.roi && p.roi.ant_2) setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_2", posX: p.roi.ant_2.posX, roi: p.roi.ant_2 }) }).catch(function(){}); }, 400);
   hablarYAntenas("Perfil " + p.nombre + " cargado", false);
 }
 function borrarPerfilGuardado() { var pid = document.getElementById("selPerfilesGuardados").value; if (pid && confirm("¿Borrar perfil?")) fetch(FB_ROOT + "/config/perfiles_camara/" + pid + ".json", { method: "DELETE" }).then(cargarListaPerfiles).catch(function(){}); }
 
-function pintarBandejasWarmup(forzar) {
+function pintarBandejasWarmup() {
   var actEl = document.activeElement; if (actEl && actEl.id && actEl.id.indexOf("selCap_") === 0) return;
-  var keys = Object.keys(warmupCaps).sort();
-  var h = keys.map(function(k){ return k + "_" + (warmupCaps[k].ts || 0); }).join("|");
-  if (!forzar && h === _warmupHashPrev) return;
-  _warmupHashPrev = h;
-
-  var pils = rootCache.pilotos || {}, gar = rootCache.garaje || {}, totalCaps = keys.length;
+  var pils = rootCache.pilotos || {}, gar = rootCache.garaje || {}, totalCaps = Object.keys(warmupCaps).length;
   document.getElementById("lblAccWu").textContent = "🔥 CAPTURAS WARM-UP MULTI-ANGULO (" + totalCaps + ")";
   var optsP = Object.keys(pils).filter(function(k){ return pils[k] && pils[k].nombre; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(pils[k].dorsal || "1") + ' ' + esc(pils[k].nombre) + '</option>'; }).join("") +
     Object.keys(gar).filter(function(k){ return !pils[k] && gar[k] && gar[k].modelo; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(gar[k].dorsal || "1") + ' ' + esc(k) + '</option>'; }).join("");
   if (!optsP) optsP = '<option value="">Sin pilotos</option>';
-
-  var a1Id = _slotAnts.ant_1 || "ant_1", a2Id = _slotAnts.ant_2 || "ant_2";
-  document.getElementById("titBandCam1").textContent = "📷 " + (a1Id === "ant_1" ? "ANTENA 1 (META)" : a1Id);
-  document.getElementById("titBandCam2").textContent = "📷 " + (a2Id === "ant_2" ? "ANTENA 2 (REFUERZO)" : a2Id);
-
-  var allItems = keys.map(function(cid){ return Object.assign({ cid: cid }, warmupCaps[cid]); }).sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
-  
-  var renderItemHtml = function(c) {
-    var cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
-    return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + ' • ' + esc(c.antNom || c.antId || "Meta") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(c.cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(c.cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(c.cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
-  };
-
-  var b1Items = allItems.filter(function(c){ return (c.antId || "ant_1") === a1Id || (c.antId || "ant_1") === "ant_1"; });
-  var b2Items = allItems.filter(function(c){ return (c.antId || "") === a2Id || (c.antId && c.antId !== a1Id && c.antId !== "ant_1"); });
-
-  document.getElementById("bandeja_ant_1").innerHTML = b1Items.length ? b1Items.map(renderItemHtml).join("") : '<div style="color:#777;font-size:11px">Sin capturas en Antena 1.</div>';
-  document.getElementById("bandeja_ant_2").innerHTML = b2Items.length ? b2Items.map(renderItemHtml).join("") : '<div style="color:#777;font-size:11px">Sin capturas en Antena 2.</div>';
-
+  ["ant_1", "ant_2"].forEach(function(aid) {
+    var items = Object.keys(warmupCaps).filter(function(cid){ return warmupCaps[cid] && (warmupCaps[cid].antId || "ant_1") === aid; }).sort(function(a, b){ return (warmupCaps[b].ts || 0) - (warmupCaps[a].ts || 0); });
+    document.getElementById("bandeja_" + aid).innerHTML = items.length ? items.map(function(cid) {
+      var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
+      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+    }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
+  });
   var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
-    var fw = gar[k].firmasWarmup || {};
-    var c1 = Array.isArray(fw[a1Id]) ? fw[a1Id].length : (Array.isArray(fw.ant_1) ? fw.ant_1.length : 0);
-    var c2 = Array.isArray(fw[a2Id]) ? fw[a2Id].length : (Array.isArray(fw.ant_2) ? fw.ant_2.length : 0);
-    if (!c1 && !c2) return "";
+    var fw = gar[k].firmasWarmup || {}, c1 = Array.isArray(fw.ant_1) ? fw.ant_1.length : 0, c2 = Array.isArray(fw.ant_2) ? fw.ant_2.length : 0; if (!c1 && !c2) return "";
     return '<div class="fila"><span><b>#' + esc((pils[k] && pils[k].dorsal) || gar[k].dorsal || "1") + ' ' + esc((pils[k] && pils[k].nombre) || k) + '</b> — Cam1: <b>' + c1 + '</b> • Cam2: <b>' + c2 + '</b></span><button onclick="vibrar();borrarFirmasWuPiloto(\'' + esc(k) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:3px 7px;font-size:10px">Limpiar</button></div>';
   }).filter(Boolean).join("");
   document.getElementById("resumenFirmasWarmup").innerHTML = res || "Ninguna asignada.";
-}
-function refrescarWarmupManual() {
-  fbJson(FB_WU + ".json?t=" + Date.now()).then(function(d){
-    warmupCaps = d || {}; pintarBandejasWarmup(true);
-  }).catch(function(){});
 }
 function asignarCapturaPiloto(cid) {
   var c = warmupCaps[cid], sel = document.getElementById("selCap_" + cid), pUid = sel ? sel.value : ""; if (!c || !pUid) { alert("Selecciona piloto."); return; }
@@ -698,9 +614,9 @@ function asignarCapturaPiloto(cid) {
     rootCache.garaje[pUid].firmasWarmup[aid] = arr; descartarCaptura(cid); hablarYAntenas("Captura asignada", false);
   }).catch(function(){ alert("Error asignando"); });
 }
-function descartarCaptura(cid) { delete warmupCaps[cid]; fetch(FB_WU + "/" + cid + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(true); }
-function limpiarBandejaWarmup() { if (!confirm("¿Vaciar todas las capturas pendientes de Warm-Up?")) return; warmupCaps = {}; fetch(FB_WU + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(true); }
-function borrarFirmasWuPiloto(pUid) { if (!confirm("¿Borrar las firmas de este piloto?")) return; if (rootCache.garaje[pUid]) delete rootCache.garaje[pUid].firmasWarmup; fetch(FB + "/garaje/" + pUid + "/firmasWarmup.json", { method: "DELETE" }).then(function(){ pintarBandejasWarmup(true); }).catch(function(){}); }
+function descartarCaptura(cid) { delete warmupCaps[cid]; fetch(FB_WU + "/" + cid + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
+function limpiarBandejaWarmup() { warmupCaps = {}; fetch(FB_WU + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
+function borrarFirmasWuPiloto(pUid) { if (rootCache.garaje[pUid]) delete rootCache.garaje[pUid].firmasWarmup; fetch(FB + "/garaje/" + pUid + "/firmasWarmup.json", { method: "DELETE" }).then(pintarBandejasWarmup).catch(function(){}); }
 
 function cmdSala(est) {
   desbloquearAudioD(false);
@@ -829,58 +745,32 @@ function guardarAccesoCfg(avisar) {
     .catch(function(){ alert("Error guardando control de descargas"); });
 }
 
-function cargarCuentasDir(forzar) {
-  var bx = document.getElementById("boxCuentasDir");
-  if (!forzar) bx.style.display = (bx.style.display === "block") ? "none" : "block";
-  if (bx.style.display === "none") return;
-  document.getElementById("listaCuentasRender").innerHTML = "<div style='color:#888'>Cargando cuentas...</div>";
-
-  Promise.all([
-    fbJson(FB_ROOT + "/cuentas_idx.json?t=" + Date.now()).catch(function(){ return {}; }),
-    fbJson(FB_ROOT + "/cuentas.json?t=" + Date.now()).catch(function(){ return {}; })
-  ]).then(function(res) {
-    var cIdx = res[0] || {}, cOld = res[1] || {};
-    _cuentasCache = Object.assign({}, cOld, cIdx);
-    filtrarCuentasDir(document.getElementById("inpFiltroCuentas").value);
-  }).catch(function(){
-    document.getElementById("listaCuentasRender").innerHTML = "<div style='color:#ff4d5e'>Error cargando cuentas</div>";
-  });
-}
-function filtrarCuentasDir(txt) {
-  var q = String(txt || "").trim().toLowerCase(), rEl = document.getElementById("listaCuentasRender");
-  var ks = Object.keys(_cuentasCache).filter(function(k){
-    var u = _cuentasCache[k]; if (!u) return false;
-    if (!q) return true;
-    var n = String(u.nombre || k).toLowerCase();
-    return n.indexOf(q) >= 0 || k.toLowerCase().indexOf(q) >= 0;
-  });
-  if (!ks.length) { rEl.innerHTML = "<div style='color:#888;padding:6px'>No se encontraron cuentas con ese filtro.</div>"; return; }
-  rEl.innerHTML = ks.map(function(k) {
-    var u = _cuentasCache[k], bloq = !!u.bloqueado;
-    return "<div class='fila' style='padding:5px 0'>" +
-      "<div><b>" + esc(u.nombre || k) + "</b> <span style='font-size:10px;color:#aaa'>(" + esc(u.rol || "PILOTO") + ")</span> " + (bloq ? "<span style='color:#ff4d5e'>⛔ BLOQUEADO</span>" : "<span style='color:#20c997'>✅ ACTIVO</span>") + "<div style='font-size:9px;color:#666'>" + esc(k) + "</div></div>" +
-      "<div style='white-space:nowrap'>" +
-        "<button onclick=\"vibrar();bloqCta('" + esc(k) + "'," + (!bloq) + ")\" style='background:" + (bloq ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (bloq ? "Activar" : "Bloquear") + "</button>" +
-        "<button onclick=\"vibrar();delCta('" + esc(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button>" +
-      "</div></div>";
-  }).join("");
+function cargarCuentasDir() {
+  var bx = document.getElementById("boxCuentasDir"); bx.style.display = (bx.style.display === "block") ? "none" : "block"; if (bx.style.display === "none") return;
+  bx.innerHTML = "<div style='color:#888'>Cargando cuentas...</div>";
+  fbJson(FB_ROOT + "/cuentas_idx.json?t=" + Date.now()).then(function(ct) {
+    if (!ct) { bx.innerHTML = "<div style='color:#888'>Sin cuentas indexadas aun (al entrar nuevos usuarios apareceran aqui).</div>"; return; }
+    bx.innerHTML = Object.keys(ct).map(function(k) {
+      var u = ct[k]; if (!u) return "";
+      return "<div class='fila'><span><b>" + esc(u.nombre) + "</b> (" + esc(u.rol || "PILOTO") + ") " + (u.bloqueado ? "⛔" : "✅") + "</span>" +
+        "<div><button onclick=\"vibrar();bloqCta('" + esc(k) + "'," + (!u.bloqueado) + ")\" style='background:" + (u.bloqueado ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button>" +
+        "<button onclick=\"vibrar();delCta('" + esc(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button></div></div>";
+    }).join("");
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando cuentas</div>"; });
 }
 function bloqCta(k, st) {
-  var u = _cuentasCache[k] || {}, nom = u.nombre || k;
-  if (!confirm("¿Deseas " + (st ? "BLOQUEAR" : "ACTIVAR") + " la cuenta de \"" + nom + "\"?")) return;
   Promise.all([
     fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }),
     fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) })
-  ]).then(function(){ if (_cuentasCache[k]) _cuentasCache[k].bloqueado = st; filtrarCuentasDir(document.getElementById("inpFiltroCuentas").value); }).catch(function(){});
+  ]).then(function(){ cargarCuentasDir(); cargarCuentasDir(); }).catch(function(){});
 }
 function delCta(k) {
-  var u = _cuentasCache[k] || {}, nom = u.nombre || k;
-  if (!confirm("⚠️ ¿ELIMINAR DEFINITIVAMENTE la cuenta de \"" + nom + "\"?\nSe borrara de usuarios y de parrilla.")) return;
+  if (!confirm("¿Eliminar esta cuenta definitivamente?")) return;
   Promise.all([
     fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "DELETE" }),
     fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }),
     fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" })
-  ]).then(function(){ delete _cuentasCache[k]; filtrarCuentasDir(document.getElementById("inpFiltroCuentas").value); }).catch(function(){});
+  ]).then(function(){ cargarCuentasDir(); cargarCuentasDir(); }).catch(function(){});
 }
 
 function guardarGpsPista() { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(function(p){ fbJson(FB + "/sala/gps.json", { method: "PUT", body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) }).then(function(){ alert("GPS guardado ✓"); }); }); }
@@ -910,7 +800,7 @@ function pintarChecklist(antsAct, pils, s) {
   var gar = rootCache.garaje || {}, md = s.modoDet || "TODO";
   var colOk = (md === "TODO") || pils.some(function(p){ var g = gar[p.id]; return g && ((g.colores && g.colores.length) || g.firmasWarmup); });
   var pasos = [
-    { ok: antsAct.length > 0, txt: "1. Antenas conectadas (" + antsAct.length + " activas)" },
+    { ok: antsAct.length > 0, txt: "1. Antenas (Cam1: " + (antsAct.indexOf("ant_1") >= 0 ? "✓" : "No") + " • Cam2: " + (antsAct.indexOf("ant_2") >= 0 ? "✓" : "No") + ")" },
     { ok: !!(s.perfilLuz && s.perfilLuz.nombre), txt: "2. Perfil Luz (" + esc((s.perfilLuz && s.perfilLuz.nombre) || "Sin elegir") + ")" },
     { ok: calOk, txt: "3. Pista vacia calibrada" },
     { ok: pils.some(function(p){ return p.activo; }), txt: "4. Parrilla (" + pils.filter(function(p){ return p.activo; }).length + " activos)" },
@@ -920,45 +810,9 @@ function pintarChecklist(antsAct, pils, s) {
   document.getElementById("bodyChecklist").innerHTML = pasos.map(function(st){ return '<div class="chk-item' + (st.ok ? ' chk-ok' : '') + '">' + (st.ok ? '✅' : '⏳') + ' <span>' + st.txt + '</span></div>'; }).join("");
 }
 
-function actualizarTelemetriaAntenasDOM() {
-  var ants = rootCache.antenas || {}, ah = ahoraSrv(), s = rootCache.sala || {}, mdDeseado = s.modoDet || "TODO";
-  var allKeys = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
-
-  var a1Candidate = ants["ant_1"] ? "ant_1" : allKeys.find(function(k){ return k.indexOf("tmp_") === 0; }) || "ant_1";
-  var a2Candidate = ants["ant_2"] ? "ant_2" : allKeys.find(function(k){ return k !== a1Candidate; }) || "ant_2";
-  _slotAnts.ant_1 = a1Candidate; _slotAnts.ant_2 = a2Candidate;
-
-  ["ant_1", "ant_2"].forEach(function(slotKey) {
-    var targetId = _slotAnts[slotKey] || slotKey;
-    var a = ants[targetId], tel = document.getElementById("tel_" + slotKey), bConf = document.getElementById("badgeModoConf_" + slotKey);
-    if (a && Math.abs(ah - Number(a.ts || 0)) < 15000) {
-      if (a.movidaTs && (ah - Number(a.movidaTs)) < 12000) {
-        tel.style.color = "#ff4d5e"; tel.textContent = "⚠️ MOVIDA POR GOLPE/VIENTO";
-        if (_ultMovida[targetId] !== a.movidaTs) { _ultMovida[targetId] = a.movidaTs; hablarYAntenas("Antena " + esc(a.nom || targetId) + " movida", false); }
-      } else {
-        tel.style.color = a.calibrada ? "#00e676" : "#ffc107";
-        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " | MOV:" + (a.mov || 0) + "% | PASOS:" + (a.pasos || 0) + (a.ultTxt ? (" | " + a.ultTxt) : "");
-      }
-      if (bConf) {
-        var mAct = a.modoActivo || a.modo || "";
-        var match = (mAct === mdDeseado) || (mdDeseado === "GAR" && mAct === "CAR");
-        bConf.className = "cam-mode-badge " + (match ? "ok" : "diff");
-        bConf.textContent = mAct ? ("[MODO REAL: " + mAct + (match ? " ✓]" : " ⏳]")) : "[MODO REAL: SIN INFO]";
-      }
-    } else {
-      if (tel) { tel.style.color = "#888"; tel.textContent = "Desconectada (" + targetId + ")"; }
-      if (bConf) { bConf.className = "cam-mode-badge diff"; bConf.textContent = "[DESCONECTADA]"; }
-    }
-  });
-}
-
 function pintarDirUI() {
-  var s = rootCache.sala || {}, ants = rootCache.antenas || {}, pils = ordenarPilotos(rootCache.pilotos, s), gObj = rootCache.garaje || {}, ah = ahoraSrv();
-  var esAmarilla = (s.bandera === "AMARILLA");
-  document.body.classList.toggle("flag-amarilla", esAmarilla);
-  var rib = document.getElementById("yellowRibbonDir");
-  if (rib) rib.style.display = esAmarilla ? "block" : "none";
-
+  var s = rootCache.sala || {}, ants = rootCache.antenas || {}, pils = ordenarPilotos(rootCache.pilotos, s), ah = ahoraSrv();
+  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
   document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
 
   var md = s.modoDet || "TODO";
@@ -972,63 +826,40 @@ function pintarDirUI() {
   var nc = Number(s.nColores || 2);
   [1, 2, 3].forEach(function(n){ var b = document.getElementById("bNCol" + n); b.style.background = (nc === n) ? "#20c997" : "#262626"; b.style.color = (nc === n) ? "#000" : "#fff"; });
 
-  var syncRng = function(id, lbl, val, suf) { if (val && document.activeElement !== document.getElementById(id)) { document.getElementById(id).value = val; if (lbl) document.getElementById(lbl).textContent = val + suf; } };
+  var syncRng = function(id, lbl, val, suf) { if (val && document.activeElement !== document.getElementById(id)) { document.getElementById(id).value = val; document.getElementById(lbl).textContent = val + suf; } };
   syncRng("rngSens", "lblSensDir", s.sensPct, "%");
   syncRng("rngColorPct", "lblColorPctDir", s.colorPct, "%");
   syncRng("rngPxDiff", "lblPxDiffDir", s.pxDiff, "");
+  syncRng("rngMovidaPct", "lblMovidaPctDir", s.movidaPct, "%");
   if (typeof s.retardoMs === "number") syncRng("rngRetardo", "lblRetardoDir", s.retardoMs, "ms");
   if (s.perfilLuz && s.perfilLuz.deltaE) syncRng("rngDeltaE", "lblDeltaEDir", s.perfilLuz.deltaE, "");
 
-  if (s.movidaPct && document.activeElement !== document.getElementById("selAntiViento")) {
-    var mv = Number(s.movidaPct);
-    var selAv = document.getElementById("selAntiViento");
-    if ([100, 75, 60, 45].indexOf(mv) >= 0) selAv.value = String(mv);
-    var txtAv = { 100: "OFF (INTERIOR)", 75: "BAJO", 60: "MEDIO", 45: "ALTO" }[mv] || (mv + "%");
-    document.getElementById("lblAntiVientoTxt").textContent = txtAv;
-  }
-
   if (!_roiInit && s.roi) {
     _roiInit = true;
-    ["ant_1", "ant_2"].forEach(function(slotKey){
-      var r = s.roi[slotKey] || s.roi[_slotAnts[slotKey]];
-      if (!r) return;
-      if (r.posX) document.getElementById("pos_" + slotKey).value = r.posX;
-      if (typeof r.x === "number") document.getElementById("rx_" + slotKey).value = r.x;
-      if (typeof r.y === "number") document.getElementById("ry_" + slotKey).value = r.y;
-      if (typeof r.w === "number") document.getElementById("rw_" + slotKey).value = r.w;
-      if (typeof r.h === "number") document.getElementById("rh_" + slotKey).value = r.h;
-    });
+    ["ant_1", "ant_2"].forEach(function(aid){ var r = s.roi[aid]; if (!r) return; if (r.posX) document.getElementById("pos_" + aid).value = r.posX; if (typeof r.x === "number") document.getElementById("rx_" + aid).value = r.x; if (typeof r.y === "number") document.getElementById("ry_" + aid).value = r.y; if (typeof r.w === "number") document.getElementById("rw_" + aid).value = r.w; if (typeof r.h === "number") document.getElementById("rh_" + aid).value = r.h; });
   }
   previewRoi("ant_1"); previewRoi("ant_2");
 
-  actualizarTelemetriaAntenasDOM();
-
-  var antsAct = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
+  var antsAct = [];
+  ["ant_1", "ant_2"].forEach(function(aid) {
+    var a = ants[aid], tel = document.getElementById("tel_" + aid);
+    if (a && Math.abs(ah - Number(a.ts || 0)) < 15000) {
+      antsAct.push(aid);
+      if (a.movidaTs && (ah - Number(a.movidaTs)) < 12000) {
+        tel.style.color = "#ff4d5e"; tel.textContent = "⚠️ MOVIDA POR GOLPE/VIENTO";
+        if (_ultMovida[aid] !== a.movidaTs) { _ultMovida[aid] = a.movidaTs; hablarYAntenas("Antena " + (aid === "ant_1" ? "1" : "2") + " movida", false); }
+      } else { tel.style.color = a.calibrada ? "#00e676" : "#ffc107"; tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " | MOV:" + (a.mov || 0) + "% | PASOS:" + (a.pasos || 0) + (a.ultTxt ? (" | " + a.ultTxt) : ""); }
+    } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
+  });
   pintarChecklist(antsAct, pils, s);
-
-  var absBest = 0;
-  pils.forEach(function(px){ if (px.mejorMs && (!absBest || px.mejorMs < absBest)) absBest = px.mejorMs; });
 
   var actCnt = 0, hDir = "", hPil = "";
   pils.forEach(function(p, ix) {
     if (p.activo) actCnt++;
     if (dirPilotoOn && p.id === uid) document.getElementById("vivoPosP").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
     var dot = p.activo ? "🟢" : "⚪";
-    var g = gObj[p.id] || {};
-    var disc = (g.disc || "MX").toUpperCase();
-    var pCls = (disc === "SM") ? "sm" : (g.modelo ? "mx" : "mx-w");
-    var colsArr = Array.isArray(g.colores) ? g.colores.slice(0, 3) : [];
-    var pillsHtml = colsArr.length ? ('<span class="col-pills">' + colsArr.map(function(c){
-      var bg = c.hex || ("rgb(" + (c.r || 0) + "," + (c.g || 0) + "," + (c.b || 0) + ")");
-      return '<span class="col-pill" style="background:' + esc(bg) + '"></span>';
-    }).join("") + '</span>') : "";
-
-    var bestCls = "tv-time";
-    if (p.mejorMs && absBest && p.mejorMs <= absBest) bestCls += " tv-time-purple";
-    else if (p.mejorMs) bestCls += " tv-time-green";
-
-    hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> <span class="plate-mx ' + pCls + '">#' + esc(p.dorsal || g.dorsal || "--") + '</span><b>' + esc(p.nombre) + '</b>' + pillsHtml + ' (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b class="' + bestCls + '">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
-    hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> <span class="plate-mx ' + pCls + '">#' + esc(p.dorsal || g.dorsal || "--") + '</span><b>' + esc(p.nombre) + '</b>' + pillsHtml + ' (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><b class="' + bestCls + '">' + fmt(p.mejorMs) + '</b></div>';
+    hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
+    hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b></div>';
   });
   document.getElementById("listaSalaDir").innerHTML = hDir || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
   document.getElementById("listaSalaPiloto").innerHTML = hPil || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
@@ -1038,7 +869,7 @@ function pintarDirUI() {
     var lA = document.getElementById("lblAntVivoP");
     lA.textContent = antsAct.length ? ("📡 ANTENAS: " + antsAct.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS"; lA.style.color = antsAct.length ? "#00e676" : "#ff4d5e";
     var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE", RULETA: "🎲 RULETA LOCA MX" };
-    document.getElementById("lblModoSalaP").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL") + (esAmarilla ? " • 🟨 AMARILLA" : "");
+    document.getElementById("lblModoSalaP").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL") + (s.bandera === "AMARILLA" ? " • 🟨 AMARILLA" : "");
     var brul = document.getElementById("banRuletaP");
     if (s.modoJuego === "RULETA" && s.ruleta && s.ruleta.texto) { brul.style.display = "block"; brul.textContent = "🎲 " + s.ruleta.texto; } else brul.style.display = "none";
     var br = document.getElementById("banReacVivoP");
@@ -1100,22 +931,21 @@ function pintarDirUI() {
   pintarBandejasWarmup();
 }
 
-function bindCamImg(slotKey) {
-  var targetId = _slotAnts[slotKey] || slotKey;
-  var es = new EventSource(FB_IMG + "/" + targetId + ".json");
+function bindCamImg(aid) {
+  var es = new EventSource(FB_IMG + "/" + aid + ".json");
   var onIm = function(e) {
     try {
       var m = JSON.parse(e.data); if (!m) return;
-      if (m.path === "/" && m.data === null) { document.getElementById("img_" + slotKey).removeAttribute("src"); return; }
+      if (m.path === "/" && m.data === null) { document.getElementById("img_" + aid).removeAttribute("src"); return; }
       var im = (m.path === "/" && m.data) ? m.data.img : (m.path === "/img" ? m.data : null);
-      if (im) document.getElementById("img_" + slotKey).src = im;
+      if (im) document.getElementById("img_" + aid).src = im;
     } catch (er) {}
   };
   es.addEventListener("put", onIm); es.addEventListener("patch", onIm);
   es.onerror = function() {
     if (es.readyState === 2) {
       setTimeout(function() {
-        if (slotKey === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2");
+        if (aid === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2");
       }, 2500);
     }
   };
@@ -1129,12 +959,8 @@ function conectarSseStreams() {
     try {
       var m = JSON.parse(e.data); if (!m || !m.path) return;
       applySsePatch(rootCache, m.path, m.data, e.type === "put");
-      if (m.path.indexOf("/antenas") === 0) {
-        actualizarTelemetriaAntenasDOM();
-      } else {
-        Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
-        pintarDirUI(); if (_tabDir === "tiempos") mxGar.pintarTiempos();
-      }
+      Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
+      pintarDirUI(); if (_tabDir === "tiempos") mxGar.pintarTiempos();
     } catch (er) {}
   };
   _esRoot.addEventListener("put", onRoot); _esRoot.addEventListener("patch", onRoot);
@@ -1150,7 +976,7 @@ function conectarSseStreams() {
       var m = JSON.parse(e.data); if (!m || !m.path) return;
       if (m.path === "/") { if (e.type === "put") warmupCaps = m.data || {}; else Object.assign(warmupCaps, m.data || {}); }
       else { var k = m.path.slice(1).split("/")[0]; if (m.data === null) delete warmupCaps[k]; else warmupCaps[k] = m.data; }
-      pintarBandejasWarmup(true);
+      pintarBandejasWarmup();
     } catch (er) {}
   };
   _esWu.addEventListener("put", onWu); _esWu.addEventListener("patch", onWu);
@@ -1176,15 +1002,10 @@ function iniciarDirector() {
   setInterval(function() {
     var labAbierto = document.getElementById("acc_lab").style.display !== "none";
     if (!testOn && !labAbierto) return;
-    ["ant_1", "ant_2"].forEach(function(slotKey) {
-      var targetId = _slotAnts[slotKey] || slotKey;
-      fbJson(FB_IMG + "/" + targetId + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + slotKey).src = d.img; }).catch(function(){});
+    ["ant_1", "ant_2"].forEach(function(aid) {
+      fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){});
     });
   }, 1500);
-
-  setInterval(function() {
-    refrescarWarmupManual();
-  }, 2500);
 
   setInterval(function() {
     fbJson(FB + ".json?t=" + Date.now()).then(function(r) {

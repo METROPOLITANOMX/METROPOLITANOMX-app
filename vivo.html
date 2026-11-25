@@ -8,62 +8,52 @@
 <style>.top{border-bottom-color:#20c997}</style>
 </head>
 <body>
-  <div id="yellowRibbonV" class="yellow-flag-ribbon"><span>BANDERA AMARILLA EN PISTA — PRECAUCION</span></div>
-
   <div id="modalSetupV" class="modal" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-box tv-glass">
-      <div id="mSetTit" style="font-size:16px;font-weight:bold;color:#ffc107;margin-bottom:6px">PILOTO</div>
+    <div class="modal-box">
+      <div id="mSetTit" style="font-size:16px;font-weight:bold;color:#ffc107;margin-bottom:6px">🏍️ PILOTO</div>
       <div id="mSetBody" style="font-size:13px;line-height:1.5;color:#ddd;margin-bottom:12px"></div>
-      <button id="btnCerrarSet" onclick="vibrar();document.getElementById('modalSetupV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000"><span class="btn-lbl">CERRAR</span></button>
+      <button id="btnCerrarSet" onclick="vibrar();document.getElementById('modalSetupV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000">CERRAR</button>
     </div>
   </div>
 
   <div id="modalFfV" class="modal" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-box tv-glass" style="border-color:#ffc107;text-align:center">
-      <div id="titFfV" style="font-size:14px;font-weight:bold;color:#ffc107;margin-bottom:8px">FOTO-FINISH DE META</div>
+    <div class="modal-box" style="border-color:#ffc107;text-align:center">
+      <div id="titFfV" style="font-size:14px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
       <img id="imgFfV" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
       <div id="txtFfInfoV" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
-      <button id="btnCerrarFfV" onclick="vibrar();document.getElementById('modalFfV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000"><span class="btn-lbl">CERRAR</span></button>
+      <button id="btnCerrarFfV" onclick="vibrar();document.getElementById('modalFfV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">CERRAR</button>
     </div>
   </div>
 
   <div class="top">
-    <div style="text-align:left"><b id="titTopV" style="color:#00f59b;font-size:13px">EN VIVO — METROPOLITANO</b><div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">METROPOLITANO</div></div>
+    <div style="text-align:left"><b id="titTopV" style="color:#20c997;font-size:13px">🔴 EN VIVO — METROPOLITANO</b><div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div></div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-      <button id="btnMecV" onclick="vibrar();toggleModoMecanico()" style="background:#2b2b2b;color:#ffc107;padding:6px 8px;font-size:10px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg><span class="btn-lbl">MECANICO</span></button>
-      <button id="btnGuiaV" onclick="vibrar();ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17h-2v-2h2zm2.07-7.75-.9.92A3.4 3.4 0 0 0 13 15h-2v-.5a4 4 0 0 1 1.17-2.83l1.24-1.26A2 2 0 0 0 14 9a2 2 0 0 0-4 0H8a4 4 0 0 1 8 0 3.18 3.18 0 0 1-.93 2.25z"/></svg><span class="btn-lbl">GUIA</span></button>
-      <button id="btnSolV" onclick="vibrar();document.body.classList.toggle('sol')" style="background:#eee;color:#000;padding:6px 8px;font-size:10px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0-5h-1v3h2V2zm0 17h-1v3h2v-3zM2 11v2h3v-2zm17 0v2h3v-2zM4.2 5.6 5.6 4.2 7.7 6.3 6.3 7.7zm12.1 12.1 1.4-1.4 2.1 2.1-1.4 1.4zM18.4 4.2l1.4 1.4-2.1 2.1-1.4-1.4zM6.3 16.3l1.4 1.4-2.1 2.1-1.4-1.4z"/></svg><span class="btn-lbl">SOL</span></button>
-      <button id="btnSalirV" onclick="vibrar();location.href='index.html'" style="background:#dc3545;color:#fff;padding:6px 9px;font-size:10px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v3H3v4h7zm9-12h-7v2h7v10h-7v2h7a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/></svg><span class="btn-lbl">Salir</span></button>
+      <button id="btnMecV" onclick="vibrar();toggleModoMecanico()" style="background:#2b2b2b;color:#ffc107;padding:6px 8px;font-size:10px">🔧 MECANICO</button>
+      <button id="btnGuiaV" onclick="vibrar();ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
+      <button id="btnSolV" onclick="vibrar();document.body.classList.toggle('sol')" style="background:#eee;color:#000;padding:6px 8px;font-size:10px">☀️ SOL</button>
+      <button id="btnSalirV" onclick="vibrar();location.href='index.html'" style="background:#dc3545;color:#fff;padding:6px 9px;font-size:10px">Salir</button>
     </div>
   </div>
 
-  <div class="card tv-glass" style="text-align:center;border-color:#ffc107">
+  <div class="card" style="text-align:center;border-color:#ffc107">
     <div id="lblEstV" style="font-size:16px;font-weight:bold;color:#ffc107">CONECTANDO CON PISTA...</div>
     <div id="lblSubV" style="font-size:12px;color:#0dcaf0;margin-top:4px">Sincronizando tiempos en vivo</div>
     <div id="lblModV" style="font-size:11px;color:#aaa;margin-top:4px"></div>
-    <div id="slotStartV" style="display:none;margin-top:6px"></div>
     <div id="banRuletaV" style="display:none;background:#321142;border:1px solid #d63384;border-radius:8px;padding:7px;margin-top:6px;font-size:12px;color:#ffc107;font-weight:bold;text-align:left"></div>
-    <button id="btnFfV" onclick="vibrar();verFotoFinishV()" style="width:100%;margin-top:8px;background:#1c2530;color:#0dcaf0;border:1px solid #0dcaf0;padding:9px;font-size:11px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M9 3 7.17 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3zm3 15a5 5 0 1 1 5-5 5 5 0 0 1-5 5z"/></svg><span class="btn-lbl">VER ULTIMO FOTO-FINISH EN META</span></button>
+    <button id="btnFfV" onclick="vibrar();verFotoFinishV()" style="width:100%;margin-top:8px;background:#1c2530;color:#0dcaf0;border:1px solid #0dcaf0;padding:9px;font-size:11px">📸 VER ULTIMO FOTO-FINISH EN META</button>
   </div>
 
-  <div id="boxMecanico" class="card tv-glass" style="display:none;border-color:#ffc107">
+  <div id="boxMecanico" class="card" style="display:none;border-color:#ffc107">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <b id="titMecV" style="color:#ffc107;font-size:13px">MODO MECANICO / BOXES (PIT-BOARD)</b>
-      <button id="btnVozMec" onclick="vibrar();toggleVozMec()" style="background:#262626;color:#20c997;padding:5px 8px;font-size:10px"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg><span class="btn-lbl">VOZ OFF</span></button>
+      <b id="titMecV" style="color:#ffc107;font-size:13px">🔧 MODO MECANICO / BOXES (PIT-BOARD)</b>
+      <button id="btnVozMec" onclick="vibrar();toggleVozMec()" style="background:#262626;color:#20c997;padding:5px 8px;font-size:10px">🔊 VOZ OFF</button>
     </div>
     <select id="selPilotoMec" onchange="pintarModoMecanico()"></select>
     <div class="grid2">
       <div class="stat"><div style="font-size:10px;color:#888">POSICION / VUELTAS</div><div id="mecPosVtas" style="font-size:18px;font-weight:bold;color:#ffc107">--</div></div>
-      <div class="stat"><div style="font-size:10px;color:#888">CRONO ACTUAL</div><div id="mecCrono" style="font-size:18px;font-weight:bold;color:#00f59b">00.0s</div></div>
+      <div class="stat"><div style="font-size:10px;color:#888">CRONO ACTUAL</div><div id="mecCrono" style="font-size:18px;font-weight:bold;color:#20c997">00.0s</div></div>
       <div class="stat"><div style="font-size:10px;color:#888">ULTIMA VUELTA</div><div id="mecUlt" style="font-size:16px;font-weight:bold;color:#0dcaf0">--</div></div>
       <div class="stat"><div style="font-size:10px;color:#888">MEJOR / BATERIA LIPO</div><div id="mecMejLipo" style="font-size:15px;font-weight:bold;color:#fff">--</div></div>
-    </div>
-    <div class="lipo-card">
-      <div class="lipo-head">
-        <span>BATERIA LIPO (0 - 12 MIN)</span>
-        <span id="mecLipoTxt" style="color:#00f59b">00:00 / 12:00</span>
-      </div>
-      <div class="lipo-bar-bg"><div id="mecLipoFill" class="lipo-bar-fill"></div></div>
     </div>
   </div>
 
@@ -92,9 +82,9 @@
   </div>
 
   <div class="card" style="border-color:#20c997">
-    <b id="titReacV" style="color:#20c997;font-size:12px">GRADA EN DIRECTO (SUENA EN ANTENAS Y OIDO)</b>
+    <b id="titReacV" style="color:#20c997;font-size:12px">👏 GRADA EN DIRECTO (SUENA EN ANTENAS Y OIDO)</b>
     <div style="margin-top:8px">
-      <button id="btnOvacion" onclick="vibrar(35);darOvacionGrada()" class="btn-shine" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:13px;padding:13px;box-shadow:0 4px 0 #8a5600"><svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 2 9.5 8.5 2.5 9l5.3 4.4L6.2 20l5.8-3.6L17.8 20l-1.6-6.6L21.5 9l-7-.5z"/></svg><span class="btn-lbl">¡OVACION DE GRADA! (0 / 10 TOQUES)</span></button>
+      <button id="btnOvacion" onclick="vibrar(35);darOvacionGrada()" class="btn-shine" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:13px;padding:13px;box-shadow:0 4px 0 #8a5600">👏 ¡OVACION DE GRADA! (0 / 10 TOQUES)</button>
     </div>
     <div class="box-sub">
       <div style="font-size:10px;color:#0dcaf0;font-weight:bold;margin-bottom:4px">🎯 DIRIGIR MENSAJE A PILOTO 🟢 EN PISTA:</div>
@@ -131,36 +121,29 @@ var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null;
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
-function setBtnLbl(id, txt) {
-  var b = document.getElementById(id); if (!b) return;
-  var sp = b.querySelector(".btn-lbl");
-  if (sp) sp.textContent = txt; else b.textContent = txt;
-}
-
 document.title = (esIngles ? "LIVE — " : "EN VIVO — ") + nomCorto;
-document.getElementById("titTopV").textContent = (esIngles ? "LIVE — " : "EN VIVO — ") + nomCorto.toUpperCase();
-document.getElementById("lblCircV").textContent = circNom;
+document.getElementById("titTopV").textContent = (esIngles ? "🔴 LIVE — " : "🔴 EN VIVO — ") + nomCorto.toUpperCase();
+document.getElementById("lblCircV").textContent = "🏁 " + circNom;
 
 if (esIngles) {
   document.documentElement.lang = "en";
-  setBtnLbl("btnMecV", "MECHANIC");
-  setBtnLbl("btnGuiaV", "GUIDE");
-  setBtnLbl("btnSolV", "SUN");
-  setBtnLbl("btnSalirV", "Exit");
+  document.getElementById("btnMecV").textContent = "🔧 MECHANIC";
+  document.getElementById("btnGuiaV").textContent = "? GUIDE";
+  document.getElementById("btnSolV").textContent = "☀️ SUN";
+  document.getElementById("btnSalirV").textContent = "Exit";
   document.getElementById("lblEstV").textContent = "CONNECTING TO TRACK...";
   document.getElementById("lblSubV").textContent = "Syncing live timing";
-  setBtnLbl("btnFfV", "VIEW LATEST FINISH PHOTO");
-  document.getElementById("titFfV").textContent = "FINISH LINE PHOTO";
-  setBtnLbl("btnCerrarFfV", "CLOSE");
-  document.getElementById("titMecV").textContent = "PIT-BOARD MECHANIC MODE";
+  document.getElementById("btnFfV").textContent = "📸 VIEW LATEST FINISH PHOTO";
+  document.getElementById("titFfV").textContent = "📸 FINISH LINE PHOTO";
+  document.getElementById("btnCerrarFfV").textContent = "CLOSE";
+  document.getElementById("titMecV").textContent = "🔧 PIT-BOARD MECHANIC MODE";
   document.getElementById("titPorraV").textContent = "🎯 PRE-START POLL: WHO SETS FASTEST LAP?";
   document.getElementById("titClasV").textContent = "LIVE STANDINGS & TRACK SETUPS";
   document.getElementById("subClasV").textContent = "Tap a rider to inspect setup";
   document.getElementById("titCampV").textContent = "🏆 TODAY'S CHAMPIONSHIP (HEATS)";
   document.getElementById("titMvpV").textContent = "🏅 VOTE RIDER MVP OF THE DAY";
-  document.getElementById("titReacV").textContent = "LIVE FAN STANDS (PA & EARPIECE)";
-  setBtnLbl("btnCerrarSet", "CLOSE");
-  setBtnLbl("btnOvacion", "FAN OVATION! (0 / 10 TAPS)");
+  document.getElementById("titReacV").textContent = "👏 LIVE FAN STANDS (PA & EARPIECE)";
+  document.getElementById("btnCerrarSet").textContent = "CLOSE";
 }
 
 function toggleModoMecanico() {
@@ -172,16 +155,15 @@ function toggleModoMecanico() {
 }
 function toggleVozMec() {
   desbloquearAudioCore(); vozMec = !vozMec;
-  var b = document.getElementById("btnVozMec");
-  setBtnLbl("btnVozMec", vozMec ? "VOZ ON" : "VOZ OFF");
+  var b = document.getElementById("btnVozMec"); b.textContent = vozMec ? "🔊 VOZ ON" : "🔊 VOZ OFF";
   b.style.background = vozMec ? "#20c997" : "#262626"; b.style.color = vozMec ? "#000" : "#20c997";
   if (vozMec) mxHablar(esIngles ? "Mechanic pit board voice enabled" : "Voz de modo mecanico activada", true, esIngles ? "en-US" : "es-ES");
 }
 
 function ayudaVivo() {
   alert(esIngles
-    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot shows riders live on track.\n• MECHANIC mode turns your phone into a dedicated Pit-Board for 1 rider with LiPo timer & lap voice.\n• OVATION triggers loudspeaker applause every 10 taps.\n• Send cheer blocks directly to any rider & vote MVP!"
-    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde indica pilotos conectados ahora en pista.\n• MECANICO convierte tu movil en un Pit-Board para seguir a 1 piloto desde boxes (crono, vueltas, barra LiPo 0-12 min y voz).\n• OVACION DE GRADA: cada 10 toques hace sonar una ovacion en las antenas.\n• Manda mensajes por bloques dirigidos a un piloto y vota al MVP.");
+    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 shows riders live on track.\n• 🔧 MECHANIC mode turns your phone into a dedicated Pit-Board for 1 rider with LiPo timer & lap voice.\n• 👏 OVATION triggers loudspeaker applause every 10 taps.\n• Send cheer blocks directly to any 🟢 rider & vote MVP!"
+    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos conectados ahora en pista.\n• 🔧 MECANICO convierte tu movil en un Pit-Board para seguir a 1 piloto desde boxes (crono, vueltas, LiPo y voz).\n• 👏 OVACION DE GRADA: cada 10 toques hace sonar una ovacion en las antenas.\n• Manda mensajes por bloques dirigidos a un piloto 🟢 (suenan en megafonia y al oido) y vota al MVP.");
 }
 
 function verFotoFinishV() {
@@ -208,11 +190,9 @@ function darOvacionGrada() {
   toquesOva++; var resto = toquesOva % 10, b = document.getElementById("btnOvacion");
   if (resto === 0) {
     b.classList.remove("ova-boom"); void b.offsetWidth; b.classList.add("ova-boom");
-    setBtnLbl("btnOvacion", esIngles ? ("OVATION SENT! (" + toquesOva + " TAPS)") : ("¡OVACION ENVIADA! (" + toquesOva + " TOQUES)"));
+    b.textContent = "🎉 ¡OVACION ENVIADA! (" + toquesOva + " TOQUES)";
     fetch(FB + "/sala/ovacion.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), total: toquesOva, racha: 10, autor: miNomV }) }).catch(function(){});
-  } else {
-    setBtnLbl("btnOvacion", (esIngles ? "FAN OVATION! (" : "¡OVACION DE GRADA! (") + resto + " / 10 " + (esIngles ? "TAPS)" : "TOQUES)"));
-  }
+  } else b.textContent = "👏 ¡OVACION DE GRADA! (" + resto + " / 10 TOQUES)";
 }
 function votarFavorito(uidP, nomP) {
   votoHecho = true;
@@ -228,8 +208,8 @@ function votarMvp(uidP, nomP) {
 }
 function verSetupRival(pid) {
   var p = (rootCache.pilotos || {})[pid] || {}, g = (rootCache.garaje || {})[pid] || {};
-  document.getElementById("mSetTit").textContent = "#" + (p.dorsal || g.dorsal || "--") + " " + (p.nombre || "Piloto");
-  document.getElementById("mSetBody").innerHTML = "<b>" + (esIngles ? "Bike:" : "Moto:") + "</b> " + esc(g.modelo || "Losi Promoto-MX") + " (" + esc(g.disc || "MX") + ")<br><b>" + (esIngles ? "Best Lap:" : "Mejor Vuelta:") + "</b> <span class='tv-time tv-time-green'>" + fmt(p.mejorMs) + "</span> (" + (p.vueltas || 0) + "v)<br><br><b style='color:#0dcaf0'>" + (esIngles ? "ACTIVE SETUP:" : "REGLAJE ACTIVO:") + "</b><br>" + esc(g.setupTxt || (esIngles ? "Stock setup" : "Setup de serie"));
+  document.getElementById("mSetTit").textContent = "🏍️ #" + (p.dorsal || g.dorsal || "--") + " " + (p.nombre || "Piloto");
+  document.getElementById("mSetBody").innerHTML = "<b>" + (esIngles ? "Bike:" : "Moto:") + "</b> " + esc(g.modelo || "Losi Promoto-MX") + " (" + esc(g.disc || "MX") + ")<br><b>" + (esIngles ? "Best Lap:" : "Mejor Vuelta:") + "</b> <span style='color:#20c997'>" + fmt(p.mejorMs) + "</span> (" + (p.vueltas || 0) + "v)<br><br><b style='color:#0dcaf0'>" + (esIngles ? "🔧 ACTIVE SETUP:" : "🔧 REGLAJE ACTIVO:") + "</b><br>" + esc(g.setupTxt || (esIngles ? "Stock setup" : "Setup de serie"));
   document.getElementById("modalSetupV").style.display = "flex";
 }
 
@@ -240,40 +220,14 @@ function pintarModoMecanico() {
   var vAct = Number(p.vueltas || 0);
   if (typeof _ultVtasMec[pid] === "number" && vAct > _ultVtasMec[pid] && p.ultimaMs) mxHablar(p.nombre + ", vuelta " + vAct + ", " + (p.ultimaMs / 1000).toFixed(2).replace(".", " punto ") + " segundos", vozMec, esIngles ? "en-US" : "es-ES");
   _ultVtasMec[pid] = vAct;
-  document.getElementById("mecPosVtas").textContent = vAct + " vtas";
-  var ultCls = "tv-time";
-  if (p.ultimaMs && p.mejorMs) ultCls += (p.ultimaMs <= p.mejorMs) ? " tv-time-green" : " tv-time-amber";
-  document.getElementById("mecUlt").innerHTML = '<span class="' + ultCls + '">' + fmt(p.ultimaMs) + '</span>';
+  document.getElementById("mecPosVtas").textContent = vAct + " vtas"; document.getElementById("mecUlt").textContent = fmt(p.ultimaMs);
   var t0 = Number(s.tsInicio || 0), minLipo = (t0 > 0 && s.estado === "EN_CURSO") ? Math.max(0, Math.floor((ahoraSrv() - t0) / 60000)) : 0;
-  document.getElementById("mecMejLipo").innerHTML = "<span class='tv-time tv-time-green'>" + fmt(p.mejorMs) + "</span> / <span style='" + (minLipo >= 12 ? "color:#ff4d5e" : (minLipo >= 9 ? "color:#ffa94d" : "color:#00f59b")) + "'>" + minLipo + "m</span>";
-}
-
-function pintarWidgetSalidaV(est, t0, ah) {
-  var slot = document.getElementById("slotStartV");
-  if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
-    var df = t0 - ah, sg = Math.ceil(df / 1000);
-    if (df <= -3500 || df > 31500) { slot.style.display = "none"; return; }
-    slot.style.display = "block";
-    if (est === "SALIDA_30") {
-      var enc = (df <= 0) ? 5 : (sg > 20 ? 1 : (sg > 15 ? 2 : (sg > 10 ? 3 : (sg > 5 ? 4 : 5))));
-      var leds = "";
-      for (var i = 0; i < 5; i++) {
-        var cls = (df <= 0) ? "sem-led green" : (i < enc ? "sem-led red" : "sem-led");
-        leds += '<div class="' + cls + '"></div>';
-      }
-      slot.innerHTML = '<div class="sem-gantry compact">' + leds + '</div><div style="font-size:11px;font-weight:700;color:' + (df <= 0 ? '#00f59b' : '#ffc107') + '">' + (df <= 0 ? '¡SALIDA!' : ('SEMAFORO ' + sg + 's')) + '</div>';
-    } else {
-      var gCls = (df <= 0) ? "mx-gate-mesh drop" : (df <= 5000 ? "mx-gate-mesh ready" : "mx-gate-mesh");
-      slot.innerHTML = '<div class="mx-gate-wrap compact"><div class="' + gCls + '"></div></div><div style="font-size:11px;font-weight:700;color:' + (df <= 0 ? '#00f59b' : '#b197fc') + '">' + (df <= 0 ? '¡VALLA ABAJO!' : (df <= 4500 ? '¡ATENTOS A LA VALLA!' : ('PARRILLA MX ' + sg + 's'))) + '</div>';
-    }
-  } else {
-    slot.style.display = "none";
-  }
+  document.getElementById("mecMejLipo").innerHTML = "<span style='color:#20c997'>" + fmt(p.mejorMs) + "</span> / <span style='" + (minLipo >= 11 ? "color:#ff4d5e" : "color:#ffc107") + "'>" + minLipo + "m</span>";
 }
 
 function pintarVivo() {
   var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gObj = rootCache.garaje || {}, cObj = rootCache.campeonato || {}, ah = ahoraSrv();
-  document.body.classList.toggle("flag-amarilla", s.bandera === "AMARILLA");
+  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
   var est = s.estado || "ESPERA";
   var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
   var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
@@ -283,14 +237,10 @@ function pintarVivo() {
   document.getElementById("lblEstV").textContent = estTxt;
   document.getElementById("lblSubV").textContent = s.hotlapTxt ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt) : circNom;
   document.getElementById("lblModV").textContent = (s.modoJuego && s.modoJuego !== "NORMAL") ? ("MODO: " + s.modoJuego) : "";
-  pintarWidgetSalidaV(est, Number(s.tsInicio || 0), ah);
   var brV = document.getElementById("banRuletaV");
   if (s.modoJuego === "RULETA" && s.ruleta && s.ruleta.texto) { brV.style.display = "block"; brV.textContent = "🎲 " + s.ruleta.texto; } else brV.style.display = "none";
 
   var pils = ordenarPilotos(pObj, s), mj = s.modoJuego || "NORMAL";
-  var absBest = 0;
-  pils.forEach(function(px){ if (px.mejorMs && (!absBest || px.mejorMs < absBest)) absBest = px.mejorMs; });
-
   var selM = document.getElementById("selPilotoMec");
   if (selM && document.activeElement !== selM) { var pm = selM.value; selM.innerHTML = pils.length ? pils.map(function(p){ return '<option value="' + esc(p.id) + '">' + (p.activo ? "🟢 " : "⚪ ") + '#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</option>'; }).join("") : '<option value="">Sin pilotos</option>'; if (pm && pObj[pm]) selM.value = pm; }
   var selD = document.getElementById("selDestinoAnimo");
@@ -312,34 +262,17 @@ function pintarVivo() {
   pils.forEach(function(p, ix) {
     if (p.activo) actCnt++;
     var g = gObj[p.id] || {}, dif = "";
-    var disc = (g.disc || "MX").toUpperCase();
-    var pCls = (disc === "SM") ? "sm" : (g.modelo ? "mx" : "mx-w");
-    var colsArr = Array.isArray(g.colores) ? g.colores.slice(0, 3) : [];
-    var pillsHtml = colsArr.length ? ('<span class="col-pills">' + colsArr.map(function(c){
-      var bg = c.hex || ("rgb(" + (c.r || 0) + "," + (c.g || 0) + "," + (c.b || 0) + ")");
-      return '<span class="col-pill" style="background:' + esc(bg) + '"></span>';
-    }).join("") + '</span>') : "";
-
-    var bestCls = "tv-time";
-    if (p.mejorMs && absBest && p.mejorMs <= absBest) bestCls += " tv-time-purple";
-    else if (p.mejorMs) bestCls += " tv-time-green";
-
-    var ultCls = "tv-time";
-    if (p.ultimaMs && absBest && p.ultimaMs <= absBest) ultCls += " tv-time-purple";
-    else if (p.ultimaMs && p.mejorMs && p.ultimaMs <= p.mejorMs) ultCls += " tv-time-green";
-    else if (p.ultimaMs && p.mejorMs && p.ultimaMs > p.mejorMs) ultCls += " tv-time-amber";
-
     if (ix > 0 && p1) {
       if ((mj === "REY" || mj === "SUPERPOLE") && p.mejorMs && p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
       else if ((p1.vueltas || 0) > (p.vueltas || 0)) dif = " • -" + ((p1.vueltas || 0) - (p.vueltas || 0)) + "v";
       else if (p.mejorMs && p1.mejorMs && p.mejorMs > p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
     }
     h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="vibrar();verSetupRival(\'' + esc(p.id) + '\')">' +
-      '<div>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º</b> <span class="plate-mx ' + pCls + '">#' + esc(p.dorsal || g.dorsal || "--") + '</span><b>' + esc(p.nombre) + '</b>' + pillsHtml + (mvpLeader && p.nombre === mvpLeader ? ' <span style="background:#5f3dc4;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">MVP</span>' : '') + ' <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(dif) + ')</span><div style="font-size:10px;color:#888">' + esc(g.modelo || "Losi Promoto-MX") + ' (' + esc(disc) + ') • Toca para setup</div></div>' +
-      '<div style="text-align:right"><b class="' + bestCls + '" style="font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: <span class="' + ultCls + '">' + fmt(p.ultimaMs) + '</span></div></div></div>';
+      '<div>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b>' + (mvpLeader && p.nombre === mvpLeader ? ' <span style="background:#5f3dc4;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">🏅 MVP</span>' : '') + ' <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(dif) + ')</span><div style="font-size:10px;color:#888">🏍️ ' + esc(g.modelo || "Losi Promoto-MX") + ' (' + esc(g.disc || "MX") + ') • Toca para setup</div></div>' +
+      '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: ' + fmt(p.ultimaMs) + '</div></div></div>';
   });
   var lpv = document.getElementById("lblPistaVivo");
-  lpv.style.color = actCnt > 0 ? "#00f59b" : "#888";
+  lpv.style.color = actCnt > 0 ? "#20c997" : "#888";
   lpv.textContent = actCnt > 0 ? ("🟢 " + actCnt + (esIngles ? " RIDER(S) ON TRACK" : " PILOTO(S) EN PISTA")) : (esIngles ? "⚪ TRACK EMPTY" : "⚪ PISTA VACIA (0 PILOTOS)");
   document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">Ningun piloto rodando ahora mismo.</div>';
 
@@ -369,29 +302,11 @@ function refrescarVivo() {
 conectarSseVivo(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 
 setInterval(function() {
-  var s = rootCache.sala || {}, ah = ahoraSrv();
-  if ((s.estado === "SALIDA_30" || s.estado === "VALLA_MX") && Number(s.tsInicio || 0) > 0) {
-    pintarWidgetSalidaV(s.estado, Number(s.tsInicio), ah);
-  }
   if (!modoMec) return;
-  var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], el = document.getElementById("mecCrono");
-  if (!p || s.estado === "ESPERA") { el.textContent = "00.0s"; }
-  else {
-    var b = Number(p.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
-    el.textContent = (!b || ah < b) ? "00.0s" : ((ah - b) / 1000).toFixed(1) + "s";
-  }
-
-  var fill = document.getElementById("mecLipoFill"), ltxt = document.getElementById("mecLipoTxt");
-  if (fill && ltxt) {
-    var t0 = Number(s.tsInicio || 0);
-    var elapsedMs = (t0 > 0 && s.estado === "EN_CURSO" && ah > t0) ? (ah - t0) : 0;
-    var pct = Math.min(100, (elapsedMs / 720000) * 100);
-    var totSec = Math.floor(elapsedMs / 1000), mm = Math.floor(totSec / 60), ss = totSec % 60;
-    fill.style.width = pct.toFixed(1) + "%";
-    fill.className = "lipo-bar-fill" + (elapsedMs >= 720000 ? " crit" : (elapsedMs >= 540000 ? " warn" : ""));
-    ltxt.textContent = (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss + " / 12:00";
-    ltxt.style.color = elapsedMs >= 720000 ? "#ff4d5e" : (elapsedMs >= 540000 ? "#ffa94d" : "#00f59b");
-  }
+  var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], s = rootCache.sala || {}, el = document.getElementById("mecCrono");
+  if (!p || s.estado === "ESPERA") { el.textContent = "00.0s"; return; }
+  var b = Number(p.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
+  el.textContent = (!b || ahoraSrv() < b) ? "00.0s" : ((ahoraSrv() - b) / 1000).toFixed(1) + "s";
 }, 150);
 </script>
 </body>
