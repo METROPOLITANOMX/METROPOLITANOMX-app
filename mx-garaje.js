@@ -9,11 +9,16 @@ var mxGar = (function() {
     if (!_motos.length) _motos = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} }];
   }
 
+  function getHue(a, b) {
+    var deg = Math.atan2(b, a) * (180 / Math.PI);
+    return deg < 0 ? deg + 360 : deg;
+  }
+
   function esColorCromatico(c) {
     if (!c) return false;
     var lb = c.lab || rgbLab(Number(c.r || 0), Number(c.g || 0), Number(c.b || 0));
-    var ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-    return ch >= 20 && lb.L >= 12 && lb.L <= 95;
+    var ch = typeof c.chroma === "number" ? c.chroma : Math.sqrt(lb.a * lb.a + lb.b * lb.b);
+    return ch >= 14 && lb.L >= 12 && lb.L <= 94;
   }
 
   function drawBevelPath(cx, x, y, w, h, bev) {
@@ -138,7 +143,7 @@ var mxGar = (function() {
           '</div>' +
           '<div id="boxCapGar" style="display:none;background:#1a1a1a;border:2px solid #0dcaf0;border-radius:10px;padding:10px;margin-bottom:10px">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span id="txtPasoCap" style="font-size:11px;color:#ffc107;font-weight:bold">PASO 1 DE 2: ENFOCA TU MOTO EN DIRECTO</span><button onclick="vibrar();mxGar.cerrarCapColor()" style="background:#333;color:#fff;padding:4px 8px;font-size:10px">✕</button></div>' +
-            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Guía de Calidad:</b> Prioriza tonos cromáticos vivos (rojo, azul, amarillo, naranja, verde). Se descartan blanco/negro/gris puros.</div>' +
+            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Guía de Calidad:</b> Enfoca la moto bien iluminada. Se detectan tonos vivos y se aíslan de fondos neutros/suelo.</div>' +
             '<div id="visorVivoCol" class="cam-visor" style="height:195px"><video id="vidGarCol" autoplay playsinline muted></video><div class="cam-guia"></div><div class="cam-div"></div></div>' +
             '<div id="boxRecorteMagico" style="display:none;margin-bottom:8px">' +
               '<div id="lblCalidadFrame" style="font-size:11px;font-weight:bold;margin-bottom:4px"></div>' +
@@ -401,13 +406,13 @@ var mxGar = (function() {
         var r = _raw[i], g = _raw[i + 1], b = _raw[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
         sumL += (r + g + b) / 3;
         var lb = rgbLab(r, g, b);
-        if ((mx - mn) > 32 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) >= 20) sat++;
+        if ((mx - mn) > 24 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) >= 14) sat++;
       }
       var avgL = sumL / tot, satP = (sat / tot) * 100, qEl = document.getElementById("lblCalidadFrame");
-      if (avgL < 55) { qEl.style.color = "#ff4d5e"; qEl.textContent = "⚠️ Poca luz — Acerca a zona iluminada"; }
-      else if (avgL > 220) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Demasiado brillo — Evita reflejo"; }
-      else if (satP < 4) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo — Acerca la moto"; }
-      else { qEl.style.color = "#20c997"; qEl.textContent = "✅ Calidad Optima (" + Math.round(satP) + "% color cromático vivo)"; }
+      if (avgL < 45) { qEl.style.color = "#ff4d5e"; qEl.textContent = "⚠️ Poca luz — Acerca a zona iluminada"; }
+      else if (avgL > 230) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Demasiado brillo — Evita reflejos"; }
+      else if (satP < 3) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo detectado"; }
+      else { qEl.style.color = "#20c997"; qEl.textContent = "✅ Calidad Optima (" + Math.round(satP) + "% color cromático)"; }
       document.getElementById("visorVivoCol").style.display = "none";
       document.getElementById("btnSnapCol").style.display = "none";
       document.getElementById("boxRecorteMagico").style.display = "block";
@@ -442,10 +447,10 @@ var mxGar = (function() {
         for (var px = 0; px < CW; px++) {
           var p = py * CW + px; if (!_mask[p]) continue;
           var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          if (mx < 40 || (mx - mn) < 30) continue;
+          if (mx < 35 || (mx - mn) < 22) continue;
           var lb = rgbLab(r, g, b), chroma = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-          if (chroma < 20 || lb.L < 14 || lb.L > 94) continue;
-          var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 34) + "_" + Math.round(g / 34) + "_" + Math.round(b / 34);
+          if (chroma < 14 || lb.L < 12 || lb.L > 94) continue;
+          var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 30) + "_" + Math.round(g / 30) + "_" + Math.round(b / 30);
           var dst = (zn === "SUP") ? bS : bI;
           if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
           dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
@@ -455,33 +460,33 @@ var mxGar = (function() {
         return Object.keys(mp).map(function(key) {
           var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n);
           var lab = rgbLab(rr, gg, bb);
-          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: lab, chroma: Math.round(Math.sqrt(lab.a * lab.a + lab.b * lab.b)) };
-        }).filter(function(item){ return item.chroma >= 20; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2);
+          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: lab, hue: Math.round(getHue(lab.a, lab.b)), chroma: Math.round(Math.sqrt(lab.a * lab.a + lab.b * lab.b)) };
+        }).filter(function(item){ return item.chroma >= 14; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2);
       };
       var res = top(bS).concat(top(bI));
-      if (!res.length) { alert("No quedaron tonos cromáticos vivos (Chroma ≥ 20) tras el recorte. Evita blanco/negro/gris o tierra."); return; }
+      if (!res.length) { alert("No se detectaron tonos cromáticos suficientes. Acerca la moto o utiliza la paleta rápida."); return; }
       if (_lado === 1) { _cols = res; _lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
-      else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }
+      else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ LISTO — PULSA GUARDAR FIRMA"; }
       pintarMuestras(); this.volverCam();
     },
     addCol: function(r, g, b, zn) {
       var lab = rgbLab(r, g, b), chroma = Math.sqrt(lab.a * lab.a + lab.b * lab.b);
-      if (chroma < 20) { alert("Solo se permiten tonos cromáticos vivos (Chroma ≥ 20)."); return; }
+      if (chroma < 14) { alert("Tono neutro descartado. Selecciona un color vivo."); return; }
       if (_cols.length >= 6) _cols.shift();
-      _cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: lab, chroma: Math.round(chroma) });
+      _cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: lab, hue: Math.round(getHue(lab.a, lab.b)), chroma: Math.round(chroma) });
       pintarMuestras();
     },
     limpiarCols: function() { _cols = []; pintarMuestras(); },
     guardarFirma: function() {
       var validos = _cols.filter(esColorCromatico);
       if (!validos.length) {
-        alert("⚠️ Firma bloqueada: se requiere al menos 1 color cromático vivo (Chroma ≥ 20). No se permite disparar con blanco/negro/gris.");
+        alert("⚠️ Selecciona o captura al menos 1 color vivo (rojo, amarillo, azul, verde, etc.).");
         return;
       }
       _cols = validos;
       _motos[_idx].colores = validos.slice();
       this.cerrarCapColor(); this.guardarMoto();
-      if (_cfg.onSpeak) _cfg.onSpeak("Colores cromaticos guardados en la nube");
+      if (_cfg.onSpeak) _cfg.onSpeak("Firma de color guardada en la nube");
     },
     compartirWa: function() {
       var m = _motos[_idx], st = m.setup || {};
