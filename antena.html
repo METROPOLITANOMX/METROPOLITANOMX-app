@@ -108,6 +108,36 @@ window.addEventListener("beforeunload", function() {
   }
 });
 
+function sonarPitidoFuerte(freq, ms) {
+  try {
+    desbloquearAudioCore();
+    if (_mxAudioCtx) {
+      if (_mxAudioCtx.state === "suspended") {
+        _mxAudioCtx.resume().then(function(){
+          ejecutarBeep(freq, ms);
+        }).catch(function(){});
+      } else {
+        ejecutarBeep(freq, ms);
+      }
+    }
+  } catch(e) {}
+}
+
+function ejecutarBeep(freq, ms) {
+  try {
+    var o = _mxAudioCtx.createOscillator();
+    var g = _mxAudioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = freq || 880;
+    g.gain.setValueAtTime(0.35, _mxAudioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, _mxAudioCtx.currentTime + ((ms || 120) / 1000));
+    o.connect(g);
+    g.connect(_mxAudioCtx.destination);
+    o.start();
+    o.stop(_mxAudioCtx.currentTime + ((ms || 120) / 1000));
+  } catch(e) {}
+}
+
 function hablarAnt(texto, urgente) {
   if (!vozOn || !texto || !("speechSynthesis" in window)) return;
   try {
@@ -137,7 +167,7 @@ function desbloquearAudio(avisar) {
   desbloquearAudioCore();
   var b = document.getElementById("btnAudioAnt");
   if (b) { b.textContent = "🔊 OK"; b.style.background = "#20c997"; }
-  if (avisar) { mxBeep(940, 110); hablarAnt("Megafonia de antena activada", true); }
+  if (avisar) { sonarPitidoFuerte(940, 110); hablarAnt("Megafonia de antena activada", true); }
 }
 function toggleOled(on) { desbloquearAudio(false); document.getElementById("oledBlack").style.display = on ? "flex" : "none"; }
 
@@ -228,7 +258,7 @@ var _cnvLive = document.createElement("canvas"); _cnvLive.width = 360; _cnvLive.
 var _ctxLive = _cnvLive.getContext("2d");
 
 function emitirPaso(pid) {
-  pasos++; mxBeep(940, 110); vibrar([35, 30, 35]);
+  pasos++; sonarPitidoFuerte(940, 110); vibrar([35, 30, 35]);
   var tsPaso = ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
   _ultTxtAnt = pid ? ("OK:" + pid) : "PASO";
   fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }) }).catch(function(){});
@@ -265,7 +295,6 @@ function diffHueGrados(h1, h2) {
   return d > 180 ? (360 - d) : d;
 }
 
-// Extracción autoadaptativa: toma el objeto en movimiento y extrae sus tonos predominantes sin bloqueos artificiales
 function capturarYEnviarWarmup(dProc) {
   var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1200) return; _ultWuTs = ts;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
@@ -282,7 +311,6 @@ function capturarYEnviarWarmup(dProc) {
       cntMov++;
       var rr = Math.min(255, Math.round(dProc[k] * lG)), gg = Math.min(255, Math.round(dProc[k + 1] * lG)), bb = Math.min(255, Math.round(dProc[k + 2] * lG));
       var lb = rgbLab(rr, gg, bb), ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-      // Ponderación: favorece colores con saturación pero incluye tonos dominantes de la moto
       var peso = (ch >= 10 ? 2 : 1);
       var key = Math.round(rr / 28) + "_" + Math.round(gg / 28) + "_" + Math.round(bb / 28);
       if (!bins[key]) bins[key] = { cnt: 0, r: 0, g: 0, b: 0 };
@@ -290,7 +318,6 @@ function capturarYEnviarWarmup(dProc) {
     }
   }
 
-  // Si en el ROI estricto pasó muy rápido, amplía a la zona central
   if (cntMov < 8) {
     for (var py2 = 10; py2 < PH - 10; py2 += 2) {
       for (var px2 = 10; px2 < PW - 10; px2 += 2) {
@@ -318,7 +345,6 @@ function capturarYEnviarWarmup(dProc) {
     };
   }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 3);
 
-  // Si no hay colores suficientes por oscuridad, genera muestra del objeto en paso
   if (!topCols.length) {
     topCols = [{ r: 255, g: 140, b: 0, zona: "CAR", hex: "rgb(255,140,0)", lab: rgbLab(255,140,0), hue: 45, chroma: 60 }];
   }
@@ -327,13 +353,15 @@ function capturarYEnviarWarmup(dProc) {
     var sx = Math.floor((r.x / 100) * 384), sy = Math.floor((r.y / 100) * 216);
     var sw = Math.max(32, Math.floor((r.w / 100) * 384)), sh = Math.max(32, Math.floor((r.h / 100) * 216));
     _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 200, 140);
-    fetch(FB_WU + "/" + antId + "_" + ts + ".json", {
+    var itemKey = antId + "_" + ts;
+    fetch(FB_WU + "/" + itemKey + ".json", {
       method: "PUT",
       body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.55), colores: topCols })
     }).then(function(r) {
       if (r && r.ok) {
         _ultTxtAnt = "WU:" + topCols.length + "c";
-        mxBeep(720, 80);
+        sonarPitidoFuerte(880, 140);
+        vibrar([40, 30, 40]);
         document.getElementById("lblMegaAnt").textContent = "🔥 Captura Warm-Up enviada (" + topCols.length + " tonos)";
       } else {
         document.getElementById("lblMegaAnt").textContent = "⚠️ Error enviando captura Warm-Up";
@@ -383,7 +411,6 @@ function obtenerFirmasPiloto(gObj, pid) {
   return res;
 }
 
-// Evaluación adaptativa de color que auto-compensa sol y sombra sin bloquearse
 function evaluarRoiColor(dProc) {
   var gObj = cfg.garajes || {}, ks = Object.keys(gObj);
   var diagEl = document.getElementById("diagColorBar");
@@ -427,7 +454,6 @@ function evaluarRoiColor(dProc) {
           var c0 = sig[ci];
           var dL = px.lb.L - c0.lab.L, da = px.lb.a - c0.lab.a, db = px.lb.b - c0.lab.b;
           var hueDiff = diffHueGrados(px.hue, c0.hue);
-          // Tolerancia adaptativa: si el matiz coincide o la distancia Lab es baja, cuenta acierto
           if (hueDiff <= 48 || Math.sqrt(da * da + db * db) <= 24) {
             var dist = Math.sqrt(0.30 * dL * dL + da * da + db * db);
             if (dist <= dEMax) { hitC[ci]++; totH++; break; }
@@ -526,7 +552,6 @@ function procFrame() {
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
   document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + (_resTxt || "") + " " + _fpsVal + "fps";
 
-  // Anti-Viento estricto mirando UNICAMENTE las 4 esquinas fijas exteriores
   var movLim = (Number(cfg.movidaPct) || 60) / 100;
   if (movLim < 0.98) {
     var pctEsq = calcularMovimientoEsquinasAntiViento(dFull);
@@ -566,7 +591,7 @@ function procFrame() {
   if (_trigPendTs && (ah - _trigPendTs) >= (cfg.retardoMs || 0)) {
     _trigPendTs = 0;
 
-    if (cfg.estado === "WARMUP") {
+    if (cfg.estado === "WARMUP" || cfg.modoDet === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
       capturarYEnviarWarmup(dFull);
       if (cfg.modoDet === "TODO") {
@@ -635,7 +660,7 @@ function procesarSala(s) {
     if (Math.abs(ahoraSrv() - Number(s.megafonia.ts || 0)) < 12000 && s.megafonia.texto) {
       if (_tSoloVoz) { clearTimeout(_tSoloVoz); _tSoloVoz = null; }
       document.getElementById("lblMegaAnt").textContent = "📢 " + s.megafonia.texto;
-      if (s.megafonia.beep) mxBeep(940, 110);
+      if (s.megafonia.beep) sonarPitidoFuerte(940, 110);
       hablarAnt(s.megafonia.texto, s.megafonia.texto.indexOf("SALIDA") >= 0);
     }
   }
@@ -648,7 +673,7 @@ function procesarSala(s) {
   }
   if (s.ovacion && s.ovacion.ts && s.ovacion.ts !== _ultOvaTs) {
     _ultOvaTs = s.ovacion.ts;
-    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { document.getElementById("lblMegaAnt").textContent = "👏 ¡OVACION DE LA GRADA!"; mxBeep(940, 120); hablarAnt("Ovacion de la grada para los pilotos", false); }
+    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { document.getElementById("lblMegaAnt").textContent = "👏 ¡OVACION DE LA GRADA!"; sonarPitidoFuerte(940, 120); hablarAnt("Ovacion de la grada para los pilotos", false); }
   }
 }
 
@@ -692,7 +717,7 @@ setInterval(function() {
 
 setInterval(function() {
   fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){});
-  fetch(FB + "/garaje.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(g){ if (g) cfg.garajes = g; }).catch(function(){});
+  fetch(FB + "/garaje.json?t=" + Date.now()).then(function(g){ return r.ok ? r.json() : null; }).then(function(g){ if (g) cfg.garajes = g; }).catch(function(){});
 }, 2500);
 
 navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })

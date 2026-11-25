@@ -149,8 +149,8 @@
             </div>
             <div class="grid2">
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107"><span>DISPARO MOV %:</span><b id="lblSensDir">7%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngSens',-1,cfgDir,'lblSensDir','%')">-</button><input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngSens',1,cfgDir,'lblSensDir','%')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">30%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">45</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="45" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">20%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="20" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">40</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="40" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
               <div>
                 <div style="display:flex;justify-content:space-between;font-size:10px;color:#ff6b6b"><span>FILTRO ANTI-VIENTO:</span><b id="lblAntiVientoTxt">MEDIO</b></div>
                 <select id="selAntiViento" onchange="cambiarAntiViento(this.value)" style="margin:2px 0 6px;padding:6px;font-size:11px">
@@ -161,7 +161,7 @@
                 </select>
               </div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0"><span>RETARDO LECTURA:</span><b id="lblRetardoDir">25ms</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngRetardo',-5,cfgDir,'lblRetardoDir','ms')">-</button><input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngRetardo',5,cfgDir,'lblRetardoDir','ms')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (dE):</span><b id="lblDeltaEDir">28</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="16" max="48" value="28" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (dE):</span><b id="lblDeltaEDir">30</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="16" max="48" value="30" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
             </div>
           </div>
           <div id="dualCamsSlot" class="dual-cams"></div>
@@ -387,6 +387,7 @@ function toggleAcc(id) {
   var open = (el.style.display === "none");
   el.style.display = open ? "block" : "none";
   if (ar) ar.textContent = open ? "▼" : "▶";
+  if (id === "acc_wu" && open) pintarBandejasWarmup(true);
 }
 
 function hablarYAntenas(texto, conBeep, tambienLocal) {
@@ -594,18 +595,18 @@ function cfgDir() {
     body: JSON.stringify({
       modoJuego: document.getElementById("selJuego").value, duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5, sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      colorPct: Number(document.getElementById("rngColorPct").value) || 20, pxDiff: Number(document.getElementById("rngPxDiff").value) || 40,
       retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
       dirTs: ahoraSrv(), dirSession: dirSessionId
     })
   }).catch(function(){});
 }
 function cfgLuz() {
-  var dE = Number(document.getElementById("rngDeltaE").value) || 28, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
-  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 12, lGain: prev.lGain || 1.0 }) }).catch(function(){});
+  var dE = Number(document.getElementById("rngDeltaE").value) || 30, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
+  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 10, lGain: prev.lGain || 1.0 }) }).catch(function(){});
 }
 function aplicarPresetLuz(tipo) {
-  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 32, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 26, minChroma: 11, lGain: 1.05, sens: 8, col: 28, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 30, minChroma: 8, lGain: 1.24, sens: 7, col: 24, px: 34 } };
+  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 24, px: 48 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 30, minChroma: 10, lGain: 1.05, sens: 8, col: 20, px: 40 }, BAJA: { nombre: "Poca Luz", deltaE: 32, minChroma: 8, lGain: 1.24, sens: 7, col: 18, px: 32 } };
   var p = ps[tipo] || ps.NUBLADO;
   document.getElementById("rngSens").value = p.sens; document.getElementById("lblSensDir").textContent = p.sens + "%";
   document.getElementById("rngColorPct").value = p.col; document.getElementById("lblColorPctDir").textContent = p.col + "%";
@@ -628,16 +629,16 @@ function guardarPerfilActual() {
     method: "PUT",
     body: JSON.stringify({
       nombre: nom.trim(), orientacion: s.orientacion || "V", sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
-      movidaPct: Number(document.getElementById("selAntiViento").value) || 60, nColores: Number(s.nColores || 2),
-      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 28,
-      minChroma: pL.minChroma || 12, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
+      colorPct: Number(document.getElementById("rngColorPct").value) || 20, pxDiff: Number(document.getElementById("rngPxDiff").value) || 40,
+      movidaPct: Number(document.getElementById("selAntiViento").value) || 60, nColores: Number(s.nColores || 1),
+      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 30,
+      minChroma: pL.minChroma || 10, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
     })
   }).then(function(){ cargarListaPerfiles(); alert("Perfil guardado ✓"); }).catch(function(){ alert("Error guardando perfil"); });
 }
 function cargarPerfilGuardado(pid) {
   var p = perfilesCam[pid]; if (!p) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 30, pxDiff: p.pxDiff || 45, movidaPct: p.movidaPct || 60, nColores: p.nColores || 2, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 28, minChroma: p.minChroma || 12, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 20, pxDiff: p.pxDiff || 40, movidaPct: p.movidaPct || 60, nColores: p.nColores || 1, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 30, minChroma: p.minChroma || 10, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
   if (p.roi && p.roi.ant_1) fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_1", posX: p.roi.ant_1.posX, roi: p.roi.ant_1 }) }).catch(function(){});
   if (p.roi && p.roi.ant_2) setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_2", posX: p.roi.ant_2.posX, roi: p.roi.ant_2 }) }).catch(function(){}); }, 400);
   hablarYAntenas("Perfil " + p.nombre + " cargado", false);
@@ -661,20 +662,18 @@ function pintarBandejasWarmup(forzar) {
   document.getElementById("titBandCam1").textContent = "📷 " + (a1Id === "ant_1" ? "ANTENA 1 (META)" : a1Id);
   document.getElementById("titBandCam2").textContent = "📷 " + (a2Id === "ant_2" ? "ANTENA 2 (REFUERZO)" : a2Id);
 
-  ["ant_1", "ant_2"].forEach(function(slotKey) {
-    var realId = _slotAnts[slotKey] || slotKey;
-    var items = Object.keys(warmupCaps).filter(function(cid){
-      var c = warmupCaps[cid];
-      if (!c) return false;
-      var aid = c.antId || "ant_1";
-      return aid === realId || aid === slotKey;
-    }).sort(function(a, b){ return (warmupCaps[b].ts || 0) - (warmupCaps[a].ts || 0); });
+  var allItems = keys.map(function(cid){ return Object.assign({ cid: cid }, warmupCaps[cid]); }).sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
+  
+  var renderItemHtml = function(c) {
+    var cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
+    return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + ' • ' + esc(c.antNom || c.antId || "Meta") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(c.cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(c.cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(c.cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+  };
 
-    document.getElementById("bandeja_" + slotKey).innerHTML = items.length ? items.map(function(cid) {
-      var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
-      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + ' • ' + esc(c.antNom || c.antId || "Meta") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
-    }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
-  });
+  var b1Items = allItems.filter(function(c){ return (c.antId || "ant_1") === a1Id || (c.antId || "ant_1") === "ant_1"; });
+  var b2Items = allItems.filter(function(c){ return (c.antId || "") === a2Id || (c.antId && c.antId !== a1Id && c.antId !== "ant_1"); });
+
+  document.getElementById("bandeja_ant_1").innerHTML = b1Items.length ? b1Items.map(renderItemHtml).join("") : '<div style="color:#777;font-size:11px">Sin capturas en Antena 1.</div>';
+  document.getElementById("bandeja_ant_2").innerHTML = b2Items.length ? b2Items.map(renderItemHtml).join("") : '<div style="color:#777;font-size:11px">Sin capturas en Antena 2.</div>';
 
   var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
     var fw = gar[k].firmasWarmup || {};
@@ -921,7 +920,6 @@ function pintarChecklist(antsAct, pils, s) {
   document.getElementById("bodyChecklist").innerHTML = pasos.map(function(st){ return '<div class="chk-item' + (st.ok ? ' chk-ok' : '') + '">' + (st.ok ? '✅' : '⏳') + ' <span>' + st.txt + '</span></div>'; }).join("");
 }
 
-// Actualizacion ligera y ultra rapida (telemetria sin tocar DOM de listas ni setups)
 function actualizarTelemetriaAntenasDOM() {
   var ants = rootCache.antenas || {}, ah = ahoraSrv(), s = rootCache.sala || {}, mdDeseado = s.modoDet || "TODO";
   var allKeys = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
@@ -1184,9 +1182,8 @@ function iniciarDirector() {
     });
   }, 1500);
 
-  // Polling de respaldo para capturas Warm-Up durante sesion WARMUP
   setInterval(function() {
-    if (rootCache.sala && rootCache.sala.estado === "WARMUP") refrescarWarmupManual();
+    refrescarWarmupManual();
   }, 2500);
 
   setInterval(function() {
