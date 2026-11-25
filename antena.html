@@ -736,5 +736,7 @@ navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment
   }).then(function(){ camOk = true; pintarOverlaysVisor(); iniciarBucleVision(); })
   .catch(function(e){ document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 </body>
 </html>
