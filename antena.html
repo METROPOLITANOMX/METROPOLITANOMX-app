@@ -8,14 +8,14 @@
 <style>
   .top{max-width:none;border-bottom-color:#6f42c1}
   .modal{display:flex;background:rgba(0,0,0,0.96);z-index:999;padding:20px}
-  .caja{background:#161616;border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px;box-shadow:0 12px 30px rgba(0,0,0,0.8)}
-  .visor{position:relative;width:100%;height:54vh;background:#000;border:2px solid #333;border-radius:12px;overflow:hidden;margin-bottom:8px}
+  .caja{background:linear-gradient(180deg,#1e222a,#12141a);border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px;box-shadow:0 12px 30px rgba(0,0,0,0.85)}
+  .visor{position:relative;width:100%;height:54vh;background:#000;border:2px solid #383e4c;border-radius:12px;overflow:hidden;margin-bottom:8px}
   video{width:100%;height:100%;object-fit:cover;display:block}
   .roi-box{position:absolute;left:30%;top:15%;width:25%;height:65%;border:2px dashed #0dcaf0;background:rgba(13,202,240,0.12);border-radius:8px;pointer-events:none;z-index:2}
   .roi-tag{position:absolute;top:2px;left:4px;font-size:9px;font-weight:bold;color:#0dcaf0;background:rgba(0,0,0,0.72);padding:1px 4px;border-radius:3px}
   .lin{position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a;box-shadow:0 0 8px rgba(255,42,42,0.85);pointer-events:none;z-index:3}
   .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676;transition:width 0.08s linear;z-index:4}
-  .panel{background:#151515;border:1px solid #2c2c2c;border-radius:12px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.45)}
+  .panel{background:linear-gradient(180deg,#1c2028,#111318);border:1px solid #353b47;border-radius:12px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
   #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2b2b2b;user-select:none}
   @media(orientation:landscape){.visor{height:66vh}}
 </style>
@@ -34,7 +34,7 @@
       <button onclick="vibrar();elegirRanura('ant_1','ANTENA 1 (META)')" style="width:100%;background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;margin-bottom:8px;box-shadow:0 4px 0 #087f5b">📡 ANTENA 1 (META)</button>
       <button onclick="vibrar();elegirRanura('ant_2','ANTENA 2 (REFUERZO)')" style="width:100%;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;margin-bottom:8px;box-shadow:0 4px 0 #087990">📡 ANTENA 2 (REFUERZO)</button>
       <button onclick="vibrar();elegirTemporal()" style="width:100%;background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;margin-bottom:8px;box-shadow:0 4px 0 #362078">📱 ANTENA TEMPORAL / PILOTO</button>
-      <button onclick="vibrar(25);iniciarModoSolo()" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;margin-bottom:10px;box-shadow:0 4px 0 #996300">🏁 RODAR SOLO (1 MOVIL EN META)</button>
+      <button onclick="vibrar(25);iniciarModoSolo()" class="btn-shine" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:10px;box-shadow:0 4px 0 #996300">🏁 RODAR SOLO (1 MOVIL EN META)</button>
       <button onclick="vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc;padding:9px;font-size:11px">VOLVER</button>
     </div>
   </div>
@@ -83,14 +83,15 @@ var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, PW = 192, PH = 108, fondoFull = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, ultCmd = 0;
 var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
-var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "";
+var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
 var _telBusy = false, _imgBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
 var _ultPasoLocalTs = 0, _tSoloVoz = null, _tSoloCal = null, _esSala = null;
+var _vozQueue = [], _vozHablando = false;
 
 var salaCache = {};
 var cfg = {
   estado: "ESPERA", modoDet: "TODO", verVivo: false, orientacion: "V",
-  sensPct: 0.07, colorPct: 0.30, nColores: 2, retardoMs: 25,
+  sensPct: 0.07, colorPct: 0.30, pxDiff: 45, movidaPct: 0.60, nColores: 2, retardoMs: 25,
   perfilLuz: { nombre: "Normal", deltaE: 28, minChroma: 12, lGain: 1.0 },
   roi: { posX: 50, x: 30, y: 15, w: 25, h: 65 }, garajes: {}
 };
@@ -104,11 +105,36 @@ window.addEventListener("beforeunload", function() {
   }
 });
 
+function hablarAnt(texto, urgente) {
+  if (!vozOn || !texto || !("speechSynthesis" in window)) return;
+  try {
+    if (urgente) {
+      _vozQueue = []; _vozHablando = false; speechSynthesis.cancel();
+    } else if (_vozHablando || speechSynthesis.speaking) {
+      if (_vozQueue.length >= 3) _vozQueue.shift();
+      _vozQueue.push(texto);
+      return;
+    }
+    var decir = function(t) {
+      _vozHablando = true;
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = "es-ES"; u.rate = 1.08;
+      var fin = function() {
+        _vozHablando = false;
+        if (_vozQueue.length) decir(_vozQueue.shift());
+      };
+      u.onend = fin; u.onerror = fin;
+      speechSynthesis.speak(u);
+    };
+    decir(texto);
+  } catch (e) {}
+}
+
 function desbloquearAudio(avisar) {
   desbloquearAudioCore();
   var b = document.getElementById("btnAudioAnt");
   if (b) { b.textContent = "🔊 OK"; b.style.background = "#20c997"; }
-  if (avisar) { mxBeep(940, 110); mxHablar("Megafonia de antena activada", vozOn); }
+  if (avisar) { mxBeep(940, 110); hablarAnt("Megafonia de antena activada", true); }
 }
 function toggleOled(on) { desbloquearAudio(false); document.getElementById("oledBlack").style.display = on ? "flex" : "none"; }
 
@@ -124,7 +150,7 @@ function elegirRanura(id, nom) {
   document.getElementById("lblNomAnt").textContent = "📡 " + nom;
   calibradaOk = false; est = "SIN_CAL"; _imgCleared = false;
   enviarTelemetria();
-  mxHablar(nom + " conectada, esperando calibracion desde direccion", vozOn);
+  hablarAnt(nom + " conectada, esperando calibracion", true);
 }
 function elegirTemporal() {
   var n = prompt("Nombre para esta antena temporal:", "Antena Invitada"); if (!n) return;
@@ -137,21 +163,21 @@ function iniciarModoSolo() {
   document.getElementById("lblNomAnt").textContent = "📡 " + antNom;
   if (_tSoloCal) clearInterval(_tSoloCal);
   var s = 10;
-  mxHablar("Modo solo activado, coloca el movil en meta y retirate, calibrando en 10 segundos", vozOn);
+  hablarAnt("Modo solo activado, coloca el movil en meta y retirate, calibrando en 10 segundos", true);
   _tSoloCal = setInterval(function() {
     document.getElementById("lblEstado").textContent = "MODO SOLO — PREPARATE (" + s + "s)";
-    if (s <= 5 && s >= 1) mxHablar(String(s), vozOn);
+    if (s <= 5 && s >= 1) hablarAnt(String(s), false);
     if (s <= 0) {
       clearInterval(_tSoloCal); _tSoloCal = null; _ultPasoLocalTs = 0; pasos = 0;
       calibrarFondo(); cfg.estado = "EN_CURSO";
       fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", modoDet: "TODO", tsInicio: ahoraSrv() }) }).catch(function(){});
-      setTimeout(function(){ mxHablar("Pista calibrada, crono en marcha, dale gas", vozOn); }, 1500);
+      setTimeout(function(){ hablarAnt("Pista calibrada, crono en marcha, dale gas", true); }, 1500);
     }
     s--;
   }, 1000);
 }
 function ayudaAnt() {
-  alert("GUIA ANTENA PRO (60 FPS + TUNEL ROI):\n1. Elige ANTENA 1 (META), ANTENA 2 (REFUERZO) o 🏁 RODAR SOLO.\n2. Para alcanzar 60 fps en Android/Xiaomi: usa luz exterior y pon Chrome en bateria 'Sin restricciones'.\n3. Direccion ajusta Meta V/H, Linea Roja y Tunel ROI.\n4. Pulsa 🔊 AUDIO al iniciar y 🌙 OLED tras calibrar para ahorrar bateria bajo el sol.");
+  alert("GUIA ANTENA PRO (60 FPS + TUNEL ROI):\n1. Elige ANTENA 1 (META), ANTENA 2 (REFUERZO) o 🏁 RODAR SOLO.\n2. Para 60 fps en Android/Xiaomi: luz exterior y bateria 'Sin restricciones'.\n3. Direccion ajusta Meta V/H, Linea Roja, Tunel ROI y sensibilidades.\n4. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar bajo el sol.");
 }
 function toggleVoz() { desbloquearAudio(false); vozOn = !vozOn; var b = document.getElementById("btnVoz"); b.textContent = vozOn ? "Voz ON" : "Voz OFF"; b.style.background = vozOn ? "#20c997" : "#444"; }
 
@@ -166,7 +192,7 @@ function pintarOverlaysVisor() {
 function calibrarFondo() {
   fondoFull = null; framesHit = 0; _golpeFrames = 0; _trigPendTs = 0; ultMsPorPiloto = {};
   est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
-  enviarTelemetria(); mxHablar("Calibrando pista vacia", vozOn);
+  enviarTelemetria(); hablarAnt("Calibrando pista vacia", true);
 }
 function salirAntena() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
@@ -178,12 +204,13 @@ var _cnv = document.getElementById("cnv"), _ctx = _cnv.getContext("2d", { willRe
 var _cnvProc = document.getElementById("cnvProc"), _ctxProc = _cnvProc.getContext("2d", { willReadFrequently: true });
 var _cnvFf = document.getElementById("cnvFf"), _ctxFf = _cnvFf.getContext("2d");
 var _cnvWu = document.getElementById("cnvWu"), _ctxWu = _cnvWu.getContext("2d");
-var _cnvLive = document.createElement("canvas"); _cnvLive.width = 480; _cnvLive.height = 270;
+var _cnvLive = document.createElement("canvas"); _cnvLive.width = 360; _cnvLive.height = 202;
 var _ctxLive = _cnvLive.getContext("2d");
 
 function emitirPaso(pid) {
   pasos++; mxBeep(940, 110); vibrar([35, 30, 35]);
   var tsPaso = ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
+  _ultTxtAnt = pid ? ("OK:" + pid) : "PASO";
   fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }) }).catch(function(){});
   enviarTelemetria();
   try {
@@ -191,44 +218,67 @@ function emitirPaso(pid) {
     var pLine = (cfg.roi && cfg.roi.posX) || 50;
     if (cfg.orientacion === "H") _ctxFf.fillRect(0, Math.round((pLine / 100) * 180) - 1, 320, 2);
     else _ctxFf.fillRect(Math.round((pLine / 100) * 320) - 1, 0, 2, 180);
-    fetch(FB_FF, { method: "PUT", body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _ctxFf.toDataURL("image/jpeg", 0.58) }) }).catch(function(){});
+    fetch(FB_FF, { method: "PUT", body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _ctxFf.toDataURL("image/jpeg", 0.56) }) }).catch(function(){});
   } catch (e) {}
 
   if (_tSoloVoz) clearTimeout(_tSoloVoz);
   var pNum = pasos;
   _tSoloVoz = setTimeout(function() {
     _tSoloVoz = null;
-    if (lapLocal >= 1500 && !pid) {
-      mxHablar("Vuelta " + Math.max(1, pNum - 1) + ", " + (lapLocal / 1000).toFixed(2).replace(".", " punto ") + " segundos", vozOn);
+    if (lapLocal >= 1500 && !pid && antNom.indexOf("SOLO") >= 0) {
+      hablarAnt("Vuelta " + Math.max(1, pNum - 1) + ", " + (lapLocal / 1000).toFixed(2).replace(".", " punto ") + " segundos", false);
       document.getElementById("lblMegaAnt").textContent = "🔊 Vuelta: " + (lapLocal / 1000).toFixed(2) + "s";
-    } else if (!pid) mxHablar("Paso " + pNum + ", crono iniciado", vozOn);
+    } else if (!pid && antNom.indexOf("SOLO") >= 0) {
+      hablarAnt("Paso " + pNum + ", crono iniciado", false);
+    }
   }, 750);
   document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
 }
 
 function capturarYEnviarWarmup(dProc) {
-  var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1300) return; _ultWuTs = ts;
+  var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1200) return; _ultWuTs = ts;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(12, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(12, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
-  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, minC = pL.minChroma || 12, bS = {}, bI = {}, midY = ry0 + Math.floor(rh * 0.48);
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(25, (cfg.pxDiff || 45) * 0.8);
 
-  for (var py = ry0; py < ry0 + rh; py++) {
-    for (var px = rx0; px < rx0 + rw; px++) {
-      var k = (py * PW + px) * 4;
-      if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < 42) continue;
-      var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG), lb = rgbLab(rr, gg, bb);
-      if (lb.L < 12 || Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minC) continue;
-      var zn = (py < midY) ? "SUP" : "INF", key = Math.round(rr / 34) + "_" + Math.round(gg / 34) + "_" + Math.round(bb / 34), dst = (zn === "SUP") ? bS : bI;
-      if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn }; dst[key].cnt++; dst[key].r += rr; dst[key].g += gg; dst[key].b += bb;
+  var muestrearZona = function(x0, y0, w0, h0, minCh) {
+    var bS = {}, bI = {}, midY = y0 + Math.floor(h0 * 0.48), cntMov = 0;
+    for (var py = y0; py < y0 + h0; py++) {
+      for (var px = x0; px < x0 + w0; px++) {
+        var k = (py * PW + px) * 4;
+        if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
+        cntMov++;
+        var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG), lb = rgbLab(rr, gg, bb);
+        if (lb.L < 10 || Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh) continue;
+        var zn = (py < midY) ? "SUP" : "INF", key = Math.round(rr / 34) + "_" + Math.round(gg / 34) + "_" + Math.round(bb / 34), dst = (zn === "SUP") ? bS : bI;
+        if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn }; dst[key].cnt++; dst[key].r += rr; dst[key].g += gg; dst[key].b += bb;
+      }
     }
+    var topC = function(mp, lim) { return Object.keys(mp).map(function(k){ var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n); return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, lim); };
+    return { cntMov: cntMov, cols: topC(bS, 2).concat(topC(bI, 2)).slice(0, 3) };
+  };
+
+  var res = muestrearZona(rx0, ry0, rw, rh, 7);
+  var cropRect = { x: r.x, y: r.y, w: r.w, h: r.h };
+  if (res.cntMov < 12 || !res.cols.length) {
+    res = muestrearZona(10, 8, PW - 20, PH - 16, 5);
+    if (!res.cols.length) res = muestrearZona(10, 8, PW - 20, PH - 16, 0);
+    cropRect = { x: 10, y: 8, w: 80, h: 84 };
   }
-  var topC = function(mp, lim) { return Object.keys(mp).map(function(k){ var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n); return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, lim); };
-  var cols = topC(bS, 2).concat(topC(bI, 2)).slice(0, 3); if (!cols.length) return;
+  if (!res.cols.length) {
+    document.getElementById("lblMegaAnt").textContent = "⚠️ Warm-Up: movimiento muy debil en ROI";
+    return;
+  }
+
   try {
-    _ctxWu.drawImage(_cnv, Math.floor((r.x / 100) * 384), Math.floor((r.y / 100) * 216), Math.max(24, Math.floor((r.w / 100) * 384)), Math.max(24, Math.floor((r.h / 100) * 216)), 0, 0, 200, 140);
-    fetch(FB_WU + "/" + antId + "_" + ts + ".json", { method: "PUT", body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.55), colores: cols }) }).catch(function(){});
-    document.getElementById("lblMegaAnt").textContent = "🔥 Captura Warm-Up enviada (" + cols.length + " tonos)";
+    var sx = Math.floor((cropRect.x / 100) * 384), sy = Math.floor((cropRect.y / 100) * 216);
+    var sw = Math.max(24, Math.floor((cropRect.w / 100) * 384)), sh = Math.max(24, Math.floor((cropRect.h / 100) * 216));
+    _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 200, 140);
+    fetch(FB_WU + "/" + antId + "_" + ts + ".json", { method: "PUT", body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.55), colores: res.cols }) }).catch(function(){});
+    _ultTxtAnt = "WU:" + res.cols.length + "c";
+    mxBeep(720, 80);
+    document.getElementById("lblMegaAnt").textContent = "🔥 Captura Warm-Up enviada (" + res.cols.length + " tonos)";
   } catch (e) {}
 }
 
@@ -248,18 +298,19 @@ function evaluarRoiColor(dProc) {
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(12, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(12, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
-  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, dEMax = pL.deltaE || 28, minC = pL.minChroma || 12, midY = ry0 + Math.floor(rh * 0.48), fg = [];
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, dEMax = pL.deltaE || 28, minC = pL.minChroma || 12, diffMin = Math.max(25, (cfg.pxDiff || 45) * 0.9), midY = ry0 + Math.floor(rh * 0.48), fg = [];
 
   for (var py = ry0; py < ry0 + rh; py += 2) {
     for (var px = rx0; px < rx0 + rw; px += 2) {
       var k = (py * PW + px) * 4;
-      if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < 42) continue;
+      if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
       var lb = rgbLab(Math.min(255, dProc[k] * lG), Math.min(255, dProc[k + 1] * lG), Math.min(255, dProc[k + 2] * lG));
       if (lb.L >= 12) fg.push({ lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), zn: (py < midY) ? "SUP" : "INF" });
     }
   }
-  if (fg.length < 10) return "";
-  var minRatio = (cfg.colorPct || 0.30) * 0.70, reqCols = Number(cfg.nColores || 2), bestPid = "", bestScore = 0;
+  if (fg.length < 16) return "";
+  var minRatio = (cfg.colorPct || 0.30) * 0.72, reqCols = Number(cfg.nColores || 2), minPxPorColor = Math.max(4, Math.round(fg.length * 0.04));
+  var bestPid = "", bestScore = 0;
 
   for (var i = 0; i < ks.length; i++) {
     var pid = ks[i], firmas = obtenerFirmasPiloto(gObj, pid);
@@ -277,7 +328,7 @@ function evaluarRoiColor(dProc) {
           if (Math.sqrt(dL * dL * 0.25 + da * da + db * db) < dEMax) { hitC[ci]++; totH++; break; }
         }
       }
-      var matched = 0; for (var h = 0; h < hitC.length; h++) if (hitC[h] >= 3) matched++;
+      var matched = 0; for (var h = 0; h < hitC.length; h++) if (hitC[h] >= minPxPorColor) matched++;
       if (matched >= Math.min(reqCols, sig.length) && (totH / fg.length) >= minRatio) {
         var sc = matched * 1000 + totH; if (sc > bestScore) { bestScore = sc; bestPid = pid; }
       }
@@ -315,24 +366,27 @@ function procFrame() {
     return;
   }
 
-  var pLine = (cfg.roi && cfg.roi.posX) || 50, mov = 0, nS = 0;
+  var pLine = (cfg.roi && cfg.roi.posX) || 50, pxDiff = cfg.pxDiff || 45, mov = 0, nS = 0;
   if (cfg.orientacion === "H") {
     var cy = Math.max(10, Math.min(PH - 10, Math.round((pLine / 100) * PH)));
-    for (var y = cy - 8; y <= cy + 8; y += 2) for (var x = 16; x < PW - 16; x += 2) { var k = (y * PW + x) * 4; nS++; if ((Math.abs(dFull[k] - fondoFull[k]) + Math.abs(dFull[k + 1] - fondoFull[k + 1]) + Math.abs(dFull[k + 2] - fondoFull[k + 2])) >= 45) mov++; }
+    for (var y = cy - 8; y <= cy + 8; y += 2) for (var x = 16; x < PW - 16; x += 2) { var k = (y * PW + x) * 4; nS++; if ((Math.abs(dFull[k] - fondoFull[k]) + Math.abs(dFull[k + 1] - fondoFull[k + 1]) + Math.abs(dFull[k + 2] - fondoFull[k + 2])) >= pxDiff) mov++; }
   } else {
     var cx = Math.max(12, Math.min(PW - 12, Math.round((pLine / 100) * PW)));
-    for (var y2 = 12; y2 < PH - 12; y2 += 2) for (var x2 = cx - 9; x2 <= cx + 9; x2 += 2) { var k2 = (y2 * PW + x2) * 4; nS++; if ((Math.abs(dFull[k2] - fondoFull[k2]) + Math.abs(dFull[k2 + 1] - fondoFull[k2 + 1]) + Math.abs(dFull[k2 + 2] - fondoFull[k2 + 2])) >= 45) mov++; }
+    for (var y2 = 12; y2 < PH - 12; y2 += 2) for (var x2 = cx - 9; x2 <= cx + 9; x2 += 2) { var k2 = (y2 * PW + x2) * 4; nS++; if ((Math.abs(dFull[k2] - fondoFull[k2]) + Math.abs(dFull[k2 + 1] - fondoFull[k2 + 1]) + Math.abs(dFull[k2 + 2] - fondoFull[k2 + 2])) >= pxDiff) mov++; }
   }
 
-  var pct = mov / (nS || 1), pctInt = Math.round(pct * 100), sens = cfg.sensPct || 0.07, resetPct = Math.min(0.03, sens * 0.45);
+  var pct = mov / (nS || 1), pctInt = Math.round(pct * 100), sens = cfg.sensPct || 0.07, resetPct = Math.min(0.035, sens * 0.50);
   window._movVivo = pctInt;
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
   document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + (_resTxt || "") + " " + _fpsVal + "fps";
 
-  if (pct >= 0.56) {
+  var movLim = cfg.movidaPct || 0.60;
+  if (movLim < 0.99 && pct >= movLim) {
     _golpeFrames++;
-    if (_golpeFrames >= 45) { _golpeFrames = 0; _movidaTs = ahoraSrv(); fondoFull = null; framesHit = 0; _trigPendTs = 0; calHasta = Date.now() + 1800; mxHablar("Atencion, antena movida, recalibrando", vozOn); document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA"; document.getElementById("lblEstado").style.color = "#ff4d5e"; return; }
+    if (_golpeFrames >= 45) { _golpeFrames = 0; _movidaTs = ahoraSrv(); fondoFull = null; framesHit = 0; _trigPendTs = 0; calHasta = Date.now() + 1800; hablarAnt("Atencion, antena movida, recalibrando", true); document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA"; document.getElementById("lblEstado").style.color = "#ff4d5e"; return; }
   } else _golpeFrames = 0;
+
+  if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85)) est = "LIBRE";
 
   if (pct < resetPct && !_trigPendTs) {
     est = "LIBRE"; framesHit = 0;
@@ -351,12 +405,31 @@ function procFrame() {
 
   if (_trigPendTs && (ah - _trigPendTs) >= (cfg.retardoMs || 0)) {
     _trigPendTs = 0;
-    if (cfg.estado === "WARMUP") { capturarYEnviarWarmup(dFull); if ((ah - ultMs) > 1300) { est = "CRUCE"; ultMs = ah; emitirPaso(""); } return; }
+
+    if (cfg.estado === "WARMUP") {
+      est = "CRUCE"; ultMs = ah;
+      capturarYEnviarWarmup(dFull);
+      if (cfg.modoDet === "TODO") {
+        emitirPaso("");
+      } else {
+        var pidWu = evaluarRoiColor(dFull);
+        if (pidWu) { document.getElementById("lblEstado").textContent = "¡TEST COLOR OK: " + pidWu + "!"; emitirPaso(pidWu); }
+        else { _ultTxtAnt = "WU sin match"; document.getElementById("lblEstado").textContent = "CAPTURA WARM-UP ENVIADA"; }
+      }
+      return;
+    }
+
     if (cfg.modoDet === "TODO") {
       if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso(""); }
     } else {
       var bestPid = evaluarRoiColor(dFull);
-      if (bestPid && (ah - (ultMsPorPiloto[bestPid] || 0)) > 1500) { est = "CRUCE"; ultMsPorPiloto[bestPid] = ah; document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!"; emitirPaso(bestPid); }
+      if (bestPid) {
+        if ((ah - (ultMsPorPiloto[bestPid] || 0)) > 1500) { est = "CRUCE"; ultMs = ah; ultMsPorPiloto[bestPid] = ah; document.getElementById("lblEstado").textContent = "¡MOTO DETECTADA!"; emitirPaso(bestPid); }
+      } else {
+        est = "CRUCE"; ultMs = ah; _ultTxtAnt = "Sin color";
+        document.getElementById("lblEstado").textContent = "MOVIMIENTO SIN MATCH DE COLOR";
+        document.getElementById("lblEstado").style.color = "#ffa94d";
+      }
     }
   }
 }
@@ -371,11 +444,13 @@ function procesarSala(s) {
   if (!s) return;
   if (s.modoDet && s.modoDet !== cfg.modoDet) {
     var nomM = { TODO: "Modo cualquier paso", GAR: "Modo color garaje", CAR: "Modo color garaje", WARMUP: "Modo firmas Warm-Up", HIBRIDO: "Modo hibrido" };
-    mxHablar(nomM[s.modoDet] || "Modo actualizado", vozOn);
+    hablarAnt(nomM[s.modoDet] || "Modo actualizado", true);
   }
   cfg.estado = s.estado || "ESPERA"; cfg.modoDet = s.modoDet || "TODO"; cfg.verVivo = !!s.verVivo; cfg.orientacion = s.orientacion || "V";
   cfg.sensPct = Math.max(0.06, Math.min(1.0, (Number(s.sensPct || 7)) / 100));
   cfg.colorPct = Math.max(0.06, Math.min(1.0, (Number(s.colorPct || 30)) / 100));
+  cfg.pxDiff = Math.max(20, Math.min(90, Number(s.pxDiff || 45)));
+  cfg.movidaPct = Math.max(0.40, Math.min(1.0, (Number(s.movidaPct || 60)) / 100));
   cfg.nColores = Number(s.nColores || 2); cfg.retardoMs = Math.max(0, Math.min(150, Number(s.retardoMs || 25)));
   if (s.perfilLuz) cfg.perfilLuz = s.perfilLuz;
   if (s.roi && s.roi[antId]) cfg.roi = s.roi[antId];
@@ -393,19 +468,20 @@ function procesarSala(s) {
     if (Math.abs(ahoraSrv() - Number(s.megafonia.ts || 0)) < 12000 && s.megafonia.texto) {
       if (_tSoloVoz) { clearTimeout(_tSoloVoz); _tSoloVoz = null; }
       document.getElementById("lblMegaAnt").textContent = "📢 " + s.megafonia.texto;
-      if (s.megafonia.beep) mxBeep(940, 110); mxHablar(s.megafonia.texto, vozOn);
+      if (s.megafonia.beep) mxBeep(940, 110);
+      hablarAnt(s.megafonia.texto, s.megafonia.texto.indexOf("SALIDA") >= 0);
     }
   }
   if (s.reaccion && s.reaccion.ts && s.reaccion.ts !== _ultReacTs) {
     _ultReacTs = s.reaccion.ts;
     if (Math.abs(ahoraSrv() - Number(s.reaccion.ts)) < 8000 && s.reaccion.texto) {
       var txtR = s.reaccion.autor + (s.reaccion.destinoNom ? (" para " + s.reaccion.destinoNom) : "") + " dice: " + s.reaccion.texto;
-      document.getElementById("lblMegaAnt").textContent = "📣 " + txtR; mxHablar(txtR, vozOn);
+      document.getElementById("lblMegaAnt").textContent = "📣 " + txtR; hablarAnt(txtR, false);
     }
   }
   if (s.ovacion && s.ovacion.ts && s.ovacion.ts !== _ultOvaTs) {
     _ultOvaTs = s.ovacion.ts;
-    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { document.getElementById("lblMegaAnt").textContent = "👏 ¡OVACION DE LA GRADA!"; mxBeep(940, 120); mxHablar("Ovacion de la grada para los pilotos", vozOn); }
+    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { document.getElementById("lblMegaAnt").textContent = "👏 ¡OVACION DE LA GRADA!"; mxBeep(940, 120); hablarAnt("Ovacion de la grada para los pilotos", false); }
   }
 }
 
@@ -413,7 +489,7 @@ function enviarTelemetria() {
   if (!antId || _telBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, ultTxt: _ultTxtAnt })
   }).catch(function(){}).finally(function(){ _telBusy = false; });
 }
 
@@ -433,14 +509,14 @@ conectarSseSala();
 setInterval(enviarTelemetria, 350);
 setInterval(function() {
   if (!antId) return; var v = document.getElementById("vid");
-  if ((cfg.verVivo || !calibradaOk) && camOk && v && v.videoWidth > 0) {
+  if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
-    _ctxLive.drawImage(v, 0, 0, 480, 270);
-    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.65) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
-  } else if (!_imgCleared && calibradaOk && !cfg.verVivo) {
+    _ctxLive.drawImage(v, 0, 0, 360, 202);
+    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.55) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
+  } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST") {
     _imgCleared = true; fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
   }
-}, 250);
+}, 400);
 
 setInterval(function() {
   fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){});

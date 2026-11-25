@@ -21,12 +21,12 @@
       <div id="titFfV" style="font-size:14px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
       <img id="imgFfV" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
       <div id="txtFfInfoV" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
-      <button id="btnCerrarFfV" onclick="vibrar();document.getElementById('modalFfV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">CERRAR</button>
+      <button id="btnCerrarFfV" onclick="vibrar();document.getElementById('modalFfV').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">CERRAR</button>
     </div>
   </div>
 
   <div class="top">
-    <div style="text-align:left"><b id="titTopV" style="color:#20c997;font-size:14px">🔴 PISTA EN DIRECTO MX</b><div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div></div>
+    <div style="text-align:left"><b id="titTopV" style="color:#20c997;font-size:13px">🔴 EN VIVO — METROPOLITANO</b><div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div></div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
       <button id="btnMecV" onclick="vibrar();toggleModoMecanico()" style="background:#2b2b2b;color:#ffc107;padding:6px 8px;font-size:10px">🔧 MECANICO</button>
       <button id="btnGuiaV" onclick="vibrar();ayudaVivo()" style="background:#0dcaf0;color:#000;padding:6px 8px;font-size:10px">? GUIA</button>
@@ -43,7 +43,7 @@
     <button id="btnFfV" onclick="vibrar();verFotoFinishV()" style="width:100%;margin-top:8px;background:#1c2530;color:#0dcaf0;border:1px solid #0dcaf0;padding:9px;font-size:11px">📸 VER ULTIMO FOTO-FINISH EN META</button>
   </div>
 
-  <div id="boxMecanico" class="card" style="display:none;border-color:#ffc107;background:#121820">
+  <div id="boxMecanico" class="card" style="display:none;border-color:#ffc107">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <b id="titMecV" style="color:#ffc107;font-size:13px">🔧 MODO MECANICO / BOXES (PIT-BOARD)</b>
       <button id="btnVozMec" onclick="vibrar();toggleVozMec()" style="background:#262626;color:#20c997;padding:5px 8px;font-size:10px">🔊 VOZ OFF</button>
@@ -84,7 +84,7 @@
   <div class="card" style="border-color:#20c997">
     <b id="titReacV" style="color:#20c997;font-size:12px">👏 GRADA EN DIRECTO (SUENA EN ANTENAS Y OIDO)</b>
     <div style="margin-top:8px">
-      <button id="btnOvacion" onclick="vibrar(35);darOvacionGrada()" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;font-size:13px;padding:13px;box-shadow:0 4px 0 #996300">👏 ¡OVACION DE GRADA! (0 / 10 TOQUES)</button>
+      <button id="btnOvacion" onclick="vibrar(35);darOvacionGrada()" class="btn-shine" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:13px;padding:13px;box-shadow:0 4px 0 #8a5600">👏 ¡OVACION DE GRADA! (0 / 10 TOQUES)</button>
     </div>
     <div class="box-sub">
       <div style="font-size:10px;color:#0dcaf0;font-weight:bold;margin-bottom:4px">🎯 DIRIGIR MENSAJE A PILOTO 🟢 EN PISTA:</div>
@@ -112,6 +112,7 @@
 <script>
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
+var nomCorto = circNom.split("(")[0].trim();
 var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
@@ -120,11 +121,12 @@ var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null;
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
+document.title = (esIngles ? "LIVE — " : "EN VIVO — ") + nomCorto;
+document.getElementById("titTopV").textContent = (esIngles ? "🔴 LIVE — " : "🔴 EN VIVO — ") + nomCorto.toUpperCase();
 document.getElementById("lblCircV").textContent = "🏁 " + circNom;
 
 if (esIngles) {
   document.documentElement.lang = "en";
-  document.getElementById("titTopV").textContent = "🔴 LIVE MX TRACK";
   document.getElementById("btnMecV").textContent = "🔧 MECHANIC";
   document.getElementById("btnGuiaV").textContent = "? GUIDE";
   document.getElementById("btnSolV").textContent = "☀️ SUN";

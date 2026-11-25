@@ -26,7 +26,7 @@
       <div style="font-size:13px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
       <img id="imgFf" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
       <div id="txtFfInfo" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
-      <button onclick="vibrar();document.getElementById('modalFf').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">CERRAR</button>
+      <button onclick="vibrar();document.getElementById('modalFf').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">CERRAR</button>
     </div>
   </div>
 
@@ -50,7 +50,7 @@
   </div>
 
   <div id="sec_sala">
-    <button id="btnUnlockAudioP" onclick="vibrar();desbloquearAudioP(true)" style="width:100%;max-width:560px;margin:0 auto 8px;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;display:block;padding:12px;font-size:12px;box-shadow:0 4px 0 #996300">🔊 TOCA AQUI PARA ACTIVAR AUDIO Y VOZ EN PISTA</button>
+    <button id="btnUnlockAudioP" onclick="vibrar();desbloquearAudioP(true)" class="btn-shine" style="width:100%;max-width:560px;margin:0 auto 8px;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;display:block;padding:12px;font-size:12px;box-shadow:0 4px 0 #8a5600">🔊 TOCA AQUI PARA ACTIVAR AUDIO Y VOZ EN PISTA</button>
 
     <div class="card" style="border-color:#0dcaf0;text-align:center">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -66,21 +66,20 @@
       </div>
       <div id="lblDeltaVivo" style="font-size:12px;font-weight:bold;color:#aaa;margin-top:6px">Ultima: --</div>
       <div class="grid3" style="margin-top:8px">
-        <button onclick="vibrar();abrirBolsillo()" style="background:#262626;color:#ffc107;font-size:10px;padding:11px 4px">🔒 BOLSILLO</button>
-        <button onclick="vibrar();verFotoFinish()" style="background:#1c2530;color:#0dcaf0;font-size:10px;padding:11px 4px">📸 FOTO-FINISH</button>
-        <button onclick="vibrar(25);sumarVueltaManual()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:10px;padding:11px 4px;box-shadow:0 4px 0 #087f5b">+ VUELTA</button>
+        <button onclick="vibrar();abrirBolsillo()" style="background:linear-gradient(180deg,#2a2e38,#191c22);color:#ffc107;font-size:10px;padding:11px 4px">🔒 BOLSILLO</button>
+        <button onclick="vibrar();verFotoFinish()" style="background:linear-gradient(180deg,#1f2c3a,#131b24);color:#0dcaf0;font-size:10px;padding:11px 4px">📸 FOTO-FINISH</button>
+        <button onclick="vibrar(25);sumarVueltaManual()" class="btn-shine" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:10px;padding:11px 4px;box-shadow:0 4px 0 #087f5b">+ VUELTA</button>
       </div>
     </div>
 
     <div id="boxAmistosa" class="card" style="display:none;border-color:#fd7e14">
       <b style="color:#fd7e14;font-size:11px">MODO AMISTOSO (SIN DIRECCION EN SALA)</b>
-      <div class="grid2" style="margin-top:6px">
-        <button id="btnCalAmistosa" onclick="vibrar();calibrarConCuenta10()" style="grid-column:span 2;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;margin-bottom:2px">📍 CALIBRAR ANTENA (CUENTA ATRAS 10s)</button>
-        <button onclick="vibrar();cmdSalaAmistosa('WARMUP')" style="background:#fd7e14;color:#000">🔥 WARM-UP (3m)</button>
-        <button onclick="vibrar();cmdSalaAmistosa('SALIDA_30')" style="background:#20c997;color:#000">🚦 SALIDA 30s</button>
-        <button onclick="vibrar();cmdSalaAmistosa('VALLA_MX')" style="background:#6f42c1;color:#fff">🚧 VALLA MX</button>
-        <button onclick="vibrar();cmdSalaAmistosa('ESPERA')" style="background:#333;color:#fff">🛑 PARAR</button>
-        <button onclick="vibrar();lanzarRuletaSolo()" style="grid-column:span 2;background:linear-gradient(180deg,#be4bdb,#9c36b5);color:#fff">🎲 RULETA LOCA MX (RETO SOLO / GRUPO)</button>
+      <div class="grid2" style="margin-top:7px">
+        <button id="btnCalAmistosa" onclick="vibrar();calibrarConCuenta10()" style="grid-column:span 2;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;padding:12px">📍 CALIBRAR ANTENA (CUENTA ATRAS 10s)</button>
+        <button onclick="vibrar();cmdSalaAmistosa('WARMUP')" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000;padding:12px">🔥 WARM-UP (3m)</button>
+        <button onclick="vibrar();cmdSalaAmistosa('SALIDA_30')" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;padding:12px">🚦 SALIDA 30s</button>
+        <button onclick="vibrar();cmdSalaAmistosa('VALLA_MX')" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;padding:12px">🚧 VALLA MX</button>
+        <button onclick="vibrar();cmdSalaAmistosa('ESPERA')" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff;padding:12px">🛑 PARAR</button>
       </div>
     </div>
 
@@ -111,6 +110,10 @@ var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, u
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
 var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null;
+
+fbJson(FB_ROOT + "/cuentas_idx/" + uid + ".json").then(function(ix){
+  if (ix && ix.bloqueado) { alert("⛔ Tu cuenta ha sido bloqueada por Direccion."); salirPiloto(); }
+}).catch(function(){});
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
@@ -145,7 +148,7 @@ function salirPiloto() {
 
 function ayudaTab() {
   var g = {
-    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso de bateria LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, posicion, destellos de record y banderas en directo (pulsa ☀️ para verlo al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado escuchando todo.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar, lanzar salidas o Ruleta Loca MX.",
+    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, posicion, destellos de record y banderas (☀️ al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar o lanzar Warm-Up / Salida 30s / Valla MX.",
     garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: guia de luz + Recorte automatico de fondo + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL para mostrar tu moto.",
     tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. 📤/📥 BACKUP para exportar o restaurar tus motos e historial."
   };
@@ -188,19 +191,13 @@ function cmdSalaAmistosa(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0;
+  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99;
   var pay = { estado: est, tsInicio: 0, ruleta: null };
   if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
-  if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; mxHablar("Atencion pilotos, 30 segundos para la salida", vozP); }
-  if (est === "VALLA_MX") { pay.tsInicio = ahoraSrv() + 16000 + Math.floor(Math.random() * 2500); mxHablar("Valla de motocross activada, 15 segundos y caida aleatoria", vozP); }
+  if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; mxHablar("Atencion pilotos, treinta segundos para la salida", vozP); }
+  if (est === "VALLA_MX") { pay.tsInicio = ahoraSrv() + 14500 + Math.floor(Math.random() * 2500); mxHablar("Valla de motocross preparada", vozP); }
   if (est === "ESPERA") { pay.tsInicio = 0; mxHablar("Manga detenida", vozP); }
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
-}
-function lanzarRuletaSolo() {
-  desbloquearAudioP(false);
-  var pils = ordenarPilotos(rootCache.pilotos, rootCache.sala), pool = (pils.length <= 1) ? RULETA_RETOS.filter(function(r){ return r.solo; }) : RULETA_RETOS;
-  var r = pool[Math.floor(Math.random() * pool.length)], rnd = Math.floor(ahoraSrv() / 1000);
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoJuego: "RULETA", estado: "EN_CURSO", tsInicio: (rootCache.sala && rootCache.sala.tsInicio) ? rootCache.sala.tsInicio : ahoraSrv(), ruleta: { ronda: rnd, titulo: r.tit, texto: r.tit + ": " + r.txt, voz: r.voz, ts: ahoraSrv() } }) }).catch(function(){});
 }
 function calibrarConCuenta10() {
   desbloquearAudioP(false); if (_tCal10) return;
@@ -253,7 +250,9 @@ function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvP[ev.antId] === ev.ts) return;
   _ultEvP[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
-    var s = rootCache.sala || {}, dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
+    var s = rootCache.sala || {}, md = s.modoDet || "TODO";
+    if (md !== "TODO" && !ev.pilotoUid) return;
+    var dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
     if (target === uid || !dirOn) registrarVuelta(target, Number(ev.ts));
   }
@@ -318,7 +317,6 @@ function pintarSalaUI() {
       var rE = Math.floor(elapsed / 60000);
       if (rE > _ultRondaElim && rE >= 1) { _ultRondaElim = rE; var act = pils.filter(function(x){ return !x.eliminado; }); if (act.length > 1) { var uP = act[act.length - 1]; fetch(FB + "/pilotos/" + uP.id + ".json", { method: "PATCH", body: JSON.stringify({ eliminado: true }) }).catch(function(){}); mxHablar("Eliminado: " + uP.nombre, vozP); } }
     }
-    if (s.modoJuego === "RULETA" && !dirOn) { var rR = Math.floor(elapsed / 75000); if (rR > _ultRondaRuleta && rR >= 1) { _ultRondaRuleta = rR; var poolR = (pils.length <= 1) ? RULETA_RETOS.filter(function(r){ return r.solo; }) : RULETA_RETOS, ret = poolR[Math.floor(Math.random() * poolR.length)]; fetch(FB + "/sala/ruleta.json", { method: "PUT", body: JSON.stringify({ ronda: rR, titulo: ret.tit, texto: ret.tit + ": " + ret.txt, voz: ret.voz, ts: ahoraSrv() }) }).catch(function(){}); } }
     if (Number(s.duracionMin || 0) > 0) {
       var rem = t0 + Number(s.duracionMin) * 60000 - ah;
       if (rem > 0) estTxt = "MANGA " + Math.floor(rem / 60000) + ":" + ((Math.floor((rem % 60000) / 1000) < 10) ? "0" : "") + Math.floor((rem % 60000) / 1000);
@@ -332,10 +330,19 @@ function pintarSalaUI() {
     if (df > 0 && df <= 31000) {
       var sg = Math.ceil(df / 1000); ov.style.display = "flex";
       if (est === "VALLA_MX" && df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
-      else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "CARTEL EN PARRILLA" : "PREPARADOS"; ov.style.background = (sg > 10) ? "#c9182b" : (sg > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000")); if (sg !== ultSegSemP) { ultSegSemP = sg; if (est === "SALIDA_30" && sg <= 5) mxHablar(String(sg), vozP); if (est === "VALLA_MX" && sg === 5) mxHablar("Cartel cinco segundos, atentos a la valla", vozP); } }
+      else {
+        document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg;
+        document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "CARTEL EN PARRILLA" : "PREPARADOS";
+        ov.style.background = (sg > 10) ? "#c9182b" : (sg > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
+        if (!dirOn && sg !== ultSegSemP) {
+          ultSegSemP = sg;
+          if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) mxHablar(String(sg), vozP); else if (sg === 5) mxHablar("5, atentos a la valla", vozP); }
+          else { if (sg === 20) mxHablar("Veinte segundos para la salida", vozP); else if (sg === 10) mxHablar("Diez segundos", vozP); else if (sg <= 5) mxHablar(String(sg), vozP); }
+        }
+      }
     } else if (df <= 0 && df > -4000) {
       ov.style.display = "flex"; ov.style.background = "#00c853"; document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
-      if (ultSegSemP !== -999) { ultSegSemP = -999; mxBeep(1100, 260); }
+      if (ultSegSemP !== -999) { ultSegSemP = -999; mxBeep(1100, 260); if (!dirOn) mxHablar("Salida", vozP); }
       if (!dirOn) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
     } else ov.style.display = "none";
   } else ov.style.display = "none";
@@ -360,10 +367,8 @@ function conectarSseUnico() {
 
 mxGar.init({
   uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: false,
-  getNom: function(){ return miNom; },
-  getRoot: function(){ return rootCache; },
-  getCircMeta: function(){ return circMeta; },
-  onSpeak: function(t){ mxHablar(t, vozP); }
+  getNom: function(){ return miNom; }, getRoot: function(){ return rootCache; },
+  getCircMeta: function(){ return circMeta; }, onSpeak: function(t){ mxHablar(t, vozP); }
 });
 inscribirPilotoAuto();
 conectarSseUnico();
