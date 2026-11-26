@@ -22,25 +22,27 @@ function fbJson(url, opt) {
 }
 function fmt(ms) {
   if (!ms || ms <= 0) return "--";
-  var totCs = Math.round(ms / 10);
-  if (totCs < 6000) return (totCs / 100).toFixed(2) + "s";
-  var m = Math.floor(totCs / 6000), r = ((totCs % 6000) / 100).toFixed(2);
-  return m + ":" + (r.length < 5 ? "0" : "") + r;
+  var csTot = Math.round(ms / 10);
+  if (csTot < 6000) return (csTot / 100).toFixed(2) + "s";
+  var m = Math.floor(csTot / 6000), rem = csTot % 6000, s = Math.floor(rem / 100), cs = rem % 100;
+  return m + ":" + (s < 10 ? "0" : "") + s + "." + (cs < 10 ? "0" : "") + cs;
 }
 function fmtCrono(seg) {
-  var tDec = Math.max(0, Math.floor((seg || 0) * 10 + 0.0001));
-  if (tDec < 600) {
-    var s = (tDec / 10).toFixed(1);
-    return (tDec < 100 ? "0" : "") + s + "s";
+  var dsTot = Math.max(0, Math.floor((Number(seg) || 0) * 10));
+  if (dsTot < 600) {
+    var s = Math.floor(dsTot / 10), d = dsTot % 10;
+    return (s < 10 ? "0" : "") + s + "." + d + "s";
   }
-  var m = Math.floor(tDec / 600), r = ((tDec % 600) / 10).toFixed(1);
-  return (m < 10 ? "0" : "") + m + ":" + (r.length < 4 ? "0" : "") + r;
+  var m = Math.floor(dsTot / 600), rem = dsTot % 600, s2 = Math.floor(rem / 10), d2 = rem % 10;
+  return (m < 10 ? "0" : "") + m + ":" + (s2 < 10 ? "0" : "") + s2 + "." + d2;
 }
 function fmtVoz(ms) {
-  var totCs = Math.round(ms / 10);
-  if (totCs < 6000) return (totCs / 100).toFixed(2).replace(".", " punto ") + " segundos";
-  var m = Math.floor(totCs / 6000), s = ((totCs % 6000) / 100).toFixed(2).replace(".", " punto ");
-  return m + (m === 1 ? " minuto " : " minutos ") + s + " segundos";
+  if (!ms || ms <= 0) return "";
+  var csTot = Math.round(ms / 10);
+  if (csTot < 6000) return (csTot / 100).toFixed(2).replace(".", " punto ") + " segundos";
+  var m = Math.floor(csTot / 6000), rem = csTot % 6000, s = Math.floor(rem / 100), cs = rem % 100;
+  var dec = (s + cs / 100).toFixed(2).replace(".", " punto ");
+  return m + (m === 1 ? " minuto " : " minutos ") + dec + " segundos";
 }
 
 function hashTxt(txt) {
