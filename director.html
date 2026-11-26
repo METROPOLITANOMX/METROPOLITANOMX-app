@@ -15,7 +15,7 @@
   .trig-line{position:absolute;background:#ff2a2a;box-shadow:0 0 8px rgba(255,42,42,0.8);pointer-events:none;z-index:3}
   .roi-tunnel{position:absolute;border:2px dashed #0dcaf0;background:rgba(13,202,240,0.14);border-radius:6px;pointer-events:none;z-index:2}
   .roi-lbl{position:absolute;top:2px;left:4px;font-size:9px;font-weight:bold;color:#0dcaf0;background:rgba(0,0,0,0.7);padding:1px 4px;border-radius:3px}
-  .tel-bar{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.82);color:#00e676;padding:4px 6px;border-radius:5px;font-size:10px;font-family:monospace;z-index:4}
+  .tel-bar{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.85);color:#00e676;padding:4px 6px;border-radius:5px;font-size:10px;font-family:monospace;z-index:4}
   .chk-grid{display:grid;grid-template-columns:1fr;gap:5px}
   @media(min-width:640px){.chk-grid{grid-template-columns:1fr 1fr}}
   .chk-item{display:flex;align-items:center;gap:8px;background:#101218;border:1px solid #2b2f3a;border-radius:8px;padding:7px 9px;font-size:11px}
@@ -27,7 +27,9 @@
 </head>
 <body>
   <div id="overlaySem">
-    <div id="numSem" style="font-size:21vw;font-weight:bold;color:#fff">00:30</div>
+    <div id="semLeds" class="sem-leds" style="display:none"><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div></div>
+    <div id="gateBox" class="gate-box" style="display:none"><div id="gateBar" class="gate-bar"></div></div>
+    <div id="numSem" style="font-size:18vw;font-weight:bold;color:#fff">00:30</div>
     <div id="txtSem" style="font-size:20px;font-weight:bold;color:#fff">PREPARADOS</div>
   </div>
 
@@ -55,7 +57,7 @@
       <h3 style="color:#ff4d5e;margin:0 0 8px">⛔ DIRECCION YA ACTIVA EN PISTA</h3>
       <div style="font-size:12px;color:#ddd;margin-bottom:12px">Ya hay un Director conectado en este circuito.</div>
       <input id="inpClvRelevo" type="password" placeholder="Clave de Direccion para tomar relevo">
-      <button onclick="vibrar(25);forzarRelevoDir()" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;margin-bottom:8px">🔑 TOMAR EL MANDO</button>
+      <button onclick="vibrar(25);forzarRelevoDir()" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:8px">🔑 TOMAR EL MANDO</button>
       <button onclick="vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc">VOLVER AL INICIO</button>
       <div id="msgRelevoDir" style="font-size:11px;margin-top:6px;font-weight:bold"></div>
     </div>
@@ -66,11 +68,12 @@
       <div style="font-size:13px;font-weight:bold;color:#ffc107;margin-bottom:8px">📸 FOTO-FINISH DE META</div>
       <img id="imgFf" style="width:100%;border-radius:8px;border:1px solid #333;background:#000;min-height:160px">
       <div id="txtFfInfo" style="font-size:11px;color:#0dcaf0;margin:8px 0"></div>
-      <button onclick="vibrar();document.getElementById('modalFf').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">CERRAR</button>
+      <button onclick="vibrar();document.getElementById('modalFf').style.display='none'" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">CERRAR</button>
     </div>
   </div>
 
   <div class="wrap">
+    <div id="banBanderaAmDir" class="flag-yellow"><span>⚠️ BANDERA AMARILLA EN PISTA — PRECAUCION</span></div>
     <div class="top">
       <div style="text-align:left">
         <b style="color:#0dcaf0;font-size:14px">👑 DIRECCION PRO <span id="badgeRangoDir" style="display:none;background:#20c997;color:#000;font-size:9px;padding:2px 5px;border-radius:4px">ROOKIE</span></b>
@@ -108,15 +111,15 @@
         </button>
         <div id="acc_lab" class="acc-body" style="display:none">
           <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
-            <button id="btnLockSliders" onclick="vibrar(25);toggleLockSliders()" style="flex:1;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">🔒 CONTROLES BLOQUEADOS</button>
+            <button id="btnLockSliders" onclick="vibrar(25);toggleLockSliders()" style="flex:1;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">🔒 CONTROLES BLOQUEADOS</button>
             <button id="btnToggleTest" onclick="vibrar(25);toggleTestAntenas()" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🎥 TEST VIVO</button>
-            <button onclick="vibrar(25);calibrarAmbas10s()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000">📍 CALIBRAR 10s</button>
+            <button onclick="vibrar(25);calibrarAmbas10s()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">📍 CALIBRAR 10s</button>
           </div>
 
           <div class="box-sub">
             <div style="font-size:11px;font-weight:bold;color:#ffc107;margin-bottom:5px">☀️ PERFILES DE ILUMINACION</div>
             <div class="grid3" style="margin-bottom:6px">
-              <button onclick="vibrar();aplicarPresetLuz('SOL')" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;font-size:10px">☀️ SOL</button>
+              <button onclick="vibrar();aplicarPresetLuz('SOL')" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:10px">☀️ SOL</button>
               <button onclick="vibrar();aplicarPresetLuz('NUBLADO')" style="background:#2c3e50;color:#fff;font-size:10px">⛅ SOMBRA</button>
               <button onclick="vibrar();aplicarPresetLuz('BAJA')" style="background:#1c1c2e;color:#b197fc;border:1px solid #5f3dc4;font-size:10px">🌆 POCA LUZ</button>
             </div>
@@ -143,9 +146,17 @@
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107"><span>DISPARO MOV %:</span><b id="lblSensDir">7%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngSens',-1,cfgDir,'lblSensDir','%')">-</button><input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngSens',1,cfgDir,'lblSensDir','%')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">30%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">45</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="45" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ff6b6b"><span>SENS. GOLPE/VIENTO:</span><b id="lblMovidaPctDir">60%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngMovidaPct',-5,cfgDir,'lblMovidaPctDir','%')">-</button><input id="rngMovidaPct" type="range" min="40" max="100" step="5" value="60" oninput="document.getElementById('lblMovidaPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngMovidaPct',5,cfgDir,'lblMovidaPctDir','%')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA COLOR (dE):</span><b id="lblDeltaEDir">20</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="12" max="34" value="20" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0"><span>RETARDO LECTURA:</span><b id="lblRetardoDir">25ms</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngRetardo',-5,cfgDir,'lblRetardoDir','ms')">-</button><input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngRetardo',5,cfgDir,'lblRetardoDir','ms')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA LUZ (dE):</span><b id="lblDeltaEDir">28</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="16" max="48" value="28" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
+              <div>
+                <div style="font-size:10px;color:#ff6b6b;margin-bottom:2px">ANTI-VIENTO / GOLPE TRIPODE:</div>
+                <select id="selAntiViento" onchange="cfgDir()" style="margin:0;padding:6px;font-size:11px">
+                  <option value="OFF">🛡️ OFF (Interior / Sin aviso)</option>
+                  <option value="BAJO">🌬️ BAJO (Solo golpe fuerte)</option>
+                  <option value="MEDIO">💨 MEDIO (Viento moderado)</option>
+                  <option value="ALTO">🌪️ ALTO (Muy sensible)</option>
+                </select>
+              </div>
             </div>
           </div>
           <div id="dualCamsSlot" class="dual-cams"></div>
@@ -158,12 +169,15 @@
           <span id="arw_acc_wu">▶</span>
         </button>
         <div id="acc_wu" class="acc-body" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:11px;color:#aaa">Asigna varias pasadas de distintos angulos por camara a cada piloto.</span>
-            <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-size:11px;color:#aaa">Asigna varias pasadas de distintos angulos a cada piloto.</span>
+            <div style="display:flex;gap:4px">
+              <button onclick="vibrar();refrescarWarmupManual()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄</button>
+              <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
+            </div>
           </div>
           <div class="dual-cams">
-            <div class="box-sub"><b style="color:#38d9a9;font-size:11px">📷 ANTENA 1</b><div id="bandeja_ant_1" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
+            <div class="box-sub"><b style="color:#38d9a9;font-size:11px">📷 ANTENA 1 / TEMP</b><div id="bandeja_ant_1" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
             <div class="box-sub"><b style="color:#3bc9db;font-size:11px">📷 ANTENA 2</b><div id="bandeja_ant_2" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
           </div>
           <div class="box-sub"><b style="color:#ffc107;font-size:11px">🎨 FIRMAS WARM-UP POR PILOTO:</b><div id="resumenFirmasWarmup" style="margin-top:4px;font-size:11px;color:#ccc">Ninguna asignada.</div></div>
@@ -183,16 +197,15 @@
           <select id="selMinLap" onchange="cfgDir()"><option value="4">Anti-rebote vuelta min: 4s</option><option value="5" selected>Anti-rebote vuelta min: 5s</option><option value="8">Anti-rebote vuelta min: 8s</option><option value="12">Anti-rebote vuelta min: 12s (Circuito MX 1/4)</option><option value="18">Anti-rebote vuelta min: 18s (Pista larga)</option></select>
           <div class="grid2">
             <button onclick="vibrar(25);cmdSala('WARMUP')" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000">🔥 WARM-UP (3m)</button>
-            <button onclick="vibrar(25);cmdSala('SALIDA_30')" class="btn-shine" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000">🚦 SALIDA 30s</button>
+            <button onclick="vibrar(25);cmdSala('SALIDA_30')" class="btn-shine" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">🚦 SALIDA 30s</button>
             <button onclick="vibrar(25);cmdSala('VALLA_MX')" class="btn-shine" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🚧 VALLA MX</button>
             <button onclick="vibrar();cmdSala('ESPERA')" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff">🛑 PARAR MANGA</button>
             <button onclick="vibrar();nuevaMangaDir()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000">🔄 NUEVA MANGA</button>
-            <button onclick="vibrar(25);guardarMangaCamp()" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">🏆 GUARDAR MANGA</button>
+            <button onclick="vibrar(25);guardarMangaCamp()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">🏆 GUARDAR MANGA</button>
           </div>
-          <div class="grid3" style="margin-top:6px">
-            <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:10px">🟨 AMARILLA</button>
-            <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 VERDE</button>
-            <button onclick="vibrar();lanzarRuletaManual()" style="background:#9c36b5;color:#fff;font-size:10px">🎲 RETO RULETA</button>
+          <div class="grid2" style="margin-top:6px">
+            <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:10px">🟨 BANDERA AMARILLA</button>
+            <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 BANDERA VERDE</button>
           </div>
 
           <div class="box-sub">
@@ -243,12 +256,21 @@
           </div>
 
           <div class="grid2" style="margin-top:8px">
-            <button onclick="vibrar();cargarCuentasDir()" style="background:#1c2530;color:#0dcaf0">🚫 BLOQUEAR / BORRAR CUENTAS</button>
+            <button onclick="vibrar();cargarCuentasDir(true)" style="background:#1c2530;color:#0dcaf0">🚫 BLOQUEAR / BORRAR CUENTAS</button>
             <button onclick="vibrar();cargarVisitasDir()" style="background:#262626;color:#ffc107">👁️ VISITAS RECIENTES</button>
             <button onclick="vibrar();verReportesDir()" style="background:#262626;color:#ff6b6b">🛠️ REPORTES BUGS</button>
             <button onclick="vibrar();guardarGpsPista()" style="background:#1c2530;color:#20c997">📍 FIJAR GPS PISTA</button>
           </div>
-          <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:240px;overflow-y:auto"></div>
+
+          <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:280px;overflow-y:auto">
+            <div style="display:flex;gap:5px;margin-bottom:6px">
+              <input id="inpBuscarCta" placeholder="Buscar cuenta antigua por nombre..." style="margin:0;flex:1">
+              <button onclick="vibrar();buscarCuentaDir()" style="background:#0dcaf0;color:#000;padding:6px 10px;font-size:10px">🔎 BUSCAR</button>
+            </div>
+            <div id="resBuscarCta"></div>
+            <div id="listaCuentasIdx"></div>
+          </div>
+
           <div id="boxClubDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
           <div id="boxRepDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
 
@@ -273,11 +295,13 @@
           <div class="stat"><div style="font-size:10px;color:#888">POSICION / SALA</div><div id="vivoPosP" style="font-size:19px;font-weight:bold;color:#ffc107">--</div></div>
           <div class="stat"><div style="font-size:10px;color:#888">VUELTA EN CURSO</div><div id="vivoRelojP" style="font-size:19px;font-weight:bold;color:#20c997">00.0s</div></div>
         </div>
+        <div style="font-size:10px;color:#888;margin-top:6px;display:flex;justify-content:space-between"><span>🔋 LIPO EN PISTA:</span><b id="lblLipoP">0m / 12m</b></div>
+        <div class="lipo-wrap"><div id="barLipoP" class="lipo-fill"></div></div>
         <div id="lblDeltaVivoP" style="font-size:12px;font-weight:bold;color:#aaa;margin-top:6px">Ultima: --</div>
         <div class="grid3" style="margin-top:8px">
           <button onclick="vibrar();abrirBolsillo()" style="background:#262626;color:#ffc107;font-size:10px;padding:11px 4px">🔒 BOLSILLO</button>
           <button onclick="vibrar();verFotoFinish()" style="background:#1c2530;color:#0dcaf0;font-size:10px;padding:11px 4px">📸 FOTO-FINISH</button>
-          <button onclick="vibrar(25);sumarVueltaManualDir()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:10px;padding:11px 4px;box-shadow:0 4px 0 #087f5b">+ VUELTA</button>
+          <button onclick="vibrar(25);sumarVueltaManualDir()" class="btn-shine" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:10px;padding:11px 4px;box-shadow:0 4px 0 #087f5b">+ VUELTA</button>
         </div>
       </div>
       <div class="card"><b style="color:#ffc107;font-size:12px">CLASIFICACION EN VIVO</b><div id="listaSalaPiloto" style="margin-top:6px"></div></div>
@@ -314,7 +338,7 @@ var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMo
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
-var _ultSecLoc = -999, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0;
+var _ultSecLoc = -999, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
@@ -346,27 +370,16 @@ window.addEventListener("beforeunload", function() {
 });
 
 function toggleAcc(id) {
-  var el = document.getElementById(id), ar = document.getElementById("arw_" + id);
-  var open = (el.style.display === "none");
-  el.style.display = open ? "block" : "none";
-  if (ar) ar.textContent = open ? "▼" : "▶";
+  var el = document.getElementById(id), ar = document.getElementById("arw_" + id), open = (el.style.display === "none");
+  el.style.display = open ? "block" : "none"; if (ar) ar.textContent = open ? "▼" : "▶";
+  if (id === "acc_wu" && open) refrescarWarmupManual();
 }
-
 function hablarYAntenas(texto, conBeep, tambienLocal) {
-  if (!texto) return;
-  if (tambienLocal !== false) mxHablar(texto);
-  fetch(FB + "/sala/megafonia.json", {
-    method: "PUT",
-    body: JSON.stringify({ id: "mg_" + ahoraSrv() + "_" + Math.random().toString(36).slice(2, 5), ts: ahoraSrv(), texto: texto, beep: !!conBeep })
-  }).catch(function(){});
+  if (!texto) return; if (tambienLocal !== false) mxHablar(texto);
+  fetch(FB + "/sala/megafonia.json", { method: "PUT", body: JSON.stringify({ id: "mg_" + ahoraSrv() + "_" + Math.random().toString(36).slice(2, 5), ts: ahoraSrv(), texto: texto, beep: !!conBeep }) }).catch(function(){});
 }
-
 function verificarClaveDir(clv) {
-  return hashTxt(clv).then(function(h) {
-    return fbJson(FB_ROOT + "/config/dirHash.json").catch(function(){ return null; }).then(function(srvHash) {
-      return srvHash ? (h === srvHash) : (clv.split("").map(function(c){ return c.charCodeAt(0) ^ 7; }).join("-") === "53-55-53-49");
-    });
-  });
+  return hashTxt(clv).then(function(h) { return fbJson(FB_ROOT + "/config/dirHash.json").catch(function(){ return null; }).then(function(srvHash){ return srvHash ? (h === srvHash) : (clv.split("").map(function(c){ return c.charCodeAt(0) ^ 7; }).join("-") === "53-55-53-49"); }); });
 }
 function comprobarBloqueoUnicoYArrancar() {
   fbJson(FB + "/sala.json").catch(function(){ return {}; }).then(function(s) {
@@ -380,23 +393,17 @@ function validarAccesoDirModal() {
   if (!clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Introduce la clave"; return; }
   verificarClaveDir(clv).then(function(ok) {
     if (!ok) { msg.style.color = "#ff4d5e"; msg.textContent = "Clave incorrecta"; return; }
-    localStorage.setItem("mxp_dir_ok", "1"); esDirOk = true; document.getElementById("modalAuthDir").style.display = "none";
-    comprobarBloqueoUnicoYArrancar();
+    localStorage.setItem("mxp_dir_ok", "1"); esDirOk = true; document.getElementById("modalAuthDir").style.display = "none"; comprobarBloqueoUnicoYArrancar();
   });
 }
 function forzarRelevoDir() {
   var clv = document.getElementById("inpClvRelevo").value.trim(), msg = document.getElementById("msgRelevoDir");
   if (!clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Introduce la clave"; return; }
-  verificarClaveDir(clv).then(function(ok) {
-    if (!ok) { msg.style.color = "#ff4d5e"; msg.textContent = "Clave incorrecta"; return; }
-    document.getElementById("modalDirOcupado").style.display = "none"; iniciarDirector();
-  });
+  verificarClaveDir(clv).then(function(ok) { if (!ok) { msg.style.color = "#ff4d5e"; msg.textContent = "Clave incorrecta"; return; } document.getElementById("modalDirOcupado").style.display = "none"; iniciarDirector(); });
 }
-
-function desbloquearAudioD(av) { desbloquearAudioCore(); if (av) { mxBeep(880, 90); mxHablar("Audio de Direccion activado"); } }
+function desbloquearAudioD(av) { desbloquearAudioCore(); if (av) { mxBeep(880, 90); mxHablar("Audio activado"); } }
 function salirDirector() {
-  mxGar.cerrarCamaras();
-  [_esRoot, _esImg1, _esImg2, _esWu].forEach(function(es){ if (es) try { es.close(); } catch (e) {} });
+  mxGar.cerrarCamaras(); [_esRoot, _esImg1, _esImg2, _esWu].forEach(function(es){ if (es) try { es.close(); } catch (e) {} });
   var ops = [fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: "", dirTs: 0 }) }).catch(function(){})];
   if (dirPilotoOn) {
     var yo = (rootCache.pilotos || {})[uid];
@@ -405,9 +412,8 @@ function salirDirector() {
   }
   Promise.all(ops).finally(function(){ localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; });
 }
-
 function ayudaDir() {
-  alert("PANEL DIRECCION PRO:\n1. Acordeones: abre solo el bloque que necesites.\n2. Candado 🔒: bloquea deslizadores para hacer scroll seguro.\n3. Megafonia unificada: todo aviso de salida, calibracion, bandera, micro o Ruleta suena en tu movil y en ambas antenas.\n4. Control de descargas y cuentas: puedes pausar o pedir codigo para nuevas altas, y bloquear/borrar cuentas.\n5. 🏍️ DIR-PILOTO: activalo si tambien ruedas.");
+  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: usa colores vivos (no blanco/negro) y verifica '[MODO: GAR ✓]' en el visor de cada camara.\n5. Cuentas: busca por nombre cuentas antiguas para bloquear/borrar con confirmacion.");
 }
 
 function aplicarModoDirPilotoUI() {
@@ -438,8 +444,9 @@ function aplicarLockSlidersUI() {
   var lab = document.getElementById("labCamaras"), b = document.getElementById("btnLockSliders");
   lab.classList.toggle("sliders-locked", _slidersLocked);
   b.textContent = _slidersLocked ? "🔒 CONTROLES BLOQUEADOS" : "🔓 EDITANDO CONTROLES";
-  b.style.background = _slidersLocked ? "linear-gradient(180deg,#ffd43b,#f59f00)" : "linear-gradient(180deg,#38d9a9,#12b886)";
-  var rngs = lab.querySelectorAll("input[type=range]"); for (var i = 0; i < rngs.length; i++) rngs[i].disabled = _slidersLocked;
+  b.style.background = _slidersLocked ? "linear-gradient(180deg,#ffe066,#f59f00)" : "linear-gradient(180deg,#4be5b6,#12b886)";
+  var rngs = lab.querySelectorAll("input[type=range],select#selAntiViento");
+  for (var i = 0; i < rngs.length; i++) rngs[i].disabled = _slidersLocked;
 }
 function toggleLockSliders() { _slidersLocked = !_slidersLocked; aplicarLockSlidersUI(); }
 function stepSlider(id, d, cb, lblId, suf) {
@@ -460,7 +467,7 @@ function toggleDictadoMicro() {
   if (_escuchandoMicro && _recogMicro) { try { _recogMicro.stop(); } catch (e) {} return; }
   _recogMicro = new SR(); _recogMicro.lang = "es-ES"; _recogMicro.interimResults = false; _recogMicro.maxAlternatives = 1;
   _escuchandoMicro = true; btn.textContent = "🔴 ESCUCHANDO..."; btn.style.background = "#ffc107"; btn.style.color = "#000";
-  lbl.style.color = "#20c997"; lbl.textContent = "🎙️ Habla ahora cerca del microfono...";
+  lbl.style.color = "#20c997"; lbl.textContent = "🎙️ Habla ahora...";
   _recogMicro.onresult = function(ev) {
     var txt = ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : "";
     if (txt) { document.getElementById("inpMega").value = txt; enviarMegafonia(txt, true); lbl.style.color = "#20c997"; lbl.textContent = "📢 Enviado: \"" + txt + "\""; }
@@ -478,7 +485,7 @@ function iniciarUnlockBol() {
 function cancelarUnlockBol() { if (_tUnlockBol) { clearInterval(_tUnlockBol); _tUnlockBol = null; } _pctUnlockBol = 0; document.getElementById("barUnlockBol").style.width = "0%"; }
 
 function verFotoFinish() {
-  document.getElementById("modalFf").style.display = "flex"; document.getElementById("txtFfInfo").textContent = "Cargando ultimo Foto-Finish..."; document.getElementById("imgFf").src = "";
+  document.getElementById("modalFf").style.display = "flex"; document.getElementById("txtFfInfo").textContent = "Cargando Foto-Finish..."; document.getElementById("imgFf").src = "";
   var pils = rootCache.pilotos || {};
   fbJson(FB_FF).then(function(ff) {
     if (!ff || !ff.img) { document.getElementById("txtFfInfo").textContent = "Aun no hay Foto-Finish."; return; }
@@ -536,17 +543,17 @@ function cfgDir() {
       modoJuego: document.getElementById("selJuego").value, duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5, sensPct: Number(document.getElementById("rngSens").value) || 7,
       colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
-      movidaPct: Number(document.getElementById("rngMovidaPct").value) || 60, retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
+      antiViento: document.getElementById("selAntiViento").value || "OFF", retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
       dirTs: ahoraSrv(), dirSession: dirSessionId
     })
   }).catch(function(){});
 }
 function cfgLuz() {
-  var dE = Number(document.getElementById("rngDeltaE").value) || 28, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
-  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 12, lGain: prev.lGain || 1.0 }) }).catch(function(){});
+  var dE = Number(document.getElementById("rngDeltaE").value) || 20, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
+  fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 20, lGain: prev.lGain || 1.0 }) }).catch(function(){});
 }
 function aplicarPresetLuz(tipo) {
-  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 34, minChroma: 14, lGain: 0.92, sens: 12, col: 32, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 26, minChroma: 11, lGain: 1.05, sens: 8, col: 28, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 30, minChroma: 8, lGain: 1.24, sens: 7, col: 24, px: 34 } };
+  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 24, minChroma: 22, lGain: 0.92, sens: 12, col: 32, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 20, minChroma: 20, lGain: 1.05, sens: 8, col: 28, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 23, minChroma: 18, lGain: 1.24, sens: 7, col: 24, px: 34 } };
   var p = ps[tipo] || ps.NUBLADO;
   document.getElementById("rngSens").value = p.sens; document.getElementById("lblSensDir").textContent = p.sens + "%";
   document.getElementById("rngColorPct").value = p.col; document.getElementById("lblColorPctDir").textContent = p.col + "%";
@@ -570,33 +577,45 @@ function guardarPerfilActual() {
     body: JSON.stringify({
       nombre: nom.trim(), orientacion: s.orientacion || "V", sensPct: Number(document.getElementById("rngSens").value) || 7,
       colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
-      movidaPct: Number(document.getElementById("rngMovidaPct").value) || 60, nColores: Number(s.nColores || 2),
-      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 28,
-      minChroma: pL.minChroma || 12, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
+      antiViento: document.getElementById("selAntiViento").value || "OFF", nColores: Number(s.nColores || 2),
+      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 20,
+      minChroma: pL.minChroma || 20, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
     })
   }).then(function(){ cargarListaPerfiles(); alert("Perfil guardado ✓"); }).catch(function(){ alert("Error guardando perfil"); });
 }
 function cargarPerfilGuardado(pid) {
   var p = perfilesCam[pid]; if (!p) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 30, pxDiff: p.pxDiff || 45, movidaPct: p.movidaPct || 60, nColores: p.nColores || 2, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 28, minChroma: p.minChroma || 12, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 30, pxDiff: p.pxDiff || 45, antiViento: p.antiViento || "OFF", nColores: p.nColores || 2, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 20, minChroma: p.minChroma || 20, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
   if (p.roi && p.roi.ant_1) fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_1", posX: p.roi.ant_1.posX, roi: p.roi.ant_1 }) }).catch(function(){});
   if (p.roi && p.roi.ant_2) setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_2", posX: p.roi.ant_2.posX, roi: p.roi.ant_2 }) }).catch(function(){}); }, 400);
   hablarYAntenas("Perfil " + p.nombre + " cargado", false);
 }
 function borrarPerfilGuardado() { var pid = document.getElementById("selPerfilesGuardados").value; if (pid && confirm("¿Borrar perfil?")) fetch(FB_ROOT + "/config/perfiles_camara/" + pid + ".json", { method: "DELETE" }).then(cargarListaPerfiles).catch(function(){}); }
 
+function refrescarWarmupManual() {
+  fbJson(FB_WU + ".json?t=" + Date.now()).then(function(d){ warmupCaps = d || {}; _lastWuSig = ""; pintarBandejasWarmup(); }).catch(function(){});
+}
 function pintarBandejasWarmup() {
   var actEl = document.activeElement; if (actEl && actEl.id && actEl.id.indexOf("selCap_") === 0) return;
-  var pils = rootCache.pilotos || {}, gar = rootCache.garaje || {}, totalCaps = Object.keys(warmupCaps).length;
+  var pils = rootCache.pilotos || {}, gar = rootCache.garaje || {};
+  var sig = Object.keys(warmupCaps).join(",") + "|" + Object.keys(pils).join(",") + "|" + Object.keys(gar).map(function(k){ return k + ":" + (gar[k] && gar[k].firmasWarmup ? JSON.stringify(gar[k].firmasWarmup).length : 0); }).join(",");
+  if (sig === _lastWuSig) return;
+  _lastWuSig = sig;
+
+  var totalCaps = Object.keys(warmupCaps).length;
   document.getElementById("lblAccWu").textContent = "🔥 CAPTURAS WARM-UP MULTI-ANGULO (" + totalCaps + ")";
   var optsP = Object.keys(pils).filter(function(k){ return pils[k] && pils[k].nombre; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(pils[k].dorsal || "1") + ' ' + esc(pils[k].nombre) + '</option>'; }).join("") +
     Object.keys(gar).filter(function(k){ return !pils[k] && gar[k] && gar[k].modelo; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(gar[k].dorsal || "1") + ' ' + esc(k) + '</option>'; }).join("");
   if (!optsP) optsP = '<option value="">Sin pilotos</option>';
+
   ["ant_1", "ant_2"].forEach(function(aid) {
-    var items = Object.keys(warmupCaps).filter(function(cid){ return warmupCaps[cid] && (warmupCaps[cid].antId || "ant_1") === aid; }).sort(function(a, b){ return (warmupCaps[b].ts || 0) - (warmupCaps[a].ts || 0); });
+    var items = Object.keys(warmupCaps).filter(function(cid){
+      var c = warmupCaps[cid]; if (!c) return false;
+      return (aid === "ant_2") ? (c.antId === "ant_2") : (c.antId !== "ant_2");
+    }).sort(function(a, b){ return (warmupCaps[b].ts || 0) - (warmupCaps[a].ts || 0); });
     document.getElementById("bandeja_" + aid).innerHTML = items.length ? items.map(function(cid) {
       var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
-      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
     }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
   });
   var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
@@ -607,16 +626,16 @@ function pintarBandejasWarmup() {
 }
 function asignarCapturaPiloto(cid) {
   var c = warmupCaps[cid], sel = document.getElementById("selCap_" + cid), pUid = sel ? sel.value : ""; if (!c || !pUid) { alert("Selecciona piloto."); return; }
-  var aid = c.antId || "ant_1", gar = rootCache.garaje || {}, fw = (gar[pUid] && gar[pUid].firmasWarmup) || {}, arr = Array.isArray(fw[aid]) ? fw[aid].slice() : [];
+  var aid = (c.antId === "ant_2") ? "ant_2" : "ant_1", gar = rootCache.garaje || {}, fw = (gar[pUid] && gar[pUid].firmasWarmup) || {}, arr = Array.isArray(fw[aid]) ? fw[aid].slice() : [];
   arr.push({ ts: c.ts || ahoraSrv(), colores: c.colores || [] }); if (arr.length > 6) arr = arr.slice(-6);
   fbJson(FB + "/garaje/" + pUid + "/firmasWarmup/" + aid + ".json", { method: "PUT", body: JSON.stringify(arr) }).then(function(){
     if (!rootCache.garaje[pUid]) rootCache.garaje[pUid] = {}; if (!rootCache.garaje[pUid].firmasWarmup) rootCache.garaje[pUid].firmasWarmup = {};
-    rootCache.garaje[pUid].firmasWarmup[aid] = arr; descartarCaptura(cid); hablarYAntenas("Captura asignada", false);
+    rootCache.garaje[pUid].firmasWarmup[aid] = arr; _lastWuSig = ""; descartarCaptura(cid); hablarYAntenas("Captura asignada", false);
   }).catch(function(){ alert("Error asignando"); });
 }
-function descartarCaptura(cid) { delete warmupCaps[cid]; fetch(FB_WU + "/" + cid + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
-function limpiarBandejaWarmup() { warmupCaps = {}; fetch(FB_WU + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
-function borrarFirmasWuPiloto(pUid) { if (rootCache.garaje[pUid]) delete rootCache.garaje[pUid].firmasWarmup; fetch(FB + "/garaje/" + pUid + "/firmasWarmup.json", { method: "DELETE" }).then(pintarBandejasWarmup).catch(function(){}); }
+function descartarCaptura(cid) { delete warmupCaps[cid]; _lastWuSig = ""; fetch(FB_WU + "/" + cid + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
+function limpiarBandejaWarmup() { warmupCaps = {}; _lastWuSig = ""; fetch(FB_WU + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
+function borrarFirmasWuPiloto(pUid) { if (rootCache.garaje[pUid]) delete rootCache.garaje[pUid].firmasWarmup; _lastWuSig = ""; fetch(FB + "/garaje/" + pUid + "/firmasWarmup.json", { method: "DELETE" }).then(pintarBandejasWarmup).catch(function(){}); }
 
 function cmdSala(est) {
   desbloquearAudioD(false);
@@ -656,22 +675,13 @@ function ponerBandera(col) { fetch(FB + "/sala.json", { method: "PATCH", body: J
 function enviarMegafonia(texto, beep) { var t = String(texto || "").trim(); if (!t) return; document.getElementById("inpMega").value = ""; hablarYAntenas(t, beep); }
 
 function borrarHotlapDir() {
-  if (!confirm("¿Borrar el record de Hotlap semanal de este circuito?")) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ hotlapMs: null, hotlapTxt: null, ultPasoTs: null, ultPasoTxt: null }) })
-    .then(function(){ alert("Hotlap semanal borrada ✓"); }).catch(function(){});
+  if (!confirm("¿Seguro que quieres borrar el record de Hotlap semanal de este circuito?")) return;
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ hotlapMs: null, hotlapTxt: null, ultPasoTs: null, ultPasoTxt: null }) }).then(function(){ alert("Hotlap semanal borrada ✓"); }).catch(function(){});
 }
 function borrarTiemposDiaDir() {
-  if (!confirm("¿Borrar todos los tiempos del dia, mangas del campeonato y locks de prueba?")) return;
-  Promise.all([
-    fetch(FB + "/campeonato.json", { method: "DELETE" }),
-    fetch(FB + "/pasos_lock.json", { method: "DELETE" }),
-    fetch(FB + "/eventos.json", { method: "DELETE" }),
-    fetch(FB + "/foto_finish/" + circId + ".json", { method: "DELETE" })
-  ]).then(function(){
-    rootCache.campeonato = {}; rootCache.eventos = {};
-    nuevaMangaDir();
-    alert("Tiempos del dia y campeonato borrados ✓");
-  }).catch(function(){});
+  if (!confirm("¿Seguro que quieres borrar todos los tiempos del dia y mangas de prueba?")) return;
+  Promise.all([fetch(FB + "/campeonato.json", { method: "DELETE" }), fetch(FB + "/pasos_lock.json", { method: "DELETE" }), fetch(FB + "/eventos.json", { method: "DELETE" }), fetch(FB + "/foto_finish/" + circId + ".json", { method: "DELETE" })])
+    .then(function(){ rootCache.campeonato = {}; rootCache.eventos = {}; nuevaMangaDir(); alert("Tiempos del dia borrados ✓"); }).catch(function(){});
 }
 
 function restarVueltaDir(pUid) {
@@ -681,7 +691,7 @@ function restarVueltaDir(pUid) {
   fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
   fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
 }
-function expulsarPilotoDir(pUid) { fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).catch(function(){}); if (rootCache.pilotos) delete rootCache.pilotos[pUid]; pintarDirUI(); }
+function expulsarPilotoDir(pUid) { if (!confirm("¿Expulsar a este piloto de la parrilla?")) return; fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).catch(function(){}); if (rootCache.pilotos) delete rootCache.pilotos[pUid]; pintarDirUI(); }
 function limpiarOfflineDir() {
   var pAll = rootCache.pilotos || {};
   Object.keys(pAll).forEach(function(k){ if (pAll[k] && !esPilotoActivo(pAll[k])) { fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" }).catch(function(){}); delete pAll[k]; } });
@@ -733,47 +743,53 @@ function manejarEventoAntena(ev) {
 
 function cargarAccesoCfgDir() {
   fbJson(FB_ROOT + "/config/acceso.json?t=" + Date.now()).then(function(a) {
-    if (!a) return;
-    if (a.modo) document.getElementById("selModoAcceso").value = a.modo;
-    if (a.codigo) document.getElementById("inpCodAcceso").value = a.codigo;
+    if (!a) return; if (a.modo) document.getElementById("selModoAcceso").value = a.modo; if (a.codigo) document.getElementById("inpCodAcceso").value = a.codigo;
   }).catch(function(){});
 }
 function guardarAccesoCfg(avisar) {
   var modo = document.getElementById("selModoAcceso").value, cod = document.getElementById("inpCodAcceso").value.trim();
   fbJson(FB_ROOT + "/config/acceso.json", { method: "PUT", body: JSON.stringify({ modo: modo, codigo: cod, ts: ahoraSrv() }) })
-    .then(function(){ if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓"); })
-    .catch(function(){ alert("Error guardando control de descargas"); });
+    .then(function(){ if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓"); }).catch(function(){ alert("Error"); });
 }
 
-function cargarCuentasDir() {
-  var bx = document.getElementById("boxCuentasDir"); bx.style.display = (bx.style.display === "block") ? "none" : "block"; if (bx.style.display === "none") return;
-  bx.innerHTML = "<div style='color:#888'>Cargando cuentas...</div>";
+function filaCuentaHtml(k, u) {
+  var nom = u.nombre || k;
+  return "<div class='fila'><span><b>" + esc(nom) + "</b> (" + esc(u.rol || "PILOTO") + ") " + (u.bloqueado ? "⛔" : "✅") + "</span>" +
+    "<div><button onclick=\"vibrar();bloqCta('" + esc(k) + "'," + (!u.bloqueado) + ",'" + esc(nom) + "')\" style='background:" + (u.bloqueado ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button>" +
+    "<button onclick=\"vibrar();delCta('" + esc(k) + "','" + esc(nom) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button></div></div>";
+}
+function cargarCuentasDir(toggle) {
+  var bx = document.getElementById("boxCuentasDir");
+  if (toggle) bx.style.display = (bx.style.display === "block") ? "none" : "block";
+  if (bx.style.display === "none") return;
+  var lst = document.getElementById("listaCuentasIdx"); lst.innerHTML = "<div style='color:#888'>Cargando...</div>";
   fbJson(FB_ROOT + "/cuentas_idx.json?t=" + Date.now()).then(function(ct) {
-    if (!ct) { bx.innerHTML = "<div style='color:#888'>Sin cuentas indexadas aun (al entrar nuevos usuarios apareceran aqui).</div>"; return; }
-    bx.innerHTML = Object.keys(ct).map(function(k) {
-      var u = ct[k]; if (!u) return "";
-      return "<div class='fila'><span><b>" + esc(u.nombre) + "</b> (" + esc(u.rol || "PILOTO") + ") " + (u.bloqueado ? "⛔" : "✅") + "</span>" +
-        "<div><button onclick=\"vibrar();bloqCta('" + esc(k) + "'," + (!u.bloqueado) + ")\" style='background:" + (u.bloqueado ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button>" +
-        "<button onclick=\"vibrar();delCta('" + esc(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button></div></div>";
-    }).join("");
-  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando cuentas</div>"; });
+    if (!ct) { lst.innerHTML = "<div style='color:#888'>Sin cuentas indexadas. Usa el buscador arriba para cuentas antiguas.</div>"; return; }
+    lst.innerHTML = Object.keys(ct).map(function(k){ return ct[k] ? filaCuentaHtml(k, ct[k]) : ""; }).join("");
+  }).catch(function(){ lst.innerHTML = "<div style='color:#ff4d5e'>Error cargando cuentas</div>"; });
 }
-function bloqCta(k, st) {
-  Promise.all([
-    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }),
-    fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) })
-  ]).then(function(){ cargarCuentasDir(); cargarCuentasDir(); }).catch(function(){});
+function buscarCuentaDir() {
+  var nom = document.getElementById("inpBuscarCta").value.trim(), k = nom.toLowerCase().replace(/[^a-z0-9]/g, ""), res = document.getElementById("resBuscarCta");
+  if (!k) { res.innerHTML = ""; return; }
+  res.innerHTML = "<div style='color:#888'>Buscando...</div>";
+  fbJson(FB_ROOT + "/cuentas/" + k + ".json").then(function(u) {
+    if (!u) { res.innerHTML = "<div style='color:#ff4d5e;font-size:11px'>No existe la cuenta '" + esc(nom) + "'</div>"; return; }
+    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PUT", body: JSON.stringify({ nombre: u.nombre || nom, rol: u.rol || "PILOTO", bloqueado: !!u.bloqueado, ultAcceso: u.ultAcceso || 0 }) }).catch(function(){});
+    res.innerHTML = "<div style='color:#0dcaf0;font-size:10px;margin-bottom:3px'>Resultado directo:</div>" + filaCuentaHtml(k, u);
+  }).catch(function(){ res.innerHTML = "<div style='color:#ff4d5e'>Error buscando</div>"; });
 }
-function delCta(k) {
-  if (!confirm("¿Eliminar esta cuenta definitivamente?")) return;
-  Promise.all([
-    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }),
-    fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" })
-  ]).then(function(){ cargarCuentasDir(); cargarCuentasDir(); }).catch(function(){});
+function bloqCta(k, st, nom) {
+  if (!confirm("¿Seguro que quieres " + (st ? "BLOQUEAR" : "REACTIVAR") + " la cuenta de " + (nom || k) + "?")) return;
+  Promise.all([fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }), fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) })])
+    .then(function(){ cargarCuentasDir(false); if (document.getElementById("inpBuscarCta").value) buscarCuentaDir(); }).catch(function(){});
+}
+function delCta(k, nom) {
+  if (!confirm("⚠️ ¿Seguro que quieres BORRAR DEFINITIVAMENTE la cuenta de " + (nom || k) + "? No podra recuperarla.")) return;
+  Promise.all([fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "DELETE" }), fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }), fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" })])
+    .then(function(){ document.getElementById("resBuscarCta").innerHTML = ""; cargarCuentasDir(false); }).catch(function(){});
 }
 
-function guardarGpsPista() { if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(function(p){ fbJson(FB + "/sala/gps.json", { method: "PUT", body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) }).then(function(){ alert("GPS guardado ✓"); }); }); }
+function guardarGpsPista() { if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(p){ fbJson(FB + "/sala/gps.json", { method: "PUT", body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) }).then(function(){ alert("GPS guardado ✓"); }); }); }
 function verReportesDir() {
   var bx = document.getElementById("boxRepDir"); bx.style.display = (bx.style.display === "block") ? "none" : "block"; if (bx.style.display === "none") return;
   fbJson(FB_ROOT + "/reportes.json").then(function(rp) {
@@ -795,13 +811,32 @@ function cambiarClaveDir() {
     .then(function(){ document.getElementById("inpNuevaClaveDir").value = ""; alert("🔐 Clave actualizada SHA-256 ✓"); }).catch(function(){ alert("Error"); });
 }
 
+function pintarAntenasTel() {
+  var s = rootCache.sala || {}, ants = rootCache.antenas || {}, ah = ahoraSrv(), md = s.modoDet || "TODO", antsAct = [];
+  ["ant_1", "ant_2"].forEach(function(aid) {
+    var a = ants[aid], tel = document.getElementById("tel_" + aid);
+    if (a && Math.abs(ah - Number(a.ts || 0)) < 15000) {
+      antsAct.push(aid);
+      if (a.movidaTs && (ah - Number(a.movidaTs)) < 12000) {
+        tel.style.color = "#ff4d5e"; tel.textContent = "⚠️ MOVIDA POR GOLPE/VIENTO";
+        if (_ultMovida[aid] !== a.movidaTs) { _ultMovida[aid] = a.movidaTs; hablarYAntenas("Antena " + (aid === "ant_1" ? "1" : "2") + " movida", false); }
+      } else {
+        var mAct = a.modoActivo || md, mOk = (mAct === md);
+        tel.style.color = !mOk ? "#ff6b6b" : (a.calibrada ? "#00e676" : "#ffc107");
+        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " [" + mAct + (mOk ? " ✓" : " ⏳") + "] | MOV:" + (a.mov || 0) + "% | P:" + (a.pasos || 0) + (a.ultTxt ? (" | " + a.ultTxt) : "");
+      }
+    } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
+  });
+  return antsAct;
+}
+
 function pintarChecklist(antsAct, pils, s) {
   var calOk = antsAct.length > 0 && antsAct.every(function(k){ return rootCache.antenas[k] && rootCache.antenas[k].calibrada; });
   var gar = rootCache.garaje || {}, md = s.modoDet || "TODO";
   var colOk = (md === "TODO") || pils.some(function(p){ var g = gar[p.id]; return g && ((g.colores && g.colores.length) || g.firmasWarmup); });
   var pasos = [
     { ok: antsAct.length > 0, txt: "1. Antenas (Cam1: " + (antsAct.indexOf("ant_1") >= 0 ? "✓" : "No") + " • Cam2: " + (antsAct.indexOf("ant_2") >= 0 ? "✓" : "No") + ")" },
-    { ok: !!(s.perfilLuz && s.perfilLuz.nombre), txt: "2. Perfil Luz (" + esc((s.perfilLuz && s.perfilLuz.nombre) || "Sin elegir") + ")" },
+    { ok: !!(s.perfilLuz && s.perfilLuz.nombre), txt: "2. Perfil Luz (" + esc((s.perfilLuz && s.perfilLuz.nombre) || "Normal") + ")" },
     { ok: calOk, txt: "3. Pista vacia calibrada" },
     { ok: pils.some(function(p){ return p.activo; }), txt: "4. Parrilla (" + pils.filter(function(p){ return p.activo; }).length + " activos)" },
     { ok: colOk, txt: "5. Firmas (" + esc(md) + ")" },
@@ -810,9 +845,15 @@ function pintarChecklist(antsAct, pils, s) {
   document.getElementById("bodyChecklist").innerHTML = pasos.map(function(st){ return '<div class="chk-item' + (st.ok ? ' chk-ok' : '') + '">' + (st.ok ? '✅' : '⏳') + ' <span>' + st.txt + '</span></div>'; }).join("");
 }
 
+function renderSwatches(g) {
+  var cs = (g && Array.isArray(g.colores)) ? g.colores.slice(0, 3) : [];
+  return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
+}
+
 function pintarDirUI() {
-  var s = rootCache.sala || {}, ants = rootCache.antenas || {}, pils = ordenarPilotos(rootCache.pilotos, s), ah = ahoraSrv();
-  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+  var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
+  var antsAct = pintarAntenasTel();
+  document.getElementById("banBanderaAmDir").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
   document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
 
   var md = s.modoDet || "TODO";
@@ -830,7 +871,7 @@ function pintarDirUI() {
   syncRng("rngSens", "lblSensDir", s.sensPct, "%");
   syncRng("rngColorPct", "lblColorPctDir", s.colorPct, "%");
   syncRng("rngPxDiff", "lblPxDiffDir", s.pxDiff, "");
-  syncRng("rngMovidaPct", "lblMovidaPctDir", s.movidaPct, "%");
+  if (s.antiViento && document.activeElement !== document.getElementById("selAntiViento")) document.getElementById("selAntiViento").value = s.antiViento;
   if (typeof s.retardoMs === "number") syncRng("rngRetardo", "lblRetardoDir", s.retardoMs, "ms");
   if (s.perfilLuz && s.perfilLuz.deltaE) syncRng("rngDeltaE", "lblDeltaEDir", s.perfilLuz.deltaE, "");
 
@@ -839,37 +880,29 @@ function pintarDirUI() {
     ["ant_1", "ant_2"].forEach(function(aid){ var r = s.roi[aid]; if (!r) return; if (r.posX) document.getElementById("pos_" + aid).value = r.posX; if (typeof r.x === "number") document.getElementById("rx_" + aid).value = r.x; if (typeof r.y === "number") document.getElementById("ry_" + aid).value = r.y; if (typeof r.w === "number") document.getElementById("rw_" + aid).value = r.w; if (typeof r.h === "number") document.getElementById("rh_" + aid).value = r.h; });
   }
   previewRoi("ant_1"); previewRoi("ant_2");
-
-  var antsAct = [];
-  ["ant_1", "ant_2"].forEach(function(aid) {
-    var a = ants[aid], tel = document.getElementById("tel_" + aid);
-    if (a && Math.abs(ah - Number(a.ts || 0)) < 15000) {
-      antsAct.push(aid);
-      if (a.movidaTs && (ah - Number(a.movidaTs)) < 12000) {
-        tel.style.color = "#ff4d5e"; tel.textContent = "⚠️ MOVIDA POR GOLPE/VIENTO";
-        if (_ultMovida[aid] !== a.movidaTs) { _ultMovida[aid] = a.movidaTs; hablarYAntenas("Antena " + (aid === "ant_1" ? "1" : "2") + " movida", false); }
-      } else { tel.style.color = a.calibrada ? "#00e676" : "#ffc107"; tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " | MOV:" + (a.mov || 0) + "% | PASOS:" + (a.pasos || 0) + (a.ultTxt ? (" | " + a.ultTxt) : ""); }
-    } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
-  });
   pintarChecklist(antsAct, pils, s);
 
-  var actCnt = 0, hDir = "", hPil = "";
-  pils.forEach(function(p, ix) {
-    if (p.activo) actCnt++;
-    if (dirPilotoOn && p.id === uid) document.getElementById("vivoPosP").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
-    var dot = p.activo ? "🟢" : "⚪";
-    hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
-    hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b></div>';
-  });
-  document.getElementById("listaSalaDir").innerHTML = hDir || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
-  document.getElementById("listaSalaPiloto").innerHTML = hPil || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
-  document.getElementById("lblPistaStatusDir").textContent = actCnt > 0 ? ("🟢 " + actCnt + " EN PISTA") : "⚪ PISTA VACIA";
+  var pilSig = pils.map(function(p){ return p.id + ":" + p.vueltas + ":" + p.mejorMs + ":" + p.activo + ":" + p.eliminado; }).join("|");
+  if (pilSig !== _lastPilSig) {
+    _lastPilSig = pilSig;
+    var actCnt = 0, hDir = "", hPil = "";
+    pils.forEach(function(p, ix) {
+      if (p.activo) actCnt++;
+      if (dirPilotoOn && p.id === uid) document.getElementById("vivoPosP").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
+      var dot = p.activo ? "🟢" : "⚪", g = gar[p.id] || {}, pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || "--") + '</span>', sw = renderSwatches(g);
+      hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b class="tv-rp">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
+      hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v)</span><b class="tv-rp">' + fmt(p.mejorMs) + '</b></div>';
+    });
+    document.getElementById("listaSalaDir").innerHTML = hDir || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
+    document.getElementById("listaSalaPiloto").innerHTML = hPil || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
+    document.getElementById("lblPistaStatusDir").textContent = actCnt > 0 ? ("🟢 " + actCnt + " EN PISTA") : "⚪ PISTA VACIA";
+  }
 
   if (dirPilotoOn) {
     var lA = document.getElementById("lblAntVivoP");
     lA.textContent = antsAct.length ? ("📡 ANTENAS: " + antsAct.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS"; lA.style.color = antsAct.length ? "#00e676" : "#ff4d5e";
     var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE", RULETA: "🎲 RULETA LOCA MX" };
-    document.getElementById("lblModoSalaP").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL") + (s.bandera === "AMARILLA" ? " • 🟨 AMARILLA" : "");
+    document.getElementById("lblModoSalaP").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL");
     var brul = document.getElementById("banRuletaP");
     if (s.modoJuego === "RULETA" && s.ruleta && s.ruleta.texto) { brul.style.display = "block"; brul.textContent = "🎲 " + s.ruleta.texto; } else brul.style.display = "none";
     var br = document.getElementById("banReacVivoP");
@@ -903,32 +936,36 @@ function pintarDirUI() {
     var df = t0 - ah, sg = Math.ceil(df / 1000);
     if (df > 0 && sg !== _ultSecLoc) {
       _ultSecLoc = sg;
-      if (est === "VALLA_MX") {
-        if (sg <= 10 && sg >= 6) hablarYAntenas(String(sg), false);
-        else if (sg === 5) hablarYAntenas("5, atentos a la valla", false);
-      } else if (est === "SALIDA_30") {
-        if (sg === 20) hablarYAntenas("Veinte segundos para la salida", false);
-        else if (sg === 10) hablarYAntenas("Diez segundos", false);
-        else if (sg <= 5 && sg >= 1) hablarYAntenas(String(sg), false);
-      }
+      if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) hablarYAntenas(String(sg), false); else if (sg === 5) hablarYAntenas("5, atentos a la valla", false); }
+      else { if (sg === 20) hablarYAntenas("Veinte segundos para la salida", false); else if (sg === 10) hablarYAntenas("Diez segundos", false); else if (sg <= 5 && sg >= 1) hablarYAntenas(String(sg), false); }
     }
     if (df <= 0 && _ultSecLoc !== 0) {
-      _ultSecLoc = 0; mxBeep(1100, 260);
-      hablarYAntenas("¡SALIDA!", true);
+      _ultSecLoc = 0; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
       fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
     }
     if (dirPilotoOn) {
       if (df > 0 && df <= 31000) {
         ov.style.display = "flex";
-        if (est === "VALLA_MX" && df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
-        else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "CARTEL EN PARRILLA" : "PREPARADOS"; ov.style.background = (sg > 10) ? "#c9182b" : (sg > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000")); }
+        var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
+        if (est === "VALLA_MX") {
+          leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
+          if (df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
+          else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
+        } else {
+          gBox.style.display = "none"; leds.style.display = "flex";
+          var nOn = sg <= 5 ? (6 - sg) : 0, ls = leds.children;
+          for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
+          document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg;
+          document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sg > 10) ? "#1f080c" : (sg > 5 ? "#332200" : "#2b0509");
+        }
       } else if (df <= 0 && df > -4000) {
-        ov.style.display = "flex"; ov.style.background = "#00c853"; document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+        ov.style.display = "flex"; ov.style.background = "#00c853";
+        document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+        if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
+        else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
       } else ov.style.display = "none";
     } else ov.style.display = "none";
   } else ov.style.display = "none";
-
-  pintarBandejasWarmup();
 }
 
 function bindCamImg(aid) {
@@ -942,13 +979,7 @@ function bindCamImg(aid) {
     } catch (er) {}
   };
   es.addEventListener("put", onIm); es.addEventListener("patch", onIm);
-  es.onerror = function() {
-    if (es.readyState === 2) {
-      setTimeout(function() {
-        if (aid === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2");
-      }, 2500);
-    }
-  };
+  es.onerror = function(){ if (es.readyState === 2) setTimeout(function(){ if (aid === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2"); }, 2500); };
   return es;
 }
 
@@ -959,8 +990,11 @@ function conectarSseStreams() {
     try {
       var m = JSON.parse(e.data); if (!m || !m.path) return;
       applySsePatch(rootCache, m.path, m.data, e.type === "put");
-      Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
-      pintarDirUI(); if (_tabDir === "tiempos") mxGar.pintarTiempos();
+      if (m.path.indexOf("/antenas") === 0) { pintarAntenasTel(); return; }
+      if (m.path.indexOf("/eventos") === 0 || m.path === "/") Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
+      pintarDirUI();
+      if (m.path.indexOf("/garaje") === 0 || m.path === "/") pintarBandejasWarmup();
+      if (_tabDir === "tiempos") mxGar.pintarTiempos();
     } catch (er) {}
   };
   _esRoot.addEventListener("put", onRoot); _esRoot.addEventListener("patch", onRoot);
@@ -1001,18 +1035,21 @@ function iniciarDirector() {
 
   setInterval(function() {
     var labAbierto = document.getElementById("acc_lab").style.display !== "none";
-    if (!testOn && !labAbierto) return;
-    ["ant_1", "ant_2"].forEach(function(aid) {
-      fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){});
-    });
-  }, 1500);
+    if (testOn || labAbierto) {
+      ["ant_1", "ant_2"].forEach(function(aid) { fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){}); });
+    }
+    var wuAbierto = document.getElementById("acc_wu").style.display !== "none";
+    if (wuAbierto || (rootCache.sala && rootCache.sala.estado === "WARMUP")) {
+      fbJson(FB_WU + ".json?t=" + Date.now()).then(function(d){ warmupCaps = d || {}; pintarBandejasWarmup(); }).catch(function(){});
+    }
+  }, 2500);
 
   setInterval(function() {
     fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
       if (!r) return;
       rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
       Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
-      pintarDirUI(); if (_tabDir === "tiempos") mxGar.pintarTiempos();
+      pintarDirUI(); pintarBandejasWarmup(); if (_tabDir === "tiempos") mxGar.pintarTiempos();
     }).catch(function(){});
   }, 5000);
 
@@ -1020,6 +1057,12 @@ function iniciarDirector() {
     if (!dirPilotoOn) return;
     var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
     var el = document.getElementById("vivoRelojP"), rb = document.getElementById("relBol");
+    var barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");
+    if (s.tsInicio && s.estado === "EN_CURSO" && barL && lblL) {
+      var minL = Math.max(0, (ahoraSrv() - Number(s.tsInicio)) / 60000), pctL = Math.min(100, Math.round((minL / 12) * 100));
+      barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
+      lblL.textContent = minL.toFixed(1) + "m / 12m";
+    } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
     if (!b || ahoraSrv() < b || s.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
     if (yo.eliminado) { el.textContent = "💀 ELIM"; if (rb) rb.textContent = "💀 ELIM"; return; }
     var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";

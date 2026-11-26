@@ -8,7 +8,9 @@
 </head>
 <body>
   <div id="overlaySem">
-    <div id="numSem" style="font-size:21vw;font-weight:bold;color:#fff">00:30</div>
+    <div id="semLeds" class="sem-leds" style="display:none"><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div><div class="sem-led"></div></div>
+    <div id="gateBox" class="gate-box" style="display:none"><div id="gateBar" class="gate-bar"></div></div>
+    <div id="numSem" style="font-size:18vw;font-weight:bold;color:#fff">00:30</div>
     <div id="txtSem" style="font-size:20px;font-weight:bold;color:#fff">PREPARADOS</div>
   </div>
 
@@ -30,9 +32,11 @@
     </div>
   </div>
 
+  <div id="banBanderaAmP" class="flag-yellow" style="max-width:560px"><span>⚠️ BANDERA AMARILLA EN PISTA — PRECAUCION</span></div>
+
   <div class="top">
     <div style="text-align:left">
-      <div><span id="badgeDor" style="background:#ffc107;color:#000;padding:2px 7px;border-radius:5px;font-weight:bold;font-size:13px">#--</span><b id="txtNomTop" style="color:#ffc107;font-size:15px;margin-left:4px">PILOTO</b><span id="badgeRango" style="background:#20c997;color:#000;font-size:10px;padding:2px 6px;border-radius:5px;margin-left:5px;font-weight:bold">ROOKIE</span></div>
+      <div><span id="badgeDor" class="mx-plate">#--</span><b id="txtNomTop" style="color:#ffc107;font-size:15px;margin-left:4px">PILOTO</b><span id="badgeRango" style="background:#20c997;color:#000;font-size:10px;padding:2px 6px;border-radius:5px;margin-left:5px;font-weight:bold">ROOKIE</span></div>
       <div id="txtCircTop" style="font-size:10px;color:#0dcaf0;margin-top:3px">🏁 METROPOLITANO</div>
     </div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
@@ -64,6 +68,8 @@
         <div class="stat"><div style="font-size:10px;color:#888">POSICION / SALA</div><div id="vivoPos" style="font-size:19px;font-weight:bold;color:#ffc107">--</div></div>
         <div class="stat"><div style="font-size:10px;color:#888">VUELTA EN CURSO</div><div id="vivoReloj" style="font-size:19px;font-weight:bold;color:#20c997">00.0s</div></div>
       </div>
+      <div style="font-size:10px;color:#888;margin-top:6px;display:flex;justify-content:space-between"><span>🔋 BATERIA LIPO:</span><b id="lblLipoP">0m / 12m</b></div>
+      <div class="lipo-wrap"><div id="barLipoP" class="lipo-fill"></div></div>
       <div id="lblDeltaVivo" style="font-size:12px;font-weight:bold;color:#aaa;margin-top:6px">Ultima: --</div>
       <div class="grid3" style="margin-top:8px">
         <button onclick="vibrar();abrirBolsillo()" style="background:linear-gradient(180deg,#2a2e38,#191c22);color:#ffc107;font-size:10px;padding:11px 4px">🔒 BOLSILLO</button>
@@ -109,10 +115,15 @@ var vozP = true, _tabAct = "sala", rootCache = { sala: {}, antenas: {}, pilotos:
 var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99;
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
-var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null;
+var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
 
 fbJson(FB_ROOT + "/cuentas_idx/" + uid + ".json").then(function(ix){
-  if (ix && ix.bloqueado) { alert("⛔ Tu cuenta ha sido bloqueada por Direccion."); salirPiloto(); }
+  if (ix && ix.bloqueado) { alert("⛔ Tu cuenta ha sido bloqueada por Direccion."); salirPiloto(); return; }
+  if (!ix) {
+    fetch(FB_ROOT + "/cuentas_idx/" + uid + ".json", {
+      method: "PUT", body: JSON.stringify({ nombre: miNom.slice(0, 40), rol: "PILOTO", bloqueado: false, ultAcceso: ahoraSrv() })
+    }).catch(function(){});
+  }
 }).catch(function(){});
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
@@ -148,9 +159,9 @@ function salirPiloto() {
 
 function ayudaTab() {
   var g = {
-    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, posicion, destellos de record y banderas (☀️ al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar o lanzar Warm-Up / Salida 30s / Valla MX.",
-    garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: guia de luz + Recorte automatico de fondo + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL para mostrar tu moto.",
-    tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. 📤/📥 BACKUP para exportar o restaurar tus motos e historial."
+    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, placa dorsal, destellos de record y banderas (☀️ al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar o lanzar Warm-Up / Salida 30s / Valla MX.",
+    garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: colores vivos + Recorte automatico + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL.",
+    tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. Tarjeta PNG diaria con foto de tu moto y 📤/📥 BACKUP."
   };
   alert(g[_tabAct] || g.sala);
 }
@@ -168,11 +179,11 @@ function verFotoFinish() {
   document.getElementById("modalFf").style.display = "flex"; document.getElementById("txtFfInfo").textContent = "Cargando ultimo Foto-Finish..."; document.getElementById("imgFf").src = "";
   var pils = rootCache.pilotos || {};
   fbJson(FB_FF).then(function(ff) {
-    if (!ff || !ff.img) { document.getElementById("txtFfInfo").textContent = "Aun no hay captura de Foto-Finish."; return; }
+    if (!ff || !ff.img) { document.getElementById("txtFfInfo").textContent = "Aun no hay Foto-Finish."; return; }
     document.getElementById("imgFf").src = ff.img;
     var nomP = (ff.pid && pils[ff.pid]) ? pils[ff.pid].nombre : (ff.modo === "TODO" ? "Cualquier moto" : "Paso en meta");
     document.getElementById("txtFfInfo").textContent = (ff.antNom || "Meta") + " • " + nomP + " • " + new Date(ff.ts).toLocaleTimeString("es-ES");
-  }).catch(function(){ document.getElementById("txtFfInfo").textContent = "Sin foto disponible."; });
+  }).catch(function(){ document.getElementById("txtFfInfo").textContent = "Sin foto."; });
 }
 
 function inscribirPilotoAuto() {
@@ -258,8 +269,22 @@ function manejarEventoAntena(ev) {
   }
 }
 
+function pintarAntStatusP() {
+  var ants = rootCache.antenas || {}, ah = ahoraSrv();
+  var aks = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
+  var lA = document.getElementById("lblAntVivo");
+  lA.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
+  lA.style.color = aks.length ? "#00e676" : "#ff4d5e";
+}
+
+function renderSwatches(g) {
+  var cs = (g && Array.isArray(g.colores)) ? g.colores.slice(0, 3) : [];
+  return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
+}
+
 function pintarSalaUI() {
-  var s = rootCache.sala || {}, ants = rootCache.antenas || {}, pObj = rootCache.pilotos || {}, ah = ahoraSrv();
+  var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gar = rootCache.garaje || {}, ah = ahoraSrv();
+  pintarAntStatusP();
   if (pObj[uid]) {
     var vAct = Number(pObj[uid].vueltas || 0), lAct = Number(pObj[uid].ultimaMs || 0), tsP = Number(pObj[uid].tsUltimoPaso || 0);
     if (_ultVtasSinc >= 0 && vAct > _ultVtasSinc && lAct > 0 && tsP !== _ultLapSinc) {
@@ -268,14 +293,13 @@ function pintarSalaUI() {
     }
     _ultVtasSinc = vAct;
   }
-  var aks = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
-  var lA = document.getElementById("lblAntVivo"); lA.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS"; lA.style.color = aks.length ? "#00e676" : "#ff4d5e";
+
   var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
   document.getElementById("boxAmistosa").style.display = (!dirOn) ? "block" : "none";
-  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+  document.getElementById("banBanderaAmP").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
 
   var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE (1 VUELTA)", RULETA: "🎲 RULETA LOCA MX" };
-  document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL") + (s.bandera === "AMARILLA" ? " • 🟨 BANDERA AMARILLA" : "");
+  document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL");
 
   var brul = document.getElementById("banRuleta");
   if ((s.modoJuego === "RULETA") && s.ruleta && s.ruleta.texto) {
@@ -296,16 +320,23 @@ function pintarSalaUI() {
     if (rc.ts !== _ultReacTsP) { _ultReacTsP = rc.ts; if (esM) { mxBeep(980, 130); mxHablar("Mensaje del publico de " + rc.autor + ": " + rc.texto, vozP); } }
   } else br.style.display = "none";
 
-  var pils = ordenarPilotos(pObj, s), actCnt = 0, h = "";
-  pils.forEach(function(p, ix) {
-    if (p.activo) actCnt++;
-    if (p.id === uid) document.getElementById("vivoPos").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
-    h += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || '--') + ' ' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + ')</span><b style="color:#20c997">' + fmt(p.mejorMs) + '</b></div>';
-  });
-  var lStat = document.getElementById("lblPistaStatus");
-  lStat.style.color = actCnt > 0 ? "#20c997" : "#888";
-  lStat.textContent = actCnt > 0 ? ("🟢 " + actCnt + (actCnt === 1 ? " PILOTO EN PISTA" : " PILOTOS EN PISTA")) : "⚪ PISTA VACIA (0 PILOTOS)";
-  document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando ahora mismo.";
+  var pils = ordenarPilotos(pObj, s);
+  var sig = pils.map(function(p){ return p.id + ":" + p.vueltas + ":" + p.mejorMs + ":" + p.activo + ":" + p.eliminado; }).join("|");
+  if (sig !== _lastSalaSig) {
+    _lastSalaSig = sig;
+    var actCnt = 0, h = "", bestAll = pils.length ? Math.min.apply(null, pils.map(function(x){ return x.mejorMs || 9e9; })) : 9e9;
+    pils.forEach(function(p, ix) {
+      if (p.activo) actCnt++;
+      if (p.id === uid) document.getElementById("vivoPos").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
+      var g = gar[p.id] || {}, pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || '--') + '</span>', sw = renderSwatches(g);
+      var clsTime = (p.mejorMs && p.mejorMs === bestAll) ? "tv-vr" : "tv-rp";
+      h += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + (p.eliminado ? ' 💀' : '') + ')</span><b class="' + clsTime + '">' + fmt(p.mejorMs) + '</b></div>';
+    });
+    var lStat = document.getElementById("lblPistaStatus");
+    lStat.style.color = actCnt > 0 ? "#20c997" : "#888";
+    lStat.textContent = actCnt > 0 ? ("🟢 " + actCnt + (actCnt === 1 ? " PILOTO EN PISTA" : " PILOTOS EN PISTA")) : "⚪ PISTA VACIA (0 PILOTOS)";
+    document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando ahora mismo.";
+  }
 
   var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ov = document.getElementById("overlaySem"), estTxt = est;
   if (est === "WARMUP" && t0 > 0) {
@@ -326,22 +357,30 @@ function pintarSalaUI() {
   document.getElementById("lblEstadoSala").textContent = estTxt;
 
   if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
-    var df = t0 - ah;
+    var df = t0 - ah, sg = Math.ceil(df / 1000);
+    var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
     if (df > 0 && df <= 31000) {
-      var sg = Math.ceil(df / 1000); ov.style.display = "flex";
-      if (est === "VALLA_MX" && df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
-      else {
+      ov.style.display = "flex";
+      if (est === "VALLA_MX") {
+        leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
+        if (df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
+        else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
+      } else {
+        gBox.style.display = "none"; leds.style.display = "flex";
+        var nOn = sg <= 5 ? (6 - sg) : 0, ls = leds.children;
+        for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
         document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg;
-        document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "CARTEL EN PARRILLA" : "PREPARADOS";
-        ov.style.background = (sg > 10) ? "#c9182b" : (sg > 5 ? "#ffc107" : (Math.floor(df / 250) % 2 === 0 ? "#ffc107" : "#000"));
-        if (!dirOn && sg !== ultSegSemP) {
-          ultSegSemP = sg;
-          if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) mxHablar(String(sg), vozP); else if (sg === 5) mxHablar("5, atentos a la valla", vozP); }
-          else { if (sg === 20) mxHablar("Veinte segundos para la salida", vozP); else if (sg === 10) mxHablar("Diez segundos", vozP); else if (sg <= 5) mxHablar(String(sg), vozP); }
-        }
+        document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sg > 10) ? "#1f080c" : (sg > 5 ? "#332200" : "#2b0509");
+      }
+      if (!dirOn && sg !== ultSegSemP) {
+        ultSegSemP = sg;
+        if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) mxHablar(String(sg), vozP); else if (sg === 5) mxHablar("5, atentos a la valla", vozP); }
+        else { if (sg === 20) mxHablar("Veinte segundos para la salida", vozP); else if (sg === 10) mxHablar("Diez segundos", vozP); else if (sg <= 5) mxHablar(String(sg), vozP); }
       }
     } else if (df <= 0 && df > -4000) {
       ov.style.display = "flex"; ov.style.background = "#00c853"; document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+      if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
+      else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
       if (ultSegSemP !== -999) { ultSegSemP = -999; mxBeep(1100, 260); if (!dirOn) mxHablar("Salida", vozP); }
       if (!dirOn) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
     } else ov.style.display = "none";
@@ -356,6 +395,7 @@ function conectarSseUnico() {
       try {
         var m = JSON.parse(e.data); if (!m || !m.path) return;
         applySsePatch(rootCache, m.path, m.data, e.type === "put");
+        if (m.path.indexOf("/antenas") === 0) { pintarAntStatusP(); return; }
         Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
         pintarSalaUI(); if (_tabAct === "tiempos") mxGar.pintarTiempos();
       } catch (er) {}
@@ -385,7 +425,12 @@ setInterval(function() {
 
 setInterval(function() {
   var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
-  var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol");
+  var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol"), barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");
+  if (s.tsInicio && s.estado === "EN_CURSO" && barL && lblL) {
+    var minL = Math.max(0, (ahoraSrv() - Number(s.tsInicio)) / 60000), pctL = Math.min(100, Math.round((minL / 12) * 100));
+    barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
+    lblL.textContent = minL.toFixed(1) + "m / 12m";
+  } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
   if (!b || ahoraSrv() < b || s.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
   if (yo.eliminado) { el.textContent = "💀 ELIMINADO"; if (rb) rb.textContent = "💀 ELIM"; return; }
   var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";

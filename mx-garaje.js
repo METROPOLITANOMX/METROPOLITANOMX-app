@@ -9,118 +9,6 @@ var mxGar = (function() {
     if (!_motos.length) _motos = [{ modelo: "Losi Promoto-MX", dorsal: "1", disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} }];
   }
 
-  function getHue(a, b) {
-    var deg = Math.atan2(b, a) * (180 / Math.PI);
-    return deg < 0 ? deg + 360 : deg;
-  }
-
-  function esColorCromatico(c) {
-    if (!c) return false;
-    var lb = c.lab || rgbLab(Number(c.r || 0), Number(c.g || 0), Number(c.b || 0));
-    var ch = typeof c.chroma === "number" ? c.chroma : Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-    return ch >= 14 && lb.L >= 12 && lb.L <= 94;
-  }
-
-  function drawBevelPath(cx, x, y, w, h, bev) {
-    cx.beginPath();
-    cx.moveTo(x + bev, y);
-    cx.lineTo(x + w - bev, y);
-    cx.lineTo(x + w, y + bev);
-    cx.lineTo(x + w, y + h - bev);
-    cx.lineTo(x + w - bev, y + h);
-    cx.lineTo(x + bev, y + h);
-    cx.lineTo(x, y + h - bev);
-    cx.lineTo(x, y + bev);
-    cx.closePath();
-  }
-
-  function drawCheckeredFlag(cx, x, y, w, h, sq) {
-    var cols = Math.ceil(w / sq), rows = Math.ceil(h / sq);
-    cx.save();
-    cx.beginPath();
-    cx.rect(x, y, w, h);
-    cx.clip();
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        cx.fillStyle = ((r + c) % 2 === 0) ? "#f8f9fa" : "#111317";
-        cx.fillRect(x + c * sq, y + r * sq, sq, sq);
-      }
-    }
-    cx.restore();
-  }
-
-  function drawRankBadge(cx, x, y, w, h, rng) {
-    var bg1 = "#20c997", bg2 = "#0ca678", txtCol = "#000";
-    if (rng === "LEYENDA MX") { bg1 = "#e056fd"; bg2 = "#9c36b5"; txtCol = "#fff"; }
-    else if (rng === "PRO RIDER") { bg1 = "#ffe066"; bg2 = "#f59f00"; txtCol = "#000"; }
-    else if (rng === "AMATEUR") { bg1 = "#3bc9db"; bg2 = "#0dcaf0"; txtCol = "#000"; }
-    cx.save();
-    drawBevelPath(cx, x, y, w, h, 8);
-    var gr = cx.createLinearGradient(x, y, x, y + h);
-    gr.addColorStop(0, bg1);
-    gr.addColorStop(1, bg2);
-    cx.fillStyle = gr;
-    cx.fill();
-    cx.strokeStyle = "#ffffff";
-    cx.lineWidth = 2;
-    cx.stroke();
-    cx.fillStyle = txtCol;
-    cx.font = "bold 17px Arial";
-    cx.textAlign = "center";
-    cx.textBaseline = "middle";
-    cx.fillText("INSIGNIA: " + rng, x + w / 2, y + h / 2 + 1);
-    cx.restore();
-  }
-
-  function stampFotoBiselada(cx, imgEl, x, y, w, h, etiqueta) {
-    cx.save();
-    drawBevelPath(cx, x, y, w, h, 16);
-    cx.fillStyle = "#12151c";
-    cx.fill();
-    cx.save();
-    cx.clip();
-    if (imgEl && imgEl.width > 0 && imgEl.height > 0) {
-      var rImg = imgEl.width / imgEl.height, rBox = w / h, sx = 0, sy = 0, sw = imgEl.width, sh = imgEl.height;
-      if (rImg > rBox) { sw = imgEl.height * rBox; sx = (imgEl.width - sw) / 2; }
-      else { sh = imgEl.width / rBox; sy = (imgEl.height - sh) / 2; }
-      cx.drawImage(imgEl, sx, sy, sw, sh, x, y, w, h);
-    } else {
-      cx.fillStyle = "#181c24";
-      cx.fillRect(x, y, w, h);
-      cx.fillStyle = "#6c757d";
-      cx.font = "bold 16px Arial";
-      cx.textAlign = "center";
-      cx.fillText("FOTO 1 GARAJE PENDIENTE", x + w / 2, y + h / 2 + 5);
-    }
-    drawCheckeredFlag(cx, x, y, 64, 14, 7);
-    if (etiqueta) {
-      cx.fillStyle = "rgba(0,0,0,0.78)";
-      cx.fillRect(x, y + h - 26, w, 26);
-      cx.fillStyle = "#ffc107";
-      cx.font = "bold 13px Arial";
-      cx.textAlign = "center";
-      cx.fillText(etiqueta, x + w / 2, y + h - 8);
-    }
-    cx.restore();
-    drawBevelPath(cx, x, y, w, h, 16);
-    var brd = cx.createLinearGradient(x, y, x + w, y + h);
-    brd.addColorStop(0, "#ffe066");
-    brd.addColorStop(0.5, "#0dcaf0");
-    brd.addColorStop(1, "#f59f00");
-    cx.strokeStyle = brd;
-    cx.lineWidth = 4;
-    cx.stroke();
-    cx.restore();
-  }
-
-  function cargarImagen(src, done) {
-    if (!src) { done(null); return; }
-    var im = new Image();
-    im.onload = function() { done(im); };
-    im.onerror = function() { done(null); };
-    im.src = src;
-  }
-
   function injectUI() {
     var sg = document.getElementById(_cfg.garId || "slotGaraje");
     var st = document.getElementById(_cfg.tmpId || "slotTiempos");
@@ -129,7 +17,7 @@ var mxGar = (function() {
         '<div class="card" style="border-color:#20c997">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
             '<b style="color:#ffc107;font-size:13px">🏍️ MI MOTO ACTIVA EN PISTA</b>' +
-            '<button onclick="vibrar();mxGar.nuevaMoto()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;padding:6px 9px;font-size:10px">+ NUEVA MOTO</button>' +
+            '<button onclick="vibrar();mxGar.nuevaMoto()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;padding:6px 9px;font-size:10px">+ NUEVA MOTO</button>' +
           '</div>' +
           (_cfg.allowEditNom ? '<div><label style="font-size:10px;color:#0dcaf0">NOMBRE EN PARRILLA</label><input id="gNomPil" placeholder="Nombre Piloto"></div>' : '') +
           '<select id="selMotoGar" onchange="mxGar.cambiarMoto(this.value)"></select>' +
@@ -141,29 +29,30 @@ var mxGar = (function() {
             '<div style="font-size:11px">Firma Antena: <b id="lblFirmaGar" style="color:#ff4d5e">PENDIENTE</b><div id="muestrasGar" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px"></div></div>' +
             '<button onclick="vibrar();mxGar.abrirCapColor()" style="background:linear-gradient(180deg,#339af0,#1c7ed6);color:#fff;font-size:10px;white-space:nowrap">📷 CAPTURAR COLORES</button>' +
           '</div>' +
-          '<div id="boxCapGar" style="display:none;background:#1a1a1a;border:2px solid #0dcaf0;border-radius:10px;padding:10px;margin-bottom:10px">' +
+          '<div id="boxCapGar" style="display:none;background:#1a1d24;border:2px solid #0dcaf0;border-radius:10px;padding:10px;margin-bottom:10px">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span id="txtPasoCap" style="font-size:11px;color:#ffc107;font-weight:bold">PASO 1 DE 2: ENFOCA TU MOTO EN DIRECTO</span><button onclick="vibrar();mxGar.cerrarCapColor()" style="background:#333;color:#fff;padding:4px 8px;font-size:10px">✕</button></div>' +
-            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Guía de Calidad:</b> Enfoca la moto bien iluminada. Se detectan tonos vivos y se aíslan de fondos neutros/suelo.</div>' +
+            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Consejo:</b> Captura colores vivos (casco/carenado). El blanco, gris y negro se descartan porque se confunden con papel, polvo y suelo.</div>' +
             '<div id="visorVivoCol" class="cam-visor" style="height:195px"><video id="vidGarCol" autoplay playsinline muted></video><div class="cam-guia"></div><div class="cam-div"></div></div>' +
             '<div id="boxRecorteMagico" style="display:none;margin-bottom:8px">' +
               '<div id="lblCalidadFrame" style="font-size:11px;font-weight:bold;margin-bottom:4px"></div>' +
               '<div style="font-size:10px;color:#ffc107;margin-bottom:4px">🪄 <b>VARITA MÁGICA:</b> Toca el fondo sobrante para borrarlo</div>' +
               '<canvas id="cnvCapEdit" width="240" height="160" class="checker" style="width:100%;max-width:300px;border-radius:8px;border:2px solid #ffc107;cursor:crosshair;touch-action:none"></canvas>' +
               '<div style="display:flex;align-items:center;gap:5px;margin-top:6px"><span style="font-size:10px;color:#aaa">Fondo:</span><button class="btn-step" onclick="mxGar.stepBgTol(-4)">-</button><input id="rngBgTol" type="range" min="15" max="75" value="38" oninput="mxGar.reaplicarRecorte()" style="margin:0;flex:1"><button class="btn-step" onclick="mxGar.stepBgTol(4)">+</button><button onclick="vibrar();mxGar.deshacer()" style="background:#333;color:#fff;padding:5px 8px;font-size:10px">↩️</button></div>' +
-              '<div class="grid2" style="margin-top:6px"><button onclick="vibrar(25);mxGar.extraerColores()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:11px">✅ EXTRAER COLORES</button><button onclick="vibrar();mxGar.volverCam()" style="background:#2b2b2b;color:#fff;font-size:11px">📷 REPETIR</button></div>' +
+              '<div class="grid2" style="margin-top:6px"><button onclick="vibrar(25);mxGar.extraerColores()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:11px">✅ EXTRAER COLORES</button><button onclick="vibrar();mxGar.volverCam()" style="background:#2b2b2b;color:#fff;font-size:11px">📷 REPETIR</button></div>' +
             '</div>' +
             '<button id="btnSnapCol" onclick="vibrar(25);mxGar.capturarYRecortar()" style="width:100%;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;margin-bottom:8px">📸 CAPTURAR Y RECORTAR FONDO</button>' +
+            '<div style="font-size:10px;color:#aaa;margin-bottom:4px">Paleta rapida colores MX vivos (SUP casco / INF moto):</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;align-items:center">' +
-              '<button onclick="vibrar();mxGar.addCol(235,25,25,\'SUP\')" style="background:#eb1919;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(255,140,0,\'INF\')" style="background:#ff8c00;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(255,230,0,\'SUP\')" style="background:#ffe600;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(0,210,85,\'INF\')" style="background:#00d255;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(20,110,255,\'INF\')" style="background:#146eff;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(215,30,195,\'SUP\')" style="background:#d71ec3;width:28px;height:26px;padding:0"></button>' +
-              '<button onclick="vibrar();mxGar.addCol(0,210,225,\'INF\')" style="background:#00d2e1;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(235,25,25,\'INF\')" title="Rojo" style="background:#eb1919;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(255,115,0,\'INF\')" title="Naranja" style="background:#ff7300;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(255,230,0,\'SUP\')" title="Amarillo" style="background:#ffe600;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(0,210,85,\'INF\')" title="Verde" style="background:#00d255;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(20,110,255,\'INF\')" title="Azul" style="background:#146eff;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(255,20,147,\'SUP\')" title="Magenta Fluor" style="background:#ff1493;width:28px;height:26px;padding:0"></button>' +
+              '<button onclick="vibrar();mxGar.addCol(0,229,255,\'SUP\')" title="Cian" style="background:#00e5ff;width:28px;height:26px;padding:0"></button>' +
               '<button onclick="vibrar();mxGar.limpiarCols()" style="background:#dc3545;color:#fff;padding:5px 8px;font-size:10px">Limpiar</button>' +
             '</div>' +
-            '<button onclick="vibrar(25);mxGar.guardarFirma()" style="width:100%;background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:11px">💾 GUARDAR FIRMA EN NUBE</button>' +
+            '<button onclick="vibrar(25);mxGar.guardarFirma()" style="width:100%;background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:11px">💾 GUARDAR FIRMA EN NUBE</button>' +
           '</div>' +
           '<b style="color:#0dcaf0;font-size:11px">🔧 SETUP Y REGLAJE ACTIVO (MS6X)</b>' +
           '<div class="grid2" style="margin-top:4px">' +
@@ -172,11 +61,11 @@ var mxGar = (function() {
             '<input id="gNeum" placeholder="Neumaticos (MX53)"><input id="gGyro" placeholder="MS6X (ej. 60% / Dirt)">' +
           '</div>' +
           '<div style="display:flex;gap:6px;margin-bottom:6px">' +
-            '<button onclick="vibrar(25);mxGar.guardarMoto()" style="flex:2;background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000">💾 GUARDAR MOTO</button>' +
+            '<button onclick="vibrar(25);mxGar.guardarMoto()" style="flex:2;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">💾 GUARDAR MOTO</button>' +
             '<button onclick="vibrar();mxGar.compartirWa()" style="flex:1;background:linear-gradient(180deg,#40c057,#25D366);color:#000;font-size:10px">💬 WA</button>' +
           '</div>' +
           '<button onclick="vibrar(25);mxGar.publicarPaddock()" style="width:100%;background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;font-size:11px">🌍 PUBLICAR EN PADDOCK MUNDIAL</button>' +
-          '<div id="infoDesgasteGar" style="margin-top:8px;font-size:11px;color:#aaa;background:#101010;padding:7px;border-radius:7px"></div>' +
+          '<div id="infoDesgasteGar" style="margin-top:8px;font-size:11px;color:#aaa;background:#101218;padding:7px;border-radius:7px"></div>' +
         '</div>';
     }
     if (st) {
@@ -191,15 +80,15 @@ var mxGar = (function() {
           '</div>' +
           '<div class="grid2" style="margin-top:8px"><button onclick="vibrar();mxGar.abrirBackup(\'EXPORT\')" style="background:#1c2530;color:#0dcaf0;font-size:10px">📤 EXPORTAR BACKUP</button><button onclick="vibrar();mxGar.abrirBackup(\'IMPORT\')" style="background:#1d2b24;color:#20c997;font-size:10px">📥 RESTAURAR BACKUP</button></div>' +
         '</div>' +
-        '<div class="card" style="border-color:#20c997"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#20c997;font-size:12px">🏆 CAMPEONATO DEL DIA (MANGAS MXGP)</b><button onclick="vibrar();mxGar.podioPng()" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;padding:5px 8px;font-size:10px">🖼️ PODIO PNG</button></div><div id="boxCampDia" style="margin-top:6px;font-size:12px;color:#ccc">Aun no hay mangas guardadas hoy.</div></div>' +
+        '<div class="card" style="border-color:#20c997"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#20c997;font-size:12px">🏆 CAMPEONATO DEL DIA (MANGAS MXGP)</b><button onclick="vibrar();mxGar.podioPng()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;padding:5px 8px;font-size:10px">🖼️ PODIO PNG</button></div><div id="boxCampDia" style="margin-top:6px;font-size:12px;color:#ccc">Aun no hay mangas guardadas hoy.</div></div>' +
         '<div class="card" style="border-color:#0dcaf0"><b style="color:#0dcaf0;font-size:12px">⚔️ DUELO 1 VS 1 Y SETUPS RIVALES</b><select id="selRivalDuelo" onchange="mxGar.pintarDuelo()" style="margin-top:6px"></select><div id="boxDuelo" style="font-size:12px;color:#ddd"></div></div>' +
         '<div class="card"><b style="color:#ffc107;font-size:12px">📅 HISTORIAL POR DIAS RODADOS</b><div id="listaDiasHist" style="margin-top:6px"></div></div>';
     }
     if (!document.getElementById("modalCamFoto")) {
       var wrap = document.createElement("div");
       wrap.innerHTML =
-        '<div id="modalCamFoto" class="cam-modal"><div class="cam-box" style="text-align:center"><div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div><div class="cam-visor"><video id="vidGarFoto" autoplay playsinline muted></video></div><div class="grid2"><button onclick="vibrar(25);mxGar.capturarFoto()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000">📸 HACER FOTO</button><button onclick="vibrar();mxGar.cerrarCamFoto()" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff">CANCELAR</button></div></div></div>' +
-        '<div id="modalBackup" class="cam-modal" onclick="if(event.target===this)this.style.display=\'none\'"><div class="cam-box" style="border-color:#20c997"><div style="font-size:14px;font-weight:bold;color:#20c997;margin-bottom:6px;text-align:center">💾 BACKUP DE GARAJE E HISTORIAL</div><div id="subBackup" style="font-size:11px;color:#aaa;margin-bottom:8px"></div><textarea id="txtBackupJson" rows="7" style="font-family:monospace;font-size:11px" placeholder="Pega aqui el JSON de backup..."></textarea><div class="grid2" style="margin-bottom:6px"><button onclick="vibrar();mxGar.copiarBackup()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;font-size:11px">📋 COPIAR</button><button onclick="vibrar();mxGar.descargarBackup()" style="background:linear-gradient(180deg,#ffd43b,#f59f00);color:#000;font-size:11px">⬇️ DESCARGAR .JSON</button></div><div class="grid2"><button onclick="vibrar(25);mxGar.restaurarBackup()" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;font-size:11px">📥 RESTAURAR</button><button onclick="vibrar();document.getElementById(\'modalBackup\').style.display=\'none\'" style="background:#333;color:#fff;font-size:11px">CERRAR</button></div><div id="msgBackup" style="font-size:11px;margin-top:6px;text-align:center;font-weight:bold"></div></div></div>' +
+        '<div id="modalCamFoto" class="cam-modal"><div class="cam-box" style="text-align:center"><div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div><div class="cam-visor"><video id="vidGarFoto" autoplay playsinline muted></video></div><div class="grid2"><button onclick="vibrar(25);mxGar.capturarFoto()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">📸 HACER FOTO</button><button onclick="vibrar();mxGar.cerrarCamFoto()" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff">CANCELAR</button></div></div></div>' +
+        '<div id="modalBackup" class="cam-modal" onclick="if(event.target===this)this.style.display=\'none\'"><div class="cam-box" style="border-color:#20c997"><div style="font-size:14px;font-weight:bold;color:#20c997;margin-bottom:6px;text-align:center">💾 BACKUP DE GARAJE E HISTORIAL</div><div id="subBackup" style="font-size:11px;color:#aaa;margin-bottom:8px"></div><textarea id="txtBackupJson" rows="7" style="font-family:monospace;font-size:11px" placeholder="Pega aqui el JSON de backup..."></textarea><div class="grid2" style="margin-bottom:6px"><button onclick="vibrar();mxGar.copiarBackup()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;font-size:11px">📋 COPIAR</button><button onclick="vibrar();mxGar.descargarBackup()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:11px">⬇️ DESCARGAR .JSON</button></div><div class="grid2"><button onclick="vibrar(25);mxGar.restaurarBackup()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:11px">📥 RESTAURAR</button><button onclick="vibrar();document.getElementById(\'modalBackup\').style.display=\'none\'" style="background:#333;color:#fff;font-size:11px">CERRAR</button></div><div id="msgBackup" style="font-size:11px;margin-top:6px;text-align:center;font-weight:bold"></div></div></div>' +
         '<canvas id="cnvPng" width="720" height="720" style="display:none"></canvas>';
       document.body.appendChild(wrap);
     }
@@ -254,9 +143,8 @@ var mxGar = (function() {
   }
 
   function pintarMuestras() {
-    var chrom = _cols.filter(esColorCromatico);
-    var ok = chrom.length > 0, lbl = document.getElementById("lblFirmaGar");
-    lbl.textContent = ok ? ("OK ✓ (" + chrom.length + " cromáticos)") : "PENDIENTE (FALTA COLOR VIVO)";
+    var ok = _cols.length > 0, lbl = document.getElementById("lblFirmaGar");
+    lbl.textContent = ok ? ("OK ✓ (" + _cols.length + " tonos vivos)") : "PENDIENTE";
     lbl.style.color = ok ? "#20c997" : "#ff4d5e";
     document.getElementById("muestrasGar").innerHTML = _cols.map(function(c) {
       return '<span title="' + esc(c.zona || "CAR") + '" style="width:20px;height:20px;border-radius:4px;border:1px solid #fff;background:' + c.hex + '"></span>';
@@ -266,6 +154,14 @@ var mxGar = (function() {
   function setupTxt(m) {
     var st = (m && m.setup) || {};
     return [st.terr, st.horq, st.amort, st.des, st.neum, st.gyro ? ("MS6X " + st.gyro) : ""].filter(Boolean).join(" • ") || "Setup de serie";
+  }
+
+  function drawCheckered(cx, y, h) {
+    var sz = 16;
+    for (var x = 0; x < 720; x += sz) {
+      cx.fillStyle = ((x / sz) % 2 === 0) ? "#ffc107" : "#181a20";
+      cx.fillRect(x, y, sz, h);
+    }
   }
 
   return {
@@ -284,8 +180,7 @@ var mxGar = (function() {
       return { tot: tot, rng: rng };
     },
     pintarGaraje: function() {
-      var s = document.getElementById("selMotoGar");
-      if (!s) return;
+      var s = document.getElementById("selMotoGar"); if (!s) return;
       s.innerHTML = _motos.map(function(m, i){ return '<option value="' + i + '"' + (i === _idx ? ' selected' : '') + '>' + esc(m.modelo) + ' (#' + esc(m.dorsal || '--') + ')</option>'; }).join("");
       var m = _motos[_idx] || _motos[0], st = m.setup || {};
       if (!Array.isArray(m.fotos)) m.fotos = ["", "", "", ""];
@@ -293,11 +188,7 @@ var mxGar = (function() {
       document.getElementById("gDisc").value = m.disc || "MX";
       document.getElementById("gMod").value = m.modelo || "";
       document.getElementById("gDor").value = m.dorsal || "";
-      var bd = document.getElementById("badgeDor");
-      if (bd) {
-        bd.textContent = "#" + (m.dorsal || "--");
-        bd.className = "plate-mx " + ((m.disc || "MX") === "SM" ? "sm" : "mx");
-      }
+      var bd = document.getElementById("badgeDor"); if (bd) { bd.textContent = "#" + (m.dorsal || "--"); bd.className = "mx-plate" + (m.disc === "SM" ? " sm" : ""); }
       document.getElementById("gTerr").value = st.terr || "";
       document.getElementById("gHorq").value = st.horq || "";
       document.getElementById("gAmort").value = st.amort || "";
@@ -314,8 +205,7 @@ var mxGar = (function() {
       var mod = prompt("Modelo de la moto:", "Losi Promoto-MX"); if (!mod) return;
       var dor = prompt("Numero de dorsal:", "46") || "1";
       _motos.push({ modelo: mod.trim(), dorsal: dor.trim(), disc: "MX", colores: [], fotos: ["", "", "", ""], vtas: 0, setup: {} });
-      _idx = _motos.length - 1;
-      this.guardarMoto();
+      _idx = _motos.length - 1; this.guardarMoto();
     },
     guardarMoto: function() {
       var gn = document.getElementById("gNomPil");
@@ -346,14 +236,14 @@ var mxGar = (function() {
       }
     },
     abrirCamFoto: function(slot) {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { alert("Tu navegador no permite camara en directo."); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { alert("Tu navegador no permite camara."); return; }
       _slotFoto = slot;
       var nom = ["LADO IZQ", "LADO DER", "FRONTAL", "DETALLE"];
       document.getElementById("titCamFoto").textContent = "📷 FOTO " + (slot + 1) + " (" + nom[slot] + ")";
       document.getElementById("modalCamFoto").style.display = "flex";
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
         .then(function(st){ _stFoto = st; var v = document.getElementById("vidGarFoto"); v.srcObject = st; return v.play(); })
-        .catch(function(e){ mxGar.cerrarCamFoto(); alert("Error abriendo camara: " + e.message); });
+        .catch(function(e){ mxGar.cerrarCamFoto(); alert("Error camara: " + e.message); });
     },
     capturarFoto: function() {
       var v = document.getElementById("vidGarFoto"); if (!v || v.videoWidth <= 0) return;
@@ -361,7 +251,7 @@ var mxGar = (function() {
       cv.getContext("2d").drawImage(v, 0, 0, 480, 320);
       var m = _motos[_idx]; if (!Array.isArray(m.fotos)) m.fotos = ["", "", "", ""];
       m.fotos[_slotFoto] = cv.toDataURL("image/jpeg", 0.64);
-      try { localStorage.setItem("mxp_gar_" + _cfg.uid, JSON.stringify(_motos)); } catch (e) { alert("Memoria llena, borra alguna foto."); }
+      try { localStorage.setItem("mxp_gar_" + _cfg.uid, JSON.stringify(_motos)); } catch (e) { alert("Memoria llena."); }
       this.cerrarCamFoto(); pintarFotos();
     },
     borrarFoto: function(slot) {
@@ -378,7 +268,7 @@ var mxGar = (function() {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
           .then(function(st){ _stCol = st; var v = document.getElementById("vidGarCol"); v.srcObject = st; return v.play(); })
-          .catch(function(){ document.getElementById("txtPasoCap").textContent = "SIN CAMARA — USA PALETA MANUAL O WARM-UP"; });
+          .catch(function(){ document.getElementById("txtPasoCap").textContent = "SIN CAMARA — USA PALETA VIVA O WARM-UP"; });
       }
     },
     cerrarCapColor: function() {
@@ -404,15 +294,13 @@ var mxGar = (function() {
       var sumL = 0, sat = 0, tot = CW * CH;
       for (var i = 0; i < _raw.length; i += 4) {
         var r = _raw[i], g = _raw[i + 1], b = _raw[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-        sumL += (r + g + b) / 3;
-        var lb = rgbLab(r, g, b);
-        if ((mx - mn) > 24 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) >= 14) sat++;
+        sumL += (r + g + b) / 3; if ((mx - mn) > 40 && mx > 50) sat++;
       }
       var avgL = sumL / tot, satP = (sat / tot) * 100, qEl = document.getElementById("lblCalidadFrame");
-      if (avgL < 45) { qEl.style.color = "#ff4d5e"; qEl.textContent = "⚠️ Poca luz — Acerca a zona iluminada"; }
-      else if (avgL > 230) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Demasiado brillo — Evita reflejos"; }
-      else if (satP < 3) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo detectado"; }
-      else { qEl.style.color = "#20c997"; qEl.textContent = "✅ Calidad Optima (" + Math.round(satP) + "% color cromático)"; }
+      if (avgL < 55) { qEl.style.color = "#ff4d5e"; qEl.textContent = "⚠️ Poca luz — Acerca a zona iluminada"; }
+      else if (avgL > 220) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Demasiado brillo — Evita reflejo"; }
+      else if (satP < 4) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo — Acerca la moto"; }
+      else { qEl.style.color = "#20c997"; qEl.textContent = "✅ Calidad Optima (" + Math.round(satP) + "% color vivo)"; }
       document.getElementById("visorVivoCol").style.display = "none";
       document.getElementById("btnSnapCol").style.display = "none";
       document.getElementById("boxRecorteMagico").style.display = "block";
@@ -447,10 +335,10 @@ var mxGar = (function() {
         for (var px = 0; px < CW; px++) {
           var p = py * CW + px; if (!_mask[p]) continue;
           var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          if (mx < 35 || (mx - mn) < 22) continue;
-          var lb = rgbLab(r, g, b), chroma = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-          if (chroma < 14 || lb.L < 12 || lb.L > 94) continue;
-          var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 30) + "_" + Math.round(g / 30) + "_" + Math.round(b / 30);
+          if (mx < 45 || (mx - mn) < 36) continue;
+          var lb = rgbLab(r, g, b), ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
+          if (ch < 22 || lb.L < 18 || lb.L > 92) continue;
+          var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 32) + "_" + Math.round(g / 32) + "_" + Math.round(b / 32);
           var dst = (zn === "SUP") ? bS : bI;
           if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
           dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
@@ -459,34 +347,30 @@ var mxGar = (function() {
       var top = function(mp) {
         return Object.keys(mp).map(function(key) {
           var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n);
-          var lab = rgbLab(rr, gg, bb);
-          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: lab, hue: Math.round(getHue(lab.a, lab.b)), chroma: Math.round(Math.sqrt(lab.a * lab.a + lab.b * lab.b)) };
-        }).filter(function(item){ return item.chroma >= 14; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2);
+          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: rgbLab(rr, gg, bb) };
+        }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2);
       };
       var res = top(bS).concat(top(bI));
-      if (!res.length) { alert("No se detectaron tonos cromáticos suficientes. Acerca la moto o utiliza la paleta rápida."); return; }
+      if (!res.length) { alert("No se detectaron colores vivos (rojo, azul, verde, amarillo, naranja...). Evita blanco/negro o usa la paleta inferior."); return; }
       if (_lado === 1) { _cols = res; _lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
-      else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ LISTO — PULSA GUARDAR FIRMA"; }
+      else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }
       pintarMuestras(); this.volverCam();
     },
     addCol: function(r, g, b, zn) {
-      var lab = rgbLab(r, g, b), chroma = Math.sqrt(lab.a * lab.a + lab.b * lab.b);
-      if (chroma < 14) { alert("Tono neutro descartado. Selecciona un color vivo."); return; }
       if (_cols.length >= 6) _cols.shift();
-      _cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: lab, hue: Math.round(getHue(lab.a, lab.b)), chroma: Math.round(chroma) });
+      _cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: rgbLab(r, g, b) });
       pintarMuestras();
     },
     limpiarCols: function() { _cols = []; pintarMuestras(); },
     guardarFirma: function() {
-      var validos = _cols.filter(esColorCromatico);
-      if (!validos.length) {
-        alert("⚠️ Selecciona o captura al menos 1 color vivo (rojo, amarillo, azul, verde, etc.).");
-        return;
-      }
-      _cols = validos;
-      _motos[_idx].colores = validos.slice();
+      var vivos = _cols.filter(function(c){
+        var lb = c.lab || rgbLab(c.r || 0, c.g || 0, c.b || 0);
+        return Math.sqrt(lb.a * lb.a + lb.b * lb.b) >= 20;
+      });
+      if (!vivos.length) { alert("⚠️ Añade al menos 1 color vivo (no blanco/negro/gris) antes de guardar."); return; }
+      _cols = vivos; _motos[_idx].colores = _cols.slice();
       this.cerrarCapColor(); this.guardarMoto();
-      if (_cfg.onSpeak) _cfg.onSpeak("Firma de color guardada en la nube");
+      if (_cfg.onSpeak) _cfg.onSpeak("Colores guardados en la nube");
     },
     compartirWa: function() {
       var m = _motos[_idx], st = m.setup || {};
@@ -503,27 +387,29 @@ var mxGar = (function() {
       }).then(function() {
         if (_cfg.onSpeak) _cfg.onSpeak("Moto publicada en el Paddock Mundial");
         alert("🌍 ¡Moto publicada en el Paddock Mundial ✓!");
-      }).catch(function(){ alert("Error publicando en Paddock Mundial."); });
+      }).catch(function(){ alert("Error publicando en Paddock."); });
     },
     procesarMiVuelta: function(lap, mej, pils, lblDeltaId, deltaBolId) {
       var todas = []; _hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
       var mejorHist = todas.length ? Math.min.apply(null, todas) : 0, esRP = (!mejorHist || lap < mejorHist);
       var p1 = pils[0], root = _cfg.getRoot(), v = ((root.pilotos || {})[_cfg.uid] || {}).vueltas || 1;
       var difH = "Ultima: " + fmt(lap), difB = fmt(lap), voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
-      if (p1 && p1.mejorMs && (lap - Number(p1.mejorMs)) <= 0) {
-        voz += ", vuelta rapida de pista";
-        difH = "Ultima: <span class='tv-time tv-time-purple'>" + fmt(lap) + " (VUELTA RAPIDA)</span>";
-        difB = "LIDER VR"; mxBeep(1280, 180); flashRecord("VR");
-      } else if (esRP && v > 1 && mejorHist > 0) {
+      if (esRP && v > 1 && mejorHist > 0) {
         voz += ", record personal, " + Math.max(1, Math.round((mejorHist - lap) / 100)) + " decimas menos";
-        difH = "Ultima: <span class='tv-time tv-time-green'>" + fmt(lap) + " (-" + ((mejorHist - lap) / 1000).toFixed(2) + "s RP)</span>";
-        difB = "-" + ((mejorHist - lap) / 1000).toFixed(2) + "s RP";
+        difH = "Ultima: <span class='tv-rp'>" + fmt(lap) + " (-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢 RP)</span>";
+        difB = "-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢";
         mxBeep(1150, 140); flashRecord("RP");
       } else if (p1 && p1.mejorMs) {
         var dL = lap - Number(p1.mejorMs);
-        voz += ", a " + Math.max(1, Math.round(dL / 100)) + " decimas del mejor";
-        difH = "Ultima: <span class='tv-time tv-time-amber'>" + fmt(lap) + " (+" + (dL / 1000).toFixed(2) + "s)</span>";
-        difB = "+" + (dL / 1000).toFixed(2) + "s";
+        if (dL <= 0) {
+          voz += ", vuelta rapida de pista";
+          difH = "Ultima: <span class='tv-vr'>" + fmt(lap) + " (VUELTA RAPIDA 👑)</span>";
+          difB = "LIDER 👑"; mxBeep(1280, 180); flashRecord("VR");
+        } else {
+          voz += ", a " + Math.max(1, Math.round(dL / 100)) + " decimas del mejor";
+          difH = "Ultima: <span class='tv-lag'>" + fmt(lap) + " (+" + (dL / 1000).toFixed(2) + "s)</span>";
+          difB = "+" + (dL / 1000).toFixed(2) + "s";
+        }
       }
       var elD = document.getElementById(lblDeltaId), elB = document.getElementById(deltaBolId);
       if (elD) elD.innerHTML = difH;
@@ -588,146 +474,46 @@ var mxGar = (function() {
       var rv = pAll[rk], gR = gAll[rk] || {}, yo = pAll[_cfg.uid] || {}, difHtml = "";
       if (yo.mejorMs && rv.mejorMs) {
         var df = (yo.mejorMs - rv.mejorMs) / 1000;
-        difHtml = df <= 0 ? "<span style='color:#00f59b'> (" + df.toFixed(2) + "s por delante)</span>" : "<span style='color:#ff4d5e'> (+" + df.toFixed(2) + "s detras)</span>";
+        difHtml = df <= 0 ? "<span class='tv-rp'> (" + df.toFixed(2) + "s por delante)</span>" : "<span style='color:#ff4d5e'> (+" + df.toFixed(2) + "s detras)</span>";
       }
-      bx.innerHTML = "<div style='background:#101010;padding:9px;border-radius:8px;margin-top:6px'><b>" + esc(_cfg.getNom()) + ":</b> " + fmt(yo.mejorMs) + " vs <b>" + esc(rv.nombre) + ":</b> " + fmt(rv.mejorMs) + difHtml +
+      bx.innerHTML = "<div style='background:#101218;padding:9px;border-radius:8px;margin-top:6px'><b>" + esc(_cfg.getNom()) + ":</b> " + fmt(yo.mejorMs) + " vs <b>" + esc(rv.nombre) + ":</b> " + fmt(rv.mejorMs) + difHtml +
         "<br><span style='color:#0dcaf0;font-size:11px'>Moto rival (" + esc(gR.disc || "MX") + "): " + esc(gR.modelo || "Losi Promoto-MX") + "<br>Setup: " + esc(gR.setupTxt || "Serie") + "</span></div>";
     },
     podioPng: function() {
-      var root = _cfg.getRoot(), cInfo = calcularCampeonato(root.campeonato || {});
-      if (!cInfo || !cInfo.tabla || !cInfo.tabla.length) { alert("Aun no hay mangas guardadas para generar el Podio PNG."); return; }
-      var cv = document.getElementById("cnvPng"), cx = cv.getContext("2d");
-      var mLocal = _motos[_idx] || _motos[0], rng = this.actualizarRango().rng;
-      var fotoLocal = (Array.isArray(mLocal.fotos) ? (mLocal.fotos[0] || mLocal.fotos.find(Boolean)) : "") || "";
-      var p1 = cInfo.tabla[0];
-
-      var renderPodio = function(imgEl, fotoNom) {
-        cx.fillStyle = "#090b10"; cx.fillRect(0, 0, 720, 720);
-        var bgG = cx.createLinearGradient(0, 0, 0, 720);
-        bgG.addColorStop(0, "#171c26"); bgG.addColorStop(1, "#090b10");
-        cx.fillStyle = bgG; cx.fillRect(0, 0, 720, 720);
-
-        drawCheckeredFlag(cx, 0, 0, 720, 22, 11);
-        cx.fillStyle = "#ffc107"; cx.fillRect(0, 22, 720, 4);
-
-        cx.textAlign = "center";
-        cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial";
-        cx.fillText("PODIO OFICIAL — " + _cfg.circNom.toUpperCase(), 360, 68);
-        cx.fillStyle = "#0dcaf0"; cx.font = "bold 18px Arial";
-        cx.fillText("CAMPEONATO MXGP • " + cInfo.nMangas + " MANGA(S)", 360, 98);
-        drawRankBadge(cx, 235, 112, 250, 30, rng);
-
-        var colsP = [
-          { idx: 1, x: 52, y: 222, w: 196, h: 120, col: "#ced4da", lbl: "2º PUESTO" },
-          { idx: 0, x: 262, y: 174, w: 196, h: 168, col: "#ffc107", lbl: "1º CAMPEON" },
-          { idx: 2, x: 472, y: 244, w: 196, h: 98, col: "#e67700", lbl: "3º PUESTO" }
-        ];
-        colsP.forEach(function(b) {
-          var r = cInfo.tabla[b.idx];
-          drawBevelPath(cx, b.x, b.y, b.w, b.h, 12);
-          cx.fillStyle = "#151922"; cx.fill();
-          cx.strokeStyle = b.col; cx.lineWidth = 3; cx.stroke();
-          cx.fillStyle = b.col; cx.font = "bold 18px Arial";
-          cx.fillText(b.lbl, b.x + b.w / 2, b.y + 28);
-          if (r) {
-            cx.fillStyle = "#fff"; cx.font = "bold 20px Arial";
-            cx.fillText("#" + (r.dorsal || "1") + " " + String(r.nombre || "").slice(0, 12), b.x + b.w / 2, b.y + 62);
-            cx.fillStyle = "#00f59b"; cx.font = "bold 22px Arial";
-            cx.fillText(r.pts + " PTS", b.x + b.w / 2, b.y + b.h - 18);
-          } else {
-            cx.fillStyle = "#555"; cx.font = "16px Arial";
-            cx.fillText("---", b.x + b.w / 2, b.y + 66);
-          }
-        });
-
-        stampFotoBiselada(cx, imgEl, 52, 366, 260, 176, fotoNom || (mLocal.modelo + " #" + (mLocal.dorsal || "1")));
-
-        drawBevelPath(cx, 332, 366, 336, 176, 12);
-        cx.fillStyle = "#12151e"; cx.fill();
-        cx.strokeStyle = "#3c4352"; cx.lineWidth = 2; cx.stroke();
-        cx.textAlign = "left";
-        cx.fillStyle = "#ffc107"; cx.font = "bold 16px Arial";
-        cx.fillText("CLASIFICACION GENERAL:", 350, 394);
-        cInfo.tabla.slice(0, 5).forEach(function(it, ix) {
-          cx.fillStyle = ix === 0 ? "#ffc107" : "#e9ecef";
-          cx.font = "bold 15px Arial";
-          cx.fillText((ix + 1) + "º #" + (it.dorsal || "1") + " " + String(it.nombre || "").slice(0, 14), 350, 424 + ix * 24);
-          cx.textAlign = "right";
-          cx.fillStyle = "#00f59b";
-          cx.fillText(it.pts + " pts", 650, 424 + ix * 24);
-          cx.textAlign = "left";
-        });
-
-        cx.textAlign = "center";
-        cx.fillStyle = "#adb5bd"; cx.font = "bold 16px Arial";
-        cx.fillText("METROPOLITANO MX PRO • " + new Date().toLocaleDateString("es-ES"), 360, 620);
-        drawCheckeredFlag(cx, 0, 694, 720, 26, 13);
-
-        var a = document.createElement("a");
-        a.download = "Podio_" + _cfg.circId + ".png";
-        a.href = cv.toDataURL("image/png");
-        a.click();
-      };
-
-      if (p1 && p1.id === _cfg.uid && fotoLocal) {
-        cargarImagen(fotoLocal, function(im){ renderPodio(im, "#" + (mLocal.dorsal || "1") + " " + _cfg.getNom().toUpperCase()); });
-      } else if (p1 && p1.id) {
-        fbJson(FB_ROOT + "/paddock_fotos/" + p1.id + "_0.json").catch(function(){ return null; }).then(function(pf) {
-          var src = (pf && pf.img) ? pf.img : fotoLocal;
-          var etq = (pf && pf.img) ? ("#" + (p1.dorsal || "1") + " " + String(p1.nombre || "").toUpperCase()) : ("GARAJE #" + (mLocal.dorsal || "1") + " " + _cfg.getNom().toUpperCase());
-          cargarImagen(src, function(im){ renderPodio(im, etq); });
-        });
-      } else {
-        cargarImagen(fotoLocal, function(im){ renderPodio(im, mLocal.modelo); });
-      }
+      descargarPodioPngCore("cnvPng", _cfg.circNom, _cfg.circId, (_cfg.getRoot().campeonato || {}));
     },
     pngDia: function(ix) {
       var d = _hist[ix]; if (!d || !d.vtas.length) return;
-      var cv = document.getElementById("cnvPng"), cx = cv.getContext("2d"), m = _motos[_idx] || _motos[0];
+      var m = _motos[_idx] || _motos[0], foto = (Array.isArray(m.fotos) ? m.fotos.find(Boolean) : "") || "";
       var best = Math.min.apply(null, d.vtas), med = d.vtas.reduce(function(a, b){ return a + b; }, 0) / d.vtas.length;
       var reg = Math.max(50, Math.min(100, Math.round((best / med) * 100))), rng = this.actualizarRango().rng;
-      var foto1 = (Array.isArray(m.fotos) ? (m.fotos[0] || m.fotos.find(Boolean)) : "") || "";
 
-      cargarImagen(foto1, function(imgEl) {
-        var bgG = cx.createLinearGradient(0, 0, 0, 720);
-        bgG.addColorStop(0, "#171c26"); bgG.addColorStop(1, "#090b10");
-        cx.fillStyle = bgG; cx.fillRect(0, 0, 720, 720);
-
-        drawCheckeredFlag(cx, 0, 0, 720, 22, 11);
-        cx.fillStyle = "#ffc107"; cx.fillRect(0, 22, 720, 4);
-
+      var render = function(imgObj) {
+        var cv = document.getElementById("cnvPng"), cx = cv.getContext("2d");
+        cx.fillStyle = "#0b0c10"; cx.fillRect(0, 0, 720, 720);
+        drawCheckered(cx, 0, 18); drawCheckered(cx, 702, 18);
         cx.textAlign = "center";
-        cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial";
-        cx.fillText(_cfg.circNom.toUpperCase(), 360, 68);
-        cx.fillStyle = "#0dcaf0"; cx.font = "bold 18px Arial";
-        cx.fillText((m.disc === "SM" ? "SUPERMOTO" : "MOTOCROSS 1/4 RC") + " • " + d.fecha, 360, 96);
+        cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial"; cx.fillText(_cfg.circNom.toUpperCase(), 360, 68);
+        cx.fillStyle = "#0dcaf0"; cx.font = "bold 19px Arial"; cx.fillText((m.disc === "SM" ? "SUPERMOTO" : "MOTOCROSS 1/4 RC") + " • " + rng, 360, 100);
+        cx.fillStyle = "#fff"; cx.font = "bold 34px Arial"; cx.fillText(_cfg.getNom().toUpperCase() + " (#" + (m.dorsal || "1") + ")", 360, 148);
 
-        drawRankBadge(cx, 235, 112, 250, 32, rng);
-
-        cx.fillStyle = "#ffffff"; cx.font = "bold 32px Arial";
-        cx.fillText(_cfg.getNom().toUpperCase() + " (#" + (m.dorsal || "1") + ")", 360, 182);
-
-        drawBevelPath(cx, 60, 202, 600, 140, 14);
-        cx.fillStyle = "#12161f"; cx.fill();
-        cx.strokeStyle = "#00f59b"; cx.lineWidth = 3; cx.stroke();
-        cx.fillStyle = "#00f59b"; cx.font = "bold 48px Arial";
-        cx.fillText("MEJOR: " + fmt(best), 360, 266);
-        cx.fillStyle = "#e9ecef"; cx.font = "bold 22px Arial";
-        cx.fillText("Vueltas: " + d.vtas.length + "   |   Regularidad: " + reg + "%", 360, 316);
-
-        stampFotoBiselada(cx, imgEl, 210, 362, 300, 196, m.modelo + " • #" + (m.dorsal || "1"));
-
-        cx.fillStyle = "#0dcaf0"; cx.font = "bold 17px Arial";
-        cx.fillText("Setup: " + setupTxt(m).slice(0, 56), 360, 594);
-        cx.fillStyle = "#adb5bd"; cx.font = "bold 16px Arial";
-        cx.fillText("METROPOLITANO MX PRO", 360, 650);
-        drawCheckeredFlag(cx, 0, 694, 720, 26, 13);
-
-        var a = document.createElement("a");
-        a.download = "MetroMX_" + d.fecha.replace(/\//g, "-") + ".png";
-        a.href = cv.toDataURL("image/png");
-        a.click();
-      });
+        if (imgObj) {
+          cx.fillStyle = "#161922"; cx.fillRect(150, 168, 420, 220);
+          cx.strokeStyle = "#ffc107"; cx.lineWidth = 3; cx.strokeRect(150, 168, 420, 220);
+          cx.drawImage(imgObj, 154, 172, 412, 212);
+        }
+        var yBox = imgObj ? 410 : 210;
+        cx.fillStyle = "#151821"; cx.fillRect(60, yBox, 600, 155);
+        cx.strokeStyle = "#20c997"; cx.lineWidth = 3; cx.strokeRect(60, yBox, 600, 155);
+        cx.fillStyle = "#20c997"; cx.font = "bold 50px Arial"; cx.fillText("MEJOR: " + fmt(best), 360, yBox + 72);
+        cx.fillStyle = "#ddd"; cx.font = "bold 22px Arial"; cx.fillText("Vueltas: " + d.vtas.length + "   |   Regularidad: " + reg + "%", 360, yBox + 124);
+        cx.fillStyle = "#aaa"; cx.font = "19px Arial"; cx.fillText("Moto: " + m.modelo + "   •   " + d.fecha, 360, yBox + 195);
+        cx.fillStyle = "#0dcaf0"; cx.font = "17px Arial"; cx.fillText("Setup: " + setupTxt(m).slice(0, 56), 360, yBox + 232);
+        cx.fillStyle = "#666"; cx.font = "bold 17px Arial"; cx.fillText("METROPOLITANO MX PRO", 360, 680);
+        var a = document.createElement("a"); a.download = "MetroMX_" + d.fecha.replace(/\//g, "-") + ".png"; a.href = cv.toDataURL("image/png"); a.click();
+      };
+      if (foto) { var im = new Image(); im.onload = function(){ render(im); }; im.onerror = function(){ render(null); }; im.src = foto; }
+      else render(null);
     },
     abrirBackup: function(modo) {
       document.getElementById("modalBackup").style.display = "flex";
@@ -736,22 +522,17 @@ var mxGar = (function() {
       if (modo === "EXPORT") {
         ta.value = JSON.stringify({ v: 1, uid: _cfg.uid, nombre: _cfg.getNom(), fecha: new Date().toISOString(), motosGar: _motos, histDias: _hist });
         document.getElementById("subBackup").textContent = "Copia este texto o descarga el archivo .JSON:";
-      } else {
-        ta.value = ""; document.getElementById("subBackup").textContent = "Pega aqui el texto JSON de tu backup y pulsa RESTAURAR:";
-      }
+      } else { ta.value = ""; document.getElementById("subBackup").textContent = "Pega aqui el texto JSON de tu backup y pulsa RESTAURAR:"; }
     },
     copiarBackup: function() {
       var ta = document.getElementById("txtBackupJson"); if (!ta.value.trim()) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(ta.value).then(function(){
-          document.getElementById("msgBackup").style.color = "#20c997"; document.getElementById("msgBackup").textContent = "✓ Copiado al portapapeles";
-        }).catch(function(){ ta.select(); document.execCommand("copy"); });
+        navigator.clipboard.writeText(ta.value).then(function(){ document.getElementById("msgBackup").style.color = "#20c997"; document.getElementById("msgBackup").textContent = "✓ Copiado al portapapeles"; }).catch(function(){ ta.select(); document.execCommand("copy"); });
       } else { ta.select(); document.execCommand("copy"); }
     },
     descargarBackup: function() {
       var txt = document.getElementById("txtBackupJson").value.trim(); if (!txt) return;
-      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" }));
-      a.download = "Backup_MX_" + _cfg.uid + ".json"; a.click();
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = "Backup_MX_" + _cfg.uid + ".json"; a.click();
     },
     restaurarBackup: function() {
       var txt = document.getElementById("txtBackupJson").value.trim(), msg = document.getElementById("msgBackup");
@@ -762,7 +543,7 @@ var mxGar = (function() {
         if (Array.isArray(obj.motosGar) && obj.motosGar.length) { _motos = obj.motosGar; _idx = 0; localStorage.setItem("mxp_gar_" + _cfg.uid, JSON.stringify(_motos)); this.subirNube(); }
         if (Array.isArray(obj.histDias)) { _hist = obj.histDias; localStorage.setItem("mxp_hist_" + _cfg.uid, JSON.stringify(_hist)); }
         this.pintarGaraje(); this.pintarTiempos();
-        msg.style.color = "#20c997"; msg.textContent = "✅ ¡Backup restaurado correctamente!";
+        msg.style.color = "#20c997"; msg.textContent = "✅ ¡Backup restaurado!";
       } catch (e) { msg.style.color = "#ff4d5e"; msg.textContent = "JSON no valido: " + e.message; }
     }
   };

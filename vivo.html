@@ -25,6 +25,8 @@
     </div>
   </div>
 
+  <div id="banBanderaAmV" class="flag-yellow" style="max-width:560px"><span>⚠️ BANDERA AMARILLA EN PISTA — PRECAUCION</span></div>
+
   <div class="top">
     <div style="text-align:left"><b id="titTopV" style="color:#20c997;font-size:13px">🔴 EN VIVO — METROPOLITANO</b><div id="lblCircV" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div></div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
@@ -55,6 +57,8 @@
       <div class="stat"><div style="font-size:10px;color:#888">ULTIMA VUELTA</div><div id="mecUlt" style="font-size:16px;font-weight:bold;color:#0dcaf0">--</div></div>
       <div class="stat"><div style="font-size:10px;color:#888">MEJOR / BATERIA LIPO</div><div id="mecMejLipo" style="font-size:15px;font-weight:bold;color:#fff">--</div></div>
     </div>
+    <div style="font-size:10px;color:#888;margin-top:6px;display:flex;justify-content:space-between"><span>🔋 ESTADO LIPO EN MANGA:</span><b id="lblLipoMec">0m / 12m</b></div>
+    <div class="lipo-wrap"><div id="barLipoMec" class="lipo-fill"></div></div>
   </div>
 
   <div id="boxPorra" class="card" style="display:none;border-color:#0dcaf0">
@@ -117,7 +121,7 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, votoMvpHecho = false, ultReacMs = 0, toquesOva = 0;
-var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null;
+var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "";
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
@@ -162,8 +166,8 @@ function toggleVozMec() {
 
 function ayudaVivo() {
   alert(esIngles
-    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 shows riders live on track.\n• 🔧 MECHANIC mode turns your phone into a dedicated Pit-Board for 1 rider with LiPo timer & lap voice.\n• 👏 OVATION triggers loudspeaker applause every 10 taps.\n• Send cheer blocks directly to any 🟢 rider & vote MVP!"
-    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos conectados ahora en pista.\n• 🔧 MECANICO convierte tu movil en un Pit-Board para seguir a 1 piloto desde boxes (crono, vueltas, LiPo y voz).\n• 👏 OVACION DE GRADA: cada 10 toques hace sonar una ovacion en las antenas.\n• Manda mensajes por bloques dirigidos a un piloto 🟢 (suenan en megafonia y al oido) y vota al MVP.");
+    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 shows riders live on track.\n• 🔧 MECHANIC mode turns your phone into a dedicated Pit-Board for 1 rider with LiPo bar & lap voice.\n• 👏 OVATION triggers loudspeaker applause every 10 taps.\n• Send cheer blocks directly to any 🟢 rider & vote MVP!"
+    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos conectados ahora en pista.\n• 🔧 MECANICO convierte tu movil en un Pit-Board para seguir a 1 piloto desde boxes (crono, vueltas, barra LiPo y voz).\n• 👏 OVACION DE GRADA: cada 10 toques hace sonar una ovacion en las antenas.\n• Manda mensajes por bloques dirigidos a un piloto 🟢 (suenan en megafonia y al oido) y vota al MVP.");
 }
 
 function verFotoFinishV() {
@@ -209,25 +213,40 @@ function votarMvp(uidP, nomP) {
 function verSetupRival(pid) {
   var p = (rootCache.pilotos || {})[pid] || {}, g = (rootCache.garaje || {})[pid] || {};
   document.getElementById("mSetTit").textContent = "🏍️ #" + (p.dorsal || g.dorsal || "--") + " " + (p.nombre || "Piloto");
-  document.getElementById("mSetBody").innerHTML = "<b>" + (esIngles ? "Bike:" : "Moto:") + "</b> " + esc(g.modelo || "Losi Promoto-MX") + " (" + esc(g.disc || "MX") + ")<br><b>" + (esIngles ? "Best Lap:" : "Mejor Vuelta:") + "</b> <span style='color:#20c997'>" + fmt(p.mejorMs) + "</span> (" + (p.vueltas || 0) + "v)<br><br><b style='color:#0dcaf0'>" + (esIngles ? "🔧 ACTIVE SETUP:" : "🔧 REGLAJE ACTIVO:") + "</b><br>" + esc(g.setupTxt || (esIngles ? "Stock setup" : "Setup de serie"));
+  document.getElementById("mSetBody").innerHTML = "<b>" + (esIngles ? "Bike:" : "Moto:") + "</b> " + esc(g.modelo || "Losi Promoto-MX") + " (" + esc(g.disc || "MX") + ")<br><b>" + (esIngles ? "Best Lap:" : "Mejor Vuelta:") + "</b> <span class='tv-rp'>" + fmt(p.mejorMs) + "</span> (" + (p.vueltas || 0) + "v)<br><br><b style='color:#0dcaf0'>" + (esIngles ? "🔧 ACTIVE SETUP:" : "🔧 REGLAJE ACTIVO:") + "</b><br>" + esc(g.setupTxt || (esIngles ? "Stock setup" : "Setup de serie"));
   document.getElementById("modalSetupV").style.display = "flex";
 }
 
 function pintarModoMecanico() {
   if (!modoMec) return;
   var pObj = rootCache.pilotos || {}, s = rootCache.sala || {}, pid = document.getElementById("selPilotoMec").value, p = pObj[pid];
-  if (!p) { document.getElementById("mecPosVtas").textContent = "--"; document.getElementById("mecUlt").textContent = "--"; document.getElementById("mecMejLipo").textContent = "--"; return; }
+  var barL = document.getElementById("barLipoMec"), lblL = document.getElementById("lblLipoMec");
+  if (!p) {
+    document.getElementById("mecPosVtas").textContent = "--"; document.getElementById("mecUlt").textContent = "--"; document.getElementById("mecMejLipo").textContent = "--";
+    if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
+    return;
+  }
   var vAct = Number(p.vueltas || 0);
   if (typeof _ultVtasMec[pid] === "number" && vAct > _ultVtasMec[pid] && p.ultimaMs) mxHablar(p.nombre + ", vuelta " + vAct + ", " + (p.ultimaMs / 1000).toFixed(2).replace(".", " punto ") + " segundos", vozMec, esIngles ? "en-US" : "es-ES");
   _ultVtasMec[pid] = vAct;
   document.getElementById("mecPosVtas").textContent = vAct + " vtas"; document.getElementById("mecUlt").textContent = fmt(p.ultimaMs);
-  var t0 = Number(s.tsInicio || 0), minLipo = (t0 > 0 && s.estado === "EN_CURSO") ? Math.max(0, Math.floor((ahoraSrv() - t0) / 60000)) : 0;
-  document.getElementById("mecMejLipo").innerHTML = "<span style='color:#20c997'>" + fmt(p.mejorMs) + "</span> / <span style='" + (minLipo >= 11 ? "color:#ff4d5e" : "color:#ffc107") + "'>" + minLipo + "m</span>";
+  var t0 = Number(s.tsInicio || 0), minLipo = (t0 > 0 && s.estado === "EN_CURSO") ? Math.max(0, (ahoraSrv() - t0) / 60000) : 0;
+  document.getElementById("mecMejLipo").innerHTML = "<span class='tv-rp'>" + fmt(p.mejorMs) + "</span> / <span style='" + (minLipo >= 11 ? "color:#ff4d5e" : "color:#ffc107") + "'>" + Math.floor(minLipo) + "m</span>";
+  if (barL && lblL) {
+    barL.style.width = Math.min(100, Math.round((minLipo / 12) * 100)) + "%";
+    barL.style.background = minLipo >= 11 ? "#ff4d5e" : (minLipo >= 8.5 ? "#ffa94d" : "#20c997");
+    lblL.textContent = minLipo.toFixed(1) + "m / 12m";
+  }
+}
+
+function renderSwatches(g) {
+  var cs = (g && Array.isArray(g.colores)) ? g.colores.slice(0, 3) : [];
+  return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
 }
 
 function pintarVivo() {
   var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gObj = rootCache.garaje || {}, cObj = rootCache.campeonato || {}, ah = ahoraSrv();
-  document.body.style.boxShadow = (s.bandera === "AMARILLA") ? "inset 0 0 0 8px #ffc107" : "none";
+  document.getElementById("banBanderaAmV").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
   var est = s.estado || "ESPERA";
   var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
   var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
@@ -258,23 +277,29 @@ function pintarVivo() {
   if (!votoMvpHecho) document.getElementById("listaMvpV").innerHTML = pils.length ? pils.map(function(p){ return '<button onclick="vibrar();votarMvp(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#211936;color:#d0a8ff;border:1px solid #5f3dc4;padding:7px 10px;font-size:11px">🏅 #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>'; }).join("") : '<span style="font-size:11px;color:#777">Esperando pilotos...</span>';
   document.getElementById("resMvpV").textContent = mvpOrd.length ? ("Ranking MVP: " + mvpOrd.map(function(n){ return esc(n) + " (" + mvpV[n] + ")"; }).join(" • ")) : "";
 
-  var p1 = pils[0] || null, actCnt = 0, h = "";
-  pils.forEach(function(p, ix) {
-    if (p.activo) actCnt++;
-    var g = gObj[p.id] || {}, dif = "";
-    if (ix > 0 && p1) {
-      if ((mj === "REY" || mj === "SUPERPOLE") && p.mejorMs && p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
-      else if ((p1.vueltas || 0) > (p.vueltas || 0)) dif = " • -" + ((p1.vueltas || 0) - (p.vueltas || 0)) + "v";
-      else if (p.mejorMs && p1.mejorMs && p.mejorMs > p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
-    }
-    h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="vibrar();verSetupRival(\'' + esc(p.id) + '\')">' +
-      '<div>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</b>' + (mvpLeader && p.nombre === mvpLeader ? ' <span style="background:#5f3dc4;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">🏅 MVP</span>' : '') + ' <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(dif) + ')</span><div style="font-size:10px;color:#888">🏍️ ' + esc(g.modelo || "Losi Promoto-MX") + ' (' + esc(g.disc || "MX") + ') • Toca para setup</div></div>' +
-      '<div style="text-align:right"><b style="color:#20c997;font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: ' + fmt(p.ultimaMs) + '</div></div></div>';
-  });
-  var lpv = document.getElementById("lblPistaVivo");
-  lpv.style.color = actCnt > 0 ? "#20c997" : "#888";
-  lpv.textContent = actCnt > 0 ? ("🟢 " + actCnt + (esIngles ? " RIDER(S) ON TRACK" : " PILOTO(S) EN PISTA")) : (esIngles ? "⚪ TRACK EMPTY" : "⚪ PISTA VACIA (0 PILOTOS)");
-  document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">Ningun piloto rodando ahora mismo.</div>';
+  var vSig = pils.map(function(p){ return p.id + ":" + p.vueltas + ":" + p.mejorMs + ":" + p.activo + ":" + p.eliminado; }).join("|") + "|" + mvpLeader;
+  if (vSig !== _lastVivoSig) {
+    _lastVivoSig = vSig;
+    var p1 = pils[0] || null, actCnt = 0, h = "", bestAll = pils.length ? Math.min.apply(null, pils.map(function(x){ return x.mejorMs || 9e9; })) : 9e9;
+    pils.forEach(function(p, ix) {
+      if (p.activo) actCnt++;
+      var g = gObj[p.id] || {}, dif = "";
+      if (ix > 0 && p1) {
+        if ((mj === "REY" || mj === "SUPERPOLE") && p.mejorMs && p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
+        else if ((p1.vueltas || 0) > (p.vueltas || 0)) dif = " • -" + ((p1.vueltas || 0) - (p.vueltas || 0)) + "v";
+        else if (p.mejorMs && p1.mejorMs && p.mejorMs > p1.mejorMs) dif = " • +" + ((p.mejorMs - p1.mejorMs) / 1000).toFixed(2) + "s";
+      }
+      var pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || '--') + '</span>', sw = renderSwatches(g);
+      var clsT = (p.mejorMs && p.mejorMs === bestAll) ? "tv-vr" : "tv-rp";
+      h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="vibrar();verSetupRival(\'' + esc(p.id) + '\')">' +
+        '<div>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b>' + (mvpLeader && p.nombre === mvpLeader ? ' <span style="background:#5f3dc4;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">🏅 MVP</span>' : '') + ' <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(dif) + ')</span><div style="font-size:10px;color:#888">🏍️ ' + esc(g.modelo || "Losi Promoto-MX") + ' (' + esc(g.disc || "MX") + ') • Toca para setup</div></div>' +
+        '<div style="text-align:right"><b class="' + clsT + '" style="font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: ' + fmt(p.ultimaMs) + '</div></div></div>';
+    });
+    var lpv = document.getElementById("lblPistaVivo");
+    lpv.style.color = actCnt > 0 ? "#20c997" : "#888";
+    lpv.textContent = actCnt > 0 ? ("🟢 " + actCnt + (esIngles ? " RIDER(S) ON TRACK" : " PILOTO(S) EN PISTA")) : (esIngles ? "⚪ TRACK EMPTY" : "⚪ PISTA VACIA (0 PILOTOS)");
+    document.getElementById("listaVivo").innerHTML = h || '<div style="color:#777;font-size:12px">Ningun piloto rodando ahora mismo.</div>';
+  }
 
   var cInfo = calcularCampeonato(cObj), bc = document.getElementById("boxCampVivo");
   if (cInfo.tabla.length) { bc.style.display = "block"; document.getElementById("listaCampV").innerHTML = cInfo.tabla.map(function(x, i){ return '<div class="fila"><span><b>' + (i + 1) + 'º #' + esc(x.dorsal) + ' ' + esc(x.nombre) + '</b></span><b style="color:#ffc107">' + x.pts + ' pts</b></div>'; }).join(""); }
@@ -289,7 +314,14 @@ function conectarSseVivo() {
   if (_esRoot) try { _esRoot.close(); } catch (e) {}
   try {
     _esRoot = new EventSource(FB + ".json");
-    var onSse = function(e) { try { var m = JSON.parse(e.data); if (m && m.path) { applySsePatch(rootCache, m.path, m.data, e.type === "put"); pintarVivo(); } } catch (er) {} };
+    var onSse = function(e) {
+      try {
+        var m = JSON.parse(e.data); if (!m || !m.path) return;
+        if (m.path.indexOf("/antenas") === 0 || m.path.indexOf("/eventos") === 0) return;
+        applySsePatch(rootCache, m.path, m.data, e.type === "put");
+        pintarVivo();
+      } catch (er) {}
+    };
     _esRoot.addEventListener("put", onSse); _esRoot.addEventListener("patch", onSse);
     _esRoot.onerror = function(){ if (_esRoot && _esRoot.readyState === 2) setTimeout(conectarSseVivo, 2500); };
   } catch (e) {}
