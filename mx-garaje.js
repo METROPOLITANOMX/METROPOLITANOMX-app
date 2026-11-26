@@ -392,12 +392,18 @@ var mxGar = (function() {
       }).catch(function(){ alert("Error publicando en Paddock."); });
     },
     procesarMiVuelta: function(lap, mej, pils, lblDeltaId, deltaBolId) {
+      var fmtDeltaVoz = function(ms) {
+        var dTot = Math.max(1, Math.round(ms / 100));
+        if (dTot < 10) return dTot + (dTot === 1 ? " decima" : " decimas");
+        var sg = Math.floor(dTot / 10), dc = dTot % 10;
+        return sg + (sg === 1 ? " segundo" : " segundos") + (dc > 0 ? (" y " + dc + (dc === 1 ? " decima" : " decimas")) : "");
+      };
       var todas = []; _hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
       var mejorHist = todas.length ? Math.min.apply(null, todas) : 0, esRP = (!mejorHist || lap < mejorHist);
       var p1 = pils[0], root = _cfg.getRoot(), v = ((root.pilotos || {})[_cfg.uid] || {}).vueltas || 1;
       var difH = "Ultima: " + fmt(lap), difB = fmt(lap), voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
       if (esRP && v > 1 && mejorHist > 0) {
-        voz += ", record personal, " + Math.max(1, Math.round((mejorHist - lap) / 100)) + " decimas menos";
+        voz += ", record personal, " + fmtDeltaVoz(mejorHist - lap) + " menos";
         difH = "Ultima: <span class='tv-rp'>" + fmt(lap) + " (-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢 RP)</span>";
         difB = "-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢";
         mxBeep(1150, 140); flashRecord("RP");
@@ -408,7 +414,7 @@ var mxGar = (function() {
           difH = "Ultima: <span class='tv-vr'>" + fmt(lap) + " (VUELTA RAPIDA 👑)</span>";
           difB = "LIDER 👑"; mxBeep(1280, 180); flashRecord("VR");
         } else {
-          voz += ", a " + Math.max(1, Math.round(dL / 100)) + " decimas del mejor";
+          voz += ", a " + fmtDeltaVoz(dL) + " del mejor";
           difH = "Ultima: <span class='tv-lag'>" + fmt(lap) + " (+" + (dL / 1000).toFixed(2) + "s)</span>";
           difB = "+" + (dL / 1000).toFixed(2) + "s";
         }

@@ -140,13 +140,13 @@
             </div>
             <div class="grid2" style="margin-bottom:6px">
               <div><div style="font-size:10px;color:#aaa;margin-bottom:2px">ORIENTACION META:</div><div class="grid2"><button id="bOriV" onclick="vibrar();setOrientacion('V')" style="background:#0dcaf0;color:#000;font-size:10px;padding:7px">↕️ VERT</button><button id="bOriH" onclick="vibrar();setOrientacion('H')" style="background:#262626;color:#fff;font-size:10px;padding:7px">↔️ HORIZ</button></div></div>
-              <div><div style="font-size:10px;color:#aaa;margin-bottom:2px">COLORES A BUSCAR:</div><div class="grid3"><button id="bNCol1" onclick="vibrar();setNColores(1)" style="background:#262626;color:#fff;font-size:10px;padding:7px">1</button><button id="bNCol2" onclick="vibrar();setNColores(2)" style="background:#20c997;color:#000;font-size:10px;padding:7px">2</button><button id="bNCol3" onclick="vibrar();setNColores(3)" style="background:#262626;color:#fff;font-size:10px;padding:7px">3</button></div></div>
+              <div><div style="font-size:10px;color:#aaa;margin-bottom:2px">COLORES A BUSCAR:</div><div class="grid3"><button id="bNCol1" onclick="vibrar();setNColores(1)" style="background:#20c997;color:#000;font-size:10px;padding:7px">1</button><button id="bNCol2" onclick="vibrar();setNColores(2)" style="background:#262626;color:#fff;font-size:10px;padding:7px">2</button><button id="bNCol3" onclick="vibrar();setNColores(3)" style="background:#262626;color:#fff;font-size:10px;padding:7px">3</button></div></div>
             </div>
             <div class="grid2">
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffc107"><span>DISPARO MOV %:</span><b id="lblSensDir">7%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngSens',-1,cfgDir,'lblSensDir','%')">-</button><input id="rngSens" type="range" min="6" max="100" value="7" oninput="document.getElementById('lblSensDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngSens',1,cfgDir,'lblSensDir','%')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">30%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="30" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#20c997"><span>MATCH COLOR %:</span><b id="lblColorPctDir">25%</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngColorPct',-1,cfgDir,'lblColorPctDir','%')">-</button><input id="rngColorPct" type="range" min="6" max="100" value="25" oninput="document.getElementById('lblColorPctDir').textContent=this.value+'%'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngColorPct',1,cfgDir,'lblColorPctDir','%')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#ffa94d"><span>SENS. PIXEL/CONTRASTE:</span><b id="lblPxDiffDir">45</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngPxDiff',-2,cfgDir,'lblPxDiffDir','')">-</button><input id="rngPxDiff" type="range" min="20" max="90" value="45" oninput="document.getElementById('lblPxDiffDir').textContent=this.value" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngPxDiff',2,cfgDir,'lblPxDiffDir','')">+</button></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA COLOR (dE):</span><b id="lblDeltaEDir">20</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="12" max="34" value="20" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#d0a8ff"><span>TOLERANCIA COLOR (dE):</span><b id="lblDeltaEDir">22</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngDeltaE',-1,cfgLuz,'lblDeltaEDir','')">-</button><input id="rngDeltaE" type="range" min="12" max="34" value="22" oninput="document.getElementById('lblDeltaEDir').textContent=this.value" onchange="cfgLuz()"><button class="btn-step" onclick="stepSlider('rngDeltaE',1,cfgLuz,'lblDeltaEDir','')">+</button></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:10px;color:#0dcaf0"><span>RETARDO LECTURA:</span><b id="lblRetardoDir">25ms</b></div><div class="rng-row"><button class="btn-step" onclick="stepSlider('rngRetardo',-5,cfgDir,'lblRetardoDir','ms')">-</button><input id="rngRetardo" type="range" min="0" max="150" step="5" value="25" oninput="document.getElementById('lblRetardoDir').textContent=this.value+'ms'" onchange="cfgDir()"><button class="btn-step" onclick="stepSlider('rngRetardo',5,cfgDir,'lblRetardoDir','ms')">+</button></div></div>
               <div>
                 <div style="font-size:10px;color:#ff6b6b;margin-bottom:2px">ANTI-VIENTO / GOLPE TRIPODE:</div>
@@ -170,7 +170,7 @@
         </button>
         <div id="acc_wu" class="acc-body" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:11px;color:#aaa">Asigna varias pasadas de distintos angulos a cada piloto.</span>
+            <span style="font-size:11px;color:#aaa">Asigna las pasadas capturadas al piloto correspondiente.</span>
             <div style="display:flex;gap:4px">
               <button onclick="vibrar();refrescarWarmupManual()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄</button>
               <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
@@ -339,7 +339,7 @@ var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMo
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
-var _ultSecLoc = -999, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
+var _ultSecLoc = -999, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
@@ -414,7 +414,7 @@ function salirDirector() {
   Promise.all(ops).finally(function(){ localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; });
 }
 function ayudaDir() {
-  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: usa colores vivos (no blanco/negro) y verifica '[MODO: GAR ✓]' en el visor de cada camara.\n5. Cuentas: busca por nombre cuentas antiguas para bloquear/borrar con confirmacion.");
+  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: 1 color por defecto para reconocer rapidamente cualquier moto u objeto.\n5. Cuentas: busca por nombre cuentas antiguas para bloquear/borrar con confirmacion.");
 }
 
 function aplicarModoDirPilotoUI(limpiarUid) {
@@ -559,18 +559,18 @@ function cfgDir() {
     body: JSON.stringify({
       modoJuego: document.getElementById("selJuego").value, duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5, sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      colorPct: Number(document.getElementById("rngColorPct").value) || 25, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
       antiViento: document.getElementById("selAntiViento").value || "OFF", retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
       dirTs: ahoraSrv(), dirSession: dirSessionId
     })
   }).catch(function(){});
 }
 function cfgLuz() {
-  var dE = Number(document.getElementById("rngDeltaE").value) || 20, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
+  var dE = Number(document.getElementById("rngDeltaE").value) || 22, prev = (rootCache.sala && rootCache.sala.perfilLuz) || {};
   fetch(FB + "/sala/perfilLuz.json", { method: "PATCH", body: JSON.stringify({ nombre: prev.nombre || "Personalizado", deltaE: dE, minChroma: prev.minChroma || 20, lGain: prev.lGain || 1.0 }) }).catch(function(){});
 }
 function aplicarPresetLuz(tipo) {
-  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 24, minChroma: 22, lGain: 0.92, sens: 12, col: 32, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 20, minChroma: 20, lGain: 1.05, sens: 8, col: 28, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 23, minChroma: 18, lGain: 1.24, sens: 7, col: 24, px: 34 } };
+  var ps = { SOL: { nombre: "Sol Fuerte", deltaE: 24, minChroma: 22, lGain: 0.92, sens: 12, col: 28, px: 52 }, NUBLADO: { nombre: "Nublado/Sombra", deltaE: 22, minChroma: 20, lGain: 1.05, sens: 8, col: 24, px: 45 }, BAJA: { nombre: "Poca Luz", deltaE: 24, minChroma: 18, lGain: 1.24, sens: 7, col: 20, px: 34 } };
   var p = ps[tipo] || ps.NUBLADO;
   document.getElementById("rngSens").value = p.sens; document.getElementById("lblSensDir").textContent = p.sens + "%";
   document.getElementById("rngColorPct").value = p.col; document.getElementById("lblColorPctDir").textContent = p.col + "%";
@@ -593,16 +593,16 @@ function guardarPerfilActual() {
     method: "PUT",
     body: JSON.stringify({
       nombre: nom.trim(), orientacion: s.orientacion || "V", sensPct: Number(document.getElementById("rngSens").value) || 7,
-      colorPct: Number(document.getElementById("rngColorPct").value) || 30, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
-      antiViento: document.getElementById("selAntiViento").value || "OFF", nColores: Number(s.nColores || 2),
-      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 20,
+      colorPct: Number(document.getElementById("rngColorPct").value) || 25, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      antiViento: document.getElementById("selAntiViento").value || "OFF", nColores: Number(s.nColores || 1),
+      retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 22,
       minChroma: pL.minChroma || 20, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
     })
   }).then(function(){ cargarListaPerfiles(); alert("Perfil guardado ✓"); }).catch(function(){ alert("Error guardando perfil"); });
 }
 function cargarPerfilGuardado(pid) {
   var p = perfilesCam[pid]; if (!p) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 30, pxDiff: p.pxDiff || 45, antiViento: p.antiViento || "OFF", nColores: p.nColores || 2, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 20, minChroma: p.minChroma || 20, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 25, pxDiff: p.pxDiff || 45, antiViento: p.antiViento || "OFF", nColores: p.nColores || 1, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 22, minChroma: p.minChroma || 20, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
   if (p.roi && p.roi.ant_1) fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_1", posX: p.roi.ant_1.posX, roi: p.roi.ant_1 }) }).catch(function(){});
   if (p.roi && p.roi.ant_2) setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_2", posX: p.roi.ant_2.posX, roi: p.roi.ant_2 }) }).catch(function(){}); }, 400);
   hablarYAntenas("Perfil " + p.nombre + " cargado", false);
@@ -631,8 +631,9 @@ function pintarBandejasWarmup() {
       return (aid === "ant_2") ? (c.antId === "ant_2") : (c.antId !== "ant_2");
     }).sort(function(a, b){ return (warmupCaps[b].ts || 0) - (warmupCaps[a].ts || 0); });
     document.getElementById("bandeja_" + aid).innerHTML = items.length ? items.map(function(cid) {
-      var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:3px"></span>'; }).join("");
-      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+      var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:4px;vertical-align:middle"></span>'; }).join("");
+      var colTxt = c.colorNom ? (' <b style="color:#ffc107">' + esc(c.colorNom) + '</b>') : '';
+      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + colTxt + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
     }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
   });
   var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
@@ -661,11 +662,17 @@ function cmdSala(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999;
+  _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
   testOn = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
-  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; hablarYAntenas("Warm-up de 3 minutos iniciado, capturando en meta", true); }
+  if (est === "WARMUP") {
+    pay.tsInicio = ahCmd + 180000;
+    hablarYAntenas("Warm-up de 3 minutos iniciado, capturando en meta", true);
+    document.getElementById("acc_wu").style.display = "block";
+    document.getElementById("arw_acc_wu").textContent = "▼";
+    refrescarWarmupManual();
+  }
   if (est === "SALIDA_30") {
     pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
     hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
@@ -883,9 +890,10 @@ function renderSwatches(g) {
 
 function actualizarSemaforoDir() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
-  var ov = document.getElementById("overlaySem");
+  var ov = document.getElementById("overlaySem"), nowLoc = Date.now();
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
   if ((est !== "SALIDA_30" && est !== "VALLA_MX") || t0 <= 0) {
-    if (ov.style.display !== "none") ov.style.display = "none";
+    if (nowLoc >= _salidaShowHasta && ov.style.display !== "none") ov.style.display = "none";
     return;
   }
 
@@ -902,7 +910,7 @@ function actualizarSemaforoDir() {
     }
   }
   if (df <= 0 && _ultSecLoc !== 0) {
-    _ultSecLoc = 0; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
+    _ultSecLoc = 0; _salidaShowHasta = nowLoc + 1800; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
   }
 
@@ -926,7 +934,7 @@ function actualizarSemaforoDir() {
       document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
       if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
       else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
-    } else ov.style.display = "none";
+    } else if (nowLoc >= _salidaShowHasta) ov.style.display = "none";
   } else ov.style.display = "none";
 }
 
@@ -944,7 +952,7 @@ function pintarDirUI() {
   var ori = s.orientacion || "V";
   document.getElementById("bOriV").style.background = (ori === "V") ? "#0dcaf0" : "#262626"; document.getElementById("bOriV").style.color = (ori === "V") ? "#000" : "#fff";
   document.getElementById("bOriH").style.background = (ori === "H") ? "#0dcaf0" : "#262626"; document.getElementById("bOriH").style.color = (ori === "H") ? "#000" : "#fff";
-  var nc = Number(s.nColores || 2);
+  var nc = Number(s.nColores || 1);
   [1, 2, 3].forEach(function(n){ var b = document.getElementById("bNCol" + n); b.style.background = (nc === n) ? "#20c997" : "#262626"; b.style.color = (nc === n) ? "#000" : "#fff"; });
 
   var syncRng = function(id, lbl, val, suf) { if (val && document.activeElement !== document.getElementById(id)) { document.getElementById(id).value = val; document.getElementById(lbl).textContent = val + suf; } };
