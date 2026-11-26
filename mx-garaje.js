@@ -31,7 +31,7 @@ var mxGar = (function() {
           '</div>' +
           '<div id="boxCapGar" style="display:none;background:#1a1d24;border:2px solid #0dcaf0;border-radius:10px;padding:10px;margin-bottom:10px">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span id="txtPasoCap" style="font-size:11px;color:#ffc107;font-weight:bold">PASO 1 DE 2: ENFOCA TU MOTO EN DIRECTO</span><button onclick="vibrar();mxGar.cerrarCapColor()" style="background:#333;color:#fff;padding:4px 8px;font-size:10px">✕</button></div>' +
-            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Consejo:</b> Captura colores vivos (casco/carenado). El blanco, gris y negro se descartan porque se confunden con papel, polvo y suelo.</div>' +
+            '<div style="font-size:10px;color:#0dcaf0;background:#101820;border:1px solid #1c3b57;border-radius:6px;padding:6px;margin-bottom:6px">💡 <b>Consejo:</b> Buena luz y colores vivos en casco/carenado ofrecen la maxima precision frente al suelo y sombras.</div>' +
             '<div id="visorVivoCol" class="cam-visor" style="height:195px"><video id="vidGarCol" autoplay playsinline muted></video><div class="cam-guia"></div><div class="cam-div"></div></div>' +
             '<div id="boxRecorteMagico" style="display:none;margin-bottom:8px">' +
               '<div id="lblCalidadFrame" style="font-size:11px;font-weight:bold;margin-bottom:4px"></div>' +
@@ -144,7 +144,7 @@ var mxGar = (function() {
 
   function pintarMuestras() {
     var ok = _cols.length > 0, lbl = document.getElementById("lblFirmaGar");
-    lbl.textContent = ok ? ("OK ✓ (" + _cols.length + " tonos vivos)") : "PENDIENTE";
+    lbl.textContent = ok ? ("OK ✓ (" + _cols.length + " tonos)") : "PENDIENTE";
     lbl.style.color = ok ? "#20c997" : "#ff4d5e";
     document.getElementById("muestrasGar").innerHTML = _cols.map(function(c) {
       return '<span title="' + esc(c.zona || "CAR") + '" style="width:20px;height:20px;border-radius:4px;border:1px solid #fff;background:' + c.hex + '"></span>';
@@ -294,12 +294,12 @@ var mxGar = (function() {
       var sumL = 0, sat = 0, tot = CW * CH;
       for (var i = 0; i < _raw.length; i += 4) {
         var r = _raw[i], g = _raw[i + 1], b = _raw[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-        sumL += (r + g + b) / 3; if ((mx - mn) > 40 && mx > 50) sat++;
+        sumL += (r + g + b) / 3; if ((mx - mn) > 36 && mx > 45) sat++;
       }
       var avgL = sumL / tot, satP = (sat / tot) * 100, qEl = document.getElementById("lblCalidadFrame");
       if (avgL < 55) { qEl.style.color = "#ff4d5e"; qEl.textContent = "⚠️ Poca luz — Acerca a zona iluminada"; }
       else if (avgL > 220) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Demasiado brillo — Evita reflejo"; }
-      else if (satP < 4) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo — Acerca la moto"; }
+      else if (satP < 4) { qEl.style.color = "#ffc107"; qEl.textContent = "⚠️ Poco color vivo — Usa tonos fuertes si puedes"; }
       else { qEl.style.color = "#20c997"; qEl.textContent = "✅ Calidad Optima (" + Math.round(satP) + "% color vivo)"; }
       document.getElementById("visorVivoCol").style.display = "none";
       document.getElementById("btnSnapCol").style.display = "none";
@@ -330,28 +330,24 @@ var mxGar = (function() {
     deshacer: function() { if (_undo.length) { _mask = _undo.pop(); pintarCanvasRecorte(); } },
     extraerColores: function() {
       if (!_raw || !_mask) return;
-      var bS = {}, bI = {};
-      for (var py = 0; py < CH; py++) {
-        for (var px = 0; px < CW; px++) {
-          var p = py * CW + px; if (!_mask[p]) continue;
-          var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          if (mx < 45 || (mx - mn) < 36) continue;
-          var lb = rgbLab(r, g, b), ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-          if (ch < 22 || lb.L < 18 || lb.L > 92) continue;
-          var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 32) + "_" + Math.round(g / 32) + "_" + Math.round(b / 32);
-          var dst = (zn === "SUP") ? bS : bI;
-          if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
-          dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
+      var scan = function(minCh) {
+        var bS = {}, bI = {};
+        for (var py = 0; py < CH; py++) {
+          for (var px = 0; px < CW; px++) {
+            var p = py * CW + px; if (!_mask[p]) continue;
+            var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2], lb = rgbLab(r, g, b);
+            if (minCh > 0 && (Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh || lb.L < 14 || lb.L > 92)) continue;
+            var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 32) + "_" + Math.round(g / 32) + "_" + Math.round(b / 32), dst = (zn === "SUP") ? bS : bI;
+            if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
+            dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
+          }
         }
-      }
-      var top = function(mp) {
-        return Object.keys(mp).map(function(key) {
-          var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n);
-          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: rgbLab(rr, gg, bb) };
-        }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2);
+        var top = function(mp) { return Object.keys(mp).map(function(key){ var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n); return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: rgbLab(rr, gg, bb) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2); };
+        return top(bS).concat(top(bI));
       };
-      var res = top(bS).concat(top(bI));
-      if (!res.length) { alert("No se detectaron colores vivos (rojo, azul, verde, amarillo, naranja...). Evita blanco/negro o usa la paleta inferior."); return; }
+      var res = scan(18);
+      if (!res.length) res = scan(0);
+      if (!res.length) { alert("Todo el recuadro quedo borrado. Pulsa 'Repetir' y deja la moto visible."); return; }
       if (_lado === 1) { _cols = res; _lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
       else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }
       pintarMuestras(); this.volverCam();
@@ -363,12 +359,8 @@ var mxGar = (function() {
     },
     limpiarCols: function() { _cols = []; pintarMuestras(); },
     guardarFirma: function() {
-      var vivos = _cols.filter(function(c){
-        var lb = c.lab || rgbLab(c.r || 0, c.g || 0, c.b || 0);
-        return Math.sqrt(lb.a * lb.a + lb.b * lb.b) >= 20;
-      });
-      if (!vivos.length) { alert("⚠️ Añade al menos 1 color vivo (no blanco/negro/gris) antes de guardar."); return; }
-      _cols = vivos; _motos[_idx].colores = _cols.slice();
+      if (!_cols.length) { alert("Captura o añade colores primero."); return; }
+      _motos[_idx].colores = _cols.slice();
       this.cerrarCapColor(); this.guardarMoto();
       if (_cfg.onSpeak) _cfg.onSpeak("Colores guardados en la nube");
     },

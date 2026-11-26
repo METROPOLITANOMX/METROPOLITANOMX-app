@@ -40,7 +40,10 @@
   </div>
 
   <div class="top">
-    <b id="lblNomAnt" style="color:#b197fc;font-size:13px">📡 ANTENA MX</b>
+    <div style="text-align:left">
+      <b id="lblNomAnt" style="color:#b197fc;font-size:13px">📡 ANTENA MX</b>
+      <div id="lblCircAntTop" style="font-size:9px;color:#0dcaf0">PISTA: METROPOLITANO</div>
+    </div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
       <button onclick="vibrar();ayudaAnt()" style="background:#0dcaf0;color:#000;padding:7px 8px;font-size:10px">? GUIA</button>
       <button id="btnAudioAnt" onclick="vibrar();desbloquearAudio(true)" style="background:#ffc107;color:#000;padding:7px 8px;font-size:10px">🔊 AUDIO</button>
@@ -66,7 +69,7 @@
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
     <div id="lblDatos" style="font-size:11px;color:#0dcaf0;font-family:monospace">MODO: ESPERA | MOV: 0% | DISPARO: 7%</div>
     <div id="lblMegaAnt" style="font-size:11px;color:#20c997;margin-top:4px;min-height:14px"></div>
-    <div style="font-size:10px;color:#888;margin-top:4px">Usa colores vivos en las motos. Pulsa 🌙 OLED tras calibrar para evitar calor bajo el sol.</div>
+    <div style="font-size:10px;color:#888;margin-top:4px">Pulsa 🌙 OLED tras calibrar para evitar calor bajo el sol.</div>
   </div>
 
 <script src="mx-core.js"></script>
@@ -77,6 +80,7 @@ var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var FB_WU = FB_ROOT + "/warmup_capturas/" + circId;
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
+document.getElementById("lblCircAntTop").textContent = "PISTA: " + circId;
 
 var antId = localStorage.getItem("mxp_ant_id") || "";
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
@@ -92,7 +96,7 @@ var salaCache = {};
 var cfg = {
   estado: "ESPERA", modoDet: "TODO", verVivo: false, orientacion: "V",
   sensPct: 0.07, colorPct: 0.30, pxDiff: 45, antiViento: "OFF", nColores: 2, retardoMs: 25,
-  perfilLuz: { nombre: "Normal", deltaE: 20, minChroma: 20, lGain: 1.0 },
+  perfilLuz: { nombre: "Normal", deltaE: 20, minChroma: 16, lGain: 1.0 },
   roi: { posX: 50, x: 30, y: 15, w: 25, h: 65 }, garajes: {}
 };
 
@@ -155,7 +159,7 @@ function iniciarModoSolo() {
   }, 1000);
 }
 function ayudaAnt() {
-  alert("GUIA ANTENA PRO:\n1. En modo Color (GAR / WARMUP / HIBRIDO), solo detecta colores vivos (Chroma + Hue°): objetos blancos/grises como papel o suelo se rechazan automaticamente.\n2. En interior deja Anti-Viento en OFF en Direccion.\n3. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar bajo el sol.");
+  alert("GUIA ANTENA PRO:\n1. En WARM-UP captura y envia SIEMPRE la foto y colores reales de lo que cruce por meta.\n2. En carrera con modo Color, distingue tonos vivos (Chroma + Hue°) y blancos/oscuros exactos para evitar falsos pasos.\n3. En interior deja Anti-Viento en OFF en Direccion.\n4. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar.");
 }
 function toggleVoz() { desbloquearAudio(false); vozOn = !vozOn; var b = document.getElementById("btnVoz"); b.textContent = vozOn ? "Voz ON" : "Voz OFF"; b.style.background = vozOn ? "#20c997" : "#444"; }
 
@@ -210,50 +214,54 @@ function emitirPaso(pid) {
 }
 
 function capturarYEnviarWarmup(dProc) {
-  var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1200) return; _ultWuTs = ts;
+  var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1100) return; _ultWuTs = ts;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
-  var rw = Math.max(12, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(12, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
-  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(24, (cfg.pxDiff || 45) * 0.8);
+  var rw = Math.max(14, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(14, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.65);
 
-  var muestrearZona = function(x0, y0, w0, h0, minCh) {
-    var bS = {}, bI = {}, midY = y0 + Math.floor(h0 * 0.48), cntMov = 0;
+  var muestrear = function(x0, y0, w0, h0, soloMov, minCh) {
+    var bS = {}, bI = {}, midY = y0 + Math.floor(h0 * 0.48), cnt = 0;
     for (var py = y0; py < y0 + h0; py++) {
       for (var px = x0; px < x0 + w0; px++) {
         var k = (py * PW + px) * 4;
-        if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
-        cntMov++;
+        if (soloMov && (Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
+        cnt++;
         var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG), lb = rgbLab(rr, gg, bb);
-        if (lb.L < 14 || lb.L > 92 || Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh) continue;
-        var zn = (py < midY) ? "SUP" : "INF", key = Math.round(rr / 32) + "_" + Math.round(gg / 32) + "_" + Math.round(bb / 32), dst = (zn === "SUP") ? bS : bI;
+        if (minCh > 0 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh) continue;
+        var zn = (py < midY) ? "SUP" : "INF", key = Math.round(rr / 34) + "_" + Math.round(gg / 34) + "_" + Math.round(bb / 34), dst = (zn === "SUP") ? bS : bI;
         if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn }; dst[key].cnt++; dst[key].r += rr; dst[key].g += gg; dst[key].b += bb;
       }
     }
     var topC = function(mp, lim) { return Object.keys(mp).map(function(k){ var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n); return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, lim); };
-    return { cntMov: cntMov, cols: topC(bS, 2).concat(topC(bI, 2)).slice(0, 3) };
+    return { cnt: cnt, cols: topC(bS, 2).concat(topC(bI, 2)).slice(0, 3) };
   };
 
-  var res = muestrearZona(rx0, ry0, rw, rh, 18), cropRect = { x: r.x, y: r.y, w: r.w, h: r.h };
-  if (res.cntMov < 12 || !res.cols.length) { res = muestrearZona(12, 8, PW - 24, PH - 16, 16); cropRect = { x: 10, y: 8, w: 80, h: 84 }; }
-  if (!res.cols.length) {
-    _ultTxtAnt = "WU sin color vivo";
-    document.getElementById("lblMegaAnt").textContent = "⚠️ Warm-Up: objeto blanco/neutro sin colores vivos";
-    return;
+  var cropRect = { x: r.x, y: r.y, w: r.w, h: r.h };
+  var res = muestrear(rx0, ry0, rw, rh, true, 14);
+  if (!res.cols.length) res = muestrear(rx0, ry0, rw, rh, true, 0);
+  if (res.cnt < 8 || !res.cols.length) {
+    cropRect = { x: 12, y: 10, w: 76, h: 80 };
+    res = muestrear(23, 11, PW - 46, PH - 22, true, 12);
+    if (!res.cols.length) res = muestrear(23, 11, PW - 46, PH - 22, true, 0);
+    if (!res.cols.length) res = muestrear(Math.floor(PW * 0.35), Math.floor(PH * 0.25), Math.floor(PW * 0.3), Math.floor(PH * 0.5), false, 0);
   }
+  if (!res.cols.length) return;
 
   try {
     var sx = Math.floor((cropRect.x / 100) * 384), sy = Math.floor((cropRect.y / 100) * 216);
     var sw = Math.max(24, Math.floor((cropRect.w / 100) * 384)), sh = Math.max(24, Math.floor((cropRect.h / 100) * 216));
     _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 200, 140);
+    document.getElementById("lblMegaAnt").textContent = "⏳ Subiendo captura Warm-Up...";
     fetch(FB_WU + "/" + antId + "_" + ts + ".json", {
-      method: "PUT", body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.55), colores: res.cols })
+      method: "PUT", body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.52), colores: res.cols })
     }).then(function(resp) {
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       _ultTxtAnt = "WU:" + res.cols.length + "c"; mxBeep(720, 80);
-      document.getElementById("lblMegaAnt").textContent = "🔥 Captura Warm-Up enviada (" + res.cols.length + " tonos)";
+      document.getElementById("lblMegaAnt").textContent = "✅ Warm-Up enviado a Direccion (" + res.cols.length + " tonos)";
     }).catch(function(err) {
       _ultTxtAnt = "Err WU";
-      document.getElementById("lblMegaAnt").textContent = "❌ Error enviando Warm-Up (" + err.message + ")";
+      document.getElementById("lblMegaAnt").textContent = "❌ Error Firebase Warm-Up: " + err.message;
     });
   } catch (e) {}
 }
@@ -275,22 +283,18 @@ function evaluarRoiColor(dProc) {
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(12, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(12, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
-  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, dEMax = pL.deltaE || 20, minC = Math.max(18, pL.minChroma || 20);
-  var diffMin = Math.max(24, (cfg.pxDiff || 45) * 0.85), midY = ry0 + Math.floor(rh * 0.48), fg = [], vivosCnt = 0;
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, dEMax = pL.deltaE || 20;
+  var diffMin = Math.max(22, (cfg.pxDiff || 45) * 0.85), midY = ry0 + Math.floor(rh * 0.48), fg = [];
 
   for (var py = ry0; py < ry0 + rh; py += 2) {
     for (var px = rx0; px < rx0 + rw; px += 2) {
       var k = (py * PW + px) * 4;
       if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
       var lb = rgbLab(Math.min(255, dProc[k] * lG), Math.min(255, dProc[k + 1] * lG), Math.min(255, dProc[k + 2] * lG));
-      if (lb.L < 14 || lb.L > 94) continue;
-      var ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-      if (ch >= minC) vivosCnt++;
-      fg.push({ lb: lb, ch: ch, hue: Math.atan2(lb.b, lb.a), zn: (py < midY) ? "SUP" : "INF" });
+      fg.push({ lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), hue: Math.atan2(lb.b, lb.a), zn: (py < midY) ? "SUP" : "INF" });
     }
   }
-  if (fg.length < 16) return { pid: "", info: "FG:" + fg.length + "px (muy poco)" };
-  if (vivosCnt < 8) return { pid: "", info: "FG:" + fg.length + "px | Neutro/Papel (" + vivosCnt + " vivos)" };
+  if (fg.length < 14) return { pid: "", info: "FG:" + fg.length + "px (muy poco)" };
 
   var minRatio = (cfg.colorPct || 0.30) * 0.72, reqCols = Number(cfg.nColores || 2), minPxPorColor = Math.max(5, Math.round(fg.length * 0.04));
   var bestPid = "", bestScore = 0, bestDiag = "";
@@ -298,32 +302,49 @@ function evaluarRoiColor(dProc) {
   for (var i = 0; i < ks.length; i++) {
     var pid = ks[i], firmas = obtenerFirmasPiloto(gObj, pid);
     for (var f = 0; f < firmas.length; f++) {
-      var sigRaw = firmas[f];
-      var sig = sigRaw.filter(function(c){ var r0 = parseRgb(c), l0 = c.lab || rgbLab(r0.r, r0.g, r0.b); return Math.sqrt(l0.a * l0.a + l0.b * l0.b) >= 18; });
-      if (!sig.length) continue;
-      var hitC = new Array(sig.length).fill(0), totH = 0;
+      var sig = firmas[f]; if (!sig.length) continue;
+      var hitC = new Array(sig.length).fill(0), totH = 0, hasChromaticSig = false;
+      for (var sc0 = 0; sc0 < sig.length; sc0++) {
+        var rS = parseRgb(sig[sc0]), lS = sig[sc0].lab || rgbLab(rS.r, rS.g, rS.b);
+        if (Math.sqrt(lS.a * lS.a + lS.b * lS.b) >= 20) { hasChromaticSig = true; break; }
+      }
 
       for (var p = 0; p < fg.length; p++) {
-        var px = fg[p]; if (px.ch < minC) continue;
+        var px = fg[p];
         for (var ci = 0; ci < sig.length; ci++) {
           var c0 = sig[ci], z0 = c0.zona || "CAR";
           if ((z0 === "SUP" && px.zn !== "SUP") || (z0 === "INF" && px.zn !== "INF")) continue;
-          var r0 = parseRgb(c0), l0 = c0.lab || rgbLab(r0.r, r0.g, r0.b), h0 = Math.atan2(l0.b, l0.a);
-          var dHue = Math.abs(px.hue - h0); if (dHue > Math.PI) dHue = 2 * Math.PI - dHue;
-          if (dHue > 0.44) continue;
-          var dL = px.lb.L - l0.L, da = px.lb.a - l0.a, db = px.lb.b - l0.b;
-          if (Math.sqrt(dL * dL * 0.65 + da * da + db * db) < dEMax) { hitC[ci]++; totH++; break; }
+          var r0 = parseRgb(c0), l0 = c0.lab || rgbLab(r0.r, r0.g, r0.b), c0Ch = Math.sqrt(l0.a * l0.a + l0.b * l0.b);
+          if (c0Ch >= 20) {
+            if (px.ch < 14) continue;
+            var h0 = Math.atan2(l0.b, l0.a), dHue = Math.abs(px.hue - h0); if (dHue > Math.PI) dHue = 2 * Math.PI - dHue;
+            if (dHue > 0.45) continue;
+            var dL = px.lb.L - l0.L, da = px.lb.a - l0.a, db = px.lb.b - l0.b;
+            if (Math.sqrt(dL * dL * 0.70 + da * da + db * db) < dEMax) { hitC[ci]++; totH++; break; }
+          } else {
+            if (px.ch >= 22 || Math.abs(px.lb.L - l0.L) >= 13) continue;
+            var dL2 = px.lb.L - l0.L, da2 = px.lb.a - l0.a, db2 = px.lb.b - l0.b;
+            if (Math.sqrt(dL2 * dL2 + da2 * da2 + db2 * db2) < Math.min(18, dEMax)) { hitC[ci]++; totH++; break; }
+          }
         }
       }
-      var matched = 0; for (var h = 0; h < hitC.length; h++) if (hitC[h] >= minPxPorColor) matched++;
+      var matched = 0, matchedChrom = 0;
+      for (var h = 0; h < hitC.length; h++) {
+        if (hitC[h] >= minPxPorColor) {
+          matched++;
+          var rH = parseRgb(sig[h]), lH = sig[h].lab || rgbLab(rH.r, rH.g, rH.b);
+          if (Math.sqrt(lH.a * lH.a + lH.b * lH.b) >= 20) matchedChrom++;
+        }
+      }
       var ratio = totH / fg.length, reqEf = Math.min(reqCols, sig.length);
+      var chromOk = !hasChromaticSig || matchedChrom >= 1;
       var diag = pid + ":" + matched + "/" + reqEf + "col " + Math.round(ratio * 100) + "%";
-      if (matched >= reqEf && ratio >= minRatio) {
+      if (matched >= reqEf && chromOk && ratio >= minRatio) {
         var sc = matched * 1000 + totH; if (sc > bestScore) { bestScore = sc; bestPid = pid; bestDiag = diag; }
       } else if (!bestPid) bestDiag = diag;
     }
   }
-  return { pid: bestPid, info: "FG:" + fg.length + "px | " + (bestDiag || "Sin firma viva") };
+  return { pid: bestPid, info: "FG:" + fg.length + "px | " + (bestDiag || "Sin match") };
 }
 
 function comprobarEsquinasMovidas(dFull, pxDiff) {
@@ -414,7 +435,7 @@ function procFrame() {
       else {
         var rWu = evaluarRoiColor(dFull);
         if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; document.getElementById("lblEstado").textContent = "✅ TEST: " + rWu.pid; emitirPaso(rWu.pid); }
-        else { _ultTxtAnt = rWu.info; document.getElementById("lblEstado").textContent = "WARM-UP (" + rWu.info + ")"; }
+        else { _ultTxtAnt = rWu.info; document.getElementById("lblEstado").textContent = "🔥 CAPTURA WARM-UP"; }
       }
       return;
     }
