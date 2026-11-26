@@ -1,4 +1,6 @@
 (function() {
+  var _s = mxGar._s;
+
   function drawCheckered(cx, y, h) {
     var sz = 16;
     for (var x = 0; x < 720; x += sz) {
@@ -8,42 +10,22 @@
   }
 
   Object.assign(mxGar, {
-    _initTiempos: function() {
-      var st = document.getElementById(mxGar._s.cfg.tmpId || "slotTiempos");
-      if (st) {
-        st.innerHTML =
-          '<div class="card" style="border-color:#ffc107">' +
-            '<b style="color:#ffc107;font-size:12px">📊 ESTADISTICAS GLOBALES</b>' +
-            '<div class="grid2" style="margin-top:6px">' +
-              '<div class="stat"><div style="font-size:10px;color:#888">MEJOR VUELTA</div><div id="stMejor" style="font-size:18px;font-weight:bold;color:#20c997">--</div></div>' +
-              '<div class="stat"><div style="font-size:10px;color:#888">REGULARIDAD</div><div id="stReg" style="font-size:18px;font-weight:bold;color:#0dcaf0">--%</div></div>' +
-              '<div class="stat"><div style="font-size:10px;color:#888">TOTAL VUELTAS</div><div id="stVtas" style="font-size:18px;font-weight:bold">0</div></div>' +
-              '<div class="stat"><div style="font-size:10px;color:#888">RANGO ACTUAL</div><div id="stRango" style="font-size:16px;font-weight:bold;color:#ffc107">ROOKIE</div></div>' +
-            '</div>' +
-            '<div class="grid2" style="margin-top:8px"><button onclick="vibrar();mxGar.abrirBackup(\'EXPORT\')" style="background:#1c2530;color:#0dcaf0;font-size:10px">📤 EXPORTAR BACKUP</button><button onclick="vibrar();mxGar.abrirBackup(\'IMPORT\')" style="background:#1d2b24;color:#20c997;font-size:10px">📥 RESTAURAR BACKUP</button></div>' +
-          '</div>' +
-          '<div class="card" style="border-color:#20c997"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#20c997;font-size:12px">🏆 CAMPEONATO DEL DIA (MANGAS MXGP)</b><button onclick="vibrar();mxGar.podioPng()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;padding:5px 8px;font-size:10px">🖼️ PODIO PNG</button></div><div id="boxCampDia" style="margin-top:6px;font-size:12px;color:#ccc">Aun no hay mangas guardadas hoy.</div></div>' +
-          '<div class="card" style="border-color:#0dcaf0"><b style="color:#0dcaf0;font-size:12px">⚔️ DUELO 1 VS 1 Y SETUPS RIVALES</b><select id="selRivalDuelo" onchange="mxGar.pintarDuelo()" style="margin-top:6px"></select><div id="boxDuelo" style="font-size:12px;color:#ddd"></div></div>' +
-          '<div class="card"><b style="color:#ffc107;font-size:12px">📅 HISTORIAL POR DIAS RODADOS</b><div id="listaDiasHist" style="margin-top:6px"></div></div>';
-      }
-      if (!document.getElementById("modalBackup")) {
-        var wrap = document.createElement("div");
-        wrap.innerHTML =
-          '<div id="modalBackup" class="cam-modal" onclick="if(event.target===this)this.style.display=\'none\'"><div class="cam-box" style="border-color:#20c997"><div style="font-size:14px;font-weight:bold;color:#20c997;margin-bottom:6px;text-align:center">💾 BACKUP DE GARAJE E HISTORIAL</div><div id="subBackup" style="font-size:11px;color:#aaa;margin-bottom:8px"></div><textarea id="txtBackupJson" rows="7" style="font-family:monospace;font-size:11px" placeholder="Pega aqui el JSON de backup..."></textarea><div class="grid2" style="margin-bottom:6px"><button onclick="vibrar();mxGar.copiarBackup()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;font-size:11px">📋 COPIAR</button><button onclick="vibrar();mxGar.descargarBackup()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:11px">⬇️ DESCARGAR .JSON</button></div><div class="grid2"><button onclick="vibrar(25);mxGar.restaurarBackup()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;font-size:11px">📥 RESTAURAR</button><button onclick="vibrar();document.getElementById(\'modalBackup\').style.display=\'none\'" style="background:#333;color:#fff;font-size:11px">CERRAR</button></div><div id="msgBackup" style="font-size:11px;margin-top:6px;text-align:center;font-weight:bold"></div></div></div>' +
-          '<canvas id="cnvPng" width="720" height="720" style="display:none"></canvas>';
-        document.body.appendChild(wrap);
-      }
+    actualizarRango: function() {
+      var tot = _s.hist.reduce(function(s, d){ return s + (d.vtas ? d.vtas.length : 0); }, 0);
+      var rng = tot >= 400 ? "LEYENDA MX" : (tot >= 150 ? "PRO RIDER" : (tot >= 50 ? "AMATEUR" : "ROOKIE"));
+      ["badgeRango", "badgeRangoDir"].forEach(function(id){ var el = document.getElementById(id); if (el) el.textContent = rng; });
+      return { tot: tot, rng: rng };
     },
     procesarMiVuelta: function(lap, mej, pils, lblDeltaId, deltaBolId) {
-      var s = mxGar._s, fmtDeltaVoz = function(ms) {
+      var fmtDeltaVoz = function(ms) {
         var dTot = Math.max(1, Math.round(ms / 100));
         if (dTot < 10) return dTot + (dTot === 1 ? " decima" : " decimas");
         var sg = Math.floor(dTot / 10), dc = dTot % 10;
         return sg + (sg === 1 ? " segundo" : " segundos") + (dc > 0 ? (" y " + dc + (dc === 1 ? " decima" : " decimas")) : "");
       };
-      var todas = []; s.hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
+      var todas = []; _s.hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
       var mejorHist = todas.length ? Math.min.apply(null, todas) : 0, esRP = (!mejorHist || lap < mejorHist);
-      var p1 = pils[0], root = s.cfg.getRoot(), v = ((root.pilotos || {})[s.cfg.uid] || {}).vueltas || 1;
+      var p1 = pils[0], root = _s.cfg.getRoot(), v = ((root.pilotos || {})[_s.cfg.uid] || {}).vueltas || 1;
       var difH = "Ultima: " + fmt(lap), difB = fmt(lap), voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
       if (esRP && v > 1 && mejorHist > 0) {
         voz += ", record personal, " + fmtDeltaVoz(mejorHist - lap) + " menos";
@@ -65,24 +47,24 @@
       var elD = document.getElementById(lblDeltaId), elB = document.getElementById(deltaBolId);
       if (elD) elD.innerHTML = difH;
       if (elB) elB.textContent = difB;
-      if (s.cfg.onSpeak) s.cfg.onSpeak(voz);
+      if (_s.cfg.onSpeak) _s.cfg.onSpeak(voz);
 
       var hoy = new Date().toLocaleDateString("es-ES");
-      if (!s.hist.length || s.hist[s.hist.length - 1].fecha !== hoy) s.hist.push({ fecha: hoy, vtas: [] });
-      s.hist[s.hist.length - 1].vtas.push(lap);
-      mxGar._saveHist();
-      s.motos[s.idx].vtas = (s.motos[s.idx].vtas || 0) + 1;
-      mxGar._saveMotos();
+      if (!_s.hist.length || _s.hist[_s.hist.length - 1].fecha !== hoy) _s.hist.push({ fecha: hoy, vtas: [] });
+      _s.hist[_s.hist.length - 1].vtas.push(lap);
+      localStorage.setItem("mxp_hist_" + _s.cfg.uid, JSON.stringify(_s.hist));
+      _s.motos[_s.idx].vtas = (_s.motos[_s.idx].vtas || 0) + 1;
+      localStorage.setItem("mxp_gar_" + _s.cfg.uid, JSON.stringify(_s.motos));
       this.actualizarRango();
 
-      var mAct = s.motos[s.idx] || s.motos[0], cm = s.cfg.getCircMeta ? s.cfg.getCircMeta() : { metros: 200, factor: 1 };
-      var totM = s.hist.reduce(function(ac, d){ return ac + (d.vtas ? d.vtas.length : 0); }, 0);
-      var medM = totM ? (s.hist.reduce(function(ac, d){ return ac + d.vtas.reduce(function(a, b){ return a + b; }, 0); }, 0) / totM) : lap;
+      var mAct = _s.motos[_s.idx] || _s.motos[0], cm = _s.cfg.getCircMeta ? _s.cfg.getCircMeta() : { metros: 200, factor: 1 };
+      var totM = _s.hist.reduce(function(s, d){ return s + (d.vtas ? d.vtas.length : 0); }, 0);
+      var medM = totM ? (_s.hist.reduce(function(s, d){ return s + d.vtas.reduce(function(a, b){ return a + b; }, 0); }, 0) / totM) : lap;
       var regM = medM > 0 ? Math.max(50, Math.min(100, Math.round((mej / medM) * 100))) : 100;
-      fetch(FB_ROOT + "/mundial/" + s.cfg.uid + "_" + s.cfg.circId + ".json", {
+      fetch(FB_ROOT + "/mundial/" + _s.cfg.uid + "_" + _s.cfg.circId + ".json", {
         method: "PUT",
         body: JSON.stringify({
-          nombre: s.cfg.getNom(), circuito: s.cfg.circNom, disc: mAct.disc || "MX",
+          nombre: _s.cfg.getNom(), circuito: _s.cfg.circNom, disc: mAct.disc || "MX",
           sup: (mAct.disc === "SM" ? "SM Asfalto" : "MX Tierra"),
           mejorMs: mej, teorico200Ms: Math.round(mej * (200 / (cm.metros || 200)) / (cm.factor || 1)),
           velKmh: Number((((cm.metros || 200) / (mej / 1000)) * 3.6).toFixed(1)),
@@ -92,51 +74,50 @@
     },
     pintarTiempos: function() {
       var stM = document.getElementById("stMejor"); if (!stM) return;
-      var s = mxGar._s, infoR = this.actualizarRango(), todas = [];
-      s.hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
+      var infoR = this.actualizarRango(), todas = [];
+      _s.hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
       var mej = todas.length ? Math.min.apply(null, todas) : 0, med = todas.length ? (todas.reduce(function(a, b){ return a + b; }, 0) / todas.length) : 0;
       stM.textContent = fmt(mej);
       document.getElementById("stReg").textContent = med > 0 ? Math.max(50, Math.min(100, Math.round((mej / med) * 100))) + "%" : "--%";
       document.getElementById("stVtas").textContent = infoR.tot;
       document.getElementById("stRango").textContent = infoR.rng;
 
-      var root = s.cfg.getRoot(), cInfo = calcularCampeonato(root.campeonato || {});
+      var root = _s.cfg.getRoot(), cInfo = calcularCampeonato(root.campeonato || {});
       document.getElementById("boxCampDia").innerHTML = cInfo.tabla.length
         ? ("<div style='font-size:10px;color:#0dcaf0;margin-bottom:4px'>Mangas puntuadas: <b>" + cInfo.nMangas + "</b></div>" +
           cInfo.tabla.map(function(x, i){ return "<div class='fila'><span><b>" + (i + 1) + "º #" + esc(x.dorsal) + " " + esc(x.nombre) + "</b> (" + x.mangas + "m)</span><b style='color:#ffc107'>" + x.pts + " pts</b></div>"; }).join(""))
         : "Aun no hay mangas guardadas hoy.";
 
       var pAll = root.pilotos || {}, sRiv = document.getElementById("selRivalDuelo");
-      var rivs = Object.keys(pAll).filter(function(k){ return k !== s.cfg.uid && pAll[k] && pAll[k].nombre; });
+      var rivs = Object.keys(pAll).filter(function(k){ return k !== _s.cfg.uid && pAll[k] && pAll[k].nombre; });
       var prevR = sRiv.value;
       sRiv.innerHTML = rivs.length ? rivs.map(function(k){ return '<option value="' + esc(k) + '">' + esc(pAll[k].nombre) + ' (#' + esc(pAll[k].dorsal || '--') + ')</option>'; }).join("") : '<option value="">Sin rivales en sala hoy</option>';
       if (prevR && rivs.indexOf(prevR) >= 0) sRiv.value = prevR;
       this.pintarDuelo();
 
-      document.getElementById("listaDiasHist").innerHTML = s.hist.slice().reverse().map(function(d, ix) {
-        var rIx = s.hist.length - 1 - ix, bestD = d.vtas.length ? Math.min.apply(null, d.vtas) : 0;
+      document.getElementById("listaDiasHist").innerHTML = _s.hist.slice().reverse().map(function(d, ix) {
+        var rIx = _s.hist.length - 1 - ix, bestD = d.vtas.length ? Math.min.apply(null, d.vtas) : 0;
         return '<div class="fila"><div><b>' + esc(d.fecha) + '</b> • ' + d.vtas.length + ' vueltas<div style="font-size:11px;color:#20c997">Mejor: ' + fmt(bestD) + '</div></div><button onclick="vibrar();mxGar.pngDia(' + rIx + ')" style="background:#ffc107;color:#000;padding:5px 8px;font-size:10px">PNG</button></div>';
       }).join("") || '<div style="color:#777;font-size:12px">Aun no tienes dias rodados guardados.</div>';
     },
     pintarDuelo: function() {
-      var s = mxGar._s, root = s.cfg.getRoot(), pAll = root.pilotos || {}, gAll = root.garaje || {};
+      var root = _s.cfg.getRoot(), pAll = root.pilotos || {}, gAll = root.garaje || {};
       var rk = document.getElementById("selRivalDuelo").value, bx = document.getElementById("boxDuelo");
       if (!rk || !pAll[rk]) { bx.textContent = "Entra en Sala Pista con amigos para comparar tiempos y setups."; return; }
-      var rv = pAll[rk], gR = gAll[rk] || {}, yo = pAll[s.cfg.uid] || {}, difHtml = "";
+      var rv = pAll[rk], gR = gAll[rk] || {}, yo = pAll[_s.cfg.uid] || {}, difHtml = "";
       if (yo.mejorMs && rv.mejorMs) {
         var df = (yo.mejorMs - rv.mejorMs) / 1000;
         difHtml = df <= 0 ? "<span class='tv-rp'> (" + df.toFixed(2) + "s por delante)</span>" : "<span style='color:#ff4d5e'> (+" + df.toFixed(2) + "s detras)</span>";
       }
-      bx.innerHTML = "<div style='background:#101218;padding:9px;border-radius:8px;margin-top:6px'><b>" + esc(s.cfg.getNom()) + ":</b> " + fmt(yo.mejorMs) + " vs <b>" + esc(rv.nombre) + ":</b> " + fmt(rv.mejorMs) + difHtml +
+      bx.innerHTML = "<div style='background:#101218;padding:9px;border-radius:8px;margin-top:6px'><b>" + esc(_s.cfg.getNom()) + ":</b> " + fmt(yo.mejorMs) + " vs <b>" + esc(rv.nombre) + ":</b> " + fmt(rv.mejorMs) + difHtml +
         "<br><span style='color:#0dcaf0;font-size:11px'>Moto rival (" + esc(gR.disc || "MX") + "): " + esc(gR.modelo || "Losi Promoto-MX") + "<br>Setup: " + esc(gR.setupTxt || "Serie") + "</span></div>";
     },
     podioPng: function() {
-      var c = mxGar._s.cfg;
-      descargarPodioPngCore("cnvPng", c.circNom, c.circId, (c.getRoot().campeonato || {}));
+      descargarPodioPngCore("cnvPng", _s.cfg.circNom, _s.cfg.circId, (_s.cfg.getRoot().campeonato || {}));
     },
     pngDia: function(ix) {
-      var s = mxGar._s, d = s.hist[ix]; if (!d || !d.vtas.length) return;
-      var m = s.motos[s.idx] || s.motos[0], foto = (Array.isArray(m.fotos) ? m.fotos.find(Boolean) : "") || "";
+      var d = _s.hist[ix]; if (!d || !d.vtas.length) return;
+      var m = _s.motos[_s.idx] || _s.motos[0], foto = (Array.isArray(m.fotos) ? m.fotos.find(Boolean) : "") || "";
       var best = Math.min.apply(null, d.vtas), med = d.vtas.reduce(function(a, b){ return a + b; }, 0) / d.vtas.length;
       var reg = Math.max(50, Math.min(100, Math.round((best / med) * 100))), rng = this.actualizarRango().rng;
 
@@ -145,9 +126,9 @@
         cx.fillStyle = "#0b0c10"; cx.fillRect(0, 0, 720, 720);
         drawCheckered(cx, 0, 18); drawCheckered(cx, 702, 18);
         cx.textAlign = "center";
-        cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial"; cx.fillText(s.cfg.circNom.toUpperCase(), 360, 68);
+        cx.fillStyle = "#ffc107"; cx.font = "bold 30px Arial"; cx.fillText(_s.cfg.circNom.toUpperCase(), 360, 68);
         cx.fillStyle = "#0dcaf0"; cx.font = "bold 19px Arial"; cx.fillText((m.disc === "SM" ? "SUPERMOTO" : "MOTOCROSS 1/4 RC") + " • " + rng, 360, 100);
-        cx.fillStyle = "#fff"; cx.font = "bold 34px Arial"; cx.fillText(s.cfg.getNom().toUpperCase() + " (#" + (m.dorsal || "1") + ")", 360, 148);
+        cx.fillStyle = "#fff"; cx.font = "bold 34px Arial"; cx.fillText(_s.cfg.getNom().toUpperCase() + " (#" + (m.dorsal || "1") + ")", 360, 148);
 
         if (imgObj) {
           cx.fillStyle = "#161922"; cx.fillRect(150, 168, 420, 220);
@@ -168,12 +149,11 @@
       else render(null);
     },
     abrirBackup: function(modo) {
-      var s = mxGar._s;
       document.getElementById("modalBackup").style.display = "flex";
       document.getElementById("msgBackup").textContent = "";
       var ta = document.getElementById("txtBackupJson");
       if (modo === "EXPORT") {
-        ta.value = JSON.stringify({ v: 1, uid: s.cfg.uid, nombre: s.cfg.getNom(), fecha: new Date().toISOString(), motosGar: s.motos, histDias: s.hist });
+        ta.value = JSON.stringify({ v: 1, uid: _s.cfg.uid, nombre: _s.cfg.getNom(), fecha: new Date().toISOString(), motosGar: _s.motos, histDias: _s.hist });
         document.getElementById("subBackup").textContent = "Copia este texto o descarga el archivo .JSON:";
       } else { ta.value = ""; document.getElementById("subBackup").textContent = "Pega aqui el texto JSON de tu backup y pulsa RESTAURAR:"; }
     },
@@ -185,16 +165,16 @@
     },
     descargarBackup: function() {
       var txt = document.getElementById("txtBackupJson").value.trim(); if (!txt) return;
-      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = "Backup_MX_" + mxGar._s.cfg.uid + ".json"; a.click();
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = "Backup_MX_" + _s.cfg.uid + ".json"; a.click();
     },
     restaurarBackup: function() {
-      var s = mxGar._s, txt = document.getElementById("txtBackupJson").value.trim(), msg = document.getElementById("msgBackup");
+      var txt = document.getElementById("txtBackupJson").value.trim(), msg = document.getElementById("msgBackup");
       if (!txt) { msg.style.color = "#ff4d5e"; msg.textContent = "Pega el JSON primero"; return; }
       try {
         var obj = JSON.parse(txt);
         if (!Array.isArray(obj.motosGar) && !Array.isArray(obj.histDias)) throw new Error("Formato invalido");
-        if (Array.isArray(obj.motosGar) && obj.motosGar.length) { s.motos = obj.motosGar; s.idx = 0; mxGar._saveMotos(); this.subirNube(); }
-        if (Array.isArray(obj.histDias)) { s.hist = obj.histDias; mxGar._saveHist(); }
+        if (Array.isArray(obj.motosGar) && obj.motosGar.length) { _s.motos = obj.motosGar; _s.idx = 0; localStorage.setItem("mxp_gar_" + _s.cfg.uid, JSON.stringify(_s.motos)); this.subirNube(); }
+        if (Array.isArray(obj.histDias)) { _s.hist = obj.histDias; localStorage.setItem("mxp_hist_" + _s.cfg.uid, JSON.stringify(_s.hist)); }
         this.pintarGaraje(); this.pintarTiempos();
         msg.style.color = "#20c997"; msg.textContent = "✅ ¡Backup restaurado!";
       } catch (e) { msg.style.color = "#ff4d5e"; msg.textContent = "JSON no valido: " + e.message; }

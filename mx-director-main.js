@@ -44,17 +44,7 @@ function toggleAcc(id) {
   el.style.display = open ? "block" : "none"; if (ar) ar.textContent = open ? "▼" : "▶";
   if (id === "acc_wu" && open) refrescarWarmupManual();
 }
-function hablarYAntenas(texto, conBeep, tambienLocal) {
-  if (!texto) return; if (tambienLocal !== false) mxHablar(texto);
-  fetch(FB + "/sala/megafonia.json", { method: "PUT", body: JSON.stringify({ id: "mg_" + ahoraSrv() + "_" + Math.random().toString(36).slice(2, 5), ts: ahoraSrv(), texto: texto, beep: !!conBeep }) }).catch(function(){});
-}
-function comprobarBloqueoUnicoYArrancar() {
-  fbJson(FB + "/sala.json").catch(function(){ return {}; }).then(function(s) {
-    s = s || {};
-    if (s.dirSession && s.dirSession !== dirSessionId && s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 20000) document.getElementById("modalDirOcupado").style.display = "flex";
-    else iniciarDirector();
-  });
-}
+
 function desbloquearAudioD(av) { desbloquearAudioCore(); if (av) { mxBeep(880, 90); mxHablar("Audio activado"); } }
 function salirDirector() {
   mxGar.cerrarCamaras(); [_esRoot, _esImg1, _esImg2, _esWu].forEach(function(es){ if (es) try { es.close(); } catch (e) {} });
@@ -81,14 +71,8 @@ function aplicarModoDirPilotoUI(limpiarUid) {
     fetch(FB + "/pilotos/director.json", { method: "DELETE" }).catch(function(){});
     if (rootCache.pilotos && rootCache.pilotos.director) delete rootCache.pilotos.director;
     if (limpiarUid && uid && uid !== "director") {
-      var yo = (rootCache.pilotos || {})[uid];
-      if (yo && yo.vueltas > 0) {
-        yo.enPista = false; yo.tsActivo = 0;
-        fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: false, tsActivo: 0 }) }).catch(function(){});
-      } else {
-        fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){});
-        if (rootCache.pilotos) delete rootCache.pilotos[uid];
-      }
+      fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){});
+      if (rootCache.pilotos) delete rootCache.pilotos[uid];
     }
   }
 }
@@ -116,27 +100,19 @@ function inscribirDirPiloto() {
   }).catch(function(){});
 }
 
-function abrirBolsillo() { desbloquearAudioD(false); document.getElementById("bolsillo").style.display = "flex"; try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); } catch (e) {} }
-function iniciarUnlockBol() {
-  if (_tUnlockBol) return; _pctUnlockBol = 0;
-  _tUnlockBol = setInterval(function(){ _pctUnlockBol += 5; document.getElementById("barUnlockBol").style.width = _pctUnlockBol + "%"; if (_pctUnlockBol >= 100) { cancelarUnlockBol(); document.getElementById("bolsillo").style.display = "none"; try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch (e) {} } }, 90);
-}
-function cancelarUnlockBol() { if (_tUnlockBol) { clearInterval(_tUnlockBol); _tUnlockBol = null; } _pctUnlockBol = 0; document.getElementById("barUnlockBol").style.width = "0%"; }
-
-function verFotoFinish() {
-  document.getElementById("modalFf").style.display = "flex"; document.getElementById("txtFfInfo").textContent = "Cargando Foto-Finish..."; document.getElementById("imgFf").src = "";
-  var pils = rootCache.pilotos || {};
-  fbJson(FB_FF).then(function(ff) {
-    if (!ff || !ff.img) { document.getElementById("txtFfInfo").textContent = "Aun no hay Foto-Finish."; return; }
-    document.getElementById("imgFf").src = ff.img;
-    var nomP = (ff.pid && pils[ff.pid]) ? pils[ff.pid].nombre : (ff.modo === "TODO" ? "Cualquier moto" : "Paso en meta");
-    document.getElementById("txtFfInfo").textContent = (ff.antNom || "Meta") + " • " + nomP + " • " + new Date(ff.ts).toLocaleTimeString("es-ES");
-  }).catch(function(){ document.getElementById("txtFfInfo").textContent = "Sin foto."; });
-}
-
-function renderSwatches(g) {
-  var cs = (g && Array.isArray(g.colores)) ? g.colores.slice(0, 3) : [];
-  return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
+function pintarChecklist(antsAct, pils, s) {
+  var calOk = antsAct.length > 0 && antsAct.every(function(k){ return rootCache.antenas[k] && rootCache.antenas[k].calibrada; });
+  var gar = rootCache.garaje || {}, md = s.modoDet || "TODO";
+  var colOk = (md === "TODO") || pils.some(function(p){ var g = gar[p.id]; return g && ((g.colores && g.colores.length) || g.firmasWarmup); });
+  var pasos = [
+    { ok: antsAct.length > 0, txt: "1. Antenas (Cam1: " + (antsAct.indexOf("ant_1") >= 0 ? "✓" : "No") + " • Cam2: " + (antsAct.indexOf("ant_2") >= 0 ? "✓" : "No") + ")" },
+    { ok: !!(s.perfilLuz && s.perfilLuz.nombre), txt: "2. Perfil Luz (" + esc((s.perfilLuz && s.perfilLuz.nombre) || "Normal") + ")" },
+    { ok: calOk, txt: "3. Pista vacia calibrada" },
+    { ok: pils.some(function(p){ return p.activo; }), txt: "4. Parrilla (" + pils.filter(function(p){ return p.activo; }).length + " activos)" },
+    { ok: colOk, txt: "5. Firmas (" + esc(md) + ")" },
+    { ok: s.estado === "EN_CURSO" || s.estado === "SALIDA_30" || s.estado === "VALLA_MX", txt: "6. Manga lanzada" }
+  ];
+  document.getElementById("bodyChecklist").innerHTML = pasos.map(function(st){ return '<div class="chk-item' + (st.ok ? ' chk-ok' : '') + '">' + (st.ok ? '✅' : '⏳') + ' <span>' + st.txt + '</span></div>'; }).join("");
 }
 
 function pintarDirUI() {
@@ -179,7 +155,7 @@ function pintarDirUI() {
       if (p.activo) actCnt++;
       if (dirPilotoOn && p.id === uid) document.getElementById("vivoPosP").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
       var dot = p.activo ? "🟢" : "⚪", g = gar[p.id] || {}, pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || "--") + '</span>', sw = renderSwatches(g);
-      hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b class="tv-rp">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + escJs(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + escJs(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
+      hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b class="tv-rp">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
       hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v)</span><b class="tv-rp">' + fmt(p.mejorMs) + '</b></div>';
     });
     document.getElementById("listaSalaDir").innerHTML = hDir || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
@@ -220,21 +196,6 @@ function pintarDirUI() {
   actualizarCronosDir();
 }
 
-function bindCamImg(aid) {
-  var es = new EventSource(FB_IMG + "/" + aid + ".json");
-  var onIm = function(e) {
-    try {
-      var m = JSON.parse(e.data); if (!m) return;
-      if (m.path === "/" && m.data === null) { document.getElementById("img_" + aid).removeAttribute("src"); return; }
-      var im = (m.path === "/" && m.data) ? m.data.img : (m.path === "/img" ? m.data : null);
-      if (im) document.getElementById("img_" + aid).src = im;
-    } catch (er) {}
-  };
-  es.addEventListener("put", onIm); es.addEventListener("patch", onIm);
-  es.onerror = function(){ if (es.readyState === 2) setTimeout(function(){ if (aid === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2"); }, 2500); };
-  return es;
-}
-
 function conectarSseStreams() {
   if (_esRoot) try { _esRoot.close(); } catch (e) {}
   _esRoot = new EventSource(FB + ".json");
@@ -242,11 +203,7 @@ function conectarSseStreams() {
     try {
       var m = JSON.parse(e.data); if (!m || !m.path) return;
       applySsePatch(rootCache, m.path, m.data, e.type === "put");
-      if (m.path.indexOf("/antenas") === 0) {
-        var antsAct = pintarAntenasTel();
-        pintarChecklist(antsAct, ordenarPilotos(rootCache.pilotos, rootCache.sala || {}), rootCache.sala || {});
-        return;
-      }
+      if (m.path.indexOf("/antenas") === 0) { pintarAntenasTel(); return; }
       if (m.path.indexOf("/eventos") === 0 || m.path === "/") Object.keys(rootCache.eventos || {}).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
       pintarDirUI();
       if (m.path.indexOf("/garaje") === 0 || m.path === "/") pintarBandejasWarmup();

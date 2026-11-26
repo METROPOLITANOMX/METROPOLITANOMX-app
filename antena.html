@@ -9,16 +9,15 @@
   .top{max-width:none;border-bottom-color:#6f42c1}
   .modal{display:flex;background:rgba(0,0,0,0.96);z-index:999;padding:20px}
   .caja{background:#161820;border:2px solid #ffc107;border-radius:16px;padding:20px;width:100%;max-width:380px}
-  .visor{display:flex;align-items:center;justify-content:center;width:100%;height:54vh;background:#000;border:2px solid #383e4c;border-radius:12px;overflow:hidden;margin-bottom:8px}
-  .visor-stage{position:relative;width:100%;max-width:calc(54vh * 16 / 9);aspect-ratio:16 / 9;overflow:hidden;background:#000}
-  video{width:100%;height:100%;object-fit:fill;display:block}
+  .visor{position:relative;width:100%;height:54vh;background:#000;border:2px solid #383e4c;border-radius:12px;overflow:hidden;margin-bottom:8px}
+  video{width:100%;height:100%;object-fit:cover;display:block}
   .roi-box{position:absolute;left:30%;top:15%;width:25%;height:65%;border:2px dashed #0dcaf0;background:rgba(13,202,240,0.12);border-radius:8px;pointer-events:none;z-index:2}
   .roi-tag{position:absolute;top:2px;left:4px;font-size:9px;font-weight:bold;color:#0dcaf0;background:rgba(0,0,0,0.72);padding:1px 4px;border-radius:3px}
   .lin{position:absolute;top:0;bottom:0;left:50%;width:4px;background:#ff2a2a;pointer-events:none;z-index:3}
   .bar{position:absolute;bottom:0;left:0;height:6px;width:0%;background:#00e676;z-index:4}
   .panel{background:#15171e;border:1px solid #353b47;border-radius:12px;padding:12px}
   #oledBlack{display:none;position:fixed;inset:0;background:#000;z-index:990;flex-direction:column;justify-content:center;align-items:center;color:#2b2b2b;user-select:none}
-  @media(orientation:landscape){.visor{height:66vh}.visor-stage{max-width:calc(66vh * 16 / 9)}}
+  @media(orientation:landscape){.visor{height:66vh}}
 </style>
 </head>
 <body>
@@ -56,12 +55,10 @@
   </div>
 
   <div class="visor">
-    <div class="visor-stage">
-      <video id="vid" autoplay playsinline muted></video>
-      <div id="roiBox" class="roi-box"><span class="roi-tag">TUNEL ROI</span></div>
-      <div id="lin" class="lin"></div>
-      <div id="bar" class="bar"></div>
-    </div>
+    <video id="vid" autoplay playsinline muted></video>
+    <div id="roiBox" class="roi-box"><span class="roi-tag">TUNEL ROI</span></div>
+    <div id="lin" class="lin"></div>
+    <div id="bar" class="bar"></div>
   </div>
   <canvas id="cnv" width="384" height="216" style="display:none"></canvas>
   <canvas id="cnvProc" width="192" height="108" style="display:none"></canvas>

@@ -1,12 +1,13 @@
 (function() {
-  var _lado = 1, _stCol = null, _raw = null, _mask = null, _undo = [], CW = 240, CH = 160;
+  var _s = mxGar._s;
 
   function pintarCanvasRecorte() {
-    if (!_raw || !_mask) return;
+    if (!_s.raw || !_s.mask) return;
+    var CW = _s.CW, CH = _s.CH;
     var cv = document.getElementById("cnvCapEdit"), cx = cv.getContext("2d"), img = cx.createImageData(CW, CH), od = img.data;
     for (var p = 0; p < CW * CH; p++) {
       var k = p * 4;
-      if (_mask[p]) { od[k] = _raw[k]; od[k + 1] = _raw[k + 1]; od[k + 2] = _raw[k + 2]; od[k + 3] = 255; }
+      if (_s.mask[p]) { od[k] = _s.raw[k]; od[k + 1] = _s.raw[k + 1]; od[k + 2] = _s.raw[k + 2]; od[k + 3] = 255; }
       else od[k + 3] = 0;
     }
     cx.putImageData(img, 0, 0);
@@ -16,23 +17,24 @@
   }
 
   Object.assign(mxGar, {
-    _initColor: function() {
+    _bindCanvasColor: function() {
       var cv = document.getElementById("cnvCapEdit");
       if (!cv) return;
+      var CW = _s.CW, CH = _s.CH;
       cv.addEventListener("pointerdown", function(ev) {
-        if (!_raw || !_mask) return;
+        if (!_s.raw || !_s.mask) return;
         vibrar(12);
         var rect = cv.getBoundingClientRect();
         var sx = Math.max(0, Math.min(CW - 1, Math.floor((ev.clientX - rect.left) * (CW / rect.width))));
         var sy = Math.max(0, Math.min(CH - 1, Math.floor((ev.clientY - rect.top) * (CH / rect.height))));
-        var sp = sy * CW + sx, sk = sp * 4, tr = _raw[sk], tg = _raw[sk + 1], tb = _raw[sk + 2];
-        _undo.push(new Uint8Array(_mask));
-        if (_undo.length > 8) _undo.shift();
+        var sp = sy * CW + sx, sk = sp * 4, tr = _s.raw[sk], tg = _s.raw[sk + 1], tb = _s.raw[sk + 2];
+        _s.undo.push(new Uint8Array(_s.mask));
+        if (_s.undo.length > 8) _s.undo.shift();
         var vis = new Uint8Array(CW * CH), q = [sp]; vis[sp] = 1;
         while (q.length) {
           var p = q.pop(), k = p * 4;
-          if (Math.abs(_raw[k] - tr) + Math.abs(_raw[k + 1] - tg) + Math.abs(_raw[k + 2] - tb) <= 72) {
-            _mask[p] = 0;
+          if (Math.abs(_s.raw[k] - tr) + Math.abs(_s.raw[k + 1] - tg) + Math.abs(_s.raw[k + 2] - tb) <= 72) {
+            _s.mask[p] = 0;
             var x = p % CW, y = (p - x) / CW;
             if (x > 0 && !vis[p - 1]) { vis[p - 1] = 1; q.push(p - 1); }
             if (x < CW - 1 && !vis[p + 1]) { vis[p + 1] = 1; q.push(p + 1); }
@@ -44,16 +46,16 @@
       });
     },
     abrirCapColor: function() {
-      _lado = 1; document.getElementById("boxCapGar").style.display = "block"; this.volverCam();
+      _s.lado = 1; document.getElementById("boxCapGar").style.display = "block"; this.volverCam();
       document.getElementById("txtPasoCap").textContent = "PASO 1 DE 2: ENFOCA LADO 1 EN DIRECTO";
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
-          .then(function(st){ _stCol = st; var v = document.getElementById("vidGarCol"); v.srcObject = st; return v.play(); })
+          .then(function(st){ _s.stCol = st; var v = document.getElementById("vidGarCol"); v.srcObject = st; return v.play(); })
           .catch(function(){ document.getElementById("txtPasoCap").textContent = "SIN CAMARA — USA PALETA VIVA O WARM-UP"; });
       }
     },
     cerrarCapColor: function() {
-      if (_stCol) { _stCol.getTracks().forEach(function(t){ t.stop(); }); _stCol = null; }
+      if (_s.stCol) { _s.stCol.getTracks().forEach(function(t){ t.stop(); }); _s.stCol = null; }
       var b = document.getElementById("boxCapGar"); if (b) b.style.display = "none";
     },
     volverCam: function() {
@@ -68,12 +70,13 @@
     },
     capturarYRecortar: function() {
       var v = document.getElementById("vidGarCol"); if (!v || v.videoWidth <= 0) { alert("Camara aun no disponible."); return; }
+      var CW = _s.CW, CH = _s.CH;
       var tmp = document.createElement("canvas"); tmp.width = CW; tmp.height = CH;
       var tctx = tmp.getContext("2d", { willReadFrequently: true }); tctx.drawImage(v, 0, 0, CW, CH);
-      _raw = tctx.getImageData(0, 0, CW, CH).data; _undo = [];
+      _s.raw = tctx.getImageData(0, 0, CW, CH).data; _s.undo = [];
       var sumL = 0, sat = 0, tot = CW * CH;
-      for (var i = 0; i < _raw.length; i += 4) {
-        var r = _raw[i], g = _raw[i + 1], b = _raw[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      for (var i = 0; i < _s.raw.length; i += 4) {
+        var r = _s.raw[i], g = _s.raw[i + 1], b = _s.raw[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
         sumL += (r + g + b) / 3; if ((mx - mn) > 36 && mx > 45) sat++;
       }
       var avgL = sumL / tot, satP = (sat / tot) * 100, qEl = document.getElementById("lblCalidadFrame");
@@ -87,34 +90,36 @@
       this.reaplicarRecorte();
     },
     reaplicarRecorte: function() {
-      if (!_raw) return;
+      if (!_s.raw) return;
+      var CW = _s.CW, CH = _s.CH;
       var tol = Number(document.getElementById("rngBgTol").value) || 38;
-      _mask = new Uint8Array(CW * CH); _undo = [];
+      _s.mask = new Uint8Array(CW * CH); _s.undo = [];
       var bg = [];
-      for (var x = 0; x < CW; x += 4) [2, CH - 3].forEach(function(y){ var i = (y * CW + x) * 4; bg.push([_raw[i], _raw[i + 1], _raw[i + 2]]); });
-      for (var y = 0; y < CH; y += 4) [2, CW - 3].forEach(function(x){ var i = (y * CW + x) * 4; bg.push([_raw[i], _raw[i + 1], _raw[i + 2]]); });
+      for (var x = 0; x < CW; x += 4) [2, CH - 3].forEach(function(y){ var i = (y * CW + x) * 4; bg.push([_s.raw[i], _s.raw[i + 1], _s.raw[i + 2]]); });
+      for (var y = 0; y < CH; y += 4) [2, CW - 3].forEach(function(x){ var i = (y * CW + x) * 4; bg.push([_s.raw[i], _s.raw[i + 1], _s.raw[i + 2]]); });
       for (var py = 0; py < CH; py++) {
         for (var px = 0; px < CW; px++) {
-          var p = py * CW + px, k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2];
+          var p = py * CW + px, k = p * 4, r = _s.raw[k], g = _s.raw[k + 1], b = _s.raw[k + 2];
           var esF = (px < 16 || px > CW - 16 || py < 12 || py > CH - 12);
           if (!esF) {
             for (var s = 0; s < bg.length; s += 2) {
               if (Math.abs(r - bg[s][0]) + Math.abs(g - bg[s][1]) + Math.abs(b - bg[s][2]) < tol * 2.1) { esF = true; break; }
             }
           }
-          _mask[p] = esF ? 0 : 1;
+          _s.mask[p] = esF ? 0 : 1;
         }
       }
       pintarCanvasRecorte();
     },
-    deshacer: function() { if (_undo.length) { _mask = _undo.pop(); pintarCanvasRecorte(); } },
+    deshacer: function() { if (_s.undo.length) { _s.mask = _s.undo.pop(); pintarCanvasRecorte(); } },
     extraerColores: function() {
-      if (!_raw || !_mask) return;
+      if (!_s.raw || !_s.mask) return;
+      var CW = _s.CW, CH = _s.CH;
       var midY = Math.round(CH * 0.48), bS = {}, bI = {}, visCnt = 0;
       for (var py = 0; py < CH; py++) {
         for (var px = 0; px < CW; px++) {
-          var p = py * CW + px; if (!_mask[p]) continue;
-          var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2];
+          var p = py * CW + px; if (!_s.mask[p]) continue;
+          var k = p * 4, r = _s.raw[k], g = _s.raw[k + 1], b = _s.raw[k + 2];
           var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
           if (mx < 55 || (mx < 78 && (mx - mn) < 18)) continue;
           visCnt++;
@@ -140,22 +145,21 @@
       };
       var res = top(bS).concat(top(bI));
       if (!res.length) { alert("Solo se detecta negro/oscuro. Pulsa 'Repetir' y deja visible un color de la moto."); return; }
-      if (_lado === 1) { mxGar._s.cols = res; _lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
-      else { mxGar._s.cols = mxGar._s.cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }
+      if (_s.lado === 1) { _s.cols = res; _s.lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
+      else { _s.cols = _s.cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }
       mxGar._pintarMuestras(); this.volverCam();
     },
     addCol: function(r, g, b, zn) {
-      if (mxGar._s.cols.length >= 6) mxGar._s.cols.shift();
-      mxGar._s.cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: rgbLab(r, g, b) });
+      if (_s.cols.length >= 6) _s.cols.shift();
+      _s.cols.push({ r: r, g: g, b: b, zona: zn, hex: "rgb(" + r + "," + g + "," + b + ")", lab: rgbLab(r, g, b) });
       mxGar._pintarMuestras();
     },
-    limpiarCols: function() { mxGar._s.cols = []; mxGar._pintarMuestras(); },
+    limpiarCols: function() { _s.cols = []; mxGar._pintarMuestras(); },
     guardarFirma: function() {
-      var s = mxGar._s;
-      if (!s.cols.length) { alert("Captura o añade colores primero."); return; }
-      s.motos[s.idx].colores = s.cols.slice();
-      this.cerrarCapColor(); mxGar.guardarMoto();
-      if (s.cfg.onSpeak) s.cfg.onSpeak("Colores guardados en la nube");
+      if (!_s.cols.length) { alert("Captura o añade colores primero."); return; }
+      _s.motos[_s.idx].colores = _s.cols.slice();
+      this.cerrarCapColor(); this.guardarMoto();
+      if (_s.cfg.onSpeak) _s.cfg.onSpeak("Colores guardados en la nube");
     }
   });
 })();

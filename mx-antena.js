@@ -75,18 +75,15 @@ function iniciarModoSolo() {
     if (s <= 5 && s >= 1) hablarAnt(String(s), false);
     if (s <= 0) {
       clearInterval(_tSoloCal); _tSoloCal = null; _ultPasoLocalTs = 0; pasos = 0;
-      calibrarFondo();
-      setTimeout(function(){
-        cfg.estado = "EN_CURSO";
-        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", modoDet: "TODO", tsInicio: ahoraSrv() }) }).catch(function(){});
-        hablarAnt("Pista calibrada, crono en marcha, dale gas", true);
-      }, 1450);
+      calibrarFondo(); cfg.estado = "EN_CURSO";
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", modoDet: "TODO", tsInicio: ahoraSrv() }) }).catch(function(){});
+      setTimeout(function(){ hablarAnt("Pista calibrada, crono en marcha, dale gas", true); }, 1500);
     }
     s--;
   }, 1000);
 }
 function ayudaAnt() {
-  alert("GUIA ANTENA PRO:\n1. En WARM-UP detecta el color principal de cualquier objeto que cruce (ignorando negro/sombras) y lo envia a Direccion.\n2. En carrera con modo Color (1 color por defecto), distingue tonos vivos y blancos exactos.\n3. En interior deja Anti-Viento en OFF en Direccion.\n4. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar.");
+  alert("GUIA ANTENA PRO:\n1. En WARM-UP detecta el color principal de cualquier objeto que cruce (ignorando negro/sombras) y lo envia a Direccion.\n2. En carrera con modo Color (1 color por defecto), distingue tonos vivos (Chroma + Hue°) y blancos exactos.\n3. En interior deja Anti-Viento en OFF en Direccion.\n4. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar.");
 }
 function toggleVoz() { desbloquearAudio(false); vozOn = !vozOn; var b = document.getElementById("btnVoz"); b.textContent = vozOn ? "Voz ON" : "Voz OFF"; b.style.background = vozOn ? "#20c997" : "#444"; }
 
@@ -483,7 +480,7 @@ function procFrame() {
 
     if (cfg.modoDet === "TODO") {
       if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso(""); }
-    } else if (est === "LIBRE") {
+    } else {
       var res = evaluarRoiColor(dFull);
       document.getElementById("lblMegaAnt").textContent = "🔬 " + res.info;
       if (res.pid) {
@@ -494,7 +491,7 @@ function procFrame() {
           emitirPaso(res.pid);
         }
       } else {
-        _ultTxtAnt = res.info;
+        est = "CRUCE"; ultMs = ah; _ultTxtAnt = res.info;
         document.getElementById("lblEstado").textContent = "❌ NO COINCIDE" + (res.colNom ? (" (VEO: " + res.colNom + ")") : "");
         document.getElementById("lblEstado").style.color = "#ffa94d";
       }
@@ -593,7 +590,7 @@ setInterval(function() {
   fetch(FB + "/garaje.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(g){ if (g) cfg.garajes = g; }).catch(function(){});
 }, 2500);
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
+navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
   .catch(function(){ return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, frameRate: { ideal: 60, min: 24 } }, audio: false }); })
   .then(function(st) {
     var v = document.getElementById("vid"); v.srcObject = st;

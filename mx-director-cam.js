@@ -155,12 +155,12 @@ function pintarBandejasWarmup() {
     document.getElementById("bandeja_" + aid).innerHTML = items.length ? items.map(function(cid) {
       var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:4px;vertical-align:middle"></span>'; }).join("");
       var colTxt = c.colorNom ? (' <b style="color:#ffc107">' + esc(c.colorNom) + '</b>') : '';
-      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + colTxt + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + escJs(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + escJs(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + colTxt + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
     }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
   });
   var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
     var fw = gar[k].firmasWarmup || {}, c1 = Array.isArray(fw.ant_1) ? fw.ant_1.length : 0, c2 = Array.isArray(fw.ant_2) ? fw.ant_2.length : 0; if (!c1 && !c2) return "";
-    return '<div class="fila"><span><b>#' + esc((pils[k] && pils[k].dorsal) || gar[k].dorsal || "1") + ' ' + esc((pils[k] && pils[k].nombre) || k) + '</b> — Cam1: <b>' + c1 + '</b> • Cam2: <b>' + c2 + '</b></span><button onclick="vibrar();borrarFirmasWuPiloto(\'' + escJs(k) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:3px 7px;font-size:10px">Limpiar</button></div>';
+    return '<div class="fila"><span><b>#' + esc((pils[k] && pils[k].dorsal) || gar[k].dorsal || "1") + ' ' + esc((pils[k] && pils[k].nombre) || k) + '</b> — Cam1: <b>' + c1 + '</b> • Cam2: <b>' + c2 + '</b></span><button onclick="vibrar();borrarFirmasWuPiloto(\'' + esc(k) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:3px 7px;font-size:10px">Limpiar</button></div>';
   }).filter(Boolean).join("");
   document.getElementById("resumenFirmasWarmup").innerHTML = res || "Ninguna asignada.";
 }
@@ -194,4 +194,19 @@ function pintarAntenasTel() {
     } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
   });
   return antsAct;
+}
+
+function bindCamImg(aid) {
+  var es = new EventSource(FB_IMG + "/" + aid + ".json");
+  var onIm = function(e) {
+    try {
+      var m = JSON.parse(e.data); if (!m) return;
+      if (m.path === "/" && m.data === null) { document.getElementById("img_" + aid).removeAttribute("src"); return; }
+      var im = (m.path === "/" && m.data) ? m.data.img : (m.path === "/img" ? m.data : null);
+      if (im) document.getElementById("img_" + aid).src = im;
+    } catch (er) {}
+  };
+  es.addEventListener("put", onIm); es.addEventListener("patch", onIm);
+  es.onerror = function(){ if (es.readyState === 2) setTimeout(function(){ if (aid === "ant_1") _esImg1 = bindCamImg("ant_1"); else _esImg2 = bindCamImg("ant_2"); }, 2500); };
+  return es;
 }
