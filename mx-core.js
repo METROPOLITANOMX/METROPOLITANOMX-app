@@ -14,6 +14,15 @@ function esc(s) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
   });
 }
+function escJs(s) {
+  return esc(String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r?\n/g, " "));
+}
+function b64Enc(str) {
+  try { return btoa(unescape(encodeURIComponent(String(str || "")))); } catch (e) { return ""; }
+}
+function b64Dec(str) {
+  try { return decodeURIComponent(escape(atob(str))); } catch (e) { try { return atob(str); } catch (e2) { return ""; } }
+}
 function fbJson(url, opt) {
   return fetch(url, opt).then(function(r) {
     if (!r.ok) throw new Error("HTTP " + r.status);
