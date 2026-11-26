@@ -112,7 +112,7 @@ document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 
 var vozP = true, _tabAct = "sala", rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
-var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99, _salidaShowHasta = 0;
+var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99, _ultSecWuP = -1, _wuFinAvisoP = false, _salidaShowHasta = 0;
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
 var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
@@ -160,7 +160,7 @@ function salirPiloto() {
 function ayudaTab() {
   var g = {
     sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, placa dorsal, destellos de record y banderas (☀️ al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar o lanzar Warm-Up / Salida 30s / Valla MX.",
-    garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: colores vivos + Recorte automatico + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL.",
+    garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: tonos reales + Recorte automatico + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL.",
     tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. Tarjeta PNG diaria con foto de tu moto y 📤/📥 BACKUP."
   };
   alert(g[_tabAct] || g.sala);
@@ -217,7 +217,7 @@ function cmdSalaAmistosa(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99; _salidaShowHasta = 0;
+  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99; _ultSecWuP = -1; _wuFinAvisoP = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null };
   if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
@@ -359,12 +359,38 @@ function renderSwatches(g) {
 
 function actualizarSemaforoP() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
-  var ov = document.getElementById("overlaySem"), nowLoc = Date.now();
+  var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+
+  if (est === "WARMUP" && t0 > 0) {
+    var dfW = t0 - ah, sgW = Math.max(0, Math.ceil(dfW / 1000));
+    if (dfW > 0 && sgW !== _ultSecWuP) {
+      _ultSecWuP = sgW; _wuFinAvisoP = false;
+      var mW = Math.floor(sgW / 60), sW = sgW % 60, mmss = (mW < 10 ? "0" : "") + mW + ":" + (sW < 10 ? "0" : "") + sW;
+      document.getElementById("lblEstadoSala").textContent = "WARM-UP " + mmss;
+      document.getElementById("vivoReloj").textContent = "🔥 " + mmss;
+      var rbW = document.getElementById("relBol"); if (rbW) rbW.textContent = "🔥 " + mmss;
+      if (!dirOn) {
+        if (sgW === 60) mxHablar("Ultimo minuto de warm-up", vozP);
+        else if (sgW === 30) mxHablar("Treinta segundos de warm-up", vozP);
+        else if (sgW === 10) mxHablar("Diez segundos para fin de warm-up", vozP);
+      }
+    } else if (dfW <= 0 && !_wuFinAvisoP) {
+      _wuFinAvisoP = true; _ultSecWuP = 0;
+      if (!dirOn) {
+        mxBeep(980, 220);
+        mxHablar("Fin de warm-up. Atencion pilotos, llamada a parrilla de salida", vozP);
+        s.estado = "ESPERA"; s.tsInicio = 0;
+        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
+      }
+    }
+  } else {
+    _ultSecWuP = -1;
+  }
+
   if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
 
   if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
     var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
-    var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
     var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
     if (df > 0 && dfCue <= 31000) {
       ov.style.display = "flex";
@@ -464,10 +490,7 @@ function pintarSalaUI() {
   }
 
   var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
-  if (est === "WARMUP" && t0 > 0) {
-    var dfW = t0 - ah; if (dfW > 0) estTxt = "WARM-UP " + Math.floor(dfW / 60000) + ":" + ((Math.floor((dfW % 60000) / 1000) < 10) ? "0" : "") + Math.floor((dfW % 60000) / 1000);
-    else if (!dirOn) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
-  } else if (est === "EN_CURSO" && t0 > 0) {
+  if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM" && !dirOn) {
       var rE = Math.floor(elapsed / 60000);
@@ -479,7 +502,7 @@ function pintarSalaUI() {
       else { estTxt = "FIN MANGA"; if (!avisoFinManga) { avisoFinManga = true; mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP); } }
     }
   }
-  document.getElementById("lblEstadoSala").textContent = estTxt;
+  if (est !== "WARMUP") document.getElementById("lblEstadoSala").textContent = estTxt;
   actualizarSemaforoP();
 }
 
@@ -528,6 +551,7 @@ setInterval(function() {
     barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
     lblL.textContent = minL.toFixed(1) + "m / 12m";
   } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
+  if (s.estado === "WARMUP" && Number(s.tsInicio || 0) > 0) return;
   if (!b || ahoraSrv() < b || s.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
   if (yo.eliminado) { el.textContent = "💀 ELIMINADO"; if (rb) rb.textContent = "💀 ELIM"; return; }
   var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";

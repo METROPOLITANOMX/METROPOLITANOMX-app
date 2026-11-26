@@ -190,6 +190,7 @@
           <span id="arw_acc_man">▼</span>
         </button>
         <div id="acc_man" class="acc-body">
+          <div id="lblWarmupCronoDir" style="display:none;background:#2b1908;border:1px solid #fd7e14;border-radius:8px;padding:8px;margin-bottom:8px;text-align:center;font-size:14px;font-weight:bold;color:#ffa94d">🔥 WARM-UP: 03:00</div>
           <div class="grid2">
             <select id="selJuego" onchange="cfgDir()"><option value="NORMAL">Carrera Normal</option><option value="BOMBA">💣 Bomba Reloj (45s)</option><option value="ELIM">💀 Eliminacion (60s)</option><option value="REY">👑 Rey de la Pista</option><option value="SUPERPOLE">⏱️ Superpole (1 Vuelta)</option><option value="RULETA">🎲 Ruleta Loca MX</option></select>
             <select id="selDur" onchange="cfgDir()"><option value="5">5 Minutos</option><option value="10" selected>10 Minutos</option><option value="15">15 Minutos</option><option value="0">Entreno Libre</option></select>
@@ -339,7 +340,7 @@ var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMo
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
-var _ultSecLoc = -999, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
+var _ultSecLoc = -999, _ultSecWu = -1, _wuFinAviso = false, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
@@ -414,7 +415,7 @@ function salirDirector() {
   Promise.all(ops).finally(function(){ localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; });
 }
 function ayudaDir() {
-  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: 1 color por defecto para reconocer rapidamente cualquier moto u objeto.\n5. Cuentas: busca por nombre cuentas antiguas para bloquear/borrar con confirmacion.");
+  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: 1 color por defecto para reconocer rapidamente cualquier moto u objeto.\n5. Warm-Up: cuenta atras de 3:00 en vivo con llamada a parrilla por megafonia al terminar.");
 }
 
 function aplicarModoDirPilotoUI(limpiarUid) {
@@ -662,7 +663,7 @@ function cmdSala(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _salidaShowHasta = 0;
+  _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _ultSecWu = -1; _wuFinAviso = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
   testOn = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
@@ -685,7 +686,7 @@ function cmdSala(est) {
   if (est === "ESPERA") { pay.tsInicio = 0; hablarYAntenas("Manga detenida", false); }
   if (!rootCache.sala) rootCache.sala = {};
   Object.assign(rootCache.sala, pay);
-  actualizarSemaforoDir();
+  actualizarCronosDir();
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
 }
 function lanzarRuletaManual() {
@@ -888,9 +889,35 @@ function renderSwatches(g) {
   return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
 }
 
-function actualizarSemaforoDir() {
+function actualizarCronosDir() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
-  var ov = document.getElementById("overlaySem"), nowLoc = Date.now();
+  var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), wuBox = document.getElementById("lblWarmupCronoDir");
+
+  if (est === "WARMUP" && t0 > 0) {
+    var dfW = t0 - ah, sgW = Math.max(0, Math.ceil(dfW / 1000));
+    if (dfW > 0 && sgW !== _ultSecWu) {
+      _ultSecWu = sgW;
+      var mW = Math.floor(sgW / 60), sW = sgW % 60, mmss = (mW < 10 ? "0" : "") + mW + ":" + (sW < 10 ? "0" : "") + sW;
+      wuBox.style.display = "block"; wuBox.style.borderColor = "#fd7e14"; wuBox.style.color = "#ffa94d";
+      wuBox.textContent = "🔥 WARM-UP: " + mmss + " — Capturando en meta";
+      document.getElementById("lblEstadoGlobDir").textContent = "WARM-UP " + mmss + " • " + (s.modoDet || "TODO");
+      document.getElementById("lblEstadoSalaP").textContent = "WARM-UP " + mmss;
+      if (sgW === 60) hablarYAntenas("Ultimo minuto de warm-up", false);
+      else if (sgW === 30) hablarYAntenas("Treinta segundos de warm-up", false);
+      else if (sgW === 10) hablarYAntenas("Diez segundos para fin de warm-up", false);
+    } else if (dfW <= 0 && !_wuFinAviso) {
+      _wuFinAviso = true; _ultSecWu = 0;
+      mxBeep(980, 220);
+      hablarYAntenas("Fin de warm-up. Atencion pilotos, llamada a parrilla de salida", true);
+      wuBox.style.display = "block"; wuBox.style.borderColor = "#20c997"; wuBox.style.color = "#20c997";
+      wuBox.textContent = "🏁 FIN WARM-UP — ¡PILOTOS A PARRILLA!";
+      s.estado = "ESPERA"; s.tsInicio = 0;
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
+    }
+  } else if (est !== "ESPERA" || !_wuFinAviso) {
+    if (wuBox.style.display !== "none") wuBox.style.display = "none";
+  }
+
   if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
   if ((est !== "SALIDA_30" && est !== "VALLA_MX") || t0 <= 0) {
     if (nowLoc >= _salidaShowHasta && ov.style.display !== "none") ov.style.display = "none";
@@ -942,7 +969,7 @@ function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
   document.getElementById("banBanderaAmDir").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
-  document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
+  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
 
   var md = s.modoDet || "TODO";
   [["bModTodo", "TODO"], ["bModGar", "GAR"], ["bModWarm", "WARMUP"], ["bModHib", "HIBRIDO"]].forEach(function(par){
@@ -1002,10 +1029,7 @@ function pintarDirUI() {
   }
 
   var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
-  if (est === "WARMUP" && t0 > 0) {
-    var dfW = t0 - ah; if (dfW > 0) estTxt = "WARM-UP " + Math.floor(dfW / 60000) + ":" + ((Math.floor((dfW % 60000) / 1000) < 10) ? "0" : "") + Math.floor((dfW % 60000) / 1000);
-    else fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
-  } else if (est === "EN_CURSO" && t0 > 0) {
+  if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM") {
       var rElim = Math.floor(elapsed / 60000);
@@ -1018,8 +1042,8 @@ function pintarDirUI() {
       else { estTxt = "FIN MANGA"; if (!avisoFinManga) { avisoFinManga = true; hablarYAntenas("Tiempo de manga cumplido, bandera a cuadros", true); } }
     }
   }
-  document.getElementById("lblEstadoSalaP").textContent = estTxt;
-  actualizarSemaforoDir();
+  if (est !== "WARMUP") document.getElementById("lblEstadoSalaP").textContent = estTxt;
+  actualizarCronosDir();
 }
 
 function bindCamImg(aid) {
@@ -1108,7 +1132,7 @@ function iniciarDirector() {
   }, 5000);
 
   setInterval(function() {
-    actualizarSemaforoDir();
+    actualizarCronosDir();
     if (!dirPilotoOn) return;
     var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
     var el = document.getElementById("vivoRelojP"), rb = document.getElementById("relBol");
@@ -1118,7 +1142,7 @@ function iniciarDirector() {
       barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
       lblL.textContent = minL.toFixed(1) + "m / 12m";
     } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
-    if (!b || ahoraSrv() < b || s.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
+    if (!b || ahoraSrv() < b || s.estado === "ESPERA" || s.estado === "WARMUP") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
     if (yo.eliminado) { el.textContent = "💀 ELIM"; if (rb) rb.textContent = "💀 ELIM"; return; }
     var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";
     if (mj === "BOMBA" && s.estado === "EN_CURSO") {
