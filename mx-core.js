@@ -14,6 +14,16 @@ function esc(s) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
   });
 }
+function escJs(s) {
+  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\x27").replace(/"/g, "\\x22").replace(/\r/g, "\\r").replace(/\n/g, "\\n").replace(/</g, "\\x3c").replace(/>/g, "\\x3e");
+}
+function b64Enc(str) {
+  try { return btoa(unescape(encodeURIComponent(String(str || "")))); } catch (e) { return ""; }
+}
+function b64Dec(str) {
+  try { return decodeURIComponent(escape(atob(String(str || "")))); }
+  catch (e) { try { return atob(String(str || "")); } catch (e2) { return ""; } }
+}
 function fbJson(url, opt) {
   return fetch(url, opt).then(function(r) {
     if (!r.ok) throw new Error("HTTP " + r.status);

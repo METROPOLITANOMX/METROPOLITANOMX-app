@@ -103,6 +103,10 @@ function borrarTiemposDiaDir() {
   Promise.all([fetch(FB + "/campeonato.json", { method: "DELETE" }), fetch(FB + "/pasos_lock.json", { method: "DELETE" }), fetch(FB + "/eventos.json", { method: "DELETE" }), fetch(FB + "/foto_finish/" + circId + ".json", { method: "DELETE" })])
     .then(function(){ rootCache.campeonato = {}; rootCache.eventos = {}; nuevaMangaDir(); alert("Tiempos del dia borrados ✓"); }).catch(function(){});
 }
+function borrarMundialDir() {
+  if (!confirm("⚠️ ¿Seguro que quieres BORRAR todo el Ranking Mundial?")) return;
+  fetch(FB_ROOT + "/mundial.json", { method: "DELETE" }).then(function(r){ if (!r.ok) throw new Error(); alert("Ranking Mundial borrado ✓"); }).catch(function(){ alert("Error"); });
+}
 
 function restarVueltaDir(pUid) {
   var p = (rootCache.pilotos || {})[pUid]; if (!p || !p.vueltas) return;
