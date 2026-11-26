@@ -269,7 +269,9 @@ function iniciarDirector() {
   setInterval(function() {
     actualizarCronosDir();
     if (!dirPilotoOn) return;
-    var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
+    var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {};
+    var tIni = Number(s.tsInicio || 0), tPaso = Number(yo.tsUltimoPaso || 0);
+    var b = (tPaso && (!tIni || tPaso >= tIni)) ? tPaso : tIni;
     var el = document.getElementById("vivoRelojP"), rb = document.getElementById("relBol");
     var barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");
     if (s.tsInicio && s.estado === "EN_CURSO" && barL && lblL) {
@@ -277,7 +279,8 @@ function iniciarDirector() {
       barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
       lblL.textContent = minL.toFixed(1) + "m / 12m";
     } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
-    if (!b || ahoraSrv() < b || s.estado === "ESPERA" || s.estado === "WARMUP") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
+    if (s.estado === "WARMUP" && tIni > 0) return;
+    if (s.estado !== "EN_CURSO" || !b || ahoraSrv() < b) { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
     if (yo.eliminado) { el.textContent = "💀 ELIM"; if (rb) rb.textContent = "💀 ELIM"; return; }
     var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";
     if (mj === "BOMBA" && s.estado === "EN_CURSO") {
@@ -285,7 +288,7 @@ function iniciarDirector() {
       if (rB <= 0 && !_bombaExplotada) { _bombaExplotada = true; mxBeep(280, 450); mxHablar("Bomba explotada, cruza meta"); }
     } else if (mj === "ELIM" && s.estado === "EN_CURSO") {
       el.textContent = "💀 " + (60 - ((ahoraSrv() - Number(s.tsInicio || b)) / 1000) % 60).toFixed(1) + "s"; if (rb) rb.textContent = el.textContent;
-    } else { el.textContent = d.toFixed(1) + "s"; if (rb) rb.textContent = d.toFixed(1) + "s"; }
+    } else { var txtC = fmtCrono(d); el.textContent = txtC; if (rb) rb.textContent = txtC; }
     if (s.tsInicio && (ahoraSrv() - Number(s.tsInicio)) >= 720000 && !avisoLipoP) { avisoLipoP = true; mxHablar("Llevas 12 minutos rodando, revisa bateria LiPo"); }
   }, 120);
 }

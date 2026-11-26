@@ -111,7 +111,7 @@ function pintarModoMecanico() {
     return;
   }
   var vAct = Number(p.vueltas || 0);
-  if (typeof _ultVtasMec[pid] === "number" && vAct > _ultVtasMec[pid] && p.ultimaMs) mxHablar(p.nombre + ", vuelta " + vAct + ", " + (p.ultimaMs / 1000).toFixed(2).replace(".", " punto ") + " segundos", vozMec, esIngles ? "en-US" : "es-ES");
+  if (typeof _ultVtasMec[pid] === "number" && vAct > _ultVtasMec[pid] && p.ultimaMs) mxHablar(p.nombre + ", vuelta " + vAct + ", " + fmtVoz(p.ultimaMs), vozMec, esIngles ? "en-US" : "es-ES");
   _ultVtasMec[pid] = vAct;
   document.getElementById("mecPosVtas").textContent = vAct + " vtas"; document.getElementById("mecUlt").textContent = fmt(p.ultimaMs);
   var t0 = Number(s.tsInicio || 0), minLipo = (t0 > 0 && s.estado === "EN_CURSO") ? Math.max(0, (ahoraSrv() - t0) / 60000) : 0;
@@ -165,14 +165,14 @@ function pintarVivo() {
 
   var bp = document.getElementById("boxPorra");
   bp.style.display = (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP" || est === "ESPERA") && pils.length > 0 ? "block" : "none";
-  if (!votoHecho && pils.length) document.getElementById("listaPorra").innerHTML = pils.map(function(p){ return '<button onclick="vibrar();votarFavorito(\'' + escJs(p.id) + '\',\'' + escJs(p.nombre) + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>'; }).join("");
+  if (!votoHecho && pils.length) document.getElementById("listaPorra").innerHTML = pils.map(function(p){ return '<button onclick="vibrar();votarFavorito(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#222;color:#ffc107;border:1px solid #444;padding:7px 10px;font-size:11px">#' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>'; }).join("");
   var votos = {}; Object.keys(s.porra || {}).forEach(function(k){ var n = s.porra[k] && s.porra[k].pilotoNom; if (n) votos[n] = (votos[n] || 0) + 1; });
   var vRes = Object.keys(votos).sort(function(a, b){ return votos[b] - votos[a]; }).map(function(n){ return esc(n) + " (" + votos[n] + ")"; }).join(" • ");
   document.getElementById("resPorra").textContent = vRes ? ("Votos porra: " + vRes) : "";
 
   var mvpV = {}; Object.keys(s.mvp || {}).forEach(function(k){ var n = s.mvp[k] && s.mvp[k].pilotoNom; if (n) mvpV[n] = (mvpV[n] || 0) + 1; });
   var mvpOrd = Object.keys(mvpV).sort(function(a, b){ return mvpV[b] - mvpV[a]; }), mvpLeader = mvpOrd[0] || "";
-  if (!votoMvpHecho) document.getElementById("listaMvpV").innerHTML = pils.length ? pils.map(function(p){ return '<button onclick="vibrar();votarMvp(\'' + escJs(p.id) + '\',\'' + escJs(p.nombre) + '\')" style="background:#211936;color:#d0a8ff;border:1px solid #5f3dc4;padding:7px 10px;font-size:11px">🏅 #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>'; }).join("") : '<span style="font-size:11px;color:#777">Esperando pilotos...</span>';
+  if (!votoMvpHecho) document.getElementById("listaMvpV").innerHTML = pils.length ? pils.map(function(p){ return '<button onclick="vibrar();votarMvp(\'' + esc(p.id) + '\',\'' + esc(p.nombre) + '\')" style="background:#211936;color:#d0a8ff;border:1px solid #5f3dc4;padding:7px 10px;font-size:11px">🏅 #' + esc(p.dorsal || "--") + ' ' + esc(p.nombre) + '</button>'; }).join("") : '<span style="font-size:11px;color:#777">Esperando pilotos...</span>';
   document.getElementById("resMvpV").textContent = mvpOrd.length ? ("Ranking MVP: " + mvpOrd.map(function(n){ return esc(n) + " (" + mvpV[n] + ")"; }).join(" • ")) : "";
 
   var vSig = pils.map(function(p){ return p.id + ":" + p.vueltas + ":" + p.mejorMs + ":" + p.activo + ":" + p.eliminado; }).join("|") + "|" + mvpLeader;
@@ -189,7 +189,7 @@ function pintarVivo() {
       }
       var pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || '--') + '</span>', sw = renderSwatches(g);
       var clsT = (p.mejorMs && p.mejorMs === bestAll) ? "tv-vr" : "tv-rp";
-      h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="vibrar();verSetupRival(\'' + escJs(p.id) + '\')">' +
+      h += '<div class="fila' + (p.eliminado ? ' elim' : '') + '" style="cursor:pointer" onclick="vibrar();verSetupRival(\'' + esc(p.id) + '\')">' +
         '<div>' + (p.activo ? "🟢" : "⚪") + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b>' + (mvpLeader && p.nombre === mvpLeader ? ' <span style="background:#5f3dc4;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">🏅 MVP</span>' : '') + ' <span style="font-size:11px;color:#0dcaf0">(' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + esc(dif) + ')</span><div style="font-size:10px;color:#888">🏍️ ' + esc(g.modelo || "Losi Promoto-MX") + ' (' + esc(g.disc || "MX") + ') • Toca para setup</div></div>' +
         '<div style="text-align:right"><b class="' + clsT + '" style="font-size:14px">' + fmt(p.mejorMs) + '</b><div style="font-size:10px;color:#aaa">Ult: ' + fmt(p.ultimaMs) + '</div></div></div>';
     });
@@ -233,10 +233,11 @@ conectarSseVivo(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 
 setInterval(function() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA";
-  if (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP") actualizarRelojEstadoV();
+  if (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP" || est === "EN_CURSO") actualizarRelojEstadoV();
   if (!modoMec) return;
   var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], el = document.getElementById("mecCrono");
-  if (!p || est === "ESPERA") { el.textContent = "00.0s"; return; }
-  var b = Number(p.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
-  el.textContent = (!b || ahoraSrv() < b) ? "00.0s" : ((ahoraSrv() - b) / 1000).toFixed(1) + "s";
+  var tIni = Number(s.tsInicio || 0), tPaso = p ? Number(p.tsUltimoPaso || 0) : 0;
+  var b = (tPaso && (!tIni || tPaso >= tIni)) ? tPaso : tIni;
+  if (!p || est !== "EN_CURSO" || !b || ahoraSrv() < b) { el.textContent = "00.0s"; return; }
+  el.textContent = fmtCrono((ahoraSrv() - b) / 1000);
 }, 150);

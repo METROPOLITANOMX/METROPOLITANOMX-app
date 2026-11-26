@@ -65,6 +65,9 @@ function cmdSala(est) {
     hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
   }
   if (est === "ESPERA") { pay.tsInicio = 0; hablarYAntenas("Manga detenida", false); }
+  if (est === "SALIDA_30" || est === "VALLA_MX") {
+    Object.keys(rootCache.pilotos || {}).forEach(function(k){ if (rootCache.pilotos[k]) rootCache.pilotos[k].tsUltimoPaso = 0; });
+  }
   if (!rootCache.sala) rootCache.sala = {};
   Object.assign(rootCache.sala, pay);
   actualizarCronosDir();
@@ -122,13 +125,15 @@ function registrarVueltaDir(pUid, evTs, esManual) {
   var p = (rootCache.pilotos || {})[pUid]; if (!p || p.eliminado) return;
   var s = rootCache.sala || {}, ah = Number(evTs || ahoraSrv()), st = s.estado || "ESPERA", minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaD[pUid] && (ah - _lockVtaD[pUid]) < minMs) return;
-  if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
+  if (st === "WARMUP" || st === "TEST" || st === "ESPERA" || st === "SALIDA_30" || st === "VALLA_MX") {
     _lockVtaD[pUid] = ah; p.sensorOk = true;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) }).catch(function(){});
     pintarDirUI(); return;
   }
-  var ult = Number(p.tsUltimoPaso || 0); if (ult && (ah - ult) < minMs) return;
+  var ult = Number(p.tsUltimoPaso || 0);
+  if (ult && s.tsInicio && ult < Number(s.tsInicio)) ult = 0;
+  if (ult && (ah - ult) < minMs) return;
   _lockVtaD[pUid] = ah;
   var baseT = ult || Number(s.tsInicio || 0) || ah, lap = ah - baseT;
   if (lap < (esManual ? 900 : 1500)) { p.tsUltimoPaso = ah; fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){}); return; }
@@ -213,8 +218,10 @@ function actualizarCronosDir() {
       else if (sgCue <= 5 && sgCue >= 1) hablarYAntenas(String(sgCue), false);
     }
   }
-  if (df <= 0 && _ultSecLoc !== 0) {
-    _ultSecLoc = 0; _salidaShowHasta = nowLoc + 1800; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
+  if (df <= 0 && _ultSecLoc !== -999) {
+    _ultSecLoc = -999; _salidaShowHasta = (df > -1500) ? (nowLoc + 1800) : 0;
+    if (df > -1500) { mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true); }
+    s.estado = "EN_CURSO";
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
   }
 
@@ -233,7 +240,7 @@ function actualizarCronosDir() {
         document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue;
         document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sgCue > 10) ? "#1f080c" : (sgCue > 5 ? "#332200" : "#2b0509");
       }
-    } else if (df <= 0 && df > -4000) {
+    } else if (df <= 0 && nowLoc < _salidaShowHasta) {
       ov.style.display = "flex"; ov.style.background = "#00c853";
       document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
       if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");

@@ -127,6 +127,9 @@ function cmdSalaAmistosa(est) {
     pay.tsInicio = pay.tsCuenta - 4000 + Math.floor(Math.random() * 5000);
     mxHablar("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", vozP);
   }
+  if (est === "SALIDA_30" || est === "VALLA_MX") {
+    Object.keys(rootCache.pilotos || {}).forEach(function(k){ rootCache.pilotos[k].tsUltimoPaso = 0; });
+  }
   if (est === "ESPERA") { pay.tsInicio = 0; mxHablar("Manga detenida", vozP); }
   if (!rootCache.sala) rootCache.sala = {};
   Object.assign(rootCache.sala, pay);
@@ -159,17 +162,16 @@ function registrarVuelta(pUid, evTs, esManual) {
     return;
   }
   var s = rootCache.sala || {}, st = s.estado || "ESPERA", dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
-  if ((st === "SALIDA_30" || st === "VALLA_MX") && (!Number(s.tsInicio || 0) || ah < Number(s.tsInicio))) {
-    if (esManual) {
-      document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#ffc107'>⏳ Espera a la salida</span>";
-      mxHablar("Espera a la salida", vozP);
-    }
-    return;
-  }
   var minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minMs) return;
 
-  if (st === "WARMUP" || st === "TEST" || (st === "ESPERA" && !esManual)) {
+  var enCuentaSalida = (st === "SALIDA_30" || st === "VALLA_MX") && (!Number(s.tsInicio || 0) || ah < Number(s.tsInicio));
+  if (st === "WARMUP" || st === "TEST" || enCuentaSalida || (st === "ESPERA" && !esManual)) {
+    if (esManual && enCuentaSalida) {
+      document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#ffc107'>⏳ Espera a que se de la salida</span>";
+      mxHablar("Espera a que se de la salida", vozP);
+      return;
+    }
     _lockVtaLocal[pUid] = ah; p.sensorOk = true;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) }).catch(function(){});
@@ -193,6 +195,7 @@ function registrarVuelta(pUid, evTs, esManual) {
   }
 
   var ult = Number(p.tsUltimoPaso || 0);
+  if (ult && s.tsInicio && ult < Number(s.tsInicio)) ult = 0;
   if (ult && (ah - ult) < minMs) return;
   _lockVtaLocal[pUid] = ah;
 
@@ -291,7 +294,7 @@ function actualizarSemaforoP() {
     _ultSecWuP = -1;
   }
 
-  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") { _salidaShowHasta = 0; ultSegSemP = -99; }
 
   if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
     var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
@@ -309,29 +312,40 @@ function actualizarSemaforoP() {
         document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue;
         document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sgCue > 10) ? "#1f080c" : (sgCue > 5 ? "#332200" : "#2b0509");
       }
-      if (!dirOn && sgCue !== ultSegSemP) {
+      if (sgCue !== ultSegSemP) {
         ultSegSemP = sgCue;
-        if (est === "VALLA_MX") {
-          if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
-          else if (sgCue <= 10 && sgCue >= 5) mxHablar(String(sgCue), vozP);
-        } else {
-          if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
-          else if (sgCue === 10) mxHablar("Diez segundos", vozP);
-          else if (sgCue <= 5 && sgCue >= 1) mxHablar(String(sgCue), vozP);
+        if (!dirOn) {
+          if (est === "VALLA_MX") {
+            if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
+            else if (sgCue <= 10 && sgCue >= 5) mxHablar(String(sgCue), vozP);
+          } else {
+            if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
+            else if (sgCue === 10) mxHablar("Diez segundos", vozP);
+            else if (sgCue <= 5 && sgCue >= 1) mxHablar(String(sgCue), vozP);
+          }
         }
       }
-    } else if (df <= 0 && df > -4000) {
-      ov.style.display = "flex"; ov.style.background = "#00c853";
-      document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
-      if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
-      else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
+    } else if (df <= 0 && (ultSegSemP !== -999 || nowLoc < _salidaShowHasta)) {
       if (ultSegSemP !== -999) {
-        ultSegSemP = -999; _salidaShowHasta = nowLoc + 1800; mxBeep(1100, 260);
-        if (!dirOn) { mxHablar("¡SALIDA!", vozP); fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){}); }
+        ultSegSemP = -999; _salidaShowHasta = (df > -4000) ? (nowLoc + 1800) : 0;
+        if (_salidaShowHasta) { mxBeep(1100, 260); if (!dirOn) mxHablar("¡SALIDA!", vozP); }
+        if (!dirOn) { s.estado = "EN_CURSO"; fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){}); }
+      }
+      if (nowLoc < _salidaShowHasta) {
+        ov.style.display = "flex"; ov.style.background = "#00c853";
+        document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+        if (est === "VALLA_MX") gBar.classList.add("drop");
+        else { var ls2 = leds.children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
+      } else if (ov.style.display !== "none") {
+        ov.style.display = "none";
       }
     } else if (nowLoc >= _salidaShowHasta) {
       if (ov.style.display !== "none") ov.style.display = "none";
     }
+  } else if (est === "EN_CURSO" && ultSegSemP >= -5 && ultSegSemP !== -999 && t0 > 0 && ah >= t0 && (ah - t0) < 2500) {
+    ultSegSemP = -999; _salidaShowHasta = nowLoc + 1800; mxBeep(1100, 260);
+    ov.style.display = "flex"; ov.style.background = "#00c853";
+    document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = "A TOPE";
   } else if (nowLoc >= _salidaShowHasta) {
     if (ov.style.display !== "none") ov.style.display = "none";
   }
@@ -448,15 +462,17 @@ setInterval(function() {
 
 setInterval(function() {
   actualizarSemaforoP();
-  var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
+  var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {};
+  var tIni = Number(s.tsInicio || 0), tPaso = Number(yo.tsUltimoPaso || 0);
+  var b = (tPaso && (!tIni || tPaso >= tIni)) ? tPaso : tIni;
   var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol"), barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");
   if (s.tsInicio && s.estado === "EN_CURSO" && barL && lblL) {
     var minL = Math.max(0, (ahoraSrv() - Number(s.tsInicio)) / 60000), pctL = Math.min(100, Math.round((minL / 12) * 100));
     barL.style.width = pctL + "%"; barL.style.background = minL >= 11 ? "#ff4d5e" : (minL >= 8.5 ? "#ffa94d" : "#20c997");
     lblL.textContent = minL.toFixed(1) + "m / 12m";
   } else if (barL && lblL) { barL.style.width = "0%"; lblL.textContent = "0m / 12m"; }
-  if (s.estado === "WARMUP" && Number(s.tsInicio || 0) > 0) return;
-  if (!b || ahoraSrv() < b || s.estado === "ESPERA") { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
+  if (s.estado === "WARMUP" && tIni > 0) return;
+  if (s.estado !== "EN_CURSO" || !b || ahoraSrv() < b) { el.textContent = "00.0s"; if (rb) rb.textContent = "EN ESPERA"; return; }
   if (yo.eliminado) { el.textContent = "💀 ELIMINADO"; if (rb) rb.textContent = "💀 ELIM"; return; }
   var d = (ahoraSrv() - b) / 1000, mj = s.modoJuego || "NORMAL";
   if (mj === "BOMBA" && s.estado === "EN_CURSO") {
@@ -464,6 +480,6 @@ setInterval(function() {
     if (rB <= 0 && !_bombaExplotada) { _bombaExplotada = true; mxBeep(280, 450); mxHablar("Bomba explotada, cruza meta", vozP); }
   } else if (mj === "ELIM" && s.estado === "EN_CURSO") {
     el.textContent = "💀 " + (60 - ((ahoraSrv() - Number(s.tsInicio || b)) / 1000) % 60).toFixed(1) + "s"; if (rb) rb.textContent = el.textContent;
-  } else { el.textContent = d.toFixed(1) + "s"; if (rb) rb.textContent = d.toFixed(1) + "s"; }
+  } else { var txtC = fmtCrono(d); el.textContent = txtC; if (rb) rb.textContent = txtC; }
   if (s.tsInicio && (ahoraSrv() - Number(s.tsInicio)) >= 720000 && !avisoLipoP) { avisoLipoP = true; mxHablar("Llevas 12 minutos rodando, revisa bateria LiPo", vozP); }
 }, 120);

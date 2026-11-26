@@ -26,7 +26,7 @@
       var todas = []; _s.hist.forEach(function(d){ if (Array.isArray(d.vtas)) todas = todas.concat(d.vtas); });
       var mejorHist = todas.length ? Math.min.apply(null, todas) : 0, esRP = (!mejorHist || lap < mejorHist);
       var p1 = pils[0], root = _s.cfg.getRoot(), v = ((root.pilotos || {})[_s.cfg.uid] || {}).vueltas || 1;
-      var difH = "Ultima: " + fmt(lap), difB = fmt(lap), voz = "Vuelta " + v + ", " + (lap / 1000).toFixed(2).replace(".", " punto ") + " segundos";
+      var difH = "Ultima: " + fmt(lap), difB = fmt(lap), voz = "Vuelta " + v + ", " + fmtVoz(lap);
       if (esRP && v > 1 && mejorHist > 0) {
         voz += ", record personal, " + fmtDeltaVoz(mejorHist - lap) + " menos";
         difH = "Ultima: <span class='tv-rp'>" + fmt(lap) + " (-" + ((mejorHist - lap) / 1000).toFixed(2) + "s 🟢 RP)</span>";

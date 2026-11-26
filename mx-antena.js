@@ -159,8 +159,8 @@ function emitirPaso(pid, sinFf) {
   _tSoloVoz = setTimeout(function() {
     _tSoloVoz = null;
     if (lapLocal >= 1500 && !pid && antNom.indexOf("SOLO") >= 0) {
-      hablarAnt("Vuelta " + Math.max(1, pNum - 1) + ", " + (lapLocal / 1000).toFixed(2).replace(".", " punto ") + " segundos", false);
-      document.getElementById("lblMegaAnt").textContent = "🔊 Vuelta: " + (lapLocal / 1000).toFixed(2) + "s";
+      hablarAnt("Vuelta " + Math.max(1, pNum - 1) + ", " + fmtVoz(lapLocal), false);
+      document.getElementById("lblMegaAnt").textContent = "🔊 Vuelta: " + fmt(lapLocal);
     } else if (!pid && antNom.indexOf("SOLO") >= 0) hablarAnt("Paso " + pNum + ", crono iniciado", false);
   }, 750);
   document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
