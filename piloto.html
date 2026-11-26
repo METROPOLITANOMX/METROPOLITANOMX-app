@@ -112,7 +112,7 @@ document.getElementById("txtNomTop").textContent = miNom.toUpperCase();
 document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 
 var vozP = true, _tabAct = "sala", rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
-var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99;
+var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99, _salidaShowHasta = 0;
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
 var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
@@ -186,11 +186,26 @@ function verFotoFinish() {
   }).catch(function(){ document.getElementById("txtFfInfo").textContent = "Sin foto."; });
 }
 
+function asegurarPilotoLocal(ah) {
+  if (!rootCache.pilotos) rootCache.pilotos = {};
+  if (!rootCache.pilotos[uid]) {
+    var dor = mxGar.getDorsal();
+    rootCache.pilotos[uid] = { nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ah || ahoraSrv() };
+    fetch(FB + "/pilotos/" + uid + ".json", { method: "PUT", body: JSON.stringify(rootCache.pilotos[uid]) }).catch(function(){});
+  }
+  return rootCache.pilotos[uid];
+}
+
 function inscribirPilotoAuto() {
   var dor = mxGar.getDorsal(); mxGar.subirNube();
   fbJson(FB + "/pilotos/" + uid + ".json").then(function(ex) {
-    if (!ex) return fetch(FB + "/pilotos/" + uid + ".json", { method: "PUT", body: JSON.stringify({ nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ahoraSrv() }) });
+    if (!ex) {
+      var nw = { nombre: miNom, dorsal: dor, vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ahoraSrv() };
+      if (!rootCache.pilotos) rootCache.pilotos = {}; rootCache.pilotos[uid] = nw;
+      return fetch(FB + "/pilotos/" + uid + ".json", { method: "PUT", body: JSON.stringify(nw) });
+    }
     _ultVtasSinc = Number(ex.vueltas || 0);
+    if (!rootCache.pilotos) rootCache.pilotos = {}; rootCache.pilotos[uid] = Object.assign({}, ex, { nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() });
     return fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() }) });
   }).catch(function(){});
 }
@@ -202,12 +217,23 @@ function cmdSalaAmistosa(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99;
-  var pay = { estado: est, tsInicio: 0, ruleta: null };
-  if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
-  if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; mxHablar("Atencion pilotos, treinta segundos para la salida", vozP); }
-  if (est === "VALLA_MX") { pay.tsInicio = ahoraSrv() + 14500 + Math.floor(Math.random() * 2500); mxHablar("Valla de motocross preparada", vozP); }
+  avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99; _salidaShowHasta = 0;
+  var ahCmd = ahoraSrv();
+  var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null };
+  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
+  if (est === "SALIDA_30") {
+    pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
+    mxHablar("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", vozP);
+  }
+  if (est === "VALLA_MX") {
+    pay.tsCuenta = ahCmd + 30000;
+    pay.tsInicio = pay.tsCuenta - 4000 + Math.floor(Math.random() * 5000);
+    mxHablar("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", vozP);
+  }
   if (est === "ESPERA") { pay.tsInicio = 0; mxHablar("Manga detenida", vozP); }
+  if (!rootCache.sala) rootCache.sala = {};
+  Object.assign(rootCache.sala, pay);
+  actualizarSemaforoP();
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
 }
 function calibrarConCuenta10() {
@@ -227,35 +253,84 @@ function calibrarConCuenta10() {
   }, 1000);
 }
 
-function registrarVuelta(pUid, evTs) {
-  var p = (rootCache.pilotos || {})[pUid]; if (!p || p.eliminado) return;
-  var s = rootCache.sala || {}, ah = Number(evTs || ahoraSrv()), st = s.estado || "ESPERA", minMs = (Number(s.minLapSec || 5)) * 1000;
+function registrarVuelta(pUid, evTs, esManual) {
+  var ah = Number(evTs || ahoraSrv());
+  var p = (pUid === uid) ? asegurarPilotoLocal(ah) : (rootCache.pilotos || {})[pUid];
+  if (!p) return;
+  if (p.eliminado) {
+    if (esManual) document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#ff4d5e'>💀 Eliminado en esta manga</span>";
+    return;
+  }
+  var s = rootCache.sala || {}, st = s.estado || "ESPERA", dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+  var minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minMs) return;
-  if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
+
+  if (st === "WARMUP" || st === "TEST" || (st === "ESPERA" && !esManual)) {
     _lockVtaLocal[pUid] = ah; p.sensorOk = true;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ ultPasoTs: ah, ultPasoTxt: p.nombre + " (Prueba OK)" }) }).catch(function(){});
-    if (pUid === uid) mxHablar("Paso de prueba detectado", vozP); pintarSalaUI(); return;
+    if (pUid === uid) mxHablar("Paso de prueba detectado", vozP);
+    pintarSalaUI(); return;
   }
-  var ult = Number(p.tsUltimoPaso || 0); if (ult && (ah - ult) < minMs) return;
+
+  if (st === "ESPERA" && esManual) {
+    if (dirOn) {
+      document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#ffc107'>⏳ Espera a que Direccion lance la salida</span>";
+      mxHablar("Espera a que Direccion lance la salida", vozP);
+      return;
+    }
+    _lockVtaLocal[pUid] = ah;
+    s.estado = "EN_CURSO"; s.tsInicio = ah; p.tsUltimoPaso = ah;
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", tsInicio: ah }) }).catch(function(){});
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah, enPista: true, tsActivo: ah }) }).catch(function(){});
+    document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#20c997'>⏱️ Crono iniciado — ¡A rodar!</span>";
+    mxBeep(940, 110); mxHablar("Crono iniciado", vozP);
+    pintarSalaUI(); return;
+  }
+
+  var ult = Number(p.tsUltimoPaso || 0);
+  if (ult && (ah - ult) < minMs) return;
   _lockVtaLocal[pUid] = ah;
+
   var baseT = ult || Number(s.tsInicio || 0) || ah, lap = ah - baseT;
-  if (lap < 1500) { p.tsUltimoPaso = ah; fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){}); return; }
-  var v = (p.vueltas || 0) + 1, mej = (!p.mejorMs || lap < p.mejorMs) ? lap : p.mejorMs, lk = pUid + "_v" + v;
-  fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
-    if (ex && ex.ok) return;
-    return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
-      p.tsUltimoPaso = ah; p.vueltas = v; p.ultimaMs = lap; p.mejorMs = mej;
-      if (pUid === uid && _ultLapSinc !== ah) { _ultLapSinc = ah; _ultVtasSinc = v; _bombaExplotada = false; mxGar.procesarMiVuelta(lap, mej, ordenarPilotos(rootCache.pilotos, s), "lblDeltaVivo", "deltaBol"); }
-      pintarSalaUI();
-      fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah, enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
-      var patchS = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
-      if (!s.hotlapMs || lap < Number(s.hotlapMs)) { patchS.hotlapMs = lap; patchS.hotlapTxt = p.nombre + " — " + fmt(lap); }
-      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(patchS) }).catch(function(){});
-    });
-  }).catch(function(){});
+  if (lap < (esManual ? 900 : 1500)) {
+    p.tsUltimoPaso = ah;
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah, enPista: true, tsActivo: ah }) }).catch(function(){});
+    if (esManual) {
+      document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#20c997'>⏱️ Crono en marcha</span>";
+      mxBeep(940, 90);
+    }
+    return;
+  }
+
+  var v = (p.vueltas || 0) + 1, mej = (!p.mejorMs || lap < p.mejorMs) ? lap : p.mejorMs;
+  var heatTag = Number(s.tsInicio || 0) || "free", lk = pUid + "_" + heatTag + "_v" + v;
+
+  var aplicarPaso = function() {
+    p.tsUltimoPaso = ah; p.vueltas = v; p.ultimaMs = lap; p.mejorMs = mej;
+    if (pUid === uid && _ultLapSinc !== ah) {
+      _ultLapSinc = ah; _ultVtasSinc = v; _bombaExplotada = false;
+      mxGar.procesarMiVuelta(lap, mej, ordenarPilotos(rootCache.pilotos, s), "lblDeltaVivo", "deltaBol");
+    }
+    _lastSalaSig = "";
+    pintarSalaUI();
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah, enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
+    var patchS = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
+    if (!s.hotlapMs || lap < Number(s.hotlapMs)) { patchS.hotlapMs = lap; patchS.hotlapTxt = p.nombre + " — " + fmt(lap); }
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(patchS) }).catch(function(){});
+  };
+
+  if (esManual) {
+    aplicarPaso();
+    fetch(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).catch(function(){});
+  } else {
+    fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
+      if (ex && ex.ok) return;
+      return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(aplicarPaso);
+    }).catch(function(){});
+  }
 }
-function sumarVueltaManual() { desbloquearAudioP(false); registrarVuelta(uid, ahoraSrv()); }
+function sumarVueltaManual() { desbloquearAudioP(false); registrarVuelta(uid, ahoraSrv(), true); }
 
 function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvP[ev.antId] === ev.ts) return;
@@ -265,7 +340,7 @@ function manejarEventoAntena(ev) {
     if (md !== "TODO" && !ev.pilotoUid) return;
     var dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
-    if (target === uid || !dirOn) registrarVuelta(target, Number(ev.ts));
+    if (target === uid || !dirOn) registrarVuelta(target, Number(ev.ts), false);
   }
 }
 
@@ -280,6 +355,56 @@ function pintarAntStatusP() {
 function renderSwatches(g) {
   var cs = (g && Array.isArray(g.colores)) ? g.colores.slice(0, 3) : [];
   return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
+}
+
+function actualizarSemaforoP() {
+  var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
+  var ov = document.getElementById("overlaySem"), nowLoc = Date.now();
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
+
+  if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
+    var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
+    var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+    var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
+    if (df > 0 && dfCue <= 31000) {
+      ov.style.display = "flex";
+      if (est === "VALLA_MX") {
+        leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
+        if (sgCue <= 5) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
+        else { document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
+      } else {
+        gBox.style.display = "none"; leds.style.display = "flex";
+        var nOn = sgCue <= 5 ? (6 - sgCue) : 0, ls = leds.children;
+        for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
+        document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue;
+        document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sgCue > 10) ? "#1f080c" : (sgCue > 5 ? "#332200" : "#2b0509");
+      }
+      if (!dirOn && sgCue !== ultSegSemP) {
+        ultSegSemP = sgCue;
+        if (est === "VALLA_MX") {
+          if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
+          else if (sgCue <= 10 && sgCue >= 5) mxHablar(String(sgCue), vozP);
+        } else {
+          if (sgCue === 20) mxHablar("Quedan veinte segundos", vozP);
+          else if (sgCue === 10) mxHablar("Diez segundos", vozP);
+          else if (sgCue <= 5 && sgCue >= 1) mxHablar(String(sgCue), vozP);
+        }
+      }
+    } else if (df <= 0 && df > -4000) {
+      ov.style.display = "flex"; ov.style.background = "#00c853";
+      document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+      if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
+      else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
+      if (ultSegSemP !== -999) {
+        ultSegSemP = -999; _salidaShowHasta = nowLoc + 1800; mxBeep(1100, 260);
+        if (!dirOn) { mxHablar("¡SALIDA!", vozP); fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){}); }
+      }
+    } else if (nowLoc >= _salidaShowHasta) {
+      if (ov.style.display !== "none") ov.style.display = "none";
+    }
+  } else if (nowLoc >= _salidaShowHasta) {
+    if (ov.style.display !== "none") ov.style.display = "none";
+  }
 }
 
 function pintarSalaUI() {
@@ -338,7 +463,7 @@ function pintarSalaUI() {
     document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando ahora mismo.";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ov = document.getElementById("overlaySem"), estTxt = est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
   if (est === "WARMUP" && t0 > 0) {
     var dfW = t0 - ah; if (dfW > 0) estTxt = "WARM-UP " + Math.floor(dfW / 60000) + ":" + ((Math.floor((dfW % 60000) / 1000) < 10) ? "0" : "") + Math.floor((dfW % 60000) / 1000);
     else if (!dirOn) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
@@ -355,36 +480,7 @@ function pintarSalaUI() {
     }
   }
   document.getElementById("lblEstadoSala").textContent = estTxt;
-
-  if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
-    var df = t0 - ah, sg = Math.ceil(df / 1000);
-    var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
-    if (df > 0 && df <= 31000) {
-      ov.style.display = "flex";
-      if (est === "VALLA_MX") {
-        leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
-        if (df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
-        else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
-      } else {
-        gBox.style.display = "none"; leds.style.display = "flex";
-        var nOn = sg <= 5 ? (6 - sg) : 0, ls = leds.children;
-        for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
-        document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg;
-        document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sg > 10) ? "#1f080c" : (sg > 5 ? "#332200" : "#2b0509");
-      }
-      if (!dirOn && sg !== ultSegSemP) {
-        ultSegSemP = sg;
-        if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) mxHablar(String(sg), vozP); else if (sg === 5) mxHablar("5, atentos a la valla", vozP); }
-        else { if (sg === 20) mxHablar("Veinte segundos para la salida", vozP); else if (sg === 10) mxHablar("Diez segundos", vozP); else if (sg <= 5) mxHablar(String(sg), vozP); }
-      }
-    } else if (df <= 0 && df > -4000) {
-      ov.style.display = "flex"; ov.style.background = "#00c853"; document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
-      if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
-      else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
-      if (ultSegSemP !== -999) { ultSegSemP = -999; mxBeep(1100, 260); if (!dirOn) mxHablar("Salida", vozP); }
-      if (!dirOn) fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
-    } else ov.style.display = "none";
-  } else ov.style.display = "none";
+  actualizarSemaforoP();
 }
 
 function conectarSseUnico() {
@@ -424,6 +520,7 @@ setInterval(function() {
 }, 4500);
 
 setInterval(function() {
+  actualizarSemaforoP();
   var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
   var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol"), barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");
   if (s.tsInicio && s.estado === "EN_CURSO" && barL && lblL) {

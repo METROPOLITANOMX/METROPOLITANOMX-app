@@ -330,7 +330,8 @@ localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", miNom);
 document.getElementById("txtCircDir").textContent = "🏁 " + circNom;
 
 var esDirOk = (localStorage.getItem("mxp_dir_ok") === "1");
-var dirPilotoOn = (localStorage.getItem("mxp_dir_piloto") === "1");
+var dirPilotoOn = false;
+localStorage.removeItem("mxp_dir_piloto");
 var rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
 var warmupCaps = {}, perfilesCam = {}, circMeta = { metros: 200, factor: 1.0 };
 var testOn = false, _slidersLocked = true, _tabDir = "control", _dirIniciado = false;
@@ -416,12 +417,28 @@ function ayudaDir() {
   alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: usa colores vivos (no blanco/negro) y verifica '[MODO: GAR ✓]' en el visor de cada camara.\n5. Cuentas: busca por nombre cuentas antiguas para bloquear/borrar con confirmacion.");
 }
 
-function aplicarModoDirPilotoUI() {
+function aplicarModoDirPilotoUI(limpiarUid) {
   var b = document.getElementById("btnDirPiloto"), tb = document.getElementById("tabsDirPiloto"), br = document.getElementById("badgeRangoDir");
-  if (dirPilotoOn) { b.textContent = "🟢 DIR-PILOTO: ON"; b.style.background = "#20c997"; b.style.color = "#000"; tb.style.display = "flex"; br.style.display = "inline-block"; inscribirDirPiloto(); mxGar.actualizarRango(); }
-  else { b.textContent = "🏍️ DIR-PILOTO: OFF"; b.style.background = "#2b2b2b"; b.style.color = "#ffc107"; tb.style.display = "none"; br.style.display = "none"; verTabDir("control"); fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){}); if (rootCache.pilotos) delete rootCache.pilotos[uid]; }
+  if (dirPilotoOn) {
+    b.textContent = "🟢 DIR-PILOTO: ON"; b.style.background = "#20c997"; b.style.color = "#000"; tb.style.display = "flex"; br.style.display = "inline-block";
+    inscribirDirPiloto(); mxGar.actualizarRango();
+  } else {
+    b.textContent = "🏍️ DIR-PILOTO: OFF"; b.style.background = "#2b2b2b"; b.style.color = "#ffc107"; tb.style.display = "none"; br.style.display = "none";
+    verTabDir("control");
+    fetch(FB + "/pilotos/director.json", { method: "DELETE" }).catch(function(){});
+    if (rootCache.pilotos && rootCache.pilotos.director) delete rootCache.pilotos.director;
+    if (limpiarUid && uid && uid !== "director") {
+      fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE" }).catch(function(){});
+      if (rootCache.pilotos) delete rootCache.pilotos[uid];
+    }
+  }
 }
-function toggleDirPiloto() { dirPilotoOn = !dirPilotoOn; localStorage.setItem("mxp_dir_piloto", dirPilotoOn ? "1" : "0"); aplicarModoDirPilotoUI(); pintarDirUI(); }
+function toggleDirPiloto() {
+  dirPilotoOn = !dirPilotoOn;
+  aplicarModoDirPilotoUI(!dirPilotoOn);
+  _lastPilSig = "";
+  pintarDirUI();
+}
 function verTabDir(t) {
   _tabDir = t; if (t !== "garaje") mxGar.cerrarCamaras();
   ["control", "pista", "garaje", "tiempos"].forEach(function(x){ document.getElementById("secDir_" + x).style.display = (x === t) ? "block" : "none"; });
@@ -645,12 +662,23 @@ function cmdSala(est) {
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
   _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999;
-  var pay = { estado: est, tsInicio: 0, ruleta: null, dirTs: ahoraSrv(), dirSession: dirSessionId, verVivo: false };
+  var ahCmd = ahoraSrv();
+  var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
   testOn = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
-  if (est === "WARMUP") { pay.tsInicio = ahoraSrv() + 180000; hablarYAntenas("Warm-up de 3 minutos iniciado, capturando en meta", true); }
-  if (est === "SALIDA_30") { pay.tsInicio = ahoraSrv() + 30000; hablarYAntenas("Atencion pilotos, treinta segundos para la salida", true); }
-  if (est === "VALLA_MX") { pay.tsInicio = ahoraSrv() + 14500 + Math.floor(Math.random() * 2500); hablarYAntenas("Valla de motocross preparada", true); }
+  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; hablarYAntenas("Warm-up de 3 minutos iniciado, capturando en meta", true); }
+  if (est === "SALIDA_30") {
+    pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
+    hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
+  }
+  if (est === "VALLA_MX") {
+    pay.tsCuenta = ahCmd + 30000;
+    pay.tsInicio = pay.tsCuenta - 4000 + Math.floor(Math.random() * 5000);
+    hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
+  }
   if (est === "ESPERA") { pay.tsInicio = 0; hablarYAntenas("Manga detenida", false); }
+  if (!rootCache.sala) rootCache.sala = {};
+  Object.assign(rootCache.sala, pay);
+  actualizarSemaforoDir();
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
 }
 function lanzarRuletaManual() {
@@ -686,9 +714,11 @@ function borrarTiemposDiaDir() {
 
 function restarVueltaDir(pUid) {
   var p = (rootCache.pilotos || {})[pUid]; if (!p || !p.vueltas) return;
+  var s = rootCache.sala || {}, heatTag = Number(s.tsInicio || 0) || "free";
   var oldV = Number(p.vueltas), newV = Math.max(0, oldV - 1), pay = { vueltas: newV, ultimaMs: 0 };
   if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
   fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
+  fetch(FB + "/pasos_lock/" + pUid + "_" + heatTag + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
   fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
 }
 function expulsarPilotoDir(pUid) { if (!confirm("¿Expulsar a este piloto de la parrilla?")) return; fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).catch(function(){}); if (rootCache.pilotos) delete rootCache.pilotos[pUid]; pintarDirUI(); }
@@ -697,11 +727,11 @@ function limpiarOfflineDir() {
   Object.keys(pAll).forEach(function(k){ if (pAll[k] && !esPilotoActivo(pAll[k])) { fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" }).catch(function(){}); delete pAll[k]; } });
   pintarDirUI();
 }
-function sumarVueltaManualDir() { desbloquearAudioD(false); if (!dirPilotoOn) toggleDirPiloto(); registrarVueltaDir(uid, ahoraSrv()); }
+function sumarVueltaManualDir() { desbloquearAudioD(false); if (!dirPilotoOn) toggleDirPiloto(); registrarVueltaDir(uid, ahoraSrv(), true); }
 
-function registrarVueltaDir(pUid, evTs) {
+function registrarVueltaDir(pUid, evTs, esManual) {
   var p = (rootCache.pilotos || {})[pUid]; if (!p || p.eliminado) return;
-  var s = rootCache.sala || {}, ah = Number(evTs || ahoraSrv()), st = s.estado || "ESPERA", minMs = (Number(s.minLapSec || 5)) * 1000;
+  var s = rootCache.sala || {}, ah = Number(evTs || ahoraSrv()), st = s.estado || "ESPERA", minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaD[pUid] && (ah - _lockVtaD[pUid]) < minMs) return;
   if (st === "WARMUP" || st === "TEST" || st === "ESPERA") {
     _lockVtaD[pUid] = ah; p.sensorOk = true;
@@ -712,8 +742,9 @@ function registrarVueltaDir(pUid, evTs) {
   var ult = Number(p.tsUltimoPaso || 0); if (ult && (ah - ult) < minMs) return;
   _lockVtaD[pUid] = ah;
   var baseT = ult || Number(s.tsInicio || 0) || ah, lap = ah - baseT;
-  if (lap < 1500) { p.tsUltimoPaso = ah; fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){}); return; }
-  var v = (p.vueltas || 0) + 1, mej = (!p.mejorMs || lap < p.mejorMs) ? lap : p.mejorMs, lk = pUid + "_v" + v;
+  if (lap < (esManual ? 900 : 1500)) { p.tsUltimoPaso = ah; fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ tsUltimoPaso: ah }) }).catch(function(){}); return; }
+  var v = (p.vueltas || 0) + 1, mej = (!p.mejorMs || lap < p.mejorMs) ? lap : p.mejorMs;
+  var heatTag = Number(s.tsInicio || 0) || "free", lk = pUid + "_" + heatTag + "_v" + v;
   fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
     if (ex && ex.ok) return;
     return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
@@ -737,7 +768,7 @@ function manejarEventoAntena(ev) {
     var s = rootCache.sala || {}, md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : "");
-    if (target) registrarVueltaDir(target, Number(ev.ts));
+    if (target) registrarVueltaDir(target, Number(ev.ts), false);
   }
 }
 
@@ -850,6 +881,55 @@ function renderSwatches(g) {
   return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
 }
 
+function actualizarSemaforoDir() {
+  var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
+  var ov = document.getElementById("overlaySem");
+  if ((est !== "SALIDA_30" && est !== "VALLA_MX") || t0 <= 0) {
+    if (ov.style.display !== "none") ov.style.display = "none";
+    return;
+  }
+
+  var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
+  if (df > 0 && sgCue !== _ultSecLoc) {
+    _ultSecLoc = sgCue;
+    if (est === "VALLA_MX") {
+      if (sgCue === 20) hablarYAntenas("Quedan veinte segundos", false);
+      else if (sgCue <= 10 && sgCue >= 5) hablarYAntenas(String(sgCue), false);
+    } else {
+      if (sgCue === 20) hablarYAntenas("Quedan veinte segundos", false);
+      else if (sgCue === 10) hablarYAntenas("Diez segundos", false);
+      else if (sgCue <= 5 && sgCue >= 1) hablarYAntenas(String(sgCue), false);
+    }
+  }
+  if (df <= 0 && _ultSecLoc !== 0) {
+    _ultSecLoc = 0; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
+  }
+
+  if (dirPilotoOn) {
+    if (df > 0 && dfCue <= 31000) {
+      ov.style.display = "flex";
+      var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
+      if (est === "VALLA_MX") {
+        leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
+        if (sgCue <= 5) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
+        else { document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
+      } else {
+        gBox.style.display = "none"; leds.style.display = "flex";
+        var nOn = sgCue <= 5 ? (6 - sgCue) : 0, ls = leds.children;
+        for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
+        document.getElementById("numSem").textContent = "00:" + (sgCue < 10 ? "0" : "") + sgCue;
+        document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sgCue > 10) ? "#1f080c" : (sgCue > 5 ? "#332200" : "#2b0509");
+      }
+    } else if (df <= 0 && df > -4000) {
+      ov.style.display = "flex"; ov.style.background = "#00c853";
+      document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
+      if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
+      else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
+    } else ov.style.display = "none";
+  } else ov.style.display = "none";
+}
+
 function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
@@ -913,7 +993,7 @@ function pintarDirUI() {
     } else br.style.display = "none";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ov = document.getElementById("overlaySem"), estTxt = est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
   if (est === "WARMUP" && t0 > 0) {
     var dfW = t0 - ah; if (dfW > 0) estTxt = "WARM-UP " + Math.floor(dfW / 60000) + ":" + ((Math.floor((dfW % 60000) / 1000) < 10) ? "0" : "") + Math.floor((dfW % 60000) / 1000);
     else fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
@@ -931,41 +1011,7 @@ function pintarDirUI() {
     }
   }
   document.getElementById("lblEstadoSalaP").textContent = estTxt;
-
-  if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
-    var df = t0 - ah, sg = Math.ceil(df / 1000);
-    if (df > 0 && sg !== _ultSecLoc) {
-      _ultSecLoc = sg;
-      if (est === "VALLA_MX") { if (sg <= 10 && sg >= 6) hablarYAntenas(String(sg), false); else if (sg === 5) hablarYAntenas("5, atentos a la valla", false); }
-      else { if (sg === 20) hablarYAntenas("Veinte segundos para la salida", false); else if (sg === 10) hablarYAntenas("Diez segundos", false); else if (sg <= 5 && sg >= 1) hablarYAntenas(String(sg), false); }
-    }
-    if (df <= 0 && _ultSecLoc !== 0) {
-      _ultSecLoc = 0; mxBeep(1100, 260); hablarYAntenas("¡SALIDA!", true);
-      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
-    }
-    if (dirPilotoOn) {
-      if (df > 0 && df <= 31000) {
-        ov.style.display = "flex";
-        var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");
-        if (est === "VALLA_MX") {
-          leds.style.display = "none"; gBox.style.display = "block"; gBar.classList.remove("drop");
-          if (df <= 4500) { document.getElementById("numSem").textContent = "5s"; document.getElementById("txtSem").textContent = "¡ATENTOS A LA VALLA!"; ov.style.background = (Math.floor(df / 220) % 2 === 0) ? "#c9182b" : "#ffc107"; }
-          else { document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg; document.getElementById("txtSem").textContent = "CARTEL EN PARRILLA"; ov.style.background = "#c9182b"; }
-        } else {
-          gBox.style.display = "none"; leds.style.display = "flex";
-          var nOn = sg <= 5 ? (6 - sg) : 0, ls = leds.children;
-          for (var li = 0; li < ls.length; li++) ls[li].className = "sem-led" + (li < nOn ? " on" : "");
-          document.getElementById("numSem").textContent = "00:" + (sg < 10 ? "0" : "") + sg;
-          document.getElementById("txtSem").textContent = "PREPARADOS"; ov.style.background = (sg > 10) ? "#1f080c" : (sg > 5 ? "#332200" : "#2b0509");
-        }
-      } else if (df <= 0 && df > -4000) {
-        ov.style.display = "flex"; ov.style.background = "#00c853";
-        document.getElementById("numSem").textContent = "¡SALIDA!"; document.getElementById("txtSem").textContent = (est === "VALLA_MX") ? "¡VALLA ABAJO!" : "A TOPE";
-        if (est === "VALLA_MX") document.getElementById("gateBar").classList.add("drop");
-        else { var ls2 = document.getElementById("semLeds").children; for (var li2 = 0; li2 < ls2.length; li2++) ls2[li2].className = "sem-led go"; }
-      } else ov.style.display = "none";
-    } else ov.style.display = "none";
-  } else ov.style.display = "none";
+  actualizarSemaforoDir();
 }
 
 function bindCamImg(aid) {
@@ -1026,7 +1072,7 @@ function iniciarDirector() {
     isSoloDir: function(){ return !dirPilotoOn; }, onSpeak: function(t){ mxHablar(t); }
   });
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
-  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
+  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
 
   setInterval(function() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
@@ -1054,6 +1100,7 @@ function iniciarDirector() {
   }, 5000);
 
   setInterval(function() {
+    actualizarSemaforoDir();
     if (!dirPilotoOn) return;
     var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {}, b = Number(yo.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
     var el = document.getElementById("vivoRelojP"), rb = document.getElementById("relBol");

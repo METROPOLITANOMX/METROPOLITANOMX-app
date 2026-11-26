@@ -121,7 +121,7 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, votoMvpHecho = false, ultReacMs = 0, toquesOva = 0;
-var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "";
+var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "", _lastEstTxtV = "";
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
@@ -244,16 +244,30 @@ function renderSwatches(g) {
   return cs.map(function(c){ return '<span class="mx-sw" style="background:' + esc(c.hex || "#fff") + '"></span>'; }).join("");
 }
 
-function pintarVivo() {
-  var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gObj = rootCache.garaje || {}, cObj = rootCache.campeonato || {}, ah = ahoraSrv();
-  document.getElementById("banBanderaAmV").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
-  var est = s.estado || "ESPERA";
+function actualizarRelojEstadoV() {
+  var s = rootCache.sala || {}, est = s.estado || "ESPERA", ah = ahoraSrv();
   var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
   var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
   var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
-  if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) { var df = Number(s.tsInicio) - ah; if (df > 0) { var sg = Math.ceil(df / 1000); estTxt += " • " + Math.floor(sg / 60) + ":" + ((sg % 60) < 10 ? "0" : "") + (sg % 60); } }
-  else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) { var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ah; if (rem > 0) { var sr = Math.ceil(rem / 1000); estTxt += " • " + Math.floor(sr / 60) + ":" + ((sr % 60) < 10 ? "0" : "") + (sr % 60); } }
-  document.getElementById("lblEstV").textContent = estTxt;
+  if (est === "VALLA_MX" && Number(s.tsInicio || 0) > 0) {
+    var tCue = Number(s.tsCuenta || 0) || Number(s.tsInicio);
+    var dfDrop = Number(s.tsInicio) - ah, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
+    if (dfDrop > 0) estTxt += " • " + (sgCue <= 5 ? (esIngles ? "WATCH GATE!" : "¡ATENTOS A LA VALLA!") : (Math.floor(sgCue / 60) + ":" + ((sgCue % 60) < 10 ? "0" : "") + (sgCue % 60)));
+  } else if ((est === "SALIDA_30" || est === "WARMUP") && Number(s.tsInicio || 0) > 0) {
+    var df = Number(s.tsInicio) - ah;
+    if (df > 0) { var sg = Math.ceil(df / 1000); estTxt += " • " + Math.floor(sg / 60) + ":" + ((sg % 60) < 10 ? "0" : "") + (sg % 60); }
+  } else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) {
+    var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ah;
+    if (rem > 0) { var sr = Math.ceil(rem / 1000); estTxt += " • " + Math.floor(sr / 60) + ":" + ((sr % 60) < 10 ? "0" : "") + (sr % 60); }
+  }
+  if (estTxt !== _lastEstTxtV) { _lastEstTxtV = estTxt; document.getElementById("lblEstV").textContent = estTxt; }
+}
+
+function pintarVivo() {
+  var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gObj = rootCache.garaje || {}, cObj = rootCache.campeonato || {};
+  document.getElementById("banBanderaAmV").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
+  var est = s.estado || "ESPERA";
+  actualizarRelojEstadoV();
   document.getElementById("lblSubV").textContent = s.hotlapTxt ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt) : circNom;
   document.getElementById("lblModV").textContent = (s.modoJuego && s.modoJuego !== "NORMAL") ? ("MODO: " + s.modoJuego) : "";
   var brV = document.getElementById("banRuletaV");
@@ -334,9 +348,11 @@ function refrescarVivo() {
 conectarSseVivo(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 
 setInterval(function() {
+  var s = rootCache.sala || {}, est = s.estado || "ESPERA";
+  if (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP") actualizarRelojEstadoV();
   if (!modoMec) return;
-  var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], s = rootCache.sala || {}, el = document.getElementById("mecCrono");
-  if (!p || s.estado === "ESPERA") { el.textContent = "00.0s"; return; }
+  var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], el = document.getElementById("mecCrono");
+  if (!p || est === "ESPERA") { el.textContent = "00.0s"; return; }
   var b = Number(p.tsUltimoPaso || 0) || Number(s.tsInicio || 0);
   el.textContent = (!b || ahoraSrv() < b) ? "00.0s" : ((ahoraSrv() - b) / 1000).toFixed(1) + "s";
 }, 150);

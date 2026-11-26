@@ -63,7 +63,7 @@
   <canvas id="cnv" width="384" height="216" style="display:none"></canvas>
   <canvas id="cnvProc" width="192" height="108" style="display:none"></canvas>
   <canvas id="cnvFf" width="320" height="180" style="display:none"></canvas>
-  <canvas id="cnvWu" width="200" height="140" style="display:none"></canvas>
+  <canvas id="cnvWu" width="160" height="112" style="display:none"></canvas>
 
   <div class="panel">
     <div id="lblEstado" style="font-size:15px;font-weight:bold;color:#ffc107;margin-bottom:4px">SELECCIONA PUESTO</div>
@@ -88,7 +88,7 @@ var vozOn = true, camOk = false, PW = 192, PH = 108, fondoFull = null, calHasta 
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, ultCmd = 0;
 var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
-var _telBusy = false, _imgBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
+var _telBusy = false, _imgBusy = false, _wuBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
 var _ultPasoLocalTs = 0, _tSoloVoz = null, _tSoloCal = null, _esSala = null;
 var _vozQueue = [], _vozHablando = false;
 
@@ -188,18 +188,20 @@ var _cnvWu = document.getElementById("cnvWu"), _ctxWu = _cnvWu.getContext("2d");
 var _cnvLive = document.createElement("canvas"); _cnvLive.width = 360; _cnvLive.height = 202;
 var _ctxLive = _cnvLive.getContext("2d");
 
-function emitirPaso(pid) {
+function emitirPaso(pid, sinFf) {
   pasos++; mxBeep(940, 110); vibrar([35, 30, 35]);
   var tsPaso = ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
   fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }) }).catch(function(){});
   enviarTelemetria();
-  try {
-    _ctxFf.drawImage(_cnv, 0, 0, 320, 180); _ctxFf.fillStyle = "rgba(255,42,42,0.8)";
-    var pLine = (cfg.roi && cfg.roi.posX) || 50;
-    if (cfg.orientacion === "H") _ctxFf.fillRect(0, Math.round((pLine / 100) * 180) - 1, 320, 2);
-    else _ctxFf.fillRect(Math.round((pLine / 100) * 320) - 1, 0, 2, 180);
-    fetch(FB_FF, { method: "PUT", body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _ctxFf.toDataURL("image/jpeg", 0.56) }) }).catch(function(){});
-  } catch (e) {}
+  if (!sinFf) {
+    try {
+      _ctxFf.drawImage(_cnv, 0, 0, 320, 180); _ctxFf.fillStyle = "rgba(255,42,42,0.8)";
+      var pLine = (cfg.roi && cfg.roi.posX) || 50;
+      if (cfg.orientacion === "H") _ctxFf.fillRect(0, Math.round((pLine / 100) * 180) - 1, 320, 2);
+      else _ctxFf.fillRect(Math.round((pLine / 100) * 320) - 1, 0, 2, 180);
+      fetch(FB_FF, { method: "PUT", body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _ctxFf.toDataURL("image/jpeg", 0.56) }) }).catch(function(){});
+    } catch (e) {}
+  }
 
   if (_tSoloVoz) clearTimeout(_tSoloVoz);
   var pNum = pasos;
@@ -214,7 +216,9 @@ function emitirPaso(pid) {
 }
 
 function capturarYEnviarWarmup(dProc) {
-  var ts = ahoraSrv(); if ((ts - _ultWuTs) < 1100) return; _ultWuTs = ts;
+  var ts = ahoraSrv();
+  if (_wuBusy || (ts - _ultWuTs) < 1100) return;
+  _ultWuTs = ts;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(14, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(14, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
@@ -235,8 +239,11 @@ function capturarYEnviarWarmup(dProc) {
     }
     var topC = function(mp, lim) {
       return Object.keys(mp).map(function(k) {
-        var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n);
-        return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) };
+        var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n), lb = rgbLab(r0, g0, b0);
+        return {
+          cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")",
+          lab: { L: Math.round(lb.L * 100) / 100, a: Math.round(lb.a * 100) / 100, b: Math.round(lb.b * 100) / 100 }
+        };
       }).sort(function(a, b) { return b.cnt - a.cnt; }).slice(0, lim);
     };
     var sTop = topC(bS, 3), iTop = topC(bI, 3), cols = [];
@@ -263,21 +270,48 @@ function capturarYEnviarWarmup(dProc) {
   if (!res.cols.length) return;
 
   try {
-    var sx = Math.floor((cropRect.x / 100) * 384), sy = Math.floor((cropRect.y / 100) * 216);
-    var sw = Math.max(24, Math.floor((cropRect.w / 100) * 384)), sh = Math.max(24, Math.floor((cropRect.h / 100) * 216));
-    _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 200, 140);
+    var sx = Math.max(0, Math.min(360, Math.floor((cropRect.x / 100) * 384)));
+    var sy = Math.max(0, Math.min(192, Math.floor((cropRect.y / 100) * 216)));
+    var sw = Math.max(24, Math.min(384 - sx, Math.floor((cropRect.w / 100) * 384)));
+    var sh = Math.max(24, Math.min(216 - sy, Math.floor((cropRect.h / 100) * 216)));
+    _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 160, 112);
+    var payload = JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.45), colores: res.cols });
+
+    _wuBusy = true;
     document.getElementById("lblMegaAnt").textContent = "⏳ Subiendo captura Warm-Up...";
+    var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var tOut = setTimeout(function() { if (ctrl) ctrl.abort(); }, 7000);
+
     fetch(FB_WU + "/" + antId + "_" + ts + ".json", {
-      method: "PUT", body: JSON.stringify({ ts: ts, antId: antId, antNom: antNom, img: _ctxWu.toDataURL("image/jpeg", 0.52), colores: res.cols })
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      signal: ctrl ? ctrl.signal : undefined
     }).then(function(resp) {
+      clearTimeout(tOut);
       if (!resp.ok) throw new Error("HTTP " + resp.status);
-      _ultTxtAnt = "WU:" + res.cols.length + "c"; mxBeep(720, 80);
+      _wuBusy = false;
+      _ultTxtAnt = "WU:" + res.cols.length + "c";
+      mxBeep(720, 90);
+      hablarAnt("Captura enviada", false);
+      document.getElementById("lblEstado").textContent = "✅ CAPTURA ENVIADA (" + res.cols.length + " tonos)";
+      document.getElementById("lblEstado").style.color = "#00e676";
       document.getElementById("lblMegaAnt").textContent = "✅ Warm-Up enviado a Direccion (" + res.cols.length + " tonos)";
     }).catch(function(err) {
+      clearTimeout(tOut);
+      _wuBusy = false;
+      _ultWuTs = 0;
       _ultTxtAnt = "Err WU";
-      document.getElementById("lblMegaAnt").textContent = "❌ Error Firebase Warm-Up: " + err.message;
+      var msgErr = (err && err.name === "AbortError") ? "Tiempo agotado (7s)" : ((err && err.message) || "Red");
+      document.getElementById("lblEstado").textContent = "❌ ERROR WARM-UP";
+      document.getElementById("lblEstado").style.color = "#ff4d5e";
+      document.getElementById("lblMegaAnt").textContent = "❌ Error Firebase Warm-Up: " + msgErr;
     });
-  } catch (e) {}
+  } catch (e) {
+    _wuBusy = false;
+    _ultWuTs = 0;
+    document.getElementById("lblMegaAnt").textContent = "❌ Error preparando captura: " + (e.message || e);
+  }
 }
 
 function obtenerFirmasPiloto(gObj, pid) {
@@ -446,10 +480,10 @@ function procFrame() {
     if (cfg.estado === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
       capturarYEnviarWarmup(dFull);
-      if (cfg.modoDet === "TODO") emitirPaso("");
+      if (cfg.modoDet === "TODO") emitirPaso("", true);
       else {
         var rWu = evaluarRoiColor(dFull);
-        if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; document.getElementById("lblEstado").textContent = "✅ TEST: " + rWu.pid; emitirPaso(rWu.pid); }
+        if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; document.getElementById("lblEstado").textContent = "✅ TEST: " + rWu.pid; emitirPaso(rWu.pid, true); }
         else { _ultTxtAnt = rWu.info; document.getElementById("lblEstado").textContent = "🔥 CAPTURA WARM-UP"; }
       }
       return;
@@ -532,7 +566,7 @@ function procesarSala(s) {
 }
 
 function enviarTelemetria() {
-  if (!antId || _telBusy) return; _telBusy = true;
+  if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
     body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt })
@@ -552,15 +586,15 @@ conectarSseSala();
 
 setInterval(enviarTelemetria, 350);
 setInterval(function() {
-  if (!antId) return; var v = document.getElementById("vid");
+  if (!antId || _wuBusy) return; var v = document.getElementById("vid");
   if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
     _ctxLive.drawImage(v, 0, 0, 360, 202);
-    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.55) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
+    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
   } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST") {
     _imgCleared = true; fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
   }
-}, 400);
+}, 500);
 
 setInterval(function() {
   fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){});
