@@ -330,23 +330,33 @@ var mxGar = (function() {
     deshacer: function() { if (_undo.length) { _mask = _undo.pop(); pintarCanvasRecorte(); } },
     extraerColores: function() {
       if (!_raw || !_mask) return;
-      var scan = function(minCh) {
-        var bS = {}, bI = {};
-        for (var py = 0; py < CH; py++) {
-          for (var px = 0; px < CW; px++) {
-            var p = py * CW + px; if (!_mask[p]) continue;
-            var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2], lb = rgbLab(r, g, b);
-            if (minCh > 0 && (Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh || lb.L < 14 || lb.L > 92)) continue;
-            var zn = (py < Math.round(CH * 0.48)) ? "SUP" : "INF", key = Math.round(r / 32) + "_" + Math.round(g / 32) + "_" + Math.round(b / 32), dst = (zn === "SUP") ? bS : bI;
-            if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
-            dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
-          }
+      var midY = Math.round(CH * 0.48), bS = {}, bI = {}, visCnt = 0;
+      for (var py = 0; py < CH; py++) {
+        for (var px = 0; px < CW; px++) {
+          var p = py * CW + px; if (!_mask[p]) continue;
+          visCnt++;
+          var k = p * 4, r = _raw[k], g = _raw[k + 1], b = _raw[k + 2];
+          var zn = (py < midY) ? "SUP" : "INF", key = Math.round(r / 32) + "_" + Math.round(g / 32) + "_" + Math.round(b / 32), dst = (zn === "SUP") ? bS : bI;
+          if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
+          dst[key].cnt++; dst[key].r += r; dst[key].g += g; dst[key].b += b;
         }
-        var top = function(mp) { return Object.keys(mp).map(function(key){ var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n); return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: rgbLab(rr, gg, bb) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, 2); };
-        return top(bS).concat(top(bI));
+      }
+      if (!visCnt) { alert("Todo el recuadro quedo borrado. Pulsa 'Repetir' y deja la moto visible."); return; }
+      var minVivo = Math.max(8, Math.round(visCnt * 0.006));
+      var top = function(mp) {
+        var arr = Object.keys(mp).map(function(key) {
+          var o = mp[key], n = o.cnt, rr = Math.round(o.r / n), gg = Math.round(o.g / n), bb = Math.round(o.b / n), lb = rgbLab(rr, gg, bb);
+          return { cnt: n, r: rr, g: gg, b: bb, zona: o.zn, hex: "rgb(" + rr + "," + gg + "," + bb + ")", lab: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b) };
+        });
+        arr.sort(function(a, b) {
+          var aV = (a.ch >= 18 && a.cnt >= minVivo) ? 1 : 0;
+          var bV = (b.ch >= 18 && b.cnt >= minVivo) ? 1 : 0;
+          if (aV !== bV) return bV - aV;
+          return b.cnt - a.cnt;
+        });
+        return arr.slice(0, 2).map(function(c) { delete c.ch; return c; });
       };
-      var res = scan(18);
-      if (!res.length) res = scan(0);
+      var res = top(bS).concat(top(bI));
       if (!res.length) { alert("Todo el recuadro quedo borrado. Pulsa 'Repetir' y deja la moto visible."); return; }
       if (_lado === 1) { _cols = res; _lado = 2; document.getElementById("txtPasoCap").textContent = "✓ LADO 1 OK — CAPTURA LADO 2 O PULSA GUARDAR"; }
       else { _cols = _cols.concat(res).slice(-6); document.getElementById("txtPasoCap").textContent = "✅ 2 LADOS LISTOS — PULSA GUARDAR FIRMA"; }

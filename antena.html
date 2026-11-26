@@ -220,31 +220,45 @@ function capturarYEnviarWarmup(dProc) {
   var rw = Math.max(14, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(14, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
   var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.65);
 
-  var muestrear = function(x0, y0, w0, h0, soloMov, minCh) {
+  var muestrear = function(x0, y0, w0, h0, soloMov) {
     var bS = {}, bI = {}, midY = y0 + Math.floor(h0 * 0.48), cnt = 0;
     for (var py = y0; py < y0 + h0; py++) {
       for (var px = x0; px < x0 + w0; px++) {
         var k = (py * PW + px) * 4;
         if (soloMov && (Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
         cnt++;
-        var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG), lb = rgbLab(rr, gg, bb);
-        if (minCh > 0 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) < minCh) continue;
+        var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG);
         var zn = (py < midY) ? "SUP" : "INF", key = Math.round(rr / 34) + "_" + Math.round(gg / 34) + "_" + Math.round(bb / 34), dst = (zn === "SUP") ? bS : bI;
-        if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn }; dst[key].cnt++; dst[key].r += rr; dst[key].g += gg; dst[key].b += bb;
+        if (!dst[key]) dst[key] = { cnt: 0, r: 0, g: 0, b: 0, zn: zn };
+        dst[key].cnt++; dst[key].r += rr; dst[key].g += gg; dst[key].b += bb;
       }
     }
-    var topC = function(mp, lim) { return Object.keys(mp).map(function(k){ var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n); return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) }; }).sort(function(a, b){ return b.cnt - a.cnt; }).slice(0, lim); };
-    return { cnt: cnt, cols: topC(bS, 2).concat(topC(bI, 2)).slice(0, 3) };
+    var topC = function(mp, lim) {
+      return Object.keys(mp).map(function(k) {
+        var o = mp[k], n = o.cnt, r0 = Math.round(o.r / n), g0 = Math.round(o.g / n), b0 = Math.round(o.b / n);
+        return { cnt: n, r: r0, g: g0, b: b0, zona: o.zn, hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")", lab: rgbLab(r0, g0, b0) };
+      }).sort(function(a, b) { return b.cnt - a.cnt; }).slice(0, lim);
+    };
+    var sTop = topC(bS, 3), iTop = topC(bI, 3), cols = [];
+    if (sTop.length && iTop.length) {
+      cols.push(sTop[0], iTop[0]);
+      var resto = sTop.slice(1).concat(iTop.slice(1)).sort(function(a, b) { return b.cnt - a.cnt; });
+      if (resto.length) cols.push(resto[0]);
+    } else {
+      cols = sTop.concat(iTop).sort(function(a, b) { return b.cnt - a.cnt; }).slice(0, 3);
+    }
+    return { cnt: cnt, cols: cols };
   };
 
   var cropRect = { x: r.x, y: r.y, w: r.w, h: r.h };
-  var res = muestrear(rx0, ry0, rw, rh, true, 14);
-  if (!res.cols.length) res = muestrear(rx0, ry0, rw, rh, true, 0);
+  var res = muestrear(rx0, ry0, rw, rh, true);
   if (res.cnt < 8 || !res.cols.length) {
-    cropRect = { x: 12, y: 10, w: 76, h: 80 };
-    res = muestrear(23, 11, PW - 46, PH - 22, true, 12);
-    if (!res.cols.length) res = muestrear(23, 11, PW - 46, PH - 22, true, 0);
-    if (!res.cols.length) res = muestrear(Math.floor(PW * 0.35), Math.floor(PH * 0.25), Math.floor(PW * 0.3), Math.floor(PH * 0.5), false, 0);
+    cropRect = { x: 20, y: 15, w: 60, h: 70 };
+    res = muestrear(Math.floor(PW * 0.20), Math.floor(PH * 0.15), Math.floor(PW * 0.60), Math.floor(PH * 0.70), true);
+    if (res.cnt < 8 || !res.cols.length) {
+      cropRect = { x: 25, y: 18, w: 50, h: 64 };
+      res = muestrear(Math.floor(PW * 0.35), Math.floor(PH * 0.25), Math.floor(PW * 0.30), Math.floor(PH * 0.50), false);
+    }
   }
   if (!res.cols.length) return;
 
@@ -304,25 +318,27 @@ function evaluarRoiColor(dProc) {
     for (var f = 0; f < firmas.length; f++) {
       var sig = firmas[f]; if (!sig.length) continue;
       var hitC = new Array(sig.length).fill(0), totH = 0, hasChromaticSig = false;
+      var sigMeta = new Array(sig.length);
       for (var sc0 = 0; sc0 < sig.length; sc0++) {
-        var rS = parseRgb(sig[sc0]), lS = sig[sc0].lab || rgbLab(rS.r, rS.g, rS.b);
-        if (Math.sqrt(lS.a * lS.a + lS.b * lS.b) >= 20) { hasChromaticSig = true; break; }
+        var cS = sig[sc0], rS = parseRgb(cS), lS = cS.lab || rgbLab(rS.r, rS.g, rS.b), chS = Math.sqrt(lS.a * lS.a + lS.b * lS.b);
+        if (chS >= 20) hasChromaticSig = true;
+        sigMeta[sc0] = { zona: cS.zona || "CAR", lb: lS, ch: chS, hue: Math.atan2(lS.b, lS.a) };
       }
 
       for (var p = 0; p < fg.length; p++) {
         var px = fg[p];
-        for (var ci = 0; ci < sig.length; ci++) {
-          var c0 = sig[ci], z0 = c0.zona || "CAR";
+        for (var ci = 0; ci < sigMeta.length; ci++) {
+          var sm = sigMeta[ci], z0 = sm.zona;
           if ((z0 === "SUP" && px.zn !== "SUP") || (z0 === "INF" && px.zn !== "INF")) continue;
-          var r0 = parseRgb(c0), l0 = c0.lab || rgbLab(r0.r, r0.g, r0.b), c0Ch = Math.sqrt(l0.a * l0.a + l0.b * l0.b);
-          if (c0Ch >= 20) {
+          var l0 = sm.lb;
+          if (sm.ch >= 20) {
             if (px.ch < 14) continue;
-            var h0 = Math.atan2(l0.b, l0.a), dHue = Math.abs(px.hue - h0); if (dHue > Math.PI) dHue = 2 * Math.PI - dHue;
+            var dHue = Math.abs(px.hue - sm.hue); if (dHue > Math.PI) dHue = 2 * Math.PI - dHue;
             if (dHue > 0.45) continue;
             var dL = px.lb.L - l0.L, da = px.lb.a - l0.a, db = px.lb.b - l0.b;
             if (Math.sqrt(dL * dL * 0.70 + da * da + db * db) < dEMax) { hitC[ci]++; totH++; break; }
           } else {
-            if (px.ch >= 22 || Math.abs(px.lb.L - l0.L) >= 13) continue;
+            if (px.ch >= 20 || Math.abs(px.lb.L - l0.L) >= 12) continue;
             var dL2 = px.lb.L - l0.L, da2 = px.lb.a - l0.a, db2 = px.lb.b - l0.b;
             if (Math.sqrt(dL2 * dL2 + da2 * da2 + db2 * db2) < Math.min(18, dEMax)) { hitC[ci]++; totH++; break; }
           }
@@ -332,8 +348,7 @@ function evaluarRoiColor(dProc) {
       for (var h = 0; h < hitC.length; h++) {
         if (hitC[h] >= minPxPorColor) {
           matched++;
-          var rH = parseRgb(sig[h]), lH = sig[h].lab || rgbLab(rH.r, rH.g, rH.b);
-          if (Math.sqrt(lH.a * lH.a + lH.b * lH.b) >= 20) matchedChrom++;
+          if (sigMeta[h].ch >= 20) matchedChrom++;
         }
       }
       var ratio = totH / fg.length, reqEf = Math.min(reqCols, sig.length);
