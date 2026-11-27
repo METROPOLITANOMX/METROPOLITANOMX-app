@@ -12,7 +12,7 @@ var vozP = true, _tabAct = "sala", rootCache = { sala: {}, antenas: {}, pilotos:
 var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99, _ultSecWuP = -1, _wuFinAvisoP = false, _salidaShowHasta = 0;
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
-var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
+var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = null;
 
 fbJson(FB_ROOT + "/cuentas_idx/" + uid + ".json").then(function(ix){
   if (ix && ix.bloqueado) { alert("⛔ Tu cuenta ha sido bloqueada por Direccion."); salirPiloto(); return; }
@@ -103,23 +103,21 @@ function inscribirPilotoAuto() {
     }
     _ultVtasSinc = Number(ex.vueltas || 0);
     if (!rootCache.pilotos) rootCache.pilotos = {}; rootCache.pilotos[uid] = Object.assign({}, ex, { nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() });
-    return fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() }) });
-  }).catch(function(){});
+    return fbJson(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ nombre: miNom, dorsal: dor, enPista: true, tsActivo: ahoraSrv() }) });
+  }).then(function(){ _lastSalaSig = ""; pintarSalaUI(); }).catch(function(e){ var l = document.getElementById("lblPistaStatus"); if (l) { l.style.color = "#ff4d5e"; l.textContent = "⚠️ Error inscripcion (" + ((e && e.message) || "Red") + ")"; } });
 }
 
 function cmdSalaAmistosa(est) {
   desbloquearAudioP(false);
-  var ants = rootCache.antenas || {}, aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
-  if (est === "WARMUP" && (!aks.length || aks.some(function(k){ return !ants[k].calibrada; }))) {
-    mxHablar("Calibra primero la pista vacia antes de iniciar el warm up", vozP);
-    alert(!aks.length ? "⚠️ Conecta y calibra primero una antena antes de iniciar el Warm-Up." : "⚠️ Calibra primero la pista vacia antes de iniciar el Warm-Up.");
-    return;
+  var ants = rootCache.antenas || {};
+  if (est === "WARMUP" || est === "SALIDA_30" || est === "VALLA_MX") {
+    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+    if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  if ((est === "SALIDA_30" || est === "VALLA_MX") && aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99; _ultSecWuP = -1; _wuFinAvisoP = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null };
-  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Atencion pilotos, llamada a pista, comienza el warm up de 3 minutos", vozP); }
+  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
   if (est === "SALIDA_30") {
     pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
     mxHablar("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", vozP);
@@ -164,7 +162,6 @@ function registrarVuelta(pUid, evTs, esManual) {
     return;
   }
   var s = rootCache.sala || {}, st = s.estado || "ESPERA", dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
-  if (st === "RADAR") return;
   var minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minMs) return;
 
@@ -246,9 +243,7 @@ function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvP[ev.antId] === ev.ts) return;
   _ultEvP[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
-    var s = rootCache.sala || {};
-    if (s.estado === "RADAR") return;
-    var md = s.modoDet || "TODO";
+    var s = rootCache.sala || {}, md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
@@ -271,7 +266,6 @@ function renderSwatches(g) {
 
 function actualizarSemaforoP() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
-  aplicarBanderaUI(s, "banBanderaAmP");
   var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
 
   if (est === "WARMUP" && t0 > 0) {
@@ -300,7 +294,7 @@ function actualizarSemaforoP() {
     _ultSecWuP = -1;
   }
 
-  if (est === "ESPERA" || est === "WARMUP" || est === "TEST" || est === "RADAR") { _salidaShowHasta = 0; ultSegSemP = -99; }
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") { _salidaShowHasta = 0; ultSegSemP = -99; }
 
   if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
     var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
@@ -371,7 +365,7 @@ function pintarSalaUI() {
 
   var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
   document.getElementById("boxAmistosa").style.display = (!dirOn) ? "block" : "none";
-  aplicarBanderaUI(s, "banBanderaAmP");
+  document.getElementById("banBanderaAmP").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
 
   var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE (1 VUELTA)", RULETA: "🎲 RULETA LOCA MX" };
   document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL");
@@ -413,7 +407,7 @@ function pintarSalaUI() {
     document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando ahora mismo.";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM" && !dirOn) {
@@ -451,21 +445,30 @@ function conectarSseUnico() {
 mxGar.init({
   uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: false,
   getNom: function(){ return miNom; }, getRoot: function(){ return rootCache; },
-  isDirSilent: function(){ var s = rootCache.sala || {}; return !!(s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000); },
   getCircMeta: function(){ return circMeta; }, onSpeak: function(t){ mxHablar(t, vozP); }
 });
+function cargarRootPiloto() {
+  return fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
+    if (!r) { pintarSalaUI(); return; }
+    rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
+    if (!rootCache.pilotos[uid]) asegurarPilotoLocal(ahoraSrv());
+    Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
+    _lastSalaSig = "";
+    pintarSalaUI(); if (_tabAct === "tiempos") mxGar.pintarTiempos();
+  }).catch(function(e) {
+    var lStat = document.getElementById("lblPistaStatus");
+    if (lStat) { lStat.style.color = "#ff4d5e"; lStat.textContent = "⚠️ Error red Firebase (" + ((e && e.message) || "Offline") + ")"; }
+    pintarSalaUI();
+  });
+}
+asegurarPilotoLocal(ahoraSrv());
+pintarSalaUI();
 inscribirPilotoAuto();
+cargarRootPiloto();
 conectarSseUnico();
 
 setInterval(function(){ fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){}); }, 7000);
-setInterval(function() {
-  fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
-    if (!r) return;
-    rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
-    Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
-    pintarSalaUI(); if (_tabAct === "tiempos") mxGar.pintarTiempos();
-  }).catch(function(){});
-}, 4500);
+setInterval(cargarRootPiloto, 3500);
 
 setInterval(function() {
   actualizarSemaforoP();

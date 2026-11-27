@@ -23,7 +23,7 @@ var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMo
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
-var _ultSecLoc = -999, _ultSecWu = -1, _wuFinAviso = false, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
+var _ultSecLoc = -999, _ultSecWu = -1, _wuFinAviso = false, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = null;
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }
@@ -118,20 +118,8 @@ function pintarChecklist(antsAct, pils, s) {
 function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
-  aplicarBanderaUI(s, "banBanderaAmDir");
-  if ((s.estado || "ESPERA") === "RADAR") document.getElementById("lblEstadoGlobDir").textContent = "📡 RADAR (" + (s.radarDist || 10) + "m)";
-  else if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
-  var bRad = document.getElementById("btnRadarDir"), elRD = document.getElementById("inpRadarDist"), elRR = document.getElementById("lblRadarResDir"), esRad = (s.estado === "RADAR");
-  if (bRad) {
-    bRad.textContent = esRad ? "🔴 PARAR RADAR" : "📡 ACTIVAR RADAR";
-    bRad.style.background = esRad ? "linear-gradient(180deg,#ff6b6b,#e03131)" : "linear-gradient(180deg,#3bc9db,#0dcaf0)";
-    bRad.style.color = esRad ? "#fff" : "#000";
-  }
-  if (elRD && document.activeElement !== elRD && Number(s.radarDist) > 0) elRD.value = s.radarDist;
-  if (elRR) {
-    if (s.radarLastTxt) elRR.textContent = s.radarLastTxt;
-    else if (!esRad && elRR.textContent.indexOf("Radar activo") >= 0) elRR.textContent = "Velocidad medida: -- km/h";
-  }
+  document.getElementById("banBanderaAmDir").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
+  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
 
   var md = s.modoDet || "TODO";
   [["bModTodo", "TODO"], ["bModGar", "GAR"], ["bModWarm", "WARMUP"], ["bModHib", "HIBRIDO"]].forEach(function(par){
@@ -190,7 +178,7 @@ function pintarDirUI() {
     } else br.style.display = "none";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM") {
@@ -248,12 +236,17 @@ function iniciarDirector() {
     uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: true,
     getNom: function(){ return miNom; }, setNom: function(n){ miNom = n; localStorage.setItem("mxp_nom", n); },
     getRoot: function(){ return rootCache; }, getCircMeta: function(){ return circMeta; },
-    isSoloDir: function(){ return !dirPilotoOn; }, isDirSilent: function(){ return true; }, onSpeak: function(t){ mxHablar(t); }
+    isSoloDir: function(){ return !dirPilotoOn; }, onSpeak: function(t){ mxHablar(t); }
   });
-  var elRDInit = document.getElementById("inpRadarDist"), dLoc = localStorage.getItem("mxp_radar_dist");
-  if (elRDInit && dLoc) elRDInit.value = dLoc;
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
-  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
+  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); pintarDirUI();
+  fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
+    if (!r) return;
+    rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
+    Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
+    pintarDirUI(); pintarBandejasWarmup();
+  }).catch(function(){});
+  conectarSseStreams();
 
   setInterval(function() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});

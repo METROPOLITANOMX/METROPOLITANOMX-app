@@ -15,13 +15,26 @@ function esc(s) {
   });
 }
 function escJs(s) {
-  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "\\\"").replace(/\r?\n/g, " ");
+  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "\\\"");
 }
 function b64Enc(s) {
-  try { return btoa(unescape(encodeURIComponent(String(s || "")))); } catch (e) { return btoa(String(s || "")); }
+  try { return btoa(unescape(encodeURIComponent(String(s || "")))); } catch (e) { return ""; }
 }
 function b64Dec(s) {
-  try { return decodeURIComponent(escape(atob(String(s || "")))); } catch (e) { try { return atob(String(s || "")); } catch (e2) { return ""; } }
+  try { return decodeURIComponent(escape(atob(String(s || "")))); } catch (e) { return ""; }
+}
+function fbFetchT(url, opt, ms) {
+  var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  var tId = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch (e) {} }, ms || 4500) : 0;
+  var cfg = Object.assign({}, opt || {});
+  if (ctrl) cfg.signal = ctrl.signal;
+  return fetch(url, cfg).then(function(r) {
+    if (tId) clearTimeout(tId);
+    return r;
+  }, function(err) {
+    if (tId) clearTimeout(tId);
+    throw err;
+  });
 }
 function fbJson(url, opt) {
   return fetch(url, opt).then(function(r) {
@@ -229,28 +242,3 @@ var RULETA_RETOS = [
   { solo: true,  tit: "🔧 PIT-STOP 2 SEGUNDOS", txt: "Al pasar por linea de meta frena 2 segundos completos y vuelve a dar gas.", voz: "Reto Pit Stop: al pasar por meta frena dos segundos completos y vuelve a acelerar." },
   { solo: false, tit: "🟨 PRECAUCION 10s", txt: "Diez segundos manteniendo posiciones sin adelantamientos en pista.", voz: "Reto Precaucion: diez segundos sin adelantar manteniendo posiciones." }
 ];
-
-function aplicarBanderaUI(s, banId) {
-  s = s || {};
-  var col = s.bandera || "VERDE", ts = Number(s.banderaTs || 0), ah = ahoraSrv();
-  var isAm = (col === "AMARILLA");
-  var isVe = (col === "VERDE" && ts > 0 && (ah - ts) >= -2000 && (ah - ts) < 8000);
-  if (document.body) {
-    document.body.classList.toggle("flag-am", isAm);
-    document.body.classList.toggle("flag-ve", isVe);
-  }
-  var el = banId ? document.getElementById(banId) : null;
-  if (el) {
-    if (isAm) {
-      el.className = "flag-yellow";
-      el.innerHTML = "<span>⚠️ BANDERA AMARILLA EN PISTA — PRECAUCION</span>";
-      el.style.display = "block";
-    } else if (isVe) {
-      el.className = "flag-green";
-      el.innerHTML = "<span>🟩 BANDERA VERDE — PISTA LIBRE</span>";
-      el.style.display = "block";
-    } else {
-      el.style.display = "none";
-    }
-  }
-}
