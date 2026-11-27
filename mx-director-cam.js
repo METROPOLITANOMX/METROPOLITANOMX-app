@@ -1,4 +1,4 @@
-var _antUltTxtTimers = {}, _antUltTxtTs = {};
+var _antUltTxtTimers = {}, _antUltTxtTs = {}, _calibracionFeed = false;
 document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(function(aid, ix) {
   var tit = ix === 0 ? "📡 ANTENA 1 (META)" : "📡 ANTENA 2 (REFUERZO)", col = ix === 0 ? "#38d9a9" : "#3bc9db";
   var fields = [["rx", "TUNEL X", 30, 0, 85], ["ry", "TUNEL Y", 15, 0, 85], ["rw", "ANCHO W", 25, 10, 80], ["rh", "ALTO H", 65, 10, 85]];
@@ -58,9 +58,20 @@ function enviarRoiAnt(aid) {
   fetch(FB + "/sala/roi/" + aid + ".json", { method: "PUT", body: JSON.stringify(roi) }).catch(function(){});
   fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, posX: roi.posX, roi: roi }) }).catch(function(){});
 }
-function calibrarUna(aid) { fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){}); hablarYAntenas("Calibrando " + (aid === "ant_1" ? "antena 1" : "antena 2"), false); }
+function asegurarVideoCalibracion() {
+  if (testOn) return;
+  _calibracionFeed = true;
+  var b = document.getElementById("btnToggleTest");
+  if (b) { b.textContent = "🛑 DETENER VÍDEO"; b.style.background = "#dc3545"; }
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: true, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+}
+function calibrarUna(aid) {
+  asegurarVideoCalibracion();
+  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){});
+  hablarYAntenas("Calibrando " + (aid === "ant_1" ? "antena 1" : "antena 2"), false);
+}
 function calibrarAmbas10s() {
-  desbloquearAudioD(false); if (_tCalAmbas) return; var s = 10;
+  desbloquearAudioD(false); if (_tCalAmbas) return; asegurarVideoCalibracion(); var s = 10;
   hablarYAntenas("Retiren las motos de meta, calibrando en diez segundos", false);
   _tCalAmbas = setInterval(function() {
     if (s <= 5 && s >= 1) hablarYAntenas(String(s), false);
@@ -69,6 +80,13 @@ function calibrarAmbas10s() {
   }, 1000);
 }
 function toggleTestAntenas() {
+  if (_calibracionFeed) {
+    _calibracionFeed = false;
+    var btn = document.getElementById("btnToggleTest");
+    if (btn) { btn.textContent = "🎥 TEST VIVO"; btn.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+    return;
+  }
   testOn = !testOn; var b = document.getElementById("btnToggleTest");
   b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO"; b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: testOn ? "TEST" : "ESPERA", verVivo: testOn, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});

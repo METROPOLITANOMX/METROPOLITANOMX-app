@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#090a0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Manual - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611272045">
+<link rel="stylesheet" href="mx.css?v=202611272200">
 <style>
   .manual-wrap{max-width:760px;margin:0 auto}
   .manual-wrap .card{display:block;max-width:none}
@@ -18,32 +20,98 @@
     <div class="top">
       <div>
         <b style="color:#0dcaf0;font-size:14px">📲 MANUAL DE METROPOLITANO MX</b>
-        <div style="font-size:10px;color:#ffc107;margin-top:2px">Guía rápida de instalación y uso</div>
+        <div style="font-size:10px;color:#ffc107;margin-top:2px">Guía de instalación, pista y administración</div>
       </div>
       <a href="index.html" style="color:#0dcaf0;font-size:11px">VOLVER</a>
     </div>
 
     <section class="card">
-      <h3>1. Instalar la aplicación</h3>
+      <h3>1. Instalar y preparar el móvil</h3>
       <ul>
-        <li><b>Android (Chrome):</b> abre el menú ⋮ y elige «Instalar aplicación» o «Añadir a pantalla de inicio».</li>
-        <li><b>iPhone (Safari):</b> pulsa Compartir y después «Añadir a pantalla de inicio».</li>
-        <li>La primera carga y las actualizaciones necesitan conexión. La caché permite abrir los recursos guardados sin conexión.</li>
+        <li><b>Android:</b> abre la aplicación en Chrome y elige «Instalar aplicación» o «Añadir a pantalla de inicio».</li>
+        <li><b>iPhone:</b> en Safari pulsa Compartir y después «Añadir a pantalla de inicio».</li>
+        <li>La primera apertura necesita conexión. Después, los recursos guardados permiten volver a abrir la aplicación sin conexión; las carreras y los datos compartidos sí requieren internet.</li>
+        <li>Permite el acceso a la cámara cuando se use una antena o se tomen fotos de la moto. Para escuchar voz, toca primero el botón de audio de la pantalla correspondiente.</li>
       </ul>
 
-      <h3>2. Acceso de piloto</h3>
-      <p>En la pantalla principal pulsa «Soy piloto» para entrar o crear una cuenta. Para crearla se solicita un PIN de recuperación de cuatro cifras. Si olvidas la contraseña, usa el nombre de usuario y ese PIN.</p>
-      <p>En pista, deja el móvil en un soporte seguro o activa el modo bolsillo con la pulsación larga para consultar avisos y tiempos.</p>
+      <h3>2. Circuito, cuentas y claves de instalación</h3>
+      <ul>
+        <li>En Inicio selecciona el circuito disponible. Si vas a competir en otro trazado, entra como piloto y usa «Crear circuito local»: indica nombre, ciudad o país, superficie, longitud y tipo de trazado.</li>
+        <li>La cuenta de piloto se crea con nombre, contraseña y un PIN de recuperación de cuatro cifras. Si olvidas la contraseña, usa el nombre y el PIN.</li>
+        <li>El club de aficionados permite entrar a la pantalla pública en directo. No sustituye a la cuenta de piloto.</li>
+        <li>Las claves de invitación que empiezan por <b>PILOTO</b> asignan el rol de piloto y ocultan Dirección y Antenas en esa instalación. Las que empiezan por <b>DIRECCION</b> mantienen la aplicación completa y marcan la instalación como preparada para la futura Red de Circuitos Oficiales.</li>
+        <li>Una clave de invitación no es la contraseña de una cuenta ni la clave privada de Dirección. Las altas pueden estar abiertas, restringidas por código o pausadas.</li>
+      </ul>
 
-      <h3>3. Cámaras y Dirección</h3>
-      <p>Configura cada móvil de cámara como Antena 1 (Meta) o Antena 2 (Refuerzo). En Dirección puedes comprobar el vídeo, ajustar el túnel ROI y calibrar con la pista despejada.</p>
-      <p>Usa «Salida 30s» o «Valla MX» para iniciar la cuenta atrás de salida. El laboratorio permite ajustar detección, iluminación y color.</p>
+      <h3>3. Inicio, clasificaciones y Paddock</h3>
+      <ul>
+        <li>Inicio ofrece acceso de piloto, club de aficionados, Dirección, Antenas, guía, invitación, reportes, Ranking Mundial y Paddock.</li>
+        <li>El Ranking Mundial compara los mejores tiempos, normaliza el resultado a un recorrido de referencia y permite ordenar por rendimiento o regularidad. Se puede filtrar por MX Tierra y Supermoto.</li>
+        <li>El Paddock muestra las motos publicadas, su foto, disciplina y reglaje. Se puede apoyar una moto con «Me gusta».</li>
+        <li>Un circuito local permite registrar longitud y dificultad del trazado para comparar resultados. Metropolitano sigue siendo el circuito reservado a Madrid.</li>
+      </ul>
 
-      <h3>4. Garaje y tiempos</h3>
-      <p>La pantalla de piloto muestra el estado de manga, vueltas y tiempos. El garaje permite consultar y editar la configuración disponible para la moto.</p>
+      <h3>4. Pantalla de piloto</h3>
+      <p><b>Sala Pista</b> presenta el estado de la manga, posición, vuelta en curso, última vuelta, clasificación, conexión de antenas y colores de cada piloto. «+ Vuelta» permite anotar manualmente un paso. «Foto-Finish» abre la última captura de meta.</p>
+      <ul>
+        <li><b>Voz:</b> activa los avisos de vuelta, diferencias y batería. La cola de voz los reproduce uno detrás de otro.</li>
+        <li><b>Bolsillo:</b> oscurece la pantalla para llevar el móvil guardado. Mantén pulsado el botón de desbloqueo durante dos segundos para volver; funciona con el tacto y con teclado.</li>
+        <li><b>Sol:</b> aumenta la legibilidad al aire libre. «Salir» vuelve a Inicio.</li>
+        <li><b>Modo amistoso:</b> si no hay Dirección en la sala, el piloto puede calibrar la antena con una cuenta atrás de diez segundos, iniciar Warm-Up, elegir una cuenta atrás fija o Valla MX, y parar.</li>
+        <li>La pestaña <b>Tiempos</b> aparece en el menú, pero actualmente no muestra su panel. Los tiempos recientes y la clasificación sí se ven en Sala Pista.</li>
+      </ul>
 
-      <h3>5. En vivo y circuitos</h3>
-      <p>La sección «En vivo» muestra la sesión del circuito cuando hay actividad. Para competir en otro trazado, crea o selecciona un circuito local desde la aplicación.</p>
+      <h3>5. Garaje y reglajes</h3>
+      <ul>
+        <li>«Nueva moto» crea otra ficha para guardar modelo, dorsal y disciplina: MX Tierra o Supermoto de asfalto. El selector permite cambiar la moto activa.</li>
+        <li>La galería admite cuatro fotos: lado izquierdo, lado derecho, frontal y detalle. Cada imagen se puede repetir o borrar.</li>
+        <li>«Capturar colores» toma imágenes de ambos lados y ayuda a recortar el fondo. También se puede elegir un color vivo de la paleta. La firma de color permite reconocer al piloto en las cámaras y se guarda con la moto.</li>
+        <li>El reglaje permite anotar terreno, horquilla, amortiguador, piñón y corona, neumáticos y ajuste MS6X. «Guardar moto» conserva los datos y comparte la configuración activa con el circuito.</li>
+        <li>«WA» prepara el reglaje para compartir por WhatsApp. «Publicar en Paddock Mundial» expone la moto y su configuración a otros usuarios.</li>
+        <li>El garaje muestra una referencia aproximada de uso para cadena y MS6X, calculada a partir de las vueltas registradas.</li>
+      </ul>
+
+      <h3>6. Antenas y cámaras</h3>
+      <ul>
+        <li>En cada móvil de cámara elige <b>Antena 1 (Meta)</b>, <b>Antena 2 (Refuerzo)</b>, <b>Antena temporal / Piloto</b> o <b>Rodar solo</b>. Coloca y fija el móvil antes de iniciar la sesión.</li>
+        <li>La cámara intenta trabajar con la mayor fluidez disponible. La detección se concentra en el área de paso y prioriza colores vivos de la moto, no tierra, sombras ni tonos apagados.</li>
+        <li>La pantalla de Dirección recibe las imágenes conservando su proporción. Durante la calibración las cámaras siguen visibles; «Test vivo» permite iniciar o detener la vista.</li>
+        <li>La antena incluye controles de audio, voz, ahorro de pantalla OLED, selección de puesto y guía. Doble toque devuelve el visor cuando la pantalla está oscurecida.</li>
+      </ul>
+
+      <h3>7. Dirección: calibración y detección</h3>
+      <ul>
+        <li>La pestaña Dirección agrupa el estado de pista, laboratorio de cámaras, capturas Warm-Up y controles de manga. «En pista» permite seguir a los pilotos; «Garaje» abre las motos y reglajes compartidos.</li>
+        <li>En el laboratorio se puede bloquear o desbloquear los controles, probar vídeo, calibrar ambas cámaras durante diez segundos y elegir perfiles de luz: Sol, Sombra o Poca luz. Los perfiles se guardan, cargan o borran.</li>
+        <li>Los métodos de captura son «Cualquier paso», «Color garaje», «Firmas Warm-Up» e «Híbrido». También se ajustan orientación vertical u horizontal, uno a tres colores, sensibilidad de disparo, cantidad de color, contraste, tolerancia, retardo y resistencia a viento o golpes.</li>
+        <li>Las pasadas capturadas durante Warm-Up aparecen en bandejas separadas por antena. Dirección puede asignarlas a los pilotos para aprender sus colores; puede refrescar la lista o vaciarla.</li>
+        <li>Los cambios de luz y color se pueden probar con la imagen en vivo antes de empezar. Conviene calibrar con la pista despejada y con las cámaras ya colocadas.</li>
+      </ul>
+
+      <h3>8. Mangas, salidas y estado de pista</h3>
+      <ul>
+        <li>Elige carrera Normal, Bomba Reloj, Eliminación, Rey de la Pista, Superpole o Ruleta Loca MX. La duración puede ser de 5, 10 o 15 minutos, o entrenamiento libre.</li>
+        <li>El tiempo mínimo entre vueltas se ajusta a 4, 5, 8, 12 o 18 segundos para adaptarse a la longitud del circuito y evitar dobles registros.</li>
+        <li><b>Warm-Up</b> inicia una cuenta atrás de tres minutos y llama automáticamente a los pilotos a parrilla al terminar.</li>
+        <li><b>Valla MX</b> es la única salida de Dirección. Muestra la preparación de parrilla, ilumina los avisos y baja la valla en un momento aleatorio. La cuenta previa dura treinta segundos.</li>
+        <li>«Parar manga» deja la pista en espera. «Nueva manga» limpia los resultados de la sesión para empezar otra; «Guardar manga» incorpora la clasificación al campeonato.</li>
+        <li>Bandera Amarilla, Bandera Verde, Pista Abierta, Última Vuelta y Todos a Boxes están juntos en el bloque de estado de pista.</li>
+        <li>Radar mide la velocidad entre dos antenas: introduce la distancia real entre cámaras, activa el modo y espera los dos pasos. El resultado muestra velocidad y mejor registro.</li>
+      </ul>
+
+      <h3>9. Megafonía y avisos</h3>
+      <p>Dirección puede dictar un mensaje con el micrófono o escribirlo y enviarlo. Las llamadas, avisos de pista, vueltas y resultados de velocidad llegan a la megafonía y a la voz de las pantallas compatibles. Los mensajes de voz se ordenan para que el siguiente empiece al terminar el anterior; el aviso visual de captura permanece cinco segundos.</p>
+
+      <h3>10. Pantalla En Vivo</h3>
+      <ul>
+        <li>La pantalla pública muestra el estado de manga, vueltas, mejores tiempos, diferencias, dorsal, colores asignados, moto, disciplina y pilotos activos. Al tocar un piloto se consulta su reglaje.</li>
+        <li>«Mecánico» convierte el móvil en un panel de boxes para seguir a una persona, con vueltas, tiempos, voz y referencia de batería.</li>
+        <li>Se puede consultar la última foto de meta, votar en la porra previa a la salida y elegir al piloto del día. El campeonato del día aparece cuando hay mangas guardadas.</li>
+        <li>Los mensajes de ánimo se pueden dirigir a todos o a un piloto; cada diez toques de grada envían una ovación a pista.</li>
+      </ul>
+
+      <h3>11. Ayuda y seguridad en pista</h3>
+      <p>Consulta «? Guía» en Inicio, Piloto, Dirección, Antena y En Vivo para ver instrucciones breves de cada pantalla. Fija los móviles y mantenlos fuera de la trayectoria de las motos. La detección y las imágenes dependen de la cámara, la iluminación, la red y la colocación física de las antenas.</p>
 
       <a href="index.html" style="display:block;text-align:center;background:#1c2530;color:#0dcaf0;padding:12px;border-radius:9px;margin-top:14px">VOLVER A METROPOLITANO MX</a>
     </section>

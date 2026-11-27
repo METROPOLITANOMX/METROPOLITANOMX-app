@@ -52,6 +52,7 @@ function aplicarRestriccionesInstalacion() {
 
 function activarPwaSiPermitido() {
   var m = accesoCfg.modo || "ABIERTO";
+  var protocoloWeb = location.protocol === "http:" || location.protocol === "https:";
   var codOk = (localStorage.getItem("mxp_inv_ok") === accesoCfg.codigo && accesoCfg.codigo);
   var permitido = (m === "ABIERTO") || (m === "CODIGO" && codOk);
   var ban = document.getElementById("banAcceso");
@@ -64,7 +65,7 @@ function activarPwaSiPermitido() {
     ban.style.display = "block";
     ban.textContent = esIngles ? "🔒 New downloads & sign-ups paused by Race Direction" : "🔒 Altas e instalaciones nuevas pausadas por Direccion";
     boxCod.style.display = "none";
-    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
+    if (protocoloWeb && "serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
   } else if (m === "CODIGO" && !codOk) {
     ban.style.display = "block";
     ban.textContent = esIngles ? "🔑 Invite code required from Race Direction for new accounts/install" : "🔑 Nuevas cuentas e instalacion requieren codigo de Direccion";
@@ -78,7 +79,7 @@ function activarPwaSiPermitido() {
     if (!document.querySelector('link[rel="manifest"]')) {
       var lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "manifest.json"; document.head.appendChild(lk);
     }
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+    if (protocoloWeb && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
   }
 }
 

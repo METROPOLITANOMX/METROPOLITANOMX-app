@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#090a0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Metropolitano MX Pro</title>
-<link rel="stylesheet" href="mx.css?v=202611272045">
+<link rel="stylesheet" href="mx.css?v=202611272200">
 <style>
   body{
     background-image:
@@ -180,25 +182,26 @@ if (localStorage.getItem("mxp_inst_role") === "PILOTO") document.documentElement
       <div id="msgCodInst" style="font-size:11px;margin-top:4px"></div>
     </div>
     <div id="txtGuiaBody" class="list-scroll" style="max-height:50vh;padding:8px">
-      <b>1. Instalar en movil (PWA Offline):</b><br>
+      <b>1. Instalar y usar sin conexión:</b><br>
       • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) → <i>"Instalar aplicacion"</i>.<br>
       • <b>iPhone (Safari):</b> Pulsa <i>Compartir</i> → <i>"Añadir a pantalla de inicio"</i>.<br><br>
       <b>2. Movil en Emisora, Bolsillo o Boxes:</b><br>
       • Coloca tu movil en un <b>soporte sobre tu emisora</b> para ver tiempos, destellos y banderas en directo (activa ☀️ al sol).<br>
       • O usa <b>🔒 Modo Bolsillo</b> (2s) con auriculares para escuchar tu <b>Delta al oido</b> y aviso LiPo (12 min), o <b>🔧 Modo Mecanico</b> en boxes.<br><br>
-      <b>3. Garaje (MS6X), Paddock y Backup:</b><br>
-      • Guarda setup completo (<b>MS6X</b>), 4 fotos en directo, captura de color con <b>Recorte + Varita Magica</b>, publica en el <b>Paddock Mundial</b> y exporta/restaura tu <b>Backup</b>.<br><br>
+      <b>3. Garaje, reglajes y Paddock:</b><br>
+      • Guarda varias motos con <b>MS6X</b>, 4 fotos, firma de color y reglaje. Comparte por WhatsApp o publica en el <b>Paddock Mundial</b>.<br><br>
       <b>4. Ranking Mundial y Circuitos Locales:</b><br>
       • <i>Metropolitano Circuit</i> es exclusivo de Madrid. Si ruedas fuera de Madrid crea tu circuito local para competir por <b>km/h</b> y <b>Tiempo Teorico 200m</b>.<br><br>
-      <b>5. Direccion Exclusiva y Antenas (60 fps):</b><br>
-      • Cada circuito tiene 1 Direccion autorizada con doble camara, Tunel ROI, Warm-Up multi-angulo, Semáforo 30s / Valla MX y Megafonia Estereo.
+      <b>5. Dirección y antenas:</b><br>
+      • Dirección conecta las cámaras de Meta y Refuerzo, permite calibrarlas con señal visible, guardar perfiles de luz y color, asignar firmas de Warm-Up y medir velocidad entre cámaras.<br>
+      • Warm-Up dura 3 minutos y llama a parrilla al terminar. Valla MX es la única salida de Dirección; su caída es aleatoria. Banderas y avisos rápidos están agrupados.
       <br><br><a href="manual.html" style="color:#0dcaf0;font-weight:bold">📖 ABRIR MANUAL COMPLETO</a>
     </div>
     <button id="btnMapaCirc" style="background:linear-gradient(180deg,#38d9a9,#12b886);color:#000;margin-top:10px;padding:11px;font-size:12px;box-shadow:0 4px 0 #087f5b" onclick="vibrar();verMapaCircuito()">📍 VER UBICACION DEL CIRCUITO</button>
     <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
   </div>
 
-<script src="mx-core.js?v=202611272045"></script>
-<script src="mx-index.js?v=202611272045"></script>
+<script src="mx-core.js?v=202611272200"></script>
+<script src="mx-index.js?v=202611272200"></script>
 </body>
 </html>

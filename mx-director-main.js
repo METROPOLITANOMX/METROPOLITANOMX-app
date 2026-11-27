@@ -58,7 +58,7 @@ function salirDirector() {
   Promise.all(ops).finally(function(){ localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; });
 }
 function ayudaDir() {
-  alert("DIRECCION PRO:\n1. Acordeones para moverte rapido sin lags.\n2. Candado 🔒: bloquea deslizadores al hacer scroll.\n3. Anti-Viento: en interior dejalo en OFF.\n4. Modo Color: 1 color por defecto para reconocer rapidamente cualquier moto u objeto.\n5. Warm-Up: cuenta atras de 3:00 en vivo con llamada a parrilla por megafonia al terminar.");
+  alert("DIRECCION PRO:\n1. Revisa la lista de estado antes de empezar: antenas, luz, calibracion, parrilla y firmas.\n2. En el laboratorio puedes ver las dos camaras, ajustar sus areas de paso y calibrarlas; la señal permanece activa durante la calibracion. Pulsa TEST VIVO para activar o detener la imagen cuando quieras.\n3. Sensibilidad, color, contraste, luz y orientacion se ajustan por separado; en interior deja el control de viento en OFF.\n4. WARM-UP dura 3 minutos y al terminar llama a los pilotos a parrilla. VALLA MX es la unica salida de Direccion y baja en un momento aleatorio.\n5. Agrupa banderas y avisos de pista en un solo bloque. La megafonia acepta voz o texto; RADAR mide entre las dos camaras.");
 }
 
 function aplicarModoDirPilotoUI(limpiarUid) {

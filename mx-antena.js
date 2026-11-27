@@ -92,7 +92,7 @@ function iniciarModoSolo() {
   }, 1000);
 }
 function ayudaAnt() {
-  alert("GUIA ANTENA PRO:\n1. En WARM-UP detecta el color principal de cualquier objeto que cruce (ignorando negro/sombras) y lo envia a Direccion.\n2. En carrera con modo Color (1 color por defecto), distingue tonos vivos (Chroma + Hue°) y blancos exactos.\n3. En interior deja Anti-Viento en OFF en Direccion.\n4. Pulsa 🔊 AUDIO al inicio y 🌙 OLED tras calibrar.");
+  alert("GUIA DE ANTENA:\n1. Coloca el movil firme, elige META o REFUERZO y deja la pista vacia para calibrar.\n2. La imagen y el estado de la antena se envian a Direccion; el color captado aparece en pantalla.\n3. WARM-UP guarda capturas de colores vivos para que Direccion las asigne a cada piloto.\n4. Pulsa AUDIO para oir avisos. OLED oscurece la pantalla; toca dos veces para volver al visor.");
 }
 function toggleVoz() { desbloquearAudio(false); vozOn = !vozOn; var b = document.getElementById("btnVoz"); b.textContent = vozOn ? "Voz ON" : "Voz OFF"; b.style.background = vozOn ? "#20c997" : "#444"; }
 

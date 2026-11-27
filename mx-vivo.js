@@ -50,8 +50,8 @@ function toggleVozMec() {
 
 function ayudaVivo() {
   alert(esIngles
-    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 shows riders live on track.\n• 🔧 MECHANIC mode turns your phone into a dedicated Pit-Board for 1 rider with LiPo bar & lap voice.\n• 👏 OVATION triggers loudspeaker applause every 10 taps.\n• Send cheer blocks directly to any 🟢 rider & vote MVP!"
-    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos conectados ahora en pista.\n• 🔧 MECANICO convierte tu movil en un Pit-Board para seguir a 1 piloto desde boxes (crono, vueltas, barra LiPo y voz).\n• 👏 OVACION DE GRADA: cada 10 toques hace sonar una ovacion en las antenas.\n• Manda mensajes por bloques dirigidos a un piloto 🟢 (suenan en megafonia y al oido) y vota al MVP.");
+    ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 marks riders currently on track; tap a rider to view bike and setup.\n• 🔧 MECHANIC mode follows one rider from the pits with lap times, voice and battery reminder.\n• 📸 View the latest finish photo, see the start poll and vote for Rider of the Day.\n• 👏 Every 10 grandstand taps sends an ovation. Cheer messages can go to everyone or one rider."
+    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos en pista; toca un nombre para ver su moto y reglaje.\n• 🔧 MECANICO sigue a un piloto desde boxes con vueltas, tiempos, voz y aviso de bateria.\n• 📸 Consulta la ultima foto de meta, participa en la porra previa y vota al piloto del dia.\n• 👏 Cada 10 toques envia una ovacion. Los mensajes de animo pueden dirigirse a todos o a un piloto.");
 }
 
 function verFotoFinishV() {

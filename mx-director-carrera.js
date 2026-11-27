@@ -76,7 +76,7 @@ function cmdSala(est) {
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
   if (rootCache.sala && rootCache.sala.estado === "RADAR" && _radarPrevModo) { pay.modoDet = _radarPrevModo; _radarPrevModo = ""; }
-  testOn = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
+  testOn = false; _calibracionFeed = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
   if (est === "WARMUP") {
     pay.tsInicio = ahCmd + 180000;
     hablarYAntenas("Atencion pilotos, llamada a pista, comienza el warm up de 3 minutos", true, true, true);

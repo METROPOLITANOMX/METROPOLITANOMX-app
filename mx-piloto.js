@@ -74,9 +74,9 @@ function salirPiloto() {
 
 function ayudaTab() {
   var g = {
-    sala: "SALA PISTA:\n1. Toca el boton amarillo para activar audio, Delta al oido y aviso LiPo (12 min).\n2. SOPORTE EN EMISORA: si no tienes mecanico, coloca tu movil en un soporte sobre la emisora para ver tiempos, placa dorsal, destellos de record y banderas (☀️ al sol).\n3. 🔒 BOLSILLO: bloquea la pantalla 2s para rodar con el movil guardado.\n4. MODO AMISTOSO: si ruedas sin Direccion en pista local puedes calibrar o lanzar Warm-Up / Salida 30s / Valla MX.",
-    garaje: "GARAJE PRO (MS6X):\n1. Elige MX Tierra o SM Supermoto y guarda tu reglaje completo (incluido MS6X).\n2. Haz 4 fotos en directo con la camara.\n3. Captura de Colores: tonos reales + Recorte automatico + 🪄 Varita Magica.\n4. Pulsa 🌍 PUBLICAR EN PADDOCK MUNDIAL.",
-    tiempos: "TIEMPOS Y BACKUP:\n1. Estadisticas globales, Campeonato MXGP del dia y Podio PNG.\n2. Duelos 1 vs 1 viendo moto y reglaje rival.\n3. Tarjeta PNG diaria con foto de tu moto y 📤/📥 BACKUP."
+    sala: "SALA PISTA:\n1. Activa el audio para escuchar vueltas, diferencias y avisos; la bateria se recuerda a los 12 minutos.\n2. Consulta posicion, vuelta en curso, clasificacion, colores asignados y estado de antenas.\n3. Usa BOLSILLO para oscurecer la pantalla: manten pulsado 2 segundos para volver.\n4. FOTO-FINISH muestra la ultima captura de meta; + VUELTA permite anotar una pasada manual.\n5. Sin Direccion puedes usar el modo amistoso para calibrar, iniciar WARM-UP, usar una cuenta atras o VALLA MX y parar.",
+    garaje: "GARAJE PRO:\n1. Elige MX Tierra o Supermoto y completa modelo, dorsal y reglaje.\n2. Guarda cuatro fotos, captura los colores visibles de casco y moto, limpia el fondo y guarda la firma.\n3. Comparte el reglaje por WhatsApp o publica moto, foto y configuracion en el Paddock Mundial.",
+    tiempos: "TIEMPOS:\nLa pestaña esta disponible en el menu, pero en esta version no se muestra su panel de contenido. Los tiempos recientes y la clasificacion si aparecen en SALA PISTA."
   };
   alert(g[_tabAct] || g.sala);
 }

@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#090a0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Dirección Pro - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611272045">
+<link rel="stylesheet" href="mx.css?v=202611272200">
 <style>html.mx-pilot-block body{display:none!important}</style>
 <script>
 if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
@@ -210,15 +212,12 @@ if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
           <select id="selMinLap" onchange="cfgDir()"><option value="4">Anti-rebote vuelta min: 4s</option><option value="5" selected>Anti-rebote vuelta min: 5s</option><option value="8">Anti-rebote vuelta min: 8s</option><option value="12">Anti-rebote vuelta min: 12s (Circuito MX 1/4)</option><option value="18">Anti-rebote vuelta min: 18s (Pista larga)</option></select>
           <div class="grid2">
             <button onclick="vibrar(25);cmdSala('WARMUP')" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000">🔥 WARM-UP (3m)</button>
-            <button onclick="vibrar(25);cmdSala('SALIDA_30')" class="btn-shine" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">🚦 SALIDA 30s</button>
             <button onclick="vibrar(25);cmdSala('VALLA_MX')" class="btn-shine" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🚧 VALLA MX</button>
+          </div>
+          <div class="grid3" style="margin-top:6px">
             <button onclick="vibrar();cmdSala('ESPERA')" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff">🛑 PARAR MANGA</button>
             <button onclick="vibrar();nuevaMangaDir()" style="background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000">🔄 NUEVA MANGA</button>
             <button onclick="vibrar(25);guardarMangaCamp()" style="background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">🏆 GUARDAR MANGA</button>
-          </div>
-          <div class="grid2" style="margin-top:6px">
-            <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:10px">🟨 BANDERA AMARILLA</button>
-            <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 BANDERA VERDE</button>
           </div>
 
           <div class="box-sub" style="border-color:#0dcaf0;margin-top:8px">
@@ -241,10 +240,16 @@ if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
               <button onclick="vibrar();enviarMegafonia(document.getElementById('inpMega').value,true)" style="background:#20c997;color:#000">📢</button>
             </div>
             <div id="lblMicroEst" style="font-size:10px;color:#0dcaf0;margin-top:4px;min-height:14px"></div>
+          </div>
+
+          <div class="box-sub" style="border-color:#ffc107">
+            <b style="color:#ffc107;font-size:11px">🚩 ESTADO DE PISTA Y AVISOS</b>
             <div class="grid3" style="margin-top:4px">
+              <button onclick="vibrar();ponerBandera('AMARILLA')" style="background:#ffc107;color:#000;font-size:9px;padding:8px 5px">🟨 BANDERA AMARILLA</button>
+              <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:9px;padding:8px 5px">🟩 BANDERA VERDE</button>
               <button onclick="vibrar();enviarMegafonia('Atencion pilotos, pista abierta para rodar',true)" style="background:#262626;color:#0dcaf0;font-size:9px;padding:6px">Pista Abierta</button>
               <button onclick="vibrar();enviarMegafonia('Ultima vuelta, bandera blanca',true)" style="background:#262626;color:#ffc107;font-size:9px;padding:6px">Ultima Vuelta</button>
-              <button onclick="vibrar();enviarMegafonia('Fin de sesion, todos a boxes despacio',true)" style="background:#262626;color:#ff6b6b;font-size:9px;padding:6px">Todos Boxes</button>
+              <button onclick="vibrar();enviarMegafonia('Fin de sesion, todos a boxes despacio',true)" style="background:#262626;color:#ff6b6b;font-size:9px;padding:6px">Todos a Boxes</button>
             </div>
           </div>
 
@@ -280,13 +285,13 @@ if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
     <div id="secDir_tiempos" style="display:none"><div id="slotTiempos"></div></div>
   </div>
 
-<script src="mx-core.js?v=202611272045"></script>
-<script src="mx-garaje.js?v=202611272045"></script>
-<script src="mx-garaje-color.js?v=202611272045"></script>
-<script src="mx-tiempos.js?v=202611272045"></script>
-<script src="mx-director-cam.js?v=202611272045"></script>
-<script src="mx-director-carrera.js?v=202611272045"></script>
-<script src="mx-director-admin.js?v=202611272045"></script>
-<script src="mx-director-main.js?v=202611272045"></script>
+<script src="mx-core.js?v=202611272200"></script>
+<script src="mx-garaje.js?v=202611272200"></script>
+<script src="mx-garaje-color.js?v=202611272200"></script>
+<script src="mx-tiempos.js?v=202611272200"></script>
+<script src="mx-director-cam.js?v=202611272200"></script>
+<script src="mx-director-carrera.js?v=202611272200"></script>
+<script src="mx-director-admin.js?v=202611272200"></script>
+<script src="mx-director-main.js?v=202611272200"></script>
 </body>
 </html>

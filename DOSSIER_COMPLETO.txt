@@ -1,0 +1,209 @@
+METROPOLITANO MX
+DOSSIER COMPLETO DE PRODUCTO
+Inventario de pantallas, controles y funciones disponibles
+
+Este documento describe la experiencia que ofrece actualmente la aplicación en sus pantallas de Inicio, Piloto, Antena, Dirección, En Vivo y Administración. Incluye también los límites visibles que conviene conocer para no dar por disponible una prestación que la pantalla todavía no presenta.
+
+======================================================================
+1. INSTALACIÓN, PRIMER USO Y ACCESO
+======================================================================
+
+La aplicación puede instalarse en la pantalla de inicio de un teléfono. En Android se añade desde el menú del navegador y en iPhone desde la opción Compartir de Safari. Para la primera apertura se necesita conexión. Los elementos principales pueden quedar guardados en el móvil para volver a abrir la aplicación sin conexión; la comunicación entre pilotos, antenas y Dirección necesita internet.
+
+Al entrar, la pantalla principal presenta el circuito activo, el Hotlap semanal y las entradas a las áreas de piloto, club de aficionados, Dirección y Antenas. También da acceso al Ranking Mundial, Paddock, guía, invitación y reportes. La aplicación adapta ciertos textos al idioma del teléfono.
+
+Las cuentas de piloto se crean con nombre, contraseña y un PIN numérico de cuatro cifras para recuperar el acceso. El nombre identifica al piloto en la parrilla y la contraseña protege su cuenta. El club de aficionados es una entrada distinta, destinada a consultar la actividad pública y participar en ella.
+
+El circuito activo determina dónde se guardan las vueltas, mangas, antenas, motos y resultados compartidos. Metropolitano se reserva para Madrid. Para otro lugar, la pantalla de Inicio permite crear un circuito local indicando nombre, país o ciudad, superficie, longitud y tipo de trazado. Las superficies disponibles son MX Tierra, Supermoto de asfalto y Mixto. El tipo de trazado puede ser estándar, rápido o técnico, y modifica el factor usado en las comparaciones de distancia.
+
+Las invitaciones pueden configurarse abiertas, limitadas a una clave o pausadas. Cuando se exige una clave, Dirección la comparte con quienes deban instalar o crear una cuenta. La clave de invitación no sustituye la contraseña del piloto ni la clave privada de Dirección.
+
+Una invitación cuyo texto empieza por PILOTO y continúa con letras, números o separadores asigna el rol de piloto a esa instalación. La aplicación oculta allí las entradas de Dirección y Antenas y también impide entrar a esas pantallas desde sus direcciones directas. Una invitación que empieza por DIRECCION mantiene el acceso completo y marca esa instalación como preparada para la futura Red de Circuitos Oficiales. Esta marca es una preparación; no significa que la red oficial ya esté funcionando.
+
+======================================================================
+2. INICIO, RANKING MUNDIAL Y PADDOCK
+======================================================================
+
+La portada es el punto de entrada para elegir el circuito y abrir cada área. El acceso a Dirección pide su clave; las antenas abren su pantalla de configuración. No hay un enlace visible a Administración en la portada.
+
+El Ranking Mundial permite filtrar resultados por todas las disciplinas, MX Tierra o Supermoto. Se puede ordenar por tiempo teórico sobre una distancia de referencia o por regularidad y vuelta rápida. Cada resultado muestra al piloto, el circuito, la disciplina y datos de rendimiento disponibles. Los tiempos de circuitos de longitudes distintas se convierten a una referencia común para que la comparación sea más útil.
+
+El Paddock presenta las motos que sus pilotos han publicado, su disciplina, dorsal, fotografías y reglaje compartido. Los usuarios pueden apoyar las motos publicadas. Una ficha publicada puede mostrar el nombre del piloto, modelo, mejor tiempo y ajustes de la moto.
+
+El creador de circuitos locales permite competir fuera de Metropolitano. Solicita un nombre de pista, lugar, superficie, longitud y una selección de trazado. Esos datos describen el circuito y sirven para calcular comparaciones de tiempos y velocidad.
+
+La portada incluye una guía breve, una invitación para compartir la aplicación y un buzón para reportar fallos o sugerencias. El indicador semanal destaca el Hotlap del circuito activo cuando hay un resultado registrado.
+
+======================================================================
+3. PILOTO: SALA PISTA
+======================================================================
+
+La pantalla de piloto tiene las pestañas Sala Pista, Garaje y Tiempos. En la parte superior se muestran el nombre, dorsal, nivel, circuito, guía, ajuste de visibilidad al sol, voz y salida de la cuenta.
+
+Sala Pista concentra la información que se consulta mientras se rueda:
+
+- Estado de la pista y de la manga, nombre del modo y actividad de las antenas.
+- Posición del piloto, tiempo de la vuelta en curso, última vuelta y diferencia.
+- Clasificación de la sala, dorsales, colores reconocidos, vueltas y mejores tiempos.
+- Referencia del tiempo de uso de batería durante la manga.
+- Botón de acceso a la última foto de meta y acción para sumar una vuelta manual.
+- Botón de modo bolsillo para llevar el móvil con la pantalla oscura.
+
+El piloto debe tocar el control de audio para habilitar voz y avisos. Cuando está activo, la aplicación puede cantar vueltas, diferencias y otros anuncios que correspondan a la sesión. Los avisos se reproducen de manera consecutiva para que una llamada no corte la anterior. Al alcanzar doce minutos de uso en pista se genera un recordatorio de batería.
+
+El modo bolsillo ofrece una pantalla oscura con información básica. Para desbloquearla hay que mantener pulsado el control durante dos segundos. El gesto funciona tanto con el dedo como con el ratón o el teclado; si se interrumpe la pulsación antes de tiempo, la barra de avance se reinicia.
+
+Foto-Finish abre la última imagen disponible de la meta e indica la antena, el paso asociado y su hora. Si aún no hay captura, la pantalla lo comunica. «+ Vuelta» anota una vuelta manual y resulta útil cuando la detección automática no registró un paso.
+
+Si no hay una persona dirigiendo la sala, aparece el modo amistoso. Permite calibrar la antena con una cuenta atrás de diez segundos, iniciar un Warm-Up de tres minutos, utilizar la cuenta atrás fija del modo personal, preparar Valla MX o parar. Este modo es independiente de los controles de salida de Dirección.
+
+La pestaña Tiempos está presente en el menú, pero en la versión inspeccionada no presenta su panel de contenido ni sus controles. La actividad reciente y la clasificación sí se muestran en Sala Pista. No debe confundirse la pestaña vacía con una pantalla de estadísticas disponible.
+
+======================================================================
+4. GARAJE VIRTUAL, FOTOS Y REGLAJES
+======================================================================
+
+El garaje deja guardar varias motos y elegir cuál está activa. Cada ficha incluye modelo, dorsal y disciplina: MX Tierra o Supermoto de asfalto. En la pantalla de piloto también se puede cambiar el nombre que aparece en parrilla cuando la cuenta lo permite.
+
+Cada moto dispone de cuatro espacios de fotografía: lado izquierdo, lado derecho, frontal y detalle. La cámara del teléfono permite capturar cada imagen; se puede repetir una foto o eliminarla.
+
+La firma de color ayuda a las antenas a distinguir una moto en movimiento. El asistente de captura guía la toma de dos lados, valora si la imagen tiene luz y color suficiente, ayuda a retirar el fondo y permite deshacer el último cambio. Una paleta rápida sirve para añadir directamente rojo, naranja, amarillo, verde, azul, magenta o cian. Se guardan los tonos visibles de la parte superior y de la parte inferior de la moto o del casco. Una firma puede contener hasta seis tonos y queda asociada a la ficha.
+
+El reglaje permite escribir:
+
+- Tipo de terreno y condición de agarre.
+- Ajuste de horquilla y amortiguador.
+- Relación de piñón y corona.
+- Modelo o elección de neumáticos.
+- Ajuste del sistema MS6X.
+
+«Guardar moto» conserva el reglaje en el teléfono y comparte el resumen de la moto activa con el circuito. «WA» prepara una ficha para compartir por WhatsApp. «Publicar en Paddock Mundial» publica la moto y sus datos para que otros pilotos los consulten.
+
+El garaje lleva una cuenta aproximada de vueltas de uso y presenta referencias de desgaste para la cadena y el MS6X. Son indicadores orientativos basados en las vueltas registradas, no mediciones físicas de las piezas.
+
+======================================================================
+5. ANTENAS Y CÁMARAS
+======================================================================
+
+Cada teléfono de cámara se asigna a una función. Antena 1 corresponde a Meta, Antena 2 es Refuerzo, Antena temporal sirve para una instalación provisional y «Rodar solo» permite probar con un único móvil en la meta. La antena muestra el circuito, estado de señal, modo de trabajo, movimiento, disparo, avisos recibidos y una vista de la pista.
+
+La cámara intenta obtener la mayor fluidez posible, idealmente hasta 60 imágenes por segundo si el teléfono lo admite. La aplicación conserva unas pocas imágenes recientes para escoger una toma anterior al disparo, más cercana al momento en que la moto entra en el centro del área de paso. Así se reduce el riesgo de guardar una imagen tardía.
+
+La lectura comienza en el primer contacto claro con un color vivo. El detector da prioridad al núcleo visible de la moto e ignora tonos oscuros, grises, blancos quemados, marrones, tierra y sombras para que el fondo no falsee el color predominante. Reconoce principalmente rojo, azul, amarillo, naranja, verde y morado, además de tonos fluorescentes.
+
+La imagen de la antena se presenta en Dirección manteniendo sus proporciones. La información de captura se actualiza al recibir el paso y su aviso visual permanece cinco segundos. Las antenas muestran en vivo el estado de conexión y los mensajes enviados por Dirección.
+
+La antena incluye los controles de selección de puesto, guía, audio, voz, OLED y salida. Al activar OLED se oscurece la pantalla para reducir luz y calor; un doble toque devuelve el visor. La guía recomienda fijar el teléfono, conceder permiso de cámara y mantener la pista vacía al calibrar.
+
+======================================================================
+6. DIRECCIÓN: ESTADO Y LABORATORIO DE CÁMARAS
+======================================================================
+
+La pantalla de Dirección contiene las pestañas Dirección, En Pista, Garaje y Tiempos. En la parte superior están el modo Dirección-Piloto, audio, guía, ajuste de visibilidad al sol y salida.
+
+El checklist muestra si las antenas están conectadas y calibradas, el estado de la luz, la parrilla y las firmas de color. Sirve para detectar preparativos pendientes antes de iniciar una actividad. El laboratorio puede plegarse; los controles se pueden bloquear para evitar cambios accidentales al desplazarse por la pantalla.
+
+El laboratorio conserva visibles las imágenes de Meta y Refuerzo durante la calibración. «Test vivo» inicia o detiene la vista de ambas cámaras. «Calibrar 10s» ejecuta la calibración con una breve cuenta atrás y no desconecta los teléfonos.
+
+Los perfiles de luz disponibles son Sol, Sombra y Poca luz. Dirección puede guardar la configuración actual, cargar un perfil anterior o borrarlo. El laboratorio también incluye:
+
+- Método de captura: Cualquier paso, Color garaje, Firmas Warm-Up o Híbrido.
+- Orientación de Meta vertical u horizontal.
+- Búsqueda de uno, dos o tres colores.
+- Sensibilidad de disparo y proporción de color reconocible.
+- Sensibilidad a cambios de píxel y contraste.
+- Tolerancia de color y retardo de lectura.
+- Protección contra avisos causados por viento o golpes del trípode.
+
+Los controles ajustables responden a los cambios y sus valores aparecen junto a cada ajuste. La guía de Dirección explica que se debe elegir el perfil de luz más cercano a las condiciones de la pista y calibrar con el paso despejado.
+
+======================================================================
+7. FIRMAS DE WARM-UP Y DOBLE CÁMARA
+======================================================================
+
+Durante el Warm-Up, las cámaras pueden guardar capturas desde distintos ángulos. Dirección presenta una bandeja por antena, permite actualizarla o vaciarla y ofrece la asignación de cada pasada al piloto correspondiente. Las firmas asignadas aparecen resumidas para que el personal compruebe quién ya tiene color registrado.
+
+Cuando Meta y Refuerzo detectan el mismo paso con una diferencia aproximada de una décima de segundo a un segundo y medio, Dirección compara las dos lecturas para evitar duplicar una vuelta. La combinación favorece la detección que presenta mayor proporción y calidad de color vivo. Si una cámara no detecta, la otra puede registrar el paso por separado.
+
+El modo Cualquier paso permite guardar una captura sin asociarla a una firma concreta. Color garaje usa los colores guardados para identificar una moto. Firmas Warm-Up aprende los colores a partir de las pasadas capturadas. Híbrido combina las lecturas disponibles.
+
+La foto seleccionada conserva la proporción de la toma original. La lectura del color se concentra en el área configurada y evita promediar el fondo de tierra o sombra como si perteneciera a la moto.
+
+======================================================================
+8. MODOS DE MANGA, DURACIÓN Y SALIDAS
+======================================================================
+
+Dirección permite elegir Carrera Normal, Bomba Reloj, Eliminación, Rey de la Pista, Superpole o Ruleta Loca MX. La duración puede ser de cinco, diez o quince minutos, o entrenamiento libre. El reloj se actualiza segundo a segundo durante los distintos modos.
+
+El control de intervalo mínimo entre vueltas ofrece cuatro, cinco, ocho, doce y dieciocho segundos. Se selecciona un intervalo apropiado a la longitud del circuito para evitar contar rebotes o pasos demasiado próximos como vueltas distintas.
+
+Warm-Up inicia una cuenta atrás real de tres minutos. Al llegar a cero, la aplicación llama automáticamente a los pilotos a parrilla por megafonía. Dirección puede revisar las capturas guardadas durante el calentamiento y asignar sus colores antes de la carrera.
+
+Valla MX es la única salida disponible en Dirección. Muestra la preparación de parrilla durante treinta segundos, avisa a los pilotos y baja la valla en un momento aleatorio. Los colores de los avisos se iluminan en la pantalla del móvil; en los últimos instantes aparecen las advertencias de atención y después la señal de salida.
+
+«Parar manga» deja la sala en espera. «Nueva manga» limpia los resultados de la sesión, incluidos los pasos que evitan duplicados, y permite empezar de nuevo. «Guardar manga» incorpora los resultados al campeonato del circuito. La tabla asigna puntos desde el primer puesto y acumula las mangas guardadas.
+
+En las modalidades especiales, Bomba Reloj muestra una cuenta regresiva propia; Eliminación puede retirar participantes; Rey de la Pista y Superpole comparan el mejor tiempo; Ruleta Loca anuncia retos de pista. El modo elegido se comunica a Piloto y En Vivo.
+
+======================================================================
+9. RADAR, BANDERAS Y MENSAJES
+======================================================================
+
+El Radar requiere dos cámaras activas en puntos distintos y la distancia real entre ellas. Dirección introduce la distancia, activa el Radar y espera a que pase la moto por ambas antenas. Con el intervalo entre los dos registros se calcula la velocidad. La pantalla muestra la medición, el máximo de la sesión y un aviso de voz.
+
+El bloque de estado de pista agrupa Bandera Amarilla, Bandera Verde, Pista Abierta, Última Vuelta y Todos a Boxes. Las banderas se reflejan en las pantallas conectadas; las otras acciones envían una llamada breve a los pilotos.
+
+La megafonía permite hablar desde el micrófono o escribir un mensaje. Las llamadas pueden sonar en Dirección y enviarse a las antenas. Los avisos de voz se ordenan en una cola: el siguiente empieza cuando termina el mensaje actual, sin esperar a que desaparezca el aviso visual ni interrumpir una locución en curso.
+
+======================================================================
+10. EN VIVO, AFICIONADOS Y MECÁNICO
+======================================================================
+
+En Vivo presenta la situación pública del circuito: estado de pista, modo de manga, pilotos activos, posiciones, vueltas, última y mejor vuelta, diferencias, dorsales, colores, disciplina y modelo de moto. Los pilotos activos se distinguen con un indicador verde. Al tocar una fila se consulta el reglaje de esa moto.
+
+Cuando hay resultados del día se muestra la tabla del campeonato y sus puntos. Antes de una salida con pilotos presentes puede aparecer una porra para votar quién hará la vuelta rápida. La pantalla recoge los votos y elige una persona destacada del día mediante la votación de MVP.
+
+El modo Mecánico convierte el teléfono en un panel de boxes dedicado a un piloto. Se elige a quién seguir y se ven sus vueltas, último y mejor tiempo, voz de aviso y referencia del uso de batería. La voz se activa desde su control.
+
+La foto de meta pública permite consultar la última captura. El muro de ánimo acepta mensajes para todos los pilotos o para una persona concreta. Los toques de grada se cuentan y, al completar cada grupo de diez, se manda una ovación a pista.
+
+======================================================================
+11. ADMINISTRACIÓN
+======================================================================
+
+El panel administrativo se mantiene separado de la navegación principal y no aparece como botón ni enlace. Para abrirlo se escribe /admin.html al final de la dirección del circuito. Se solicita la clave de Dirección antes de mostrar sus controles.
+
+El estado de servicios presenta la conexión del teléfono, disponibilidad de los datos del circuito, estado del mecanismo de apertura sin conexión y número de espacios guardados localmente. Un botón permite actualizar la lectura.
+
+La sección de pilotos muestra orden, dorsal, colores, vueltas, mejor tiempo y conexión. Se pueden refrescar los datos, retirar un piloto de la parrilla, corregir una vuelta y limpiar participantes desconectados. Estas acciones afectan al circuito seleccionado.
+
+El control de altas puede dejarse libre, limitarse a un código de invitación o pausarse. La sección de cuentas permite buscar cuentas antiguas, bloquearlas o eliminarlas. También hay herramientas para consultar visitas recientes, leer reportes de fallos o sugerencias y fijar la ubicación GPS del circuito.
+
+Dirección puede cambiar su clave. Las herramientas de limpieza permiten borrar el Hotlap semanal, restablecer los tiempos del día y la manga en curso, o vaciar el Ranking Mundial. Cada acción solicita confirmación porque puede eliminar resultados.
+
+El generador produce claves aleatorias PILOTO o DIRECCION. El validador revisa que el formato corresponda a una sola categoría y que la clave coincida con la invitación activa. «Usar como clave de invitación» aplica el código al control de altas.
+
+La limpieza de recursos locales pide dos confirmaciones, incluida una frase escrita. Solo borra lo guardado para abrir la aplicación sin conexión en ese dispositivo; no elimina cuentas, mangas ni registros del circuito.
+
+Las instalaciones DIRECCION se marcan para la futura Red de Circuitos Oficiales. El panel no presenta esa red como un servicio ya operativo.
+
+======================================================================
+12. GUÍAS, IMAGEN Y USO EN MÓVIL
+======================================================================
+
+La aplicación ofrece una guía breve en Inicio, Piloto, Antena, Dirección y En Vivo. Cada guía explica las acciones de esa pantalla y recomienda activar el audio o fijar la cámara cuando corresponda.
+
+La interfaz usa un fondo oscuro y contempla la zona segura inferior del teléfono para que los avisos y controles no se confundan con la barra del sistema. El modo Sol facilita la lectura a plena luz. La pantalla OLED de Antena puede oscurecerse con doble toque para reducir brillo durante el uso fijo.
+
+Las cámaras y antenas dependen de permisos de cámara, iluminación, alimentación del teléfono, su colocación y calidad de la conexión. La lectura automática complementa la supervisión de pista, no reemplaza las reglas ni la decisión de Dirección.
+
+======================================================================
+13. LÍMITES CONSTATADOS EN ESTA VERSIÓN
+======================================================================
+
+- La pestaña Tiempos está visible en Piloto y Dirección, pero no presenta contenido. Por ello, el acceso a estadísticas, duelos, exportaciones y copias personales no está disponible desde esas pestañas en esta versión.
+- El panel de Administración y la marca de preparación para la futura Red de Circuitos Oficiales no equivalen a una red pública ya operativa.
+- La limpieza de recursos locales no restablece los datos de prueba ni elimina información remota; su alcance se limita a los recursos guardados en el dispositivo.
+- Una instalación de cámara debe probarse físicamente en la ubicación y luz reales de la pista. Los resultados pueden variar según el teléfono y la conexión.
+
+FIN DEL DOSSIER
