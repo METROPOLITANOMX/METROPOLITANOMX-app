@@ -1,0 +1,195 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "mx_pro": {
+      ".read": false,
+      ".write": false,
+      "cuentas": {
+        ".read": false,
+        ".write": false,
+        "$uid": {
+          ".read": true,
+          ".write": "newData.val() === null || (newData.hasChildren(['nombre']) && newData.child('nombre').isString() && newData.child('nombre').val().length <= 40 && (!newData.hasChild('claveHash') || (newData.child('claveHash').isString() && newData.child('claveHash').val().length <= 80)) && (!newData.hasChild('pinHash') || (newData.child('pinHash').isString() && newData.child('pinHash').val().length <= 80)))"
+        }
+      },
+      "cuentas_idx": {
+        ".read": true,
+        ".write": false,
+        "$uid": {
+          ".write": "newData.val() === null || (newData.hasChildren(['nombre']) && newData.child('nombre').isString() && newData.child('nombre').val().length <= 40 && !newData.hasChild('claveHash') && !newData.hasChild('pinHash') && !newData.hasChild('clave') && !newData.hasChild('pin'))"
+        }
+      },
+      "config": {
+        "dirHash": {
+          ".read": true,
+          ".write": "newData.isString() && newData.val().length <= 80"
+        },
+        "acceso": {
+          ".read": true,
+          ".write": "newData.hasChild('modo') && newData.child('modo').isString() && newData.child('modo').val().length <= 20 && (!newData.hasChild('codigo') || (newData.child('codigo').isString() && newData.child('codigo').val().length <= 30))"
+        },
+        "perfiles_camara": {
+          ".read": true,
+          "$pid": {
+            ".write": "newData.val() === null || (newData.hasChild('nombre') && newData.child('nombre').isString() && newData.child('nombre').val().length <= 50)"
+          }
+        }
+      },
+      "circuitos_lista": {
+        ".read": true,
+        "$cid": {
+          ".write": "newData.val() === null || (newData.hasChildren(['nombre', 'pais']) && newData.child('nombre').isString() && newData.child('nombre').val().length <= 50 && newData.child('pais').isString() && newData.child('pais').val().length <= 50)"
+        }
+      },
+      "circuitos": {
+        "$circId": {
+          ".read": true,
+          "sala": {
+            ".write": true
+          },
+          "antenas": {
+            "$antId": {
+              ".write": true
+            }
+          },
+          "pilotos": {
+            "$uid": {
+              ".write": "newData.val() === null || (!newData.hasChild('nombre') || (newData.child('nombre').isString() && newData.child('nombre').val().length <= 40))"
+            }
+          },
+          "garaje": {
+            "$uid": {
+              ".write": "newData.val() === null || (!newData.hasChild('setupTxt') || (newData.child('setupTxt').isString() && newData.child('setupTxt').val().length <= 300))"
+            }
+          },
+          "eventos": {
+            ".write": true
+          },
+          "pasos_lock": {
+            ".write": true
+          },
+          "campeonato": {
+            ".write": true
+          }
+        }
+      },
+      "amistosas": {
+        "$circId": {
+          ".read": true,
+          "$roomId": {
+            ".read": true,
+            ".write": "(!data.exists() && $roomId.matches(/^[0-9]{4}$/) && newData.hasChildren(['status', 'code', 'circuitId', 'hostUid', 'hostName', 'createdAt', 'sala', 'pilotos', 'garaje']) && newData.child('status').val() === 'ACTIVE' && newData.child('code').val() === $roomId && newData.child('circuitId').val() === $circId && newData.child('hostUid').isString() && newData.child('hostName').isString() && newData.child('hostName').val().length <= 40 && newData.child('createdAt').isNumber()) || (data.exists() && newData.child('hostUid').val() === data.child('hostUid').val() && newData.child('code').val() === data.child('code').val() && newData.child('circuitId').val() === data.child('circuitId').val() && newData.child('status').val() === 'FINISHED')",
+            "sala": {
+              ".write": true
+            },
+            "pilotos": {
+              ".write": true
+            },
+            "garaje": {
+              "$uid": {
+                ".write": true
+              }
+            },
+            "antenas": {
+              "$antId": {
+                ".write": true
+              }
+            },
+            "rolesAntena": {
+              "$antId": {
+                ".write": true
+              }
+            },
+            "eventos": {
+              ".write": true
+            },
+            "resultados": {
+              "$heatId": {
+                ".write": true
+              }
+            },
+            "antenas_img": {
+              "$antId": {
+                ".write": "newData.val() === null || (newData.hasChildren(['ts', 'img']) && newData.child('ts').isNumber() && newData.child('img').isString() && newData.child('img').val().length <= 160000)"
+              }
+            },
+            "foto_finish": {
+              ".write": "newData.val() === null || (newData.hasChildren(['ts', 'img']) && newData.child('ts').isNumber() && newData.child('img').isString() && newData.child('img').val().length <= 140000)"
+            },
+            "warmup_capturas": {
+              "$capId": {
+                ".write": "newData.val() === null || (newData.hasChildren(['ts', 'antId']) && newData.child('ts').isNumber() && newData.child('antId').isString() && (!newData.hasChild('img') || (newData.child('img').isString() && newData.child('img').val().length <= 100000)))"
+              }
+            }
+          }
+        }
+      },
+      "resultados_dia_amistosas": {
+        "$circId": {
+          ".read": true,
+          "$day": {
+            ".read": true,
+            ".write": "newData.val() === null",
+            "$resultId": {
+              ".write": "newData.val() === null || (newData.hasChildren(['id', 'etiqueta', 'circuitoId', 'sala', 'final', 'res']) && newData.child('etiqueta').val() === 'Amistosa' && newData.child('circuitoId').val() === $circId && newData.child('sala').isString() && newData.child('final').isNumber() && newData.child('res').hasChildren())"
+            }
+          }
+        }
+      },
+      "antenas_img": {
+        "$circId": {
+          ".read": true,
+          "$antId": {
+            ".write": "newData.val() === null || (newData.hasChildren(['ts', 'img']) && newData.child('img').isString() && newData.child('img').val().length <= 160000)"
+          }
+        }
+      },
+      "warmup_capturas": {
+        "$circId": {
+          ".read": true,
+          ".write": "newData.val() === null",
+          "$capId": {
+            ".write": "newData.val() === null || (newData.hasChildren(['ts', 'antId']) && (!newData.hasChild('img') || (newData.child('img').isString() && newData.child('img').val().length <= 100000)))"
+          }
+        }
+      },
+      "foto_finish": {
+        "$circId": {
+          ".read": true,
+          ".write": "newData.val() === null || (newData.hasChildren(['ts', 'img']) && newData.child('img').isString() && newData.child('img').val().length <= 140000)"
+        }
+      },
+      "mundial": {
+        ".read": true,
+        "$id": {
+          ".write": "newData.hasChildren(['nombre', 'mejorMs']) && newData.child('nombre').isString() && newData.child('nombre').val().length <= 40"
+        }
+      },
+      "paddock": {
+        ".read": true,
+        "$id": {
+          ".write": "newData.hasChildren(['modelo', 'piloto']) && newData.child('modelo').isString() && newData.child('modelo').val().length <= 60"
+        }
+      },
+      "paddock_fotos": {
+        ".read": true,
+        "$id": {
+          ".write": "newData.val() === null || (newData.hasChild('img') && newData.child('img').isString() && newData.child('img').val().length <= 220000)"
+        }
+      },
+      "reportes": {
+        ".read": true,
+        "$idR": {
+          ".write": "newData.val() === null || (newData.hasChildren(['texto', 'ts']) && newData.child('texto').isString() && newData.child('texto').val().length <= 400)"
+        }
+      },
+      "visitas": {
+        ".read": true,
+        "$idV": {
+          ".write": "newData.hasChildren(['ts', 'rol']) && (!newData.hasChild('nom') || (newData.child('nom').isString() && newData.child('nom').val().length <= 40))"
+        }
+      }
+    }
+  }
+}

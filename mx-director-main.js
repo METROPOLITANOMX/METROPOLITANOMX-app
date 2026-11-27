@@ -120,7 +120,12 @@ function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
   aplicarBanderaUI(s, "banBanderaAmDir");
-  if ((s.estado || "ESPERA") === "RADAR") document.getElementById("lblEstadoGlobDir").textContent = "📡 RADAR (" + (s.radarDist || 10) + "m)";
+  if ((s.estado || "ESPERA") === "RADAR") {
+    var radarKmh = Number(s.radarLastKmh || 0), radarMax = Number(s.radarMaxKmh || 0);
+    document.getElementById("lblEstadoGlobDir").textContent = radarKmh > 0
+      ? "📡 RADAR: " + radarKmh.toFixed(1) + " km/h · MÁX " + radarMax.toFixed(1) + " km/h"
+      : "📡 RADAR (" + (s.radarDist || 10) + "m) · ESPERANDO CÁMARAS";
+  }
   else if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
   var bRad = document.getElementById("btnRadarDir"), elRD = document.getElementById("inpRadarDist"), elRR = document.getElementById("lblRadarResDir"), esRad = (s.estado === "RADAR");
   if (bRad) {

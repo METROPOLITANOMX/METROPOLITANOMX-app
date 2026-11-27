@@ -109,12 +109,10 @@ function aplicarIdioma() {
   document.getElementById("btnTopAnt").textContent = "📡 ANTENNAS";
   document.getElementById("lblCircTit").textContent = "TRACK:";
   document.getElementById("banHotlap").textContent = "👑 WEEKLY HOTLAP: Loading...";
-  document.getElementById("btnPiloto").textContent = "🏍️ I AM A RIDER";
+  document.getElementById("btnPiloto").textContent = "🏍️ PROMOTO RIDER";
   document.getElementById("btnAfi").textContent = "🎟️ FAN CLUB (LIVE)";
   document.getElementById("btnGlobal").textContent = "🌍 WORLD RANKING & PADDOCK";
-  document.getElementById("btnGuia").textContent = "📲 GUIDE";
-  document.getElementById("btnInvitar").textContent = "💬 INVITE";
-  document.getElementById("btnReportar").textContent = "🛠️ REPORT";
+  document.getElementById("btnReportar").textContent = "📬 INBOX";
   document.getElementById("tLog").textContent = "SIGN IN";
   document.getElementById("tReg").textContent = "SIGN UP";
   document.getElementById("aNom").placeholder = "Rider name";
@@ -384,7 +382,7 @@ function comprobarGpsCercano() {
     fbJson(FB_CIRC() + "/sala/gps.json").then(function(g) {
       var bg = document.getElementById("banGps"); if (!g || !g.lat) { bg.style.display = "none"; return; } gpsCirc = g;
       if (Math.sqrt(Math.pow((p.coords.latitude - g.lat) * 111000, 2) + Math.pow((p.coords.longitude - g.lng) * 85000, 2)) < 550) {
-        bg.style.display = "block"; bg.textContent = "📍 ¡Estas en " + circNom + "! Pulsa SOY PILOTO.";
+        bg.style.display = "block"; bg.textContent = "📍 Estas en " + circNom + ".";
       } else bg.style.display = "none";
     }).catch(function(){});
   }, function(){}, { timeout: 5000 });

@@ -185,9 +185,11 @@ function procesarPasoRadar(ev) {
   var txt = "📡 " + kmhFix.toFixed(1) + " km/h (" + (dt / 1000).toFixed(2) + "s / " + dist + "m • Max: " + maxFix.toFixed(1) + " km/h)";
   if (lbl) lbl.textContent = txt;
   s.radarLastKmh = kmhFix; s.radarMaxKmh = maxFix; s.radarLastTxt = txt;
+  var status = document.getElementById("lblEstadoGlobDir");
+  if (status) status.textContent = "📡 RADAR: " + kmhFix.toFixed(1) + " km/h · MÁX " + maxFix.toFixed(1) + " km/h";
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ radarLastKmh: kmhFix, radarMaxKmh: maxFix, radarLastTxt: txt, ultPasoTs: ts, ultPasoTxt: kmhFix.toFixed(1) + " km/h (Radar)" }) }).catch(function(){});
   mxBeep(1040, 120);
-  hablarYAntenas("Velocidad medida: " + kmhFix.toFixed(1).replace(".", " punto ") + " kilometros por hora" + (esMax ? ", nuevo record de velocidad" : ""), true, true, true);
+  hablarYAntenas("Radar. Velocidad medida: " + kmhFix.toFixed(1).replace(".", " punto ") + " kilometros por hora" + (esMax ? ", nuevo record de velocidad" : ""), true, true, true);
 }
 
 function ponerBandera(col) {

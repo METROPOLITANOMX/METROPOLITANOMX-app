@@ -192,6 +192,17 @@ function mostrarErrorSalaAmistosa(err) {
   alert("No se pudo completar la acción de la sala amistosa. " + (err && err.message ? err.message : "Comprueba la conexión e inténtalo de nuevo."));
 }
 
+function mostrarErrorCargaSalasAmistosas(err) {
+  console.error("No se pudieron cargar las salas amistosas:", err);
+  var lista = document.getElementById("listaSalasAmistosas");
+  if (!lista) return;
+  var detalle = err && err.message ? err.message : "";
+  lista.style.color = "#ff6b6b";
+  lista.textContent = /HTTP 401|HTTP 403/.test(detalle)
+    ? "El servicio de salas amistosas no tiene permiso de lectura en Firebase (" + detalle + ")."
+    : "No se pudieron cargar las salas amistosas. Comprueba la conexión e inténtalo de nuevo.";
+}
+
 function refrescarSalasAmistosas() {
   var lista = document.getElementById("listaSalasAmistosas");
   if (lista) lista.textContent = "Buscando salas activas...";
@@ -205,7 +216,7 @@ function refrescarSalasAmistosas() {
       return '<div class="box-sub" style="margin-top:5px"><b style="color:#ffc107">' + esc(r.hostName || "Organizador") + '</b> · ' + n + ' piloto(s) · ' +
         esc((r.sala && r.sala.modoJuego) || "NORMAL") + '<button onclick="vibrar();unirseSalaAmistosa(\'' + esc(x.id) + '\',false)" style="width:100%;margin-top:5px;background:#25303b;color:#20c997;padding:8px">UNIRSE A ESTA SALA</button></div>';
     }).join("") : '<div style="font-size:11px;color:#999;margin-top:6px">No hay salas activas en este circuito. Puedes crear una o unirte con el código de cuatro cifras.</div>';
-  }).catch(mostrarErrorSalaAmistosa);
+  }).catch(mostrarErrorCargaSalasAmistosas);
 }
 
 function crearSalaAmistosa() {
@@ -290,7 +301,7 @@ function recuperarSalaAmistosa() {
     amistosaId = code; amistosaCache = room;
     if (room.status === "ACTIVE") conectarSseAmistosa();
     renderSalaAmistosa(); pintarSalaUI();
-  }).catch(mostrarErrorSalaAmistosa);
+  }).catch(mostrarErrorCargaSalasAmistosas);
 }
 function conectarSseAmistosa() {
   if (_esAmistosa) try { _esAmistosa.close(); } catch (e) {}
@@ -966,7 +977,7 @@ setInterval(function() {
   if (amistosaId && (!_esAmistosa || _esAmistosa.readyState !== 1)) {
     fbJson(rutaSalaAmistosa() + ".json?t=" + Date.now()).then(function(room) {
       if (room) { amistosaCache = room; renderSalaAmistosa(); pintarSalaUI(); }
-    }).catch(mostrarErrorSalaAmistosa);
+    }).catch(mostrarErrorCargaSalasAmistosas);
   }
 }, 4500);
 

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Metropolitano MX Pro</title>
-<link rel="stylesheet" href="mx.css?v=202611272208">
+<link rel="stylesheet" href="mx.css?v=202611272337">
 <style>
   body{
     background-image:
@@ -20,11 +20,12 @@
       linear-gradient(90deg,#111317 10px,transparent 10px),
       linear-gradient(#111317 25%,#0b0c0f 25%,#0b0c0f 50%,transparent 50%,transparent 75%,#181a20 75%,#181a20);
     background-position:center 10%,0 0,0 5px,10px 0,0 10px,10px 5px,0 0,0 0;
-    background-size:min(78vw,380px) auto,100% 100%,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px;
+    background-size:min(70vw,340px) auto,100% 100%,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px;
     background-repeat:no-repeat,no-repeat,repeat,repeat,repeat,repeat,repeat,repeat;
-    min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:58px 16px 22px
+    min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:min(44vh,340px) 16px 22px
   }
-  .top-bar{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:20}
+  .top-bar{position:fixed;top:8px;left:10px;right:10px;display:flex;justify-content:center;align-items:center;z-index:20}
+  .top-access{display:flex;justify-content:space-between;align-items:center;min-height:36px;margin-bottom:1px}
   button{width:100%;padding:13px;font-size:14px;border-radius:12px}
   .btn-mini{background:linear-gradient(180deg,#262a33,#16181e);color:#ccc;border:1px solid #3c4250;padding:7px 11px;border-radius:9px;font-size:11px;width:auto;box-shadow:0 3px 0 #000}
   .box{width:100%;max-width:390px;display:flex;flex-direction:column;gap:9px;animation:fadeUp 0.25s ease}
@@ -54,36 +55,36 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
 </head>
 <body>
   <div class="top-bar">
-    <button id="btnTopDir" class="btn-mini" onclick="vibrar();abrirDirModal()">🏁 DIRECCION</button>
-    <button id="btnTopAnt" class="btn-mini" onclick="vibrar();irAntenas()">📡 ANTENAS</button>
+    <button id="btnReportar" class="btn-mini" style="background:linear-gradient(180deg,#2a191c,#191012);color:#ff8787;border-color:#4a282c" onclick="vibrar();abrir('pRep')">📬 BUZÓN</button>
+  </div>
+  <div id="menu" class="box">
+    <div class="top-access">
+      <button id="btnTopDir" class="btn-mini" onclick="vibrar();abrirDirModal()">🏁 DIRECCION</button>
+      <button id="btnTopAnt" class="btn-mini" onclick="vibrar();irAntenas()">📡 ANTENAS</button>
+    </div>
+    <div id="banAcceso" class="banner" style="display:none;border-color:#ff4d5e;color:#ff8787;font-weight:bold"></div>
+    <div id="boxCodInst" class="box-sub" style="display:none;border-color:#ffc107">
+      <div id="lblCodInst" style="font-size:11px;color:#ffc107;font-weight:bold;margin-bottom:5px">🔑 ACTIVAR DESCARGA CON CÓDIGO</div>
+      <div style="display:flex;gap:5px"><input id="inpCodInst" placeholder="Código..." style="margin:0;flex:1"><button onclick="vibrar();desbloquearInstalacion()" style="width:auto;background:#ffc107;color:#000;padding:8px 12px;font-size:11px">ACTIVAR</button></div>
+      <div id="msgCodInst" style="font-size:11px;margin-top:4px"></div>
+    </div>
+    <div id="banHotlap" class="banner">👑 HOTLAP SEMANAL: Cargando...</div>
+    <button id="btnVivo" class="b-vivo btn-shine" onclick="vibrar();location.href='vivo.html'">🔴 EN VIVO — METROPOLITANO</button>
+
+    <button id="btnPiloto" class="b-pil btn-shine" onclick="vibrar(25);abrirAuth('PILOTO')">🏍️ PILOTO PROMOTO</button>
+    <button id="btnAfi" class="b-afi" onclick="vibrar();abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (EN VIVO)</button>
+    <button id="btnGlobal" class="b-glo" onclick="vibrar();abrirGlobal('MUN')">🌍 RANKING Y PADDOCK MUNDIAL</button>
   </div>
 
-  <div id="menu" class="box">
-    <div id="banAcceso" class="banner" style="display:none;border-color:#ff4d5e;color:#ff8787;font-weight:bold"></div>
+  <div id="pAuth" class="card">
+    <h3 id="titAuth" style="color:#ffc107;margin:0 0 10px;text-align:center">ACCESO PILOTO</h3>
     <div class="circ-pill">
       <span id="lblCircTit" style="font-size:10px;color:#888;font-weight:bold;white-space:nowrap">PISTA:</span>
       <select id="selCircuitoIdx" onchange="cambiarCircuitoIdx(this.value)">
         <option value="METROPOLITANO">🏁 METROPOLITANO CIRCUIT (MADRID)</option>
       </select>
     </div>
-
-    <div id="banGps" class="banner" style="display:none;border-color:#20c997;color:#20c997"></div>
-    <div id="banHotlap" class="banner">👑 HOTLAP SEMANAL: Cargando...</div>
-    <button id="btnVivo" class="b-vivo btn-shine" onclick="vibrar();location.href='vivo.html'">🔴 EN VIVO — METROPOLITANO</button>
-
-    <button id="btnPiloto" class="b-pil btn-shine" onclick="vibrar(25);abrirAuth('PILOTO')">🏍️ SOY PILOTO</button>
-    <button id="btnAfi" class="b-afi" onclick="vibrar();abrirAuth('AFICIONADO')">🎟️ CLUB AFICIONADOS (EN VIVO)</button>
-    <button id="btnGlobal" class="b-glo" onclick="vibrar();abrirGlobal('MUN')">🌍 RANKING Y PADDOCK MUNDIAL</button>
-
-    <div class="grid3" style="margin-top:2px">
-      <button id="btnGuia" style="background:linear-gradient(180deg,#232730,#15171d);color:#ccc;border:1px solid #353a45;padding:9px 4px;font-size:10px" onclick="vibrar();abrir('pGuia')">📲 GUIA</button>
-      <button id="btnInvitar" style="background:linear-gradient(180deg,#232730,#15171d);color:#0dcaf0;border:1px solid #353a45;padding:9px 4px;font-size:10px" onclick="vibrar();invitarAmigo()">💬 INVITAR</button>
-      <button id="btnReportar" style="background:linear-gradient(180deg,#2a191c,#191012);color:#ff6b6b;border:1px solid #4a282c;padding:9px 4px;font-size:10px" onclick="vibrar();abrir('pRep')">🛠️ REPORTAR</button>
-    </div>
-  </div>
-
-  <div id="pAuth" class="card">
-    <h3 id="titAuth" style="color:#ffc107;margin:0 0 10px;text-align:center">ACCESO PILOTO</h3>
+    <div id="banGps" class="banner" style="display:none;border-color:#20c997;color:#20c997;margin:8px 0"></div>
     <div class="tabs">
       <button id="tLog" class="tab act" onclick="vibrar();modoAuth('LOGIN')">ENTRAR</button>
       <button id="tReg" class="tab" onclick="vibrar();modoAuth('REG')">CREAR CUENTA</button>
@@ -176,11 +177,6 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
 
   <div id="pGuia" class="card" style="font-size:12px;line-height:1.5;color:#ddd">
     <h3 id="titGuia" style="color:#ffc107;margin:0 0 8px">📲 INSTALAR APP Y GUIA</h3>
-    <div id="boxCodInst" class="box-sub" style="display:none;border-color:#ffc107">
-      <div id="lblCodInst" style="font-size:11px;color:#ffc107;font-weight:bold;margin-bottom:5px">🔑 INSTALACION CON CODIGO DE DIRECCION</div>
-      <div style="display:flex;gap:5px"><input id="inpCodInst" placeholder="Codigo..." style="margin:0;flex:1"><button onclick="vibrar();desbloquearInstalacion()" style="width:auto;background:#ffc107;color:#000;padding:8px 12px;font-size:11px">ACTIVAR</button></div>
-      <div id="msgCodInst" style="font-size:11px;margin-top:4px"></div>
-    </div>
     <div id="txtGuiaBody" class="list-scroll" style="max-height:50vh;padding:8px">
       <b>1. Instalar y usar sin conexión:</b><br>
       • <b>Android (Chrome):</b> Pulsa los 3 puntos (⋮) → <i>"Instalar aplicacion"</i>.<br>
@@ -201,7 +197,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
     <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
   </div>
 
-<script src="mx-core.js?v=202611272208"></script>
-<script src="mx-index.js?v=202611272208"></script>
+<script src="mx-core.js?v=202611272337"></script>
+<script src="mx-index.js?v=202611272337"></script>
 </body>
 </html>
