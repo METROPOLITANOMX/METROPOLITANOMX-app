@@ -115,23 +115,27 @@ function pintarChecklist(antsAct, pils, s) {
   document.getElementById("bodyChecklist").innerHTML = pasos.map(function(st){ return '<div class="chk-item' + (st.ok ? ' chk-ok' : '') + '">' + (st.ok ? '✅' : '⏳') + ' <span>' + st.txt + '</span></div>'; }).join("");
 }
 
+function actualizarRadarUI() {
+  var s = rootCache.sala || {}, btn = document.getElementById("btnRadarDir"), inp = document.getElementById("inpRadarDist"), lbl = document.getElementById("lblRadarResDir");
+  if (inp && s.radarDistM && document.activeElement !== inp) inp.value = s.radarDistM;
+  if (btn) {
+    btn.textContent = s.radarOn ? "📡 RADAR: ON" : "📡 RADAR: OFF";
+    btn.style.background = s.radarOn ? "#20c997" : "#262626";
+    btn.style.color = s.radarOn ? "#000" : "#0dcaf0";
+  }
+  if (lbl) {
+    if (s.radarTxt) lbl.textContent = s.radarTxt;
+    else if (s.radarOn) lbl.textContent = "Radar armado (" + (s.radarDistM || (inp && inp.value) || 20) + " m) — Esperando Cam 1 ➔ Cam 2";
+    else lbl.textContent = "Velocidad medida: -- km/h";
+  }
+}
+
 function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
-  aplicarBanderaUI(s, "banBanderaAmDir");
-  if ((s.estado || "ESPERA") === "RADAR") document.getElementById("lblEstadoGlobDir").textContent = "📡 RADAR (" + (s.radarDist || 10) + "m)";
-  else if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
-  var bRad = document.getElementById("btnRadarDir"), elRD = document.getElementById("inpRadarDist"), elRR = document.getElementById("lblRadarResDir"), esRad = (s.estado === "RADAR");
-  if (bRad) {
-    bRad.textContent = esRad ? "🔴 PARAR RADAR" : "📡 ACTIVAR RADAR";
-    bRad.style.background = esRad ? "linear-gradient(180deg,#ff6b6b,#e03131)" : "linear-gradient(180deg,#3bc9db,#0dcaf0)";
-    bRad.style.color = esRad ? "#fff" : "#000";
-  }
-  if (elRD && document.activeElement !== elRD && Number(s.radarDist) > 0) elRD.value = s.radarDist;
-  if (elRR) {
-    if (s.radarLastTxt) elRR.textContent = s.radarLastTxt;
-    else if (!esRad && elRR.textContent.indexOf("Radar activo") >= 0) elRR.textContent = "Velocidad medida: -- km/h";
-  }
+  if (typeof aplicarBanderaUI === "function") aplicarBanderaUI(s.bandera, s.banderaTs);
+  actualizarRadarUI();
+  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
 
   var md = s.modoDet || "TODO";
   [["bModTodo", "TODO"], ["bModGar", "GAR"], ["bModWarm", "WARMUP"], ["bModHib", "HIBRIDO"]].forEach(function(par){
@@ -190,7 +194,7 @@ function pintarDirUI() {
     } else br.style.display = "none";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM") {
@@ -250,10 +254,8 @@ function iniciarDirector() {
     getRoot: function(){ return rootCache; }, getCircMeta: function(){ return circMeta; },
     isSoloDir: function(){ return !dirPilotoOn; }, isDirSilent: function(){ return true; }, onSpeak: function(t){ mxHablar(t); }
   });
-  var elRDInit = document.getElementById("inpRadarDist"), dLoc = localStorage.getItem("mxp_radar_dist");
-  if (elRDInit && dLoc) elRDInit.value = dLoc;
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
-  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
+  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); conectarSseStreams();
 
   setInterval(function() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
