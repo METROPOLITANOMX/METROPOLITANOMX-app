@@ -74,33 +74,51 @@ function cmdSala(est) {
   _radarArm = null;
   _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _ultSecWu = -1; _wuFinAviso = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
-  var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
-  if (rootCache.sala && rootCache.sala.estado === "RADAR" && _radarPrevModo) { pay.modoDet = _radarPrevModo; _radarPrevModo = ""; }
-  testOn = false; _calibracionFeed = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
+  var keepVideo = est === "WARMUP" || testOn || _calibracionFeed;
+  var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: keepVideo };
+  var modoRestaurado = "";
+  if (rootCache.sala && rootCache.sala.estado === "RADAR" && _radarPrevModo) { modoRestaurado = _radarPrevModo; pay.modoDet = modoRestaurado; }
+  var anuncio = "", beepAnuncio = false, urgenteAnuncio = false;
   if (est === "WARMUP") {
     pay.tsInicio = ahCmd + 180000;
-    hablarYAntenas("Atencion pilotos, llamada a pista, comienza el warm up de 3 minutos", true, true, true);
-    document.getElementById("acc_wu").style.display = "block";
-    document.getElementById("arw_acc_wu").textContent = "▼";
-    refrescarWarmupManual();
+    anuncio = "Atencion pilotos, llamada a pista, comienza el warm up de 3 minutos"; beepAnuncio = true; urgenteAnuncio = true;
   }
   if (est === "SALIDA_30") {
     pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
-    hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
+    anuncio = "Atencion pilotos, llamada a parrilla, treinta segundos para la salida"; beepAnuncio = true;
   }
   if (est === "VALLA_MX") {
     pay.tsCuenta = ahCmd + 30000;
     pay.tsInicio = pay.tsCuenta - 4000 + Math.floor(Math.random() * 5000);
-    hablarYAntenas("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", true);
+    anuncio = "Atencion pilotos, llamada a parrilla, treinta segundos para la salida"; beepAnuncio = true;
   }
-  if (est === "ESPERA") { pay.tsInicio = 0; hablarYAntenas("Manga detenida", false); }
-  if (est === "SALIDA_30" || est === "VALLA_MX") {
-    Object.keys(rootCache.pilotos || {}).forEach(function(k){ if (rootCache.pilotos[k]) rootCache.pilotos[k].tsUltimoPaso = 0; });
-  }
-  if (!rootCache.sala) rootCache.sala = {};
-  Object.assign(rootCache.sala, pay);
-  actualizarCronosDir();
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
+  if (est === "ESPERA") { pay.tsInicio = 0; anuncio = "Manga detenida"; }
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(pay) })
+    .then(function(resp){ if (!resp.ok) throw new Error("HTTP " + resp.status); })
+    .then(function() {
+      if (!rootCache.sala) rootCache.sala = {};
+      Object.assign(rootCache.sala, pay);
+      testOn = false; _calibracionFeed = keepVideo;
+      var b = document.getElementById("btnToggleTest");
+      if (b) { b.textContent = keepVideo ? "🛑 DETENER VÍDEO" : "🎥 TEST VIVO"; b.style.background = keepVideo ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+      if (modoRestaurado) _radarPrevModo = "";
+      if (est === "WARMUP") {
+        document.getElementById("acc_wu").style.display = "block";
+        document.getElementById("arw_acc_wu").textContent = "▼";
+        refrescarWarmupManual();
+      }
+      if (est === "SALIDA_30" || est === "VALLA_MX") {
+        Object.keys(rootCache.pilotos || {}).forEach(function(k){ if (rootCache.pilotos[k]) rootCache.pilotos[k].tsUltimoPaso = 0; });
+      }
+      actualizarCronosDir();
+      if (anuncio) hablarYAntenas(anuncio, beepAnuncio, true, urgenteAnuncio);
+    })
+    .catch(function(err) {
+      var msg = "No se pudo actualizar la manga en Firebase (" + ((err && err.message) || "sin conexión") + ").";
+      var status = document.getElementById("lblEstadoGlobDir");
+      if (status) status.textContent = "❌ " + msg;
+      alert(msg);
+    });
 }
 function lanzarRuletaManual() {
   var pils = ordenarPilotos(rootCache.pilotos, rootCache.sala), pool = (pils.length <= 1) ? RULETA_RETOS.filter(function(r){ return r.solo; }) : RULETA_RETOS;

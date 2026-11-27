@@ -264,11 +264,18 @@ function iniciarDirector() {
 
   setInterval(function() {
     var labAbierto = document.getElementById("acc_lab").style.display !== "none";
-    if (testOn || labAbierto) {
+    var videoActivo = _calibracionFeed || !!(rootCache.sala && rootCache.sala.verVivo);
+    if (testOn || labAbierto || videoActivo) {
       ["ant_1", "ant_2"].forEach(function(aid) {
         var esImg = aid === "ant_1" ? _esImg1 : _esImg2;
-        if (esImg && esImg.readyState === 1) return;
-        fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){});
+        if (esImg && esImg.readyState === 1 && Date.now() - (_camImgLastTs[aid] || 0) < 2500) return;
+        if (_camImgPollBusy[aid]) return;
+        _camImgPollBusy[aid] = true;
+        fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){
+          var im = document.getElementById("img_" + aid);
+          if (d && d.img) { _camImgLastTs[aid] = Date.now(); im.src = d.img; }
+          else if (!d) { _camImgLastTs[aid] = Date.now(); im.removeAttribute("src"); }
+        }).catch(function(){}).finally(function(){ _camImgPollBusy[aid] = false; });
       });
     }
     var wuAbierto = document.getElementById("acc_wu").style.display !== "none";

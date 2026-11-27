@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280024-admin-antenas";
+var CACHE_NAME = "mxp-cache-v202611280155-antenas-warmup-video";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

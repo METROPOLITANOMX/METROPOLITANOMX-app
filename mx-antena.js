@@ -19,9 +19,10 @@ var antId = _antenaBloqueadaRol ? "" : (_esAmistosaAnt ? _amistosaAntId : (local
 var antNom = _esAmistosaAnt ? (_amistosaAntId === "ant_1" ? "META AMISTOSA" : "REFUERZO AMISTOSA") : (localStorage.getItem("mxp_ant_nom") || "");
 var vozOn = true, camOk = false, PW = 192, PH = 108, fondoFull = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, ultCmd = 0;
-var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
+var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0, _prevColorContact = false;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
 var _telBusy = false, _imgBusy = false, _wuBusy = false, _salaPollBusy = false, _garajePollBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
+var _ultimoErrorRed = "", _ultimoErrorRedTs = 0;
 var _ultPasoLocalTs = 0, _tSoloCal = null, _esSala = null, _tAvisoAnt = null, _avisoAntId = 0;
 var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
 var _ultTxtTs = 0;
@@ -88,6 +89,16 @@ function mostrarAvisoAnt(texto) {
     el.textContent = ""; _tAvisoAnt = null;
   }, 5000) : null;
 }
+function reportarErrorRedAnt(contexto, err) {
+  var msg = "❌ " + contexto + ": " + ((err && err.message) || "sin conexión"), ahora = Date.now();
+  if (msg === _ultimoErrorRed && ahora - _ultimoErrorRedTs < 5000) return;
+  _ultimoErrorRed = msg; _ultimoErrorRedTs = ahora;
+  mostrarAvisoAnt(msg);
+}
+function comprobarRespuestaAnt(resp, contexto) {
+  if (!resp.ok) throw new Error(contexto + " HTTP " + resp.status);
+  return resp;
+}
 
 function desbloquearAudio(avisar) {
   desbloquearAudioCore();
@@ -137,7 +148,7 @@ function pintarOverlaysVisor() {
 }
 
 function calibrarFondo() {
-  fondoFull = null; framesHit = 0; _golpeFrames = 0; _trigPendTs = 0; ultMsPorPiloto = {};
+  fondoFull = null; framesHit = 0; _golpeFrames = 0; _trigPendTs = 0; _prevColorContact = false; ultMsPorPiloto = {};
   est = "CAL"; calibradaOk = true; calHasta = Date.now() + 1400; _imgCleared = false;
   enviarTelemetria(); hablarAnt("Calibrando pista vacia", true);
 }
@@ -287,7 +298,8 @@ function emitirPaso(pid, sinFf, frame, lectura) {
     colorArea: Number(lectura.colorArea) || 0,
     colorQuality: Number(lectura.colorQuality) || 0
   } : {};
-  fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }, colorData)) }).catch(function(){});
+  fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }, colorData)) })
+    .then(function(resp){ return comprobarRespuestaAnt(resp, "Paso"); }).catch(function(err){ reportarErrorRedAnt("No se pudo enviar el paso", err); });
   enviarTelemetria();
   if (!sinFf) {
     try {
@@ -295,7 +307,8 @@ function emitirPaso(pid, sinFf, frame, lectura) {
       var pLine = (cfg.roi && cfg.roi.posX) || 50;
       if (cfg.orientacion === "H") _ctxFf.fillRect(0, Math.round((pLine / 100) * 180) - 1, 320, 2);
       else _ctxFf.fillRect(Math.round((pLine / 100) * 320) - 1, 0, 2, 180);
-      fetch(FB_FF, { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.56) }, colorData)) }).catch(function(){});
+      fetch(FB_FF, { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.56) }, colorData)) })
+        .then(function(resp){ return comprobarRespuestaAnt(resp, "Foto-Finish"); }).catch(function(err){ reportarErrorRedAnt("No se pudo enviar la foto", err); });
     } catch (e) {}
   }
 
@@ -545,12 +558,13 @@ function procFrame() {
   if ((ah - _fpsTs) >= 1000) { _fpsVal = _fpsCnt; _fpsCnt = 0; _fpsTs = ah; }
   if (!_resTxt && v.videoWidth) _resTxt = v.videoWidth + "x" + v.videoHeight;
 
-  if (!calibradaOk) { document.getElementById("lblEstado").textContent = "COLOCADA — ESPERANDO CALIBRACION (" + _fpsVal + " fps)"; document.getElementById("lblEstado").style.color = "#ffc107"; return; }
+  if (!calibradaOk) { _prevColorContact = false; document.getElementById("lblEstado").textContent = "COLOCADA — ESPERANDO CALIBRACION (" + _fpsVal + " fps)"; document.getElementById("lblEstado").style.color = "#ffc107"; return; }
 
   _ctx.drawImage(v, 0, 0, 384, 216); _ctxProc.drawImage(_cnv, 0, 0, PW, PH);
   var dFull = _ctxProc.getImageData(0, 0, PW, PH).data;
   var frameActual = guardarFotograma(dFull);
   if (!fondoFull || fondoFull.length !== dFull.length || ah < calHasta) {
+    _prevColorContact = false;
     fondoFull = new Uint8ClampedArray(dFull); est = "CAL";
     document.getElementById("lblEstado").textContent = "CALIBRANDO PISTA VACIA..."; document.getElementById("lblEstado").style.color = "#0dcaf0"; return;
   }
@@ -558,7 +572,7 @@ function procFrame() {
 
   var activa = (cfg.estado === "EN_CURSO" || cfg.estado === "WARMUP" || cfg.estado === "TEST" || cfg.estado === "RADAR");
   if (!activa) {
-    est = "LIBRE"; _golpeFrames = 0; _trigPendTs = 0;
+    est = "LIBRE"; _golpeFrames = 0; _trigPendTs = 0; _prevColorContact = false;
     document.getElementById("lblEstado").textContent = "CALIBRADA ✓ — REPOSO [" + cfg.modoDet + "]"; document.getElementById("lblEstado").style.color = "#20c997";
     document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | " + (_resTxt || "--") + " | " + _fpsVal + "fps";
     document.getElementById("bar").style.width = "0%";
@@ -592,10 +606,10 @@ function procFrame() {
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
   document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + _fpsVal + "fps";
 
-  if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85) && !colorContact) est = "LIBRE";
+  if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85)) est = "LIBRE";
 
   if (pct < resetPct && !_trigPendTs && !colorContact) {
-    est = "LIBRE"; framesHit = 0;
+    est = "LIBRE"; framesHit = 0; _prevColorContact = false;
     document.getElementById("lblEstado").textContent = (cfg.estado === "WARMUP" ? "🔥 WARM-UP [" + cfg.modoDet + "]" : (cfg.estado === "RADAR" ? "📡 RADAR LISTO" : "VIGILANDO [" + cfg.modoDet + "]"));
     document.getElementById("lblEstado").style.color = "#00e676";
     for (var u = 0; u < dFull.length; u += 4) {
@@ -608,9 +622,10 @@ function procFrame() {
 
   if (pct >= sens) framesHit++; else framesHit = 0;
   if (est === "LIBRE" && !_trigPendTs) {
-    if (colorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
+    if (colorContact && !_prevColorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
     else if (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6)) _trigPendTs = ah;
   }
+  _prevColorContact = colorContact;
 
   if (_trigPendTs && (ah - _trigPendTs) >= (cfg.retardoMs || 0)) {
     _trigPendTs = 0;
@@ -666,7 +681,7 @@ function procesarSala(s) {
   var nuevoModo = s.modoDet || "TODO";
   if (nuevoModo !== cfg.modoDet) {
     cfg.modoDet = nuevoModo;
-    _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _ultTxtAnt = "MODO:" + nuevoModo; _ultTxtTs = ahoraSrv();
+    _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _prevColorContact = false; _ultTxtAnt = "MODO:" + nuevoModo; _ultTxtTs = ahoraSrv();
     var nomM = { TODO: "Modo cualquier paso", GAR: "Modo color garaje", CAR: "Modo color garaje", WARMUP: "Modo firmas Warm-Up", HIBRIDO: "Modo hibrido" };
     if (s.estado !== "RADAR") hablarAnt(nomM[nuevoModo] || "Modo actualizado", true);
     enviarTelemetria();
@@ -713,11 +728,11 @@ function procesarSala(s) {
 function enviarTelemetria() {
   if (!antenaPuedeOperar()) return;
   aplicarBanderaUI(salaCache, "banBanderaAnt");
-  if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
+  if (!antId || _telBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
     body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, ultTxtTs: _ultTxtTs, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
-  }).catch(function(){}).finally(function(){ _telBusy = false; });
+  }).then(function(resp){ return comprobarRespuestaAnt(resp, "Telemetría"); }).catch(function(err){ reportarErrorRedAnt("No se pudo enviar el estado", err); }).finally(function(){ _telBusy = false; });
 }
 
 function conectarSseSala() {
@@ -734,13 +749,19 @@ if (!_antenaBloqueadaRol && !_esAmistosaAnt) conectarSseSala();
 setInterval(enviarTelemetria, 1000);
 setInterval(function() {
   if (!antenaPuedeOperar()) return;
-  if (!antId || _wuBusy) return; var v = document.getElementById("vid");
-  if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST" || est === "CAL") && camOk && v && v.videoWidth > 0) {
+  if (!antId) return; var v = document.getElementById("vid");
+  if ((cfg.verVivo || !calibradaOk || cfg.estado === "TEST" || est === "CAL") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
     _ctxLive.drawImage(v, 0, 0, 384, 216);
-    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
-  } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST" && est !== "CAL") {
-    _imgCleared = true; fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
+    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) })
+      .then(function(resp){ return comprobarRespuestaAnt(resp, "Vídeo"); })
+      .catch(function(err){ reportarErrorRedAnt("No se pudo compartir el vídeo", err); })
+      .finally(function(){ _imgBusy = false; });
+  } else if (!_imgCleared && calibradaOk && !cfg.verVivo && est !== "CAL") {
+    _imgCleared = true;
+    fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" })
+      .then(function(resp){ return comprobarRespuestaAnt(resp, "Vídeo"); })
+      .catch(function(err){ reportarErrorRedAnt("No se pudo limpiar el vídeo", err); });
   }
 }, 500);
 

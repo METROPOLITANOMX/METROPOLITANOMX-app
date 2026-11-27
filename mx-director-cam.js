@@ -1,4 +1,5 @@
 var _antUltTxtTimers = {}, _antUltTxtTs = {}, _calibracionFeed = false;
+var _camImgLastTs = { ant_1: 0, ant_2: 0 }, _camImgPollBusy = { ant_1: false, ant_2: false };
 document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(function(aid, ix) {
   var tit = ix === 0 ? "📡 ANTENA 1 (META)" : "📡 ANTENA 2 (REFUERZO)", col = ix === 0 ? "#38d9a9" : "#3bc9db";
   var fields = [["rx", "TUNEL X", 30, 0, 85], ["ry", "TUNEL Y", 15, 0, 85], ["rw", "ANCHO W", 25, 10, 80], ["rh", "ALTO H", 65, 10, 85]];
@@ -55,41 +56,85 @@ function presetTunel(aid, lado) {
 function leerRoiObj(aid) { return { posX: Number(document.getElementById("pos_" + aid).value || 50), x: Number(document.getElementById("rx_" + aid).value || 30), y: Number(document.getElementById("ry_" + aid).value || 15), w: Number(document.getElementById("rw_" + aid).value || 25), h: Number(document.getElementById("rh_" + aid).value || 65) }; }
 function enviarRoiAnt(aid) {
   var roi = leerRoiObj(aid);
-  fetch(FB + "/sala/roi/" + aid + ".json", { method: "PUT", body: JSON.stringify(roi) }).catch(function(){});
-  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, posX: roi.posX, roi: roi }) }).catch(function(){});
+  Promise.all([
+    fetchCmdCamDir(FB + "/sala/roi/" + aid + ".json", { method: "PUT", body: JSON.stringify(roi) }, "Guardar ROI"),
+    fetchCmdCamDir(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, posX: roi.posX, roi: roi }) }, "Enviar ROI a antena")
+  ]).catch(function(){});
+}
+function mostrarErrorCmdCamDir(accion, err) {
+  var msg = accion + ": " + ((err && err.message) || "sin conexión con Firebase");
+  var estado = document.getElementById("lblEstadoGlobDir");
+  if (estado) estado.textContent = "❌ " + msg;
+}
+function fetchCmdCamDir(url, opciones, accion) {
+  return fetch(url, opciones).then(function(resp) {
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    return resp;
+  }).catch(function(err) {
+    mostrarErrorCmdCamDir(accion, err);
+    throw err;
+  });
 }
 function asegurarVideoCalibracion() {
-  if (testOn) return;
+  if (testOn) return Promise.resolve();
   _calibracionFeed = true;
   var b = document.getElementById("btnToggleTest");
   if (b) { b.textContent = "🛑 DETENER VÍDEO"; b.style.background = "#dc3545"; }
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: true, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  return fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: true, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, "Activar vídeo de calibración").catch(function(err) {
+    _calibracionFeed = false;
+    if (b) { b.textContent = "🎥 TEST VIVO"; b.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+    throw err;
+  });
 }
 function calibrarUna(aid) {
-  asegurarVideoCalibracion();
-  fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){});
-  hablarYAntenas("Calibrando " + (aid === "ant_1" ? "antena 1" : "antena 2"), false);
+  asegurarVideoCalibracion().then(function() {
+    return fetchCmdCamDir(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }, "Calibrar antena");
+  }).then(function() {
+    hablarYAntenas("Calibrando " + (aid === "ant_1" ? "antena 1" : "antena 2"), false);
+  }).catch(function(){});
 }
 function calibrarAmbas10s() {
-  desbloquearAudioD(false); if (_tCalAmbas) return; asegurarVideoCalibracion(); var s = 10;
-  hablarYAntenas("Retiren las motos de meta, calibrando en diez segundos", false);
-  _tCalAmbas = setInterval(function() {
-    if (s <= 5 && s >= 1) hablarYAntenas(String(s), false);
-    if (s <= 0) { clearInterval(_tCalAmbas); _tCalAmbas = null; ["ant_1", "ant_2"].forEach(function(aid, ix){ setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }).catch(function(){}); }, ix * 600); }); hablarYAntenas("Pista vacia calibrada en ambas camaras", true); }
-    s--;
-  }, 1000);
+  desbloquearAudioD(false); if (_tCalAmbas) return;
+  _tCalAmbas = true;
+  asegurarVideoCalibracion().then(function() {
+    var s = 10;
+    hablarYAntenas("Retiren las motos de meta, calibrando en diez segundos", false);
+    _tCalAmbas = setInterval(function() {
+      if (s <= 5 && s >= 1) hablarYAntenas(String(s), false);
+      if (s <= 0) {
+        clearInterval(_tCalAmbas); _tCalAmbas = null;
+        Promise.all(["ant_1", "ant_2"].map(function(aid, ix) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+              fetchCmdCamDir(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }, "Calibrar antena")
+                .then(resolve).catch(reject);
+            }, ix * 600);
+          });
+        })).then(function() {
+          hablarYAntenas("Pista vacia calibrada en ambas camaras", true);
+        }).catch(function(){});
+      }
+      s--;
+    }, 1000);
+  }).catch(function(){ _tCalAmbas = null; });
 }
 function toggleTestAntenas() {
   if (_calibracionFeed) {
-    _calibracionFeed = false;
-    var btn = document.getElementById("btnToggleTest");
-    if (btn) { btn.textContent = "🎥 TEST VIVO"; btn.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
-    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+    fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, "Detener vídeo")
+      .then(function() {
+        _calibracionFeed = false;
+        var btn = document.getElementById("btnToggleTest");
+        if (btn) { btn.textContent = "🎥 TEST VIVO"; btn.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+      }).catch(function(){});
     return;
   }
-  testOn = !testOn; var b = document.getElementById("btnToggleTest");
-  b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO"; b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: testOn ? "TEST" : "ESPERA", verVivo: testOn, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  var activar = !testOn;
+  fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: activar ? "TEST" : "ESPERA", verVivo: activar, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, activar ? "Iniciar test de vídeo" : "Detener test de vídeo")
+    .then(function() {
+      testOn = activar;
+      var b = document.getElementById("btnToggleTest");
+      b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO"; b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
+    }).catch(function(){});
 }
 function setModoAnt(m) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); }
 function setOrientacion(o) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: o, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); previewRoi("ant_1"); previewRoi("ant_2"); }
@@ -240,9 +285,9 @@ function bindCamImg(aid) {
   var onIm = function(e) {
     try {
       var m = JSON.parse(e.data); if (!m) return;
-      if (m.path === "/" && m.data === null) { document.getElementById("img_" + aid).removeAttribute("src"); return; }
+      if (m.path === "/" && m.data === null) { _camImgLastTs[aid] = Date.now(); document.getElementById("img_" + aid).removeAttribute("src"); return; }
       var im = (m.path === "/" && m.data) ? m.data.img : (m.path === "/img" ? m.data : null);
-      if (im) document.getElementById("img_" + aid).src = im;
+      if (im) { _camImgLastTs[aid] = Date.now(); document.getElementById("img_" + aid).src = im; }
     } catch (er) {}
   };
   es.addEventListener("put", onIm); es.addEventListener("patch", onIm);
