@@ -9,8 +9,13 @@ fetch(FB_BASE + ".info/serverTimeOffset.json")
 
 function ahoraSrv() { return Math.round(Date.now() + _offSrv); }
 function vibrar(ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 18); } catch (e) {} }
+function esc(s) {
+  return String(s || "").replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+  });
+}
 function escJs(s) {
-  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "\\\"");
 }
 function b64Enc(s) {
   try { return btoa(unescape(encodeURIComponent(String(s || "")))); } catch (e) { return ""; }
@@ -18,33 +23,17 @@ function b64Enc(s) {
 function b64Dec(s) {
   try { return decodeURIComponent(escape(atob(String(s || "")))); } catch (e) { return ""; }
 }
-function mxNormCod(s) {
-  return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-function mxCodigoValido(ing, cfgCod) {
-  var a = mxNormCod(ing);
-  if (!a || !cfgCod) return false;
-  return String(cfgCod).split(",").map(mxNormCod).filter(Boolean).indexOf(a) >= 0;
-}
-function mxPerfilCodigo(codOpt) {
-  var c = mxNormCod(codOpt !== undefined ? codOpt : (localStorage.getItem("mxp_inv_ok") || ""));
-  if (!c) return localStorage.getItem("mxp_cod_perfil") || "";
-  if (/piloto[\s_-]*[0-9a-z]+/.test(c)) return "SOLO_PILOTO";
-  if (/direccion[\s_-]*[0-9a-z]+/.test(c)) return "DIRECCION_LIMITADA";
-  return "COMPLETO";
-}
-(function() {
-  try {
-    var pf = mxPerfilCodigo();
-    var pg = (location.pathname.split("/").pop() || "").toLowerCase();
-    if (pf === "SOLO_PILOTO" && (pg === "director.html" || pg === "antena.html" || pg === "admin.html")) {
-      location.replace("index.html");
-    }
-  } catch (e) {}
-})();
-function esc(s) {
-  return String(s || "").replace(/[&<>"']/g, function(c) {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+function fbFetchT(url, opt, ms) {
+  var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  var tId = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch (e) {} }, ms || 4500) : 0;
+  var cfg = Object.assign({}, opt || {});
+  if (ctrl) cfg.signal = ctrl.signal;
+  return fetch(url, cfg).then(function(r) {
+    if (tId) clearTimeout(tId);
+    return r;
+  }, function(err) {
+    if (tId) clearTimeout(tId);
+    throw err;
   });
 }
 function fbJson(url, opt) {
