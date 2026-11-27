@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="robots" content="noindex,nofollow">
 <title>Panel Privado Admin - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611273">
+<link rel="stylesheet" href="mx.css?v=202611272">
 <style>
   .wrap{max-width:760px;margin:0 auto}
   .top,.card{max-width:760px}
@@ -18,10 +18,10 @@
     <div class="modal-box" style="border-color:#ffc107">
       <h3 style="color:#ffc107;margin:0 0 8px;text-align:center">🛡️ PANEL PRIVADO PROPIETARIO</h3>
       <div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:10px">Acceso exclusivo de gestion total (cuentas, codigos y borrados).</div>
-      <input id="inpClvAdm" type="password" placeholder="Clave de Direccion / Admin" onkeydown="if(event.key==='Enter')btnEntrarAdm()">
-      <button type="button" onclick="btnEntrarAdm()" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:8px">DESBLOQUEAR PANEL</button>
-      <button type="button" onclick="if(window.vibrar)vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc">VOLVER AL INICIO</button>
-      <div id="msgAuthAdm" style="font-size:12px;text-align:center;margin-top:8px;font-weight:bold;min-height:16px"></div>
+      <input id="inpClvAdm" type="password" placeholder="Clave de Direccion / Admin" onkeydown="if(event.key==='Enter')validarAccesoAdm()">
+      <button onclick="vibrar(25);validarAccesoAdm()" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:8px">DESBLOQUEAR PANEL</button>
+      <button onclick="vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc">VOLVER AL INICIO</button>
+      <div id="msgAuthAdm" style="font-size:12px;text-align:center;margin-top:8px;font-weight:bold"></div>
     </div>
   </div>
 
@@ -120,27 +120,7 @@
     </div>
   </div>
 
-<script>
-function btnEntrarAdm() {
-  try { if (window.vibrar) vibrar(25); } catch (e) {}
-  var msg = document.getElementById("msgAuthAdm");
-  if (typeof validarAccesoAdm === "function") { validarAccesoAdm(); return; }
-  if (typeof validarAccesoAdmin === "function") { validarAccesoAdmin(); return; }
-  if (msg) {
-    msg.style.color = "#ff4d5e";
-    msg.textContent = "⚠️ No cargo mx-admin.js o esta desactualizado. Sube mx-core.js y mx-admin.js y recarga.";
-  }
-}
-</script>
-<script src="mx-core.js?v=202611273"></script>
-<script src="mx-admin.js?v=202611273"></script>
-<script>
-setTimeout(function() {
-  var m = document.getElementById("msgAuthAdm");
-  if (!m || m.textContent) return;
-  if (typeof FB_ROOT === "undefined") { m.style.color = "#ff4d5e"; m.textContent = "⚠️ Falta mx-core.js o tiene un error."; }
-  else if (typeof validarAccesoAdm !== "function") { m.style.color = "#ff4d5e"; m.textContent = "⚠️ Falta mx-admin.js actualizado en el servidor."; }
-}, 350);
-</script>
+<script src="mx-core.js?v=202611272"></script>
+<script src="mx-admin.js?v=202611272"></script>
 </body>
 </html>
