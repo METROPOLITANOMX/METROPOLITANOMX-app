@@ -14,6 +14,7 @@ var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
 var _telBusy = false, _imgBusy = false, _wuBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
 var _ultPasoLocalTs = 0, _tSoloVoz = null, _tSoloCal = null, _esSala = null;
+var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
 var _vozQueue = [], _vozHablando = false;
 
 var salaCache = {};
@@ -109,17 +110,10 @@ var _cnv = document.getElementById("cnv"), _ctx = _cnv.getContext("2d", { willRe
 var _cnvProc = document.getElementById("cnvProc"), _ctxProc = _cnvProc.getContext("2d", { willReadFrequently: true });
 var _cnvFf = document.getElementById("cnvFf"), _ctxFf = _cnvFf.getContext("2d");
 var _cnvWu = document.getElementById("cnvWu"), _ctxWu = _cnvWu.getContext("2d");
-var _cnvLive = document.createElement("canvas"); _cnvLive.width = 360; _cnvLive.height = 202;
+var _cnvLive = document.createElement("canvas"); _cnvLive.width = 384; _cnvLive.height = 216;
 var _ctxLive = _cnvLive.getContext("2d");
 
-function esPixelNegro(r, g, b) {
-  var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-  return mx < 55 || (mx < 78 && (mx - mn) < 18);
-}
-
-function nombreColorSimple(r, g, b, lb) {
-  var ch = Math.sqrt(lb.a * lb.a + lb.b * lb.b);
-  if (ch < 16) return (lb.L >= 70) ? "BLANCO" : "GRIS";
+function analizarColorVivo(r, g, b) {
   var rn = r / 255, gn = g / 255, bn = b / 255;
   var mx = Math.max(rn, gn, bn), mn = Math.min(rn, gn, bn), d = mx - mn, h = 0;
   if (d > 0) {
@@ -129,14 +123,67 @@ function nombreColorSimple(r, g, b, lb) {
     h = h * 60;
     if (h < 0) h += 360;
   }
-  if (h < 16 || h >= 340) return "ROJO";
-  if (h < 42) return "NARANJA";
-  if (h < 72) return "AMARILLO";
-  if (h < 165) return "VERDE";
-  if (h < 205) return "CIAN";
-  if (h < 260) return "AZUL";
-  if (h < 300) return "MORADO";
-  return "ROSA";
+  var s = mx ? d / mx : 0, v = mx, l = (mx + mn) / 2;
+  if (s < 0.50 || v < 0.30 || l < 0.27) return null;
+  if (h < 18 || h >= 345) return l >= 0.32 ? { nombre: "ROJO", h: h, s: s, v: v } : null;
+  if (h < 42) return s >= 0.75 && v >= 0.62 && l >= 0.45 ? { nombre: "NARANJA", h: h, s: s, v: v } : null;
+  if (h < 75) return v >= 0.55 && l >= 0.45 ? { nombre: "AMARILLO", h: h, s: s, v: v } : null;
+  if (h < 165) return { nombre: "VERDE", h: h, s: s, v: v };
+  if (h >= 195 && h < 255) return { nombre: "AZUL", h: h, s: s, v: v };
+  if (h >= 255 && h < 345) return { nombre: "MORADO", h: h, s: s, v: v };
+  return null;
+}
+
+function colorDominantePorZona(dProc, x0, y0, w0, h0, diffMin, lG, stride) {
+  var bins = {}, vividCount = 0, sampleCount = 0;
+  for (var py = y0; py < y0 + h0; py += stride) {
+    for (var px = x0; px < x0 + w0; px += stride) {
+      sampleCount++;
+      var k = (py * PW + px) * 4;
+      if (diffMin && (Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
+      var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG);
+      var col = analizarColorVivo(rr, gg, bb);
+      if (!col) continue;
+      vividCount++;
+      if (!bins[col.nombre]) bins[col.nombre] = { cnt: 0, r: 0, g: 0, b: 0 };
+      bins[col.nombre].cnt++; bins[col.nombre].r += rr; bins[col.nombre].g += gg; bins[col.nombre].b += bb;
+    }
+  }
+  var nombres = Object.keys(bins).sort(function(a, b){ return bins[b].cnt - bins[a].cnt; });
+  if (!nombres.length) return { nombre: "", vividCount: 0, ratio: 0, sampleCount: sampleCount };
+  var elegido = bins[nombres[0]];
+  return {
+    nombre: nombres[0],
+    vividCount: vividCount,
+    ratio: vividCount ? Math.round((elegido.cnt / vividCount) * 100) : 0,
+    sampleCount: sampleCount,
+    r: Math.round(elegido.r / elegido.cnt),
+    g: Math.round(elegido.g / elegido.cnt),
+    b: Math.round(elegido.b / elegido.cnt),
+    count: elegido.cnt
+  };
+}
+
+function colorDominanteDePixeles(pixeles) {
+  var bins = {};
+  for (var i = 0; i < pixeles.length; i++) {
+    var px = pixeles[i], col = analizarColorVivo(px.r, px.g, px.b);
+    if (!col) continue;
+    if (!bins[col.nombre]) bins[col.nombre] = { cnt: 0 };
+    bins[col.nombre].cnt++;
+  }
+  var nombres = Object.keys(bins).sort(function(a, b){ return bins[b].cnt - bins[a].cnt; });
+  return nombres.length ? nombres[0] : "";
+}
+
+function actualizarColorVivo(dProc) {
+  var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
+  var x0 = Math.max(0, Math.floor((r.x / 100) * PW)), y0 = Math.max(0, Math.floor((r.y / 100) * PH));
+  var w0 = Math.max(12, Math.min(PW - x0, Math.floor((r.w / 100) * PW))), h0 = Math.max(12, Math.min(PH - y0, Math.floor((r.h / 100) * PH)));
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.70);
+  var col = colorDominantePorZona(dProc, x0, y0, w0, h0, diffMin, lG, 2);
+  _colorVivoAnt = col.nombre;
+  _ratioColorAnt = col.ratio;
 }
 
 function emitirPaso(pid, sinFf) {
@@ -173,11 +220,10 @@ function extraerColorUnico(dProc, x0, y0, w0, h0, soloMov, diffMin, lG) {
       var k = (py * PW + px) * 4;
       if (soloMov && (Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
       var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG);
-      if (esPixelNegro(rr, gg, bb)) continue;
+      var vivo = analizarColorVivo(rr, gg, bb); if (!vivo) continue;
       cnt++;
-      var key = Math.round(rr / 34) + "_" + Math.round(gg / 34) + "_" + Math.round(bb / 34);
-      if (!bins[key]) bins[key] = { cnt: 0, r: 0, g: 0, b: 0 };
-      bins[key].cnt++; bins[key].r += rr; bins[key].g += gg; bins[key].b += bb;
+      if (!bins[vivo.nombre]) bins[vivo.nombre] = { cnt: 0, r: 0, g: 0, b: 0 };
+      bins[vivo.nombre].cnt++; bins[vivo.nombre].r += rr; bins[vivo.nombre].g += gg; bins[vivo.nombre].b += bb;
     }
   }
   var lista = Object.keys(bins).map(function(k) {
@@ -185,17 +231,11 @@ function extraerColorUnico(dProc, x0, y0, w0, h0, soloMov, diffMin, lG) {
     return {
       cnt: n, r: r0, g: g0, b: b0, zona: "CAR", hex: "rgb(" + r0 + "," + g0 + "," + b0 + ")",
       lab: { L: Math.round(lb.L * 100) / 100, a: Math.round(lb.a * 100) / 100, b: Math.round(lb.b * 100) / 100 },
-      ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), nom: nombreColorSimple(r0, g0, b0, lb)
+      nom: k
     };
-  }).filter(function(c) { return !(c.ch < 16 && c.lab.L <= 30); }).sort(function(a, b) { return b.cnt - a.cnt; });
+  }).sort(function(a, b) { return b.cnt - a.cnt; });
   if (!lista.length) return { cnt: 0, col: null };
   var elegido = lista[0];
-  if (elegido.ch < 18) {
-    for (var i = 1; i < lista.length; i++) {
-      if (lista[i].ch >= 18 && lista[i].cnt >= elegido.cnt * 0.28) { elegido = lista[i]; break; }
-    }
-  }
-  delete elegido.ch;
   return { cnt: cnt, col: elegido };
 }
 
@@ -301,10 +341,9 @@ function evaluarRoiColor(dProc) {
         var k = (py * PW + px) * 4;
         if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
         var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG);
-        if (esPixelNegro(rr, gg, bb)) continue;
+        var colorVivo = analizarColorVivo(rr, gg, bb); if (!colorVivo) continue;
         var lb = rgbLab(rr, gg, bb);
-        if (lb.L <= 28 && Math.sqrt(lb.a * lb.a + lb.b * lb.b) < 16) continue;
-        out.push({ r: rr, g: gg, b: bb, lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), hue: Math.atan2(lb.b, lb.a), zn: (py < mY) ? "SUP" : "INF" });
+        out.push({ r: rr, g: gg, b: bb, lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), hue: Math.atan2(lb.b, lb.a), hsvHue: colorVivo.h, zn: (py < mY) ? "SUP" : "INF" });
       }
     }
     return out;
@@ -317,17 +356,8 @@ function evaluarRoiColor(dProc) {
   }
   if (fg.length < 8) return { pid: "", colNom: "", info: "FG:" + fg.length + "px (muy poco)" };
 
-  var domSum = { r: 0, g: 0, b: 0, cnt: 0 }, domViv = { r: 0, g: 0, b: 0, cnt: 0 };
-  for (var di = 0; di < fg.length; di++) {
-    var dpx = fg[di];
-    domSum.cnt++; domSum.r += dpx.r; domSum.g += dpx.g; domSum.b += dpx.b;
-    if (dpx.ch >= 18) { domViv.cnt++; domViv.r += dpx.r; domViv.g += dpx.g; domViv.b += dpx.b; }
-  }
-  var useV = (domViv.cnt >= domSum.cnt * 0.25);
-  var dr = Math.round((useV ? domViv.r : domSum.r) / (useV ? domViv.cnt : domSum.cnt));
-  var dg = Math.round((useV ? domViv.g : domSum.g) / (useV ? domViv.cnt : domSum.cnt));
-  var db = Math.round((useV ? domViv.b : domSum.b) / (useV ? domViv.cnt : domSum.cnt));
-  var colVisto = nombreColorSimple(dr, dg, db, rgbLab(dr, dg, db));
+  var colVisto = colorDominanteDePixeles(fg);
+  if (!colVisto) return { pid: "", colNom: "", info: "Sin color vivo en el tunel" };
 
   var gObj = cfg.garajes || {}, ks = Object.keys(gObj);
   if (!ks.length) return { pid: "", colNom: colVisto, info: "VEO: " + colVisto + " | Sin garajes en sala" };
@@ -341,9 +371,10 @@ function evaluarRoiColor(dProc) {
       var sig = firmas[f]; if (!sig.length) continue;
       var sigMeta = [], hasChromaticSig = false;
       for (var sc0 = 0; sc0 < sig.length; sc0++) {
-        var cS = sig[sc0], rS = parseRgb(cS), lS = cS.lab || rgbLab(rS.r, rS.g, rS.b), chS = Math.sqrt(lS.a * lS.a + lS.b * lS.b);
-        if (chS < 16 && lS.L <= 30) continue;
-        if (chS >= 20) hasChromaticSig = true;
+        var cS = sig[sc0], rS = parseRgb(cS), vivoS = analizarColorVivo(rS.r, rS.g, rS.b);
+        if (!vivoS) continue;
+        var lS = cS.lab || rgbLab(rS.r, rS.g, rS.b), chS = Math.sqrt(lS.a * lS.a + lS.b * lS.b);
+        hasChromaticSig = true;
         sigMeta.push({ zona: cS.zona || "CAR", lb: lS, ch: chS, hue: Math.atan2(lS.b, lS.a) });
       }
       if (!sigMeta.length) continue;
@@ -412,6 +443,7 @@ function procFrame() {
     fondoFull = new Uint8ClampedArray(dFull); est = "CAL";
     document.getElementById("lblEstado").textContent = "CALIBRANDO PISTA VACIA..."; document.getElementById("lblEstado").style.color = "#0dcaf0"; return;
   }
+  if ((ah - _colorSampleTs) >= 180) { _colorSampleTs = ah; actualizarColorVivo(dFull); }
 
   var activa = (cfg.estado === "EN_CURSO" || cfg.estado === "WARMUP" || cfg.estado === "TEST" || cfg.estado === "RADAR");
   if (!activa) {
@@ -565,7 +597,7 @@ function enviarTelemetria() {
   if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
   }).catch(function(){}).finally(function(){ _telBusy = false; });
 }
 
@@ -585,7 +617,7 @@ setInterval(function() {
   if (!antId || _wuBusy) return; var v = document.getElementById("vid");
   if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
-    _ctxLive.drawImage(v, 0, 0, 360, 202);
+    _ctxLive.drawImage(v, 0, 0, 384, 216);
     fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
   } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST") {
     _imgCleared = true; fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});

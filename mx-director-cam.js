@@ -4,6 +4,7 @@ document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(funct
   return '<div class="cam-card">' +
     '<div style="display:flex;justify-content:space-between;align-items:center"><b style="color:' + col + ';font-size:12px">' + tit + '</b><button onclick="vibrar();calibrarUna(\'' + aid + '\')" style="background:' + col + ';color:#000;padding:5px 8px;font-size:10px">📍 CALIBRAR ' + (ix + 1) + '</button></div>' +
     '<div class="visor-dir"><img id="img_' + aid + '" alt="Sin señal"><div id="trig_' + aid + '" class="trig-line"></div><div id="roi_' + aid + '" class="roi-tunnel"><span class="roi-lbl">TUNEL ROI</span></div><div id="tel_' + aid + '" class="tel-bar">Esperando antena...</div></div>' +
+    '<div class="color-readout"><span id="colorDot_' + aid + '" class="color-dot"></span><b id="colorTxt_' + aid + '">ESPERANDO COLOR VIVO</b><span id="colorPct_' + aid + '"></span></div>' +
     '<div style="font-size:10px;color:#ff6b6b;display:flex;justify-content:space-between"><span>LINEA ROJA DISPARO:</span><b id="lblPos_' + aid + '">50%</b></div>' +
     '<div class="rng-row"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'pos\',-1)">-</button><input id="pos_' + aid + '" type="range" min="10" max="90" value="50" oninput="previewRoi(\'' + aid + '\')" onchange="enviarRoiAnt(\'' + aid + '\')"><button class="btn-step" onclick="stepRoi(\'' + aid + '\',\'pos\',1)">+</button></div>' +
     '<div class="grid2">' + fields.map(function(f) {
@@ -181,6 +182,13 @@ function pintarAntenasTel() {
   var s = rootCache.sala || {}, ants = rootCache.antenas || {}, ah = ahoraSrv(), md = s.modoDet || "TODO", antsAct = [];
   ["ant_1", "ant_2"].forEach(function(aid) {
     var a = ants[aid], tel = document.getElementById("tel_" + aid);
+    var colorTxt = document.getElementById("colorTxt_" + aid), colorDot = document.getElementById("colorDot_" + aid), colorPct = document.getElementById("colorPct_" + aid);
+    if (colorTxt && colorDot && colorPct) {
+      var cn = a && a.colorNom, colorHex = { ROJO: "#ff3b30", AZUL: "#1687ff", AMARILLO: "#ffd400", NARANJA: "#ff7900", VERDE: "#00d26a", MORADO: "#a855f7" };
+      colorTxt.textContent = cn ? "CAPTANDO " + cn + " VIVO" : "ESPERANDO COLOR VIVO";
+      colorDot.style.background = colorHex[cn] || "#343a40";
+      colorPct.textContent = cn ? "DOMINANTE " + (Number(a.colorRatio) || 0) + "% DE COLOR VIVO" : "";
+    }
     if (a && Math.abs(ah - Number(a.ts || 0)) < 15000) {
       antsAct.push(aid);
       if (a.movidaTs && (ah - Number(a.movidaTs)) < 12000) {

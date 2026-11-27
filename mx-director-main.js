@@ -23,7 +23,7 @@ var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMo
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;
-var _ultSecLoc = -999, _ultSecWu = -1, _wuFinAviso = false, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _lastWuSig = "", _lastPilSig = "";
+var _ultSecLoc = -999, _ultSecWu = -1, _wuFinAviso = false, _salidaShowHasta = 0, _ultReacTsP = 0, _tUnlockBol = null, _pctUnlockBol = 0, _unlockBolStart = 0, _unlockBolPointerId = null, _unlockBolKey = "", _lastWuSig = "", _lastPilSig = "";
 
 fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(c){
   if (c) { if (Number(c.metros) > 0) circMeta.metros = Number(c.metros); if (Number(c.factor) > 0) circMeta.factor = Number(c.factor); }

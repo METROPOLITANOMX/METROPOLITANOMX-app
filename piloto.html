@@ -20,7 +20,7 @@
     <div><div style="font-size:38px">🔒</div><div id="relBol" style="font-size:40px;color:#20c997;font-weight:bold;margin-top:8px">EN PISTA</div><div id="deltaBol" style="font-size:14px;color:#ffc107;margin-top:6px"></div></div>
     <div style="width:100%;max-width:300px">
       <div style="height:7px;background:#1a1a1a;border-radius:4px;overflow:hidden;margin-bottom:8px"><div id="barUnlockBol" class="lipo-fill" style="height:100%;width:0%;background:#ffc107"></div></div>
-      <button onpointerdown="iniciarUnlockBol()" onpointerup="cancelarUnlockBol()" onpointerleave="cancelarUnlockBol()" onpointercancel="cancelarUnlockBol()" style="width:100%;background:#1f1f1f;color:#ccc;border:1px solid #3a3a3a;padding:15px;font-size:11px">MANTEN PULSADO 2s PARA DESBLOQUEAR</button>
+      <button onpointerdown="iniciarUnlockBol(event)" onpointerup="cancelarUnlockBol(event)" onpointercancel="cancelarUnlockBol(event)" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();iniciarUnlockBol(event)}" onkeyup="if(event.key===' '||event.key==='Enter'){cancelarUnlockBol(event)}" style="width:100%;background:#1f1f1f;color:#ccc;border:1px solid #3a3a3a;padding:15px;font-size:11px;touch-action:none;user-select:none;-webkit-user-select:none">MANTEN PULSADO 2s PARA DESBLOQUEAR</button>
     </div>
   </div>
 

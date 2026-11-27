@@ -107,7 +107,7 @@ button:disabled{opacity:0.42;cursor:not-allowed;transform:none}
   clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);margin:0 3px;border:1px solid rgba(255,255,255,0.4)
 }
 .mx-plate.sm{background:linear-gradient(180deg,#f8f9fa,#ced4da);color:#000}
-.mx-sw{display:inline-block;width:9px;height:9px;border-radius:2px;border:1px solid rgba(255,255,255,0.65);margin-right:2px;vertical-align:middle}
+.mx-sw{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid rgba(255,255,255,0.8);margin-right:3px;vertical-align:middle;box-shadow:0 0 2px rgba(0,0,0,0.75)}
 
 .tv-vr{color:#d0a8ff;font-weight:bold}
 .tv-rp{color:#20c997;font-weight:bold}

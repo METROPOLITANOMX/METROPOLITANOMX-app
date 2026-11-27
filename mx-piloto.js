@@ -11,7 +11,7 @@ document.getElementById("txtCircTop").textContent = "🏁 " + circNom;
 var vozP = true, _tabAct = "sala", rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
 var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, ultSegSemP = -99, _ultSecWuP = -1, _wuFinAvisoP = false, _salidaShowHasta = 0;
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
-var _tUnlockBol = null, _pctUnlockBol = 0, _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
+var _tUnlockBol = null, _pctUnlockBol = 0, _unlockBolStart = 0, _unlockBolPointerId = null, _unlockBolKey = "", _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
 var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
 
 fbJson(FB_ROOT + "/cuentas_idx/" + uid + ".json").then(function(ix){
@@ -38,14 +38,32 @@ window.addEventListener("beforeunload", function() {
 function desbloquearAudioP(av) { desbloquearAudioCore(); var b = document.getElementById("btnUnlockAudioP"); if (b) b.style.display = "none"; if (av) { mxBeep(880, 90); mxHablar("Audio de pista y delta al oido activados", vozP); } }
 function toggleVozP() { desbloquearAudioP(false); vozP = !vozP; var b = document.getElementById("btnVozP"); b.textContent = vozP ? "Voz ON" : "Voz OFF"; b.style.background = vozP ? "#20c997" : "#444"; }
 function abrirBolsillo() { desbloquearAudioP(false); document.getElementById("bolsillo").style.display = "flex"; try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); } catch (e) {} }
-function iniciarUnlockBol() {
-  if (_tUnlockBol) return; _pctUnlockBol = 0;
+function iniciarUnlockBol(ev) {
+  if (_tUnlockBol) return;
+  if (ev && ev.pointerId !== undefined) {
+    _unlockBolPointerId = ev.pointerId;
+    try { if (ev.currentTarget.setPointerCapture) ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  } else _unlockBolKey = ev && ev.key ? ev.key : "";
+  if (ev && ev.preventDefault) ev.preventDefault();
+  _unlockBolStart = Date.now(); _pctUnlockBol = 0;
   _tUnlockBol = setInterval(function() {
-    _pctUnlockBol += 5; document.getElementById("barUnlockBol").style.width = _pctUnlockBol + "%";
-    if (_pctUnlockBol >= 100) { cancelarUnlockBol(); document.getElementById("bolsillo").style.display = "none"; try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch (e) {} }
-  }, 90);
+    _pctUnlockBol = Math.min(100, Math.round(((Date.now() - _unlockBolStart) / 2000) * 100));
+    document.getElementById("barUnlockBol").style.width = _pctUnlockBol + "%";
+    if (_pctUnlockBol >= 100) {
+      clearInterval(_tUnlockBol); _tUnlockBol = null; _unlockBolPointerId = null; _unlockBolKey = "";
+      document.getElementById("bolsillo").style.display = "none";
+      try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch (e) {}
+    }
+  }, 40);
 }
-function cancelarUnlockBol() { if (_tUnlockBol) { clearInterval(_tUnlockBol); _tUnlockBol = null; } _pctUnlockBol = 0; document.getElementById("barUnlockBol").style.width = "0%"; }
+function cancelarUnlockBol(ev) {
+  if (ev && ev.pointerId !== undefined && _unlockBolPointerId !== null && ev.pointerId !== _unlockBolPointerId) return;
+  if (ev && ev.type === "keyup" && _unlockBolKey && ev.key !== _unlockBolKey) return;
+  if (ev && ev.type === "keyup" && _unlockBolPointerId !== null) return;
+  if (_tUnlockBol) { clearInterval(_tUnlockBol); _tUnlockBol = null; }
+  _unlockBolPointerId = null; _unlockBolKey = ""; _pctUnlockBol = 0;
+  document.getElementById("barUnlockBol").style.width = "0%";
+}
 
 function salirPiloto() {
   mxGar.cerrarCamaras(); if (_esRoot) try { _esRoot.close(); } catch (e) {}
