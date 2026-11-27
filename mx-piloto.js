@@ -109,15 +109,17 @@ function inscribirPilotoAuto() {
 
 function cmdSalaAmistosa(est) {
   desbloquearAudioP(false);
-  var ants = rootCache.antenas || {};
-  if (est === "WARMUP" || est === "SALIDA_30" || est === "VALLA_MX") {
-    var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
-    if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
+  var ants = rootCache.antenas || {}, aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
+  if (est === "WARMUP" && (!aks.length || aks.some(function(k){ return !ants[k].calibrada; }))) {
+    mxHablar("Calibra primero la pista vacia antes de iniciar el warm up", vozP);
+    alert(!aks.length ? "⚠️ Conecta y calibra primero una antena antes de iniciar el Warm-Up." : "⚠️ Calibra primero la pista vacia antes de iniciar el Warm-Up.");
+    return;
   }
+  if ((est === "SALIDA_30" || est === "VALLA_MX") && aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   avisoFinManga = false; avisoLipoP = false; _bombaExplotada = false; _ultRondaElim = 0; _ultRondaRuleta = 0; ultSegSemP = -99; _ultSecWuP = -1; _wuFinAvisoP = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null };
-  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Warm-up de 3 minutos iniciado", vozP); }
+  if (est === "WARMUP") { pay.tsInicio = ahCmd + 180000; mxHablar("Atencion pilotos, llamada a pista, comienza el warm up de 3 minutos", vozP); }
   if (est === "SALIDA_30") {
     pay.tsCuenta = ahCmd + 30000; pay.tsInicio = pay.tsCuenta;
     mxHablar("Atencion pilotos, llamada a parrilla, treinta segundos para la salida", vozP);
@@ -162,7 +164,7 @@ function registrarVuelta(pUid, evTs, esManual) {
     return;
   }
   var s = rootCache.sala || {}, st = s.estado || "ESPERA", dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
-  if (st === "RADAR") { if (esManual) document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#0dcaf0'>📡 Modo Radar activo en Direccion</span>"; return; }
+  if (st === "RADAR") return;
   var minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minMs) return;
 
@@ -244,8 +246,9 @@ function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvP[ev.antId] === ev.ts) return;
   _ultEvP[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
-    var s = rootCache.sala || {}, md = s.modoDet || "TODO";
-    if ((s.estado || "ESPERA") === "RADAR") return;
+    var s = rootCache.sala || {};
+    if (s.estado === "RADAR") return;
+    var md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
@@ -268,6 +271,7 @@ function renderSwatches(g) {
 
 function actualizarSemaforoP() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
+  aplicarBanderaUI(s, "banBanderaAmP");
   var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
 
   if (est === "WARMUP" && t0 > 0) {
@@ -296,7 +300,7 @@ function actualizarSemaforoP() {
     _ultSecWuP = -1;
   }
 
-  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") { _salidaShowHasta = 0; ultSegSemP = -99; }
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST" || est === "RADAR") { _salidaShowHasta = 0; ultSegSemP = -99; }
 
   if ((est === "SALIDA_30" || est === "VALLA_MX") && t0 > 0) {
     var df = t0 - ah, tCue = Number(s.tsCuenta || 0) || t0, dfCue = tCue - ah, sgCue = Math.ceil(dfCue / 1000);
@@ -367,7 +371,7 @@ function pintarSalaUI() {
 
   var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
   document.getElementById("boxAmistosa").style.display = (!dirOn) ? "block" : "none";
-  document.getElementById("banBanderaAmP").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
+  aplicarBanderaUI(s, "banBanderaAmP");
 
   var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE (1 VUELTA)", RULETA: "🎲 RULETA LOCA MX" };
   document.getElementById("lblModoSala").textContent = "MODO: " + (modTxt[s.modoJuego || "NORMAL"] || "NORMAL");
@@ -447,7 +451,8 @@ function conectarSseUnico() {
 mxGar.init({
   uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: false,
   getNom: function(){ return miNom; }, getRoot: function(){ return rootCache; },
-  getCircMeta: function(){ return circMeta; }, isDirSilent: function(){ var s = rootCache.sala || {}; return !!(s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000); }, onSpeak: function(t){ mxHablar(t, vozP); }
+  isDirSilent: function(){ var s = rootCache.sala || {}; return !!(s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000); },
+  getCircMeta: function(){ return circMeta; }, onSpeak: function(t){ mxHablar(t, vozP); }
 });
 inscribirPilotoAuto();
 conectarSseUnico();

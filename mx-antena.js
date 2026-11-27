@@ -451,7 +451,7 @@ function procFrame() {
 
   if (pct < resetPct && !_trigPendTs) {
     est = "LIBRE"; framesHit = 0;
-    document.getElementById("lblEstado").textContent = (cfg.estado === "RADAR" ? "📡 RADAR LISTO" : (cfg.estado === "WARMUP" ? "🔥 WARM-UP [" + cfg.modoDet + "]" : "VIGILANDO [" + cfg.modoDet + "]"));
+    document.getElementById("lblEstado").textContent = (cfg.estado === "WARMUP" ? "🔥 WARM-UP [" + cfg.modoDet + "]" : (cfg.estado === "RADAR" ? "📡 RADAR LISTO" : "VIGILANDO [" + cfg.modoDet + "]"));
     document.getElementById("lblEstado").style.color = "#00e676";
     for (var u = 0; u < dFull.length; u += 4) {
       fondoFull[u] = Math.round(fondoFull[u] * 0.93 + dFull[u] * 0.07);
@@ -479,8 +479,11 @@ function procFrame() {
     }
 
     if (cfg.estado === "RADAR") {
-      if ((ah - ultMs) > 900) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "📡 RADAR: ¡PASO!"; emitirPaso("", true); }
-    } else if (cfg.modoDet === "TODO") {
+      if ((ah - ultMs) > 900) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "📡 ¡PASO RADAR!"; emitirPaso("", true); }
+      return;
+    }
+
+    if (cfg.modoDet === "TODO") {
       if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso(""); }
     } else {
       var res = evaluarRoiColor(dFull);
@@ -509,12 +512,13 @@ function iniciarBucleVision() {
 
 function procesarSala(s) {
   if (!s) return;
+  aplicarBanderaUI(s, "banBanderaAnt");
   var nuevoModo = s.modoDet || "TODO";
   if (nuevoModo !== cfg.modoDet) {
     cfg.modoDet = nuevoModo;
     _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _ultTxtAnt = "MODO:" + nuevoModo;
     var nomM = { TODO: "Modo cualquier paso", GAR: "Modo color garaje", CAR: "Modo color garaje", WARMUP: "Modo firmas Warm-Up", HIBRIDO: "Modo hibrido" };
-    if ((s.estado || "ESPERA") !== "RADAR") hablarAnt(nomM[nuevoModo] || "Modo actualizado", true);
+    if (s.estado !== "RADAR") hablarAnt(nomM[nuevoModo] || "Modo actualizado", true);
     enviarTelemetria();
   }
   cfg.estado = s.estado || "ESPERA"; cfg.verVivo = !!s.verVivo; cfg.orientacion = s.orientacion || "V";
@@ -540,7 +544,7 @@ function procesarSala(s) {
       if (_tSoloVoz) { clearTimeout(_tSoloVoz); _tSoloVoz = null; }
       document.getElementById("lblMegaAnt").textContent = "📢 " + s.megafonia.texto;
       if (s.megafonia.beep) mxBeep(940, 110);
-      hablarAnt(s.megafonia.texto, s.megafonia.texto.indexOf("SALIDA") >= 0);
+      hablarAnt(s.megafonia.texto, !!(s.megafonia.urgente || s.megafonia.texto.indexOf("SALIDA") >= 0 || s.megafonia.texto.indexOf("Velocidad") >= 0));
     }
   }
   if (s.reaccion && s.reaccion.ts && s.reaccion.ts !== _ultReacTs) {
@@ -557,6 +561,7 @@ function procesarSala(s) {
 }
 
 function enviarTelemetria() {
+  aplicarBanderaUI(salaCache, "banBanderaAnt");
   if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",

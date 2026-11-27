@@ -130,8 +130,8 @@ function renderSwatches(g) {
 
 function actualizarRelojEstadoV() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", ah = ahoraSrv();
-  var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS" };
-  var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST" };
+  var titEs = { ESPERA: "PISTA EN ESPERA", WARMUP: "🔥 WARM-UP EN CURSO", SALIDA_30: "🚦 PREPARADOS EN PARRILLA (30s)", VALLA_MX: "🚧 VALLA MX LISTA (SALIDA ALEATORIA)", EN_CURSO: "🏁 MANGA EN DIRECTO", TEST: "📡 PRUEBA DE ANTENAS", RADAR: "📡 MODO RADAR (" + (s.radarDist || 10) + "m)" };
+  var titEn = { ESPERA: "TRACK ON STANDBY", WARMUP: "🔥 WARM-UP IN PROGRESS", SALIDA_30: "🚦 STARTING GRID (30s)", VALLA_MX: "🚧 MX GATE READY", EN_CURSO: "🏁 LIVE HEAT", TEST: "📡 ANTENNA TEST", RADAR: "📡 SPEED TRAP (" + (s.radarDist || 10) + "m)" };
   var estTxt = (esIngles ? titEn[est] : titEs[est]) || est;
   if (est === "VALLA_MX" && Number(s.tsInicio || 0) > 0) {
     var tCue = Number(s.tsCuenta || 0) || Number(s.tsInicio);
@@ -149,7 +149,7 @@ function actualizarRelojEstadoV() {
 
 function pintarVivo() {
   var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gObj = rootCache.garaje || {}, cObj = rootCache.campeonato || {};
-  document.getElementById("banBanderaAmV").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
+  aplicarBanderaUI(s, "banBanderaAmV");
   var est = s.estado || "ESPERA";
   actualizarRelojEstadoV();
   document.getElementById("lblSubV").textContent = s.hotlapTxt ? ((esIngles ? "👑 Weekly Hotlap: " : "👑 Hotlap Semana: ") + s.hotlapTxt) : circNom;
@@ -233,6 +233,7 @@ conectarSseVivo(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 
 setInterval(function() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA";
+  aplicarBanderaUI(s, "banBanderaAmV");
   if (est === "SALIDA_30" || est === "VALLA_MX" || est === "WARMUP" || est === "EN_CURSO") actualizarRelojEstadoV();
   if (!modoMec) return;
   var pid = document.getElementById("selPilotoMec").value, p = (rootCache.pilotos || {})[pid], el = document.getElementById("mecCrono");

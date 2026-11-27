@@ -118,8 +118,20 @@ function pintarChecklist(antsAct, pils, s) {
 function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
-  document.getElementById("banBanderaAmDir").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
-  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado === "RADAR") ? ("RADAR • " + (s.radarDist || 10) + "m") : ((s.estado || "ESPERA") + " • " + (s.modoDet || "TODO"));
+  aplicarBanderaUI(s, "banBanderaAmDir");
+  if ((s.estado || "ESPERA") === "RADAR") document.getElementById("lblEstadoGlobDir").textContent = "📡 RADAR (" + (s.radarDist || 10) + "m)";
+  else if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
+  var bRad = document.getElementById("btnRadarDir"), elRD = document.getElementById("inpRadarDist"), elRR = document.getElementById("lblRadarResDir"), esRad = (s.estado === "RADAR");
+  if (bRad) {
+    bRad.textContent = esRad ? "🔴 PARAR RADAR" : "📡 ACTIVAR RADAR";
+    bRad.style.background = esRad ? "linear-gradient(180deg,#ff6b6b,#e03131)" : "linear-gradient(180deg,#3bc9db,#0dcaf0)";
+    bRad.style.color = esRad ? "#fff" : "#000";
+  }
+  if (elRD && document.activeElement !== elRD && Number(s.radarDist) > 0) elRD.value = s.radarDist;
+  if (elRR) {
+    if (s.radarLastTxt) elRR.textContent = s.radarLastTxt;
+    else if (!esRad && elRR.textContent.indexOf("Radar activo") >= 0) elRR.textContent = "Velocidad medida: -- km/h";
+  }
 
   var md = s.modoDet || "TODO";
   [["bModTodo", "TODO"], ["bModGar", "GAR"], ["bModWarm", "WARMUP"], ["bModHib", "HIBRIDO"]].forEach(function(par){
@@ -139,10 +151,6 @@ function pintarDirUI() {
   if (s.antiViento && document.activeElement !== document.getElementById("selAntiViento")) document.getElementById("selAntiViento").value = s.antiViento;
   if (typeof s.retardoMs === "number") syncRng("rngRetardo", "lblRetardoDir", s.retardoMs, "ms");
   if (s.perfilLuz && s.perfilLuz.deltaE) syncRng("rngDeltaE", "lblDeltaEDir", s.perfilLuz.deltaE, "");
-  var bRad = document.getElementById("btnRadarDir");
-  if (bRad) { var radOn = (s.estado === "RADAR"); bRad.textContent = radOn ? "📡 RADAR: ACTIVO ✓" : "📡 RADAR: OFF"; bRad.style.background = radOn ? "#20c997" : "#262626"; bRad.style.color = radOn ? "#000" : "#0dcaf0"; }
-  var inpRad = document.getElementById("inpRadarDist");
-  if (inpRad && s.radarDist && document.activeElement !== inpRad) inpRad.value = s.radarDist;
 
   if (!_roiInit && s.roi) {
     _roiInit = true;
@@ -242,8 +250,9 @@ function iniciarDirector() {
     getRoot: function(){ return rootCache; }, getCircMeta: function(){ return circMeta; },
     isSoloDir: function(){ return !dirPilotoOn; }, isDirSilent: function(){ return true; }, onSpeak: function(t){ mxHablar(t); }
   });
+  var elRDInit = document.getElementById("inpRadarDist"), dLoc = localStorage.getItem("mxp_radar_dist");
+  if (elRDInit && dLoc) elRDInit.value = dLoc;
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
-  var rdSaved = localStorage.getItem("mxp_radar_dist"); if (rdSaved && document.getElementById("inpRadarDist")) document.getElementById("inpRadarDist").value = rdSaved;
   aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
 
   setInterval(function() {
