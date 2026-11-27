@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611272200";
+var CACHE_NAME = "mxp-cache-v202611272208";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

@@ -73,6 +73,32 @@ var mxGar = (function() {
           '<div id="infoDesgasteGar" style="margin-top:8px;font-size:11px;color:#aaa;background:#101218;padding:7px;border-radius:7px"></div>' +
         '</div>';
     }
+    var st = document.getElementById(_s.cfg.tiemposId || "slotTiempos");
+    if (st) {
+      st.innerHTML =
+        '<div class="card tiempos-card">' +
+          '<div class="tiempos-heading"><div><b>⏱️ TIEMPOS Y PROGRESO</b><div class="tiempos-subtitle">Tus vueltas y resultados del circuito</div></div></div>' +
+          '<div class="grid4 tiempos-metrics">' +
+            '<div class="stat"><div>MEJOR VUELTA</div><b id="stMejor" class="tiempos-value">--</b></div>' +
+            '<div class="stat"><div>REGULARIDAD</div><b id="stReg" class="tiempos-value">--%</b></div>' +
+            '<div class="stat"><div>VUELTAS</div><b id="stVtas" class="tiempos-value">0</b></div>' +
+            '<div class="stat"><div>RANGO</div><b id="stRango" class="tiempos-value">ROOKIE</b></div>' +
+          '</div>' +
+          '<section class="tiempos-section">' +
+            '<h3>🏆 CAMPEONATO DEL DÍA</h3>' +
+            '<div id="boxCampDia" class="tiempos-list"></div>' +
+          '</section>' +
+          '<section class="tiempos-section">' +
+            '<h3>⚔️ COMPARAR CON OTRO PILOTO</h3>' +
+            '<select id="selRivalDuelo" aria-label="Elegir piloto para comparar" onchange="mxGar.pintarDuelo()"></select>' +
+            '<div id="boxDuelo" class="tiempos-duelo"></div>' +
+          '</section>' +
+          '<section class="tiempos-section">' +
+            '<h3>📅 HISTORIAL DE VUELTAS</h3>' +
+            '<div id="listaDiasHist" class="tiempos-list"></div>' +
+          '</section>' +
+        '</div>';
+    }
     if (!document.getElementById("modalCamFoto")) {
       var wrap = document.createElement("div");
       wrap.innerHTML = '<div id="modalCamFoto" class="cam-modal"><div class="cam-box" style="text-align:center"><div id="titCamFoto" style="font-size:13px;font-weight:bold;color:#0dcaf0;margin-bottom:8px">📷 FOTO DE TU MOTO</div><div class="cam-visor"><video id="vidGarFoto" autoplay playsinline muted></video></div><div class="grid2"><button onclick="vibrar(25);mxGar.capturarFoto()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">📸 HACER FOTO</button><button onclick="vibrar();mxGar.cerrarCamFoto()" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff">CANCELAR</button></div></div></div>';

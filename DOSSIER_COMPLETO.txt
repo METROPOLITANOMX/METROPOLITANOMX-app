@@ -57,7 +57,7 @@ Foto-Finish abre la última imagen disponible de la meta e indica la antena, el 
 
 Si no hay una persona dirigiendo la sala, aparece el modo amistoso. Permite calibrar la antena con una cuenta atrás de diez segundos, iniciar un Warm-Up de tres minutos, utilizar la cuenta atrás fija del modo personal, preparar Valla MX o parar. Este modo es independiente de los controles de salida de Dirección.
 
-La pestaña Tiempos está presente en el menú, pero en la versión inspeccionada no presenta su panel de contenido ni sus controles. La actividad reciente y la clasificación sí se muestran en Sala Pista. No debe confundirse la pestaña vacía con una pantalla de estadísticas disponible.
+La pestaña Tiempos reúne la mejor vuelta, regularidad, vueltas acumuladas y rango del piloto. También presenta la clasificación del campeonato del día, permite comparar tiempos y reglajes con otro piloto de la sala y conserva el historial diario, con opción de descargar cada jornada como imagen.
 
 ======================================================================
 4. GARAJE VIRTUAL, FOTOS Y REGLAJES
@@ -201,7 +201,7 @@ Las cámaras y antenas dependen de permisos de cámara, iluminación, alimentaci
 13. LÍMITES CONSTATADOS EN ESTA VERSIÓN
 ======================================================================
 
-- La pestaña Tiempos está visible en Piloto y Dirección, pero no presenta contenido. Por ello, el acceso a estadísticas, duelos, exportaciones y copias personales no está disponible desde esas pestañas en esta versión.
+- Tiempos muestra el rendimiento personal, la clasificación del campeonato, la comparación de pilotos y el historial de vueltas. No incluye una copia de seguridad independiente desde esa pestaña.
 - El panel de Administración y la marca de preparación para la futura Red de Circuitos Oficiales no equivalen a una red pública ya operativa.
 - La limpieza de recursos locales no restablece los datos de prueba ni elimina información remota; su alcance se limita a los recursos guardados en el dispositivo.
 - Una instalación de cámara debe probarse físicamente en la ubicación y luz reales de la pista. Los resultados pueden variar según el teléfono y la conexión.

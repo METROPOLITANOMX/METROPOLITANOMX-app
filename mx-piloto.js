@@ -76,7 +76,7 @@ function ayudaTab() {
   var g = {
     sala: "SALA PISTA:\n1. Activa el audio para escuchar vueltas, diferencias y avisos; la bateria se recuerda a los 12 minutos.\n2. Consulta posicion, vuelta en curso, clasificacion, colores asignados y estado de antenas.\n3. Usa BOLSILLO para oscurecer la pantalla: manten pulsado 2 segundos para volver.\n4. FOTO-FINISH muestra la ultima captura de meta; + VUELTA permite anotar una pasada manual.\n5. Sin Direccion puedes usar el modo amistoso para calibrar, iniciar WARM-UP, usar una cuenta atras o VALLA MX y parar.",
     garaje: "GARAJE PRO:\n1. Elige MX Tierra o Supermoto y completa modelo, dorsal y reglaje.\n2. Guarda cuatro fotos, captura los colores visibles de casco y moto, limpia el fondo y guarda la firma.\n3. Comparte el reglaje por WhatsApp o publica moto, foto y configuracion en el Paddock Mundial.",
-    tiempos: "TIEMPOS:\nLa pestaña esta disponible en el menu, pero en esta version no se muestra su panel de contenido. Los tiempos recientes y la clasificacion si aparecen en SALA PISTA."
+    tiempos: "TIEMPOS:\nConsulta tu mejor vuelta, regularidad, vueltas acumuladas, rango, campeonato del dia, comparacion con otros pilotos e historial diario."
   };
   alert(g[_tabAct] || g.sala);
 }
