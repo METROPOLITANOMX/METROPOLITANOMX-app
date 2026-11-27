@@ -3,445 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<title>Admin Propietario - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel Privado Admin - Metropolitano MX</title>
+<link rel="stylesheet" href="mx.css?v=202611273">
 <style>
-*{box-sizing:border-box}
-body{background:#090a0c;color:#fff;font-family:Arial,sans-serif;margin:0;padding:10px;text-align:center}
-.wrap,.top,.acc-box,.card{max-width:760px;margin-left:auto;margin-right:auto}
-.pill-ok,.pill-off{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold}
-.pill-ok{background:#20c997;color:#000}.pill-off{background:#3a1c1c;color:#ff6b6b}
-.adm-note{font-size:11px;color:#aaa;margin:4px 0 8px;line-height:1.4}
-.modal{display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9997;flex-direction:column;justify-content:center;align-items:center;padding:14px}
-.modal-box{width:100%;max-width:420px;background:linear-gradient(180deg,#1f232c,#12141a);border:2px solid #ffc107;border-radius:15px;padding:16px;text-align:left;box-shadow:0 14px 34px rgba(0,0,0,0.85)}
-.bs{padding:4px 7px;font-size:10px}.br{background:#dc3545;color:#fff}.by{background:#ffc107;color:#000}.bg{background:#20c997;color:#000}.bc{background:#1c2530;color:#0dcaf0}.bd{background:#332611;color:#ffc107}.bx{background:#3a1c1c;color:#ff4d5e}
+  .wrap{max-width:760px;margin:0 auto}
+  .top,.card{max-width:760px}
+  .adm-hint{background:#101820;border:1px solid #1c3b57;border-radius:8px;padding:8px;font-size:11px;color:#9ad9ff;margin-top:6px;line-height:1.4}
+  .adm-list{max-height:250px;overflow-y:auto;margin-top:8px}
 </style>
 </head>
 <body>
-<div id="modalAuthAdm" class="modal">
-<form class="modal-box" onsubmit="event.preventDefault();btnEntrarAdm();">
-<h3 style="color:#ffc107;margin:0 0 8px;text-align:center">🛡️ PANEL PRIVADO PROPIETARIO (v3)</h3>
-<div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:10px">Gestion total exclusiva: cuentas, descargas, rankings, paddock y circuitos.</div>
-<input id="inpClvAdmAuth" type="password" autocomplete="current-password" placeholder="Clave maestra de Direccion">
-<button type="submit" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:8px;padding:11px;border:none;border-radius:10px;font-weight:bold;cursor:pointer">ENTRAR A GESTION</button>
-<button type="button" onclick="vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc;padding:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer">VOLVER AL INICIO</button>
-<div id="msgAuthAdm" style="font-size:12px;text-align:center;margin-top:8px;font-weight:bold;min-height:16px;color:#0dcaf0"></div>
-</form>
-</div>
+  <div id="modalAuthAdm" class="modal" style="display:flex">
+    <div class="modal-box" style="border-color:#ffc107">
+      <h3 style="color:#ffc107;margin:0 0 8px;text-align:center">🛡️ PANEL PRIVADO PROPIETARIO</h3>
+      <div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:10px">Acceso exclusivo de gestion total (cuentas, codigos y borrados).</div>
+      <input id="inpClvAdm" type="password" placeholder="Clave de Direccion / Admin" onkeydown="if(event.key==='Enter')btnEntrarAdm()">
+      <button type="button" onclick="btnEntrarAdm()" style="width:100%;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;margin-bottom:8px">DESBLOQUEAR PANEL</button>
+      <button type="button" onclick="if(window.vibrar)vibrar();location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc">VOLVER AL INICIO</button>
+      <div id="msgAuthAdm" style="font-size:12px;text-align:center;margin-top:8px;font-weight:bold;min-height:16px"></div>
+    </div>
+  </div>
 
-<div id="panelAdminMain" class="wrap" style="display:none">
-<div class="top" style="border-bottom-color:#ffc107">
-<div style="text-align:left">
-<b style="color:#ffc107;font-size:14px">🛡️ PROPIETARIO MX <span style="font-size:10px;color:#0dcaf0">(v3)</span></b>
-<div id="txtCircAdm" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div>
-</div>
-<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
-<button onclick="vibrar();recargarTodoAdm()" style="background:#0dcaf0;color:#000;padding:7px 9px;font-size:10px">🔄 ACTUALIZAR</button>
-<button onclick="vibrar();document.body.classList.toggle('sol')" style="background:#eee;color:#000;padding:7px 9px;font-size:10px">☀️</button>
-<button onclick="vibrar();salirAdmin()" style="background:#dc3545;color:#fff;padding:7px 9px;font-size:10px">Salir</button>
-</div>
-</div>
+  <div id="admWrap" class="wrap" style="display:none">
+    <div class="top" style="border-bottom-color:#ffc107">
+      <div style="text-align:left">
+        <b style="color:#ffc107;font-size:14px">🛡️ ADMIN PRO — GESTION PRIVADA</b>
+        <div id="txtCircAdm" style="font-size:10px;color:#0dcaf0;margin-top:2px">🏁 METROPOLITANO</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button onclick="vibrar();cargarTodoAdm()" style="background:#1c2530;color:#0dcaf0;padding:7px 9px;font-size:10px">🔄 ACTUALIZAR</button>
+        <button onclick="vibrar();document.body.classList.toggle('sol')" style="background:#eee;color:#000;padding:7px 9px;font-size:10px">☀️</button>
+        <button onclick="vibrar();salirAdm()" style="background:#dc3545;color:#fff;padding:7px 9px;font-size:10px">Salir</button>
+      </div>
+    </div>
 
-<div class="card" style="border-color:#0dcaf0">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
-<b style="color:#0dcaf0;font-size:12px">🏁 CIRCUITO ACTIVO PARA GESTION</b>
-<span id="lblEstadoSalaAdm" class="pill-ok">ESPERA</span>
-</div>
-<div style="display:flex;gap:6px;margin-top:6px;align-items:center">
-<select id="selCircAdm" onchange="cambiarCircuitoAdm(this.value)" style="margin:0;flex:1"></select>
-<button onclick="vibrar();borrarCircuitoAdm()" class="bx" style="padding:9px 10px;font-size:10px">🗑️ BORRAR PISTA</button>
-</div>
-<div id="lblEstadoDirAdm" class="adm-note" style="margin-top:6px;margin-bottom:4px">Comprobando mando de Direccion...</div>
-<div class="grid2" style="margin-top:6px">
-<button onclick="vibrar();liberarMandoDirAdm()" class="bc" style="color:#ffc107;font-size:10px">🔓 LIBERAR MANDO DIRECCION</button>
-<button onclick="vibrar();guardarGpsPistaAdm()" class="bc" style="color:#20c997;font-size:10px">📍 FIJAR GPS PISTA</button>
-</div>
-</div>
+    <div class="card" style="border-color:#0dcaf0">
+      <b style="color:#0dcaf0;font-size:12px">🏁 CIRCUITO ACTIVO PARA GESTIONAR</b>
+      <select id="selCircAdm" onchange="cambiarCircAdm(this.value)" style="margin-top:6px;margin-bottom:0"></select>
+    </div>
 
-<div class="acc-box" style="border-color:#ffc107">
-<button class="acc-head" onclick="vibrar();toggleAccAdm('acc_adm_des')">
-<b style="color:#ffc107">📲 CONTROL DE DESCARGAS Y CODIGOS DE ACCESO</b>
-<span id="arw_acc_adm_des">▼</span>
-</button>
-<div id="acc_adm_des" class="acc-body">
-<div class="grid2">
-<select id="selModoAccesoAdm" onchange="guardarAccesoAdm()" style="margin:0">
-<option value="ABIERTO">🟢 ABIERTO (Libre)</option>
-<option value="CODIGO">🔑 CON CODIGO INVITACION</option>
-<option value="PAUSADO">🔴 PAUSADO (Paralizar)</option>
-</select>
-<input id="inpCodAccesoAdm" placeholder="Codigo (ej. piloto26 o direccion1)" style="margin:0" onchange="guardarAccesoAdm()">
-</div>
-<div class="adm-note">• <b style="color:#20c997">piloto...</b>: oculta Direccion y Antenas completo.<br>• <b style="color:#0dcaf0">direccion...</b>: oculta borrados, pilotos, cuentas y descargas en Direccion.</div>
-<button onclick="vibrar();guardarAccesoAdm(true)" class="by" style="width:100%;font-size:11px">💾 APLICAR CONTROL DE DESCARGAS</button>
-</div>
-</div>
+    <div id="cardAdmDescargas" class="card" style="border-color:#ffc107">
+      <b style="color:#ffc107;font-size:12px">📲 CONTROL DE DESCARGAS Y CODIGOS DE ACCESO</b>
+      <div class="grid2" style="margin-top:8px">
+        <select id="selModoAcceso" onchange="guardarAccesoCfg(false)" style="margin:0">
+          <option value="ABIERTO">🟢 ABIERTO (Libre)</option>
+          <option value="CODIGO">🔑 CON CODIGO INVITACION</option>
+          <option value="PAUSADO">🔴 PAUSADO (Paralizar)</option>
+        </select>
+        <input id="inpCodAcceso" placeholder="Ej: piloto2026, direccion2026" style="margin:0" onchange="guardarAccesoCfg(false)">
+      </div>
+      <div class="adm-hint">
+        <b>Reglas automaticas por palabra clave (puedes poner varios separados por coma):</b><br>
+        • Codigo con <b>piloto</b> + numero/palabra (ej. <code>piloto2026</code>): oculta <b>Direccion</b> y <b>Antenas</b> por completo.<br>
+        • Codigo con <b>direccion</b> + numero/palabra (ej. <code>direccion2026</code>): oculta borrados, pilotos, bloqueo de cuentas y descargas.
+      </div>
+      <button onclick="vibrar(25);guardarAccesoCfg(true)" style="width:100%;margin-top:8px;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:11px">💾 GUARDAR CONTROL DE DESCARGAS</button>
+    </div>
 
-<div class="acc-box" style="border-color:#ff6b6b">
-<button class="acc-head" onclick="vibrar();toggleAccAdm('acc_adm_del')">
-<b style="color:#ff6b6b">🧹 BORRADO DE TIEMPOS, HOTLAP, RANKING Y PADDOCK</b>
-<span id="arw_acc_adm_del">▼</span>
-</button>
-<div id="acc_adm_del" class="acc-body">
-<div class="grid2" style="margin-bottom:8px">
-<button onclick="vibrar();borrarHotlapAdm()" class="bd" style="font-size:10px">🧹 BORRAR HOTLAP SEMANAL</button>
-<button onclick="vibrar();borrarTiemposDiaAdm()" class="bx" style="font-size:10px">🗑️ BORRAR TIEMPOS DEL DIA</button>
-</div>
-<div class="box-sub" style="border-color:#7950f2">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
-<b style="color:#d0a8ff;font-size:11px">🌍 RANKING MUNDIAL (<span id="cntMundialAdm">0</span>)</b>
-<div style="display:flex;gap:4px">
-<button onclick="vibrar();cargarMundialAdm(true)" class="bc bs">🔄 VER</button>
-<button onclick="vibrar();vaciarMundialAdm()" class="br bs">🗑️ VACIAR TODO</button>
-</div>
-</div>
-<div id="listaMundialAdm" style="display:none;margin-top:8px;max-height:240px;overflow-y:auto"></div>
-</div>
-<div class="box-sub" style="border-color:#20c997">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
-<b style="color:#20c997;font-size:11px">🏍️ PADDOCK MUNDIAL (<span id="cntPaddockAdm">0</span>)</b>
-<div style="display:flex;gap:4px">
-<button onclick="vibrar();cargarPaddockAdm(true)" class="bc bs">🔄 VER</button>
-<button onclick="vibrar();vaciarPaddockAdm()" class="br bs">🗑️ VACIAR PADDOCK</button>
-</div>
-</div>
-<div id="listaPaddockAdm" style="display:none;margin-top:8px;max-height:240px;overflow-y:auto"></div>
-</div>
-</div>
-</div>
+    <div id="cardAdmBorrados" class="card" style="border-color:#ff4d5e">
+      <b style="color:#ff4d5e;font-size:12px">🗑️ BORRADOS DELICADOS (RANKING, HOTLAP, DIA Y PISTAS)</b>
+      <div class="grid2" style="margin-top:8px">
+        <button onclick="vibrar();borrarHotlapAdm()" style="background:#332611;color:#ffc107;font-size:10px">🧹 BORRAR HOTLAP SEMANAL</button>
+        <button onclick="vibrar();borrarTiemposDiaAdm()" style="background:#3a1c1c;color:#ff6b6b;font-size:10px">🗑️ BORRAR TIEMPOS DEL DIA</button>
+        <button onclick="vibrar();verRankingAdm(true)" style="background:#1c2530;color:#0dcaf0;font-size:10px">🌍 GESTIONAR RANKING MUNDIAL</button>
+        <button onclick="vibrar();borrarRankingAdm()" style="background:#4a1218;color:#ff8787;font-size:10px">💣 VACIAR TODO EL RANKING</button>
+      </div>
+      <div id="boxRankingAdm" class="adm-list" style="display:none"></div>
+      <div style="margin-top:8px;border-top:1px solid #2e333e;padding-top:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b style="color:#ffa94d;font-size:11px">🗺️ CIRCUITOS LOCALES CREADOS</b>
+          <button onclick="vibrar();cargarCircuitosAdm()" style="background:#262626;color:#ffa94d;padding:4px 8px;font-size:10px">🔄 LISTAR</button>
+        </div>
+        <div id="listaCircsAdm" class="adm-list"></div>
+      </div>
+    </div>
 
-<div class="acc-box" style="border-color:#20c997">
-<button class="acc-head" onclick="vibrar();toggleAccAdm('acc_adm_pil')">
-<b style="color:#20c997">🏍️ PILOTOS EN SALA (<span id="cntSalaAdm">0</span>)</b>
-<span id="arw_acc_adm_pil">▶</span>
-</button>
-<div id="acc_adm_pil" class="acc-body" style="display:none">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-<span id="lblPistaStatusAdm" style="font-size:11px;color:#20c997;font-weight:bold">Cargando sala...</span>
-<button onclick="vibrar();limpiarOfflineAdm()" class="bx bs">🧹 LIMPIAR OFFLINE</button>
-</div>
-<div id="listaSalaAdm">Sin pilotos en sala.</div>
-</div>
-</div>
+    <div id="cardAdmPilotos" class="card" style="border-color:#20c997">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+        <b style="color:#20c997;font-size:12px">🏍️ PILOTOS EN SALA (<span id="lblPistaStatusAdm">--</span>)</b>
+        <div style="display:flex;gap:4px">
+          <button onclick="vibrar();cargarPilotosAdm()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄</button>
+          <button onclick="vibrar();limpiarOfflineAdm()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 OFFLINE</button>
+        </div>
+      </div>
+      <div id="listaPilotosAdm" class="adm-list">Cargando...</div>
+    </div>
 
-<div class="acc-box" style="border-color:#7950f2">
-<button class="acc-head" onclick="vibrar();toggleAccAdm('acc_adm_cta')">
-<b style="color:#d0a8ff">🚫 BLOQUEO Y BORRADO DE CUENTAS</b>
-<span id="arw_acc_adm_cta">▶</span>
-</button>
-<div id="acc_adm_cta" class="acc-body" style="display:none">
-<div style="display:flex;gap:5px;margin-bottom:6px">
-<input id="inpBuscarCtaAdm" placeholder="Buscar cuenta por nombre..." style="margin:0;flex:1">
-<button onclick="vibrar();buscarCuentaAdm()" style="background:#0dcaf0;color:#000;padding:6px 10px;font-size:10px">🔎 BUSCAR</button>
-<button onclick="vibrar();cargarCuentasAdm()" style="background:#262626;color:#ffc107;padding:6px 10px;font-size:10px">🔄</button>
-</div>
-<div id="resBuscarCtaAdm"></div>
-<div id="listaCuentasAdm" style="max-height:280px;overflow-y:auto"></div>
-</div>
-</div>
+    <div id="cardAdmCuentas" class="card" style="border-color:#7950f2">
+      <b style="color:#d0a8ff;font-size:12px">🚫 BLOQUEO Y BORRADO DE CUENTAS</b>
+      <div style="display:flex;gap:5px;margin-top:8px">
+        <input id="inpBuscarCta" placeholder="Buscar cuenta por nombre..." style="margin:0;flex:1" onkeydown="if(event.key==='Enter')buscarCuentaAdm()">
+        <button onclick="vibrar();buscarCuentaAdm()" style="background:#0dcaf0;color:#000;padding:6px 10px;font-size:10px">🔎 BUSCAR</button>
+        <button onclick="vibrar();cargarCuentasAdm(true)" style="background:#2b2b2b;color:#d0a8ff;padding:6px 10px;font-size:10px">📋 TODAS</button>
+      </div>
+      <div id="resBuscarCta" style="margin-top:6px"></div>
+      <div id="listaCuentasIdx" class="adm-list"></div>
+    </div>
 
-<div class="acc-box" style="border-color:#3bc9db">
-<button class="acc-head" onclick="vibrar();toggleAccAdm('acc_adm_aud')">
-<b style="color:#3bc9db">🛠️ REPORTES, VISITAS, PERFILES Y CLAVE MAESTRA</b>
-<span id="arw_acc_adm_aud">▶</span>
-</button>
-<div id="acc_adm_aud" class="acc-body" style="display:none">
-<div class="grid3" style="margin-bottom:8px">
-<button onclick="vibrar();cargarVisitasAdm(true)" style="background:#262626;color:#ffc107;font-size:10px">👁️ VISITAS</button>
-<button onclick="vibrar();verReportesAdm(true)" style="background:#262626;color:#ff6b6b;font-size:10px">🛠️ REPORTES</button>
-<button onclick="vibrar();cargarPerfilesCamAdm(true)" style="background:#262626;color:#0dcaf0;font-size:10px">📷 PERFILES</button>
-</div>
-<div id="boxClubAdm" style="display:none;margin-bottom:8px;max-height:220px;overflow-y:auto"></div>
-<div id="boxRepAdm" style="display:none;margin-bottom:8px;max-height:220px;overflow-y:auto"></div>
-<div id="boxPerfilesAdm" style="display:none;margin-bottom:8px;max-height:200px;overflow-y:auto"></div>
-<div class="box-sub">
-<b style="color:#ffc107;font-size:11px">🔐 CAMBIAR CLAVE MAESTRA DE DIRECCION (SHA-256)</b>
-<div style="display:flex;gap:5px;margin-top:5px">
-<input id="inpNuevaClaveAdm" type="password" placeholder="Nueva clave (min 4 chars)..." style="margin:0;flex:1">
-<button onclick="vibrar(25);cambiarClaveAdm()" class="by">💾</button>
-</div>
-</div>
-</div>
-</div>
-</div>
+    <div id="cardAdmHerramientas" class="card" style="border-color:#38d9a9">
+      <b style="color:#38d9a9;font-size:12px">🛠️ UTILIDADES, VISITAS, REPORTES Y CLAVE</b>
+      <div class="grid3" style="margin-top:8px">
+        <button onclick="vibrar();cargarVisitasAdm()" style="background:#262626;color:#ffc107;font-size:10px">👁️ VISITAS</button>
+        <button onclick="vibrar();verReportesAdm()" style="background:#262626;color:#ff6b6b;font-size:10px">🛠️ REPORTES</button>
+        <button onclick="vibrar();guardarGpsPistaAdm()" style="background:#1c2530;color:#20c997;font-size:10px">📍 GPS PISTA</button>
+      </div>
+      <div id="boxClubAdm" class="adm-list" style="display:none"></div>
+      <div id="boxRepAdm" class="adm-list" style="display:none"></div>
+      <div class="box-sub" style="margin-top:10px;margin-bottom:0">
+        <b style="color:#ffc107;font-size:11px">🔐 CAMBIAR CLAVE MAESTRA (SHA-256)</b>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <input id="inpNuevaClaveDir" type="password" placeholder="Nueva clave (min. 4 caracteres)..." style="margin:0;flex:1">
+          <button onclick="vibrar(25);cambiarClaveDirAdm()" style="background:#ffc107;color:#000">💾</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-var FB_BASE="https://metropolitano-mx-circuit-default-rtdb.firebaseio.com/";
-var FB_ROOT=FB_BASE+"mx_pro",_offSrv=0;
-function ahoraSrv(){return Math.round(Date.now()+_offSrv);}
-function vibrar(ms){try{if(navigator.vibrate)navigator.vibrate(ms||18);}catch(e){}}
-function esc(s){return String(s||"").replace(/[&<>\"\x27]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\x27":"&#39;"}[c];});}
-function escJs(s){return String(s||"").replace(/[^a-zA-Z0-9 _.-]/g,"");}
-function fmt(ms){if(!ms||ms<=0)return"--";var c=Math.round(ms/10);if(c<6000)return(c/100).toFixed(2)+"s";var m=Math.floor(c/6000),r=c%6000,s=Math.floor(r/100),cs=r%100;return m+":"+(s<10?"0":"")+s+"."+(cs<10?"0":"")+cs;}
-function fbJson(u,o){return fetch(u,o).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();});}
-function sha256Pure(str){
-var u=unescape(encodeURIComponent(str)),w=[],bl=u.length*8;
-for(var i=0;i<u.length;i++)w[i>>2]|=(u.charCodeAt(i)&255)<<(24-(i%4)*8);
-w[bl>>5]|=0x80<<(24-bl%32);w[((bl+64>>9)<<4)+15]=bl;
-var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-var K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-var rr=function(v,n){return(v>>>n)|(v<<(32-n));},W=new Array(64);
-for(var j=0;j<w.length;j+=16){
-var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
-for(var t=0;t<64;t++){
-if(t<16)W[t]=w[j+t]|0;
-else{var s0=rr(W[t-15],7)^rr(W[t-15],18)^(W[t-15]>>>3),s1=rr(W[t-2],17)^rr(W[t-2],19)^(W[t-2]>>>10);W[t]=(W[t-16]+s0+W[t-7]+s1)|0;}
-var S1=rr(e,6)^rr(e,11)^rr(e,25),ch=(e&f)^((~e)&g),t1=(h+S1+ch+K[t]+W[t])|0,S0=rr(a,2)^rr(a,13)^rr(a,22),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)|0;
-h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+function btnEntrarAdm() {
+  try { if (window.vibrar) vibrar(25); } catch (e) {}
+  var msg = document.getElementById("msgAuthAdm");
+  if (typeof validarAccesoAdm === "function") { validarAccesoAdm(); return; }
+  if (typeof validarAccesoAdmin === "function") { validarAccesoAdmin(); return; }
+  if (msg) {
+    msg.style.color = "#ff4d5e";
+    msg.textContent = "⚠️ No cargo mx-admin.js o esta desactualizado. Sube mx-core.js y mx-admin.js y recarga.";
+  }
 }
-H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
-}
-return H.map(function(x){return("00000000"+(x>>>0).toString(16)).slice(-8);}).join("");
-}
-function hashTxt(txt){
-var s="MXPRO_2026_SALT_"+String(txt||"");
-if(window.crypto&&crypto.subtle&&window.TextEncoder){
-return crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)).then(function(buf){
-return Array.prototype.map.call(new Uint8Array(buf),function(b){return("00"+b.toString(16)).slice(-2);}).join("");
-}).catch(function(){return sha256Pure(s);});
-}
-return Promise.resolve(sha256Pure(s));
-}
-fetch(FB_BASE+".info/serverTimeOffset.json").then(function(r){return r.ok?r.json():0;}).then(function(o){if(typeof o==="number")_offSrv=o;}).catch(function(){});
-
-var circId=localStorage.getItem("mxp_circ_id")||"METROPOLITANO";
-var circNom=localStorage.getItem("mxp_circ_nom")||"METROPOLITANO CIRCUIT";
-var FB=FB_ROOT+"/circuitos/"+circId,_admIniciado=false,_tAdm=null;
-function actualizarRutasAdm(){FB=FB_ROOT+"/circuitos/"+circId;document.getElementById("txtCircAdm").textContent="🏁 "+circNom+" ("+circId+")";}
-function setMsgAdm(t,c){var m=document.getElementById("msgAuthAdm");if(m){m.style.color=c||"#0dcaf0";m.textContent=t;}}
-window.onerror=function(m){setMsgAdm("Error JS: "+m,"#ff4d5e");};
-
-function _admHash(clv){
-return hashTxt(clv).then(function(h){
-return fbJson(FB_ROOT+"/config/dirHash.json?t="+Date.now()).then(function(srvHash){
-if(srvHash){
-if(typeof srvHash==="string"&&srvHash.indexOf("fb_")===0){
-var s="MXPRO_2026_SALT_"+String(clv||""),fh=2166136261;
-for(var i=0;i<s.length;i++){fh^=s.charCodeAt(i);fh=(fh*16777619)>>>0;}
-return{ok:("fb_"+fh.toString(16))===srvHash,reason:""};
-}
-return{ok:h===srvHash,reason:""};
-}
-return{ok:clv.split("").map(function(c){return c.charCodeAt(0)^7;}).join("-")==="53-55-53-49",reason:""};
-}).catch(function(err){return{ok:false,reason:"Error red Firebase ("+((err&&err.message)||"sin red")+")"};});
-});
-}
-function btnEntrarAdm(){
-vibrar(25);
-try{
-var inp=document.getElementById("inpClvAdmAuth"),clv=inp?inp.value.trim():"";
-if(!clv){setMsgAdm("⚠️ Introduce la clave maestra.","#ff4d5e");return;}
-setMsgAdm("Verificando clave en Firebase...","#0dcaf0");
-_admHash(clv).then(function(res){
-if(!res.ok){setMsgAdm(res.reason||"❌ Clave incorrecta","#ff4d5e");return;}
-localStorage.setItem("mxp_adm_ok","1");
-document.getElementById("modalAuthAdm").style.display="none";
-document.getElementById("panelAdminMain").style.display="block";
-iniciarAdmin();
-}).catch(function(err){setMsgAdm("❌ Error al validar: "+((err&&err.message)||err),"#ff4d5e");});
-}catch(e){setMsgAdm("❌ Fallo interno: "+e.message,"#ff4d5e");}
-}
-function salirAdmin(){if(_tAdm){clearInterval(_tAdm);_tAdm=null;}localStorage.removeItem("mxp_adm_ok");location.href="index.html";}
-function toggleAccAdm(id){
-var el=document.getElementById(id),ar=document.getElementById("arw_"+id),open=(el.style.display==="none");
-el.style.display=open?"block":"none";if(ar)ar.textContent=open?"▼":"▶";
-if(id==="acc_adm_pil"&&open)cargarSalaAdm();
-if(id==="acc_adm_cta"&&open)cargarCuentasAdm();
-}
-function cargarCircuitosAdm(){
-return fbJson(FB_ROOT+"/circuitos_lista.json?t="+Date.now()).then(function(ls){
-var s=document.getElementById("selCircAdm");if(!s)return;
-var h="<option value=\"METROPOLITANO\">🏁 METROPOLITANO CIRCUIT (MADRID)</option>";
-if(ls)Object.keys(ls).forEach(function(k){if(k!=="METROPOLITANO"&&ls[k]&&ls[k].nombre)h+="<option value=\""+esc(k)+"\">🌍 "+esc(ls[k].nombre)+" ("+esc(ls[k].pais||"")+")</option>";});
-s.innerHTML=h;s.value=circId;
-if(s.selectedIndex<0){circId="METROPOLITANO";circNom="METROPOLITANO CIRCUIT";s.value=circId;}
-else circNom=s.options[s.selectedIndex].text.replace(/^(🏁|🌍)\s*/,"").trim();
-localStorage.setItem("mxp_circ_id",circId);localStorage.setItem("mxp_circ_nom",circNom);actualizarRutasAdm();
-}).catch(function(){});
-}
-function cambiarCircuitoAdm(val){
-var s=document.getElementById("selCircAdm");circId=val||"METROPOLITANO";
-circNom=(s&&s.options[s.selectedIndex])?s.options[s.selectedIndex].text.replace(/^(🏁|🌍)\s*/,"").trim():circId;
-localStorage.setItem("mxp_circ_id",circId);localStorage.setItem("mxp_circ_nom",circNom);actualizarRutasAdm();cargarSalaAdm();
-}
-function borrarCircuitoAdm(){
-if(circId==="METROPOLITANO"){alert("METROPOLITANO es la pista base y no se puede borrar.");return;}
-if(!confirm("⚠️ ¿Borrar por completo \""+circNom+"\"?"))return;
-Promise.all([
-fetch(FB_ROOT+"/circuitos_lista/"+circId+".json",{method:"DELETE"}),
-fetch(FB_ROOT+"/circuitos/"+circId+".json",{method:"DELETE"}),
-fetch(FB_ROOT+"/antenas_img/"+circId+".json",{method:"DELETE"}),
-fetch(FB_ROOT+"/warmup_capturas/"+circId+".json",{method:"DELETE"}),
-fetch(FB_ROOT+"/foto_finish/"+circId+".json",{method:"DELETE"})
-]).then(function(){
-circId="METROPOLITANO";circNom="METROPOLITANO CIRCUIT";
-localStorage.setItem("mxp_circ_id",circId);localStorage.setItem("mxp_circ_nom",circNom);
-cargarCircuitosAdm().then(cargarSalaAdm);alert("Circuito eliminado ✓");
-}).catch(function(){alert("Error borrando circuito");});
-}
-function liberarMandoDirAdm(){
-if(!confirm("¿Liberar el mando de Direccion en "+circNom+"?"))return;
-fbJson(FB+"/sala.json",{method:"PATCH",body:JSON.stringify({dirSession:"",dirTs:0})})
-.then(function(){cargarSalaAdm();alert("🔓 Mando de Direccion liberado ✓");}).catch(function(){alert("Error");});
-}
-function guardarGpsPistaAdm(){
-if(!navigator.geolocation){alert("Sin geolocalizacion.");return;}
-navigator.geolocation.getCurrentPosition(function(p){
-fbJson(FB+"/sala/gps.json",{method:"PUT",body:JSON.stringify({lat:p.coords.latitude,lng:p.coords.longitude})})
-.then(function(){alert("GPS fijado en "+circNom+" ✓");}).catch(function(){alert("Error GPS");});
-},function(){alert("Activa permiso de ubicacion.");});
-}
-function cargarAccesoAdm(){
-fbJson(FB_ROOT+"/config/acceso.json?t="+Date.now()).then(function(a){
-if(!a)return;
-if(a.modo)document.getElementById("selModoAccesoAdm").value=a.modo;
-if(typeof a.codigo==="string")document.getElementById("inpCodAccesoAdm").value=a.codigo;
-}).catch(function(){});
-}
-function guardarAccesoAdm(av){
-var m=document.getElementById("selModoAccesoAdm").value,c=document.getElementById("inpCodAccesoAdm").value.trim();
-fbJson(FB_ROOT+"/config/acceso.json",{method:"PUT",body:JSON.stringify({modo:m,codigo:c,ts:ahoraSrv()})})
-.then(function(){if(av)alert("Control descargas guardado ("+m+") ✓");}).catch(function(){alert("Error");});
-}
-function borrarHotlapAdm(){
-if(!confirm("¿Borrar Hotlap semanal de "+circNom+"?"))return;
-fetch(FB+"/sala.json",{method:"PATCH",body:JSON.stringify({hotlapMs:null,hotlapTxt:null,ultPasoTs:null,ultPasoTxt:null})})
-.then(function(){cargarSalaAdm();alert("Hotlap semanal borrada ✓");}).catch(function(){alert("Error");});
-}
-function borrarTiemposDiaAdm(){
-if(!confirm("⚠️ ¿Borrar todos los tiempos del dia, porra, MVP y mangas de "+circNom+"?"))return;
-fbJson(FB+"/pilotos.json").catch(function(){return{};}).then(function(pils){
-var ops=[
-fetch(FB+"/campeonato.json",{method:"DELETE"}),fetch(FB+"/pasos_lock.json",{method:"DELETE"}),
-fetch(FB+"/eventos.json",{method:"DELETE"}),fetch(FB_ROOT+"/foto_finish/"+circId+".json",{method:"DELETE"}),
-fetch(FB+"/sala.json",{method:"PATCH",body:JSON.stringify({estado:"ESPERA",tsInicio:0,tsCuenta:0,ruleta:null,porra:null,mvp:null,reaccion:null,ovacion:null})})
-];
-Object.keys(pils||{}).forEach(function(k){ops.push(fetch(FB+"/pilotos/"+k+".json",{method:"PATCH",body:JSON.stringify({vueltas:0,ultimaMs:0,mejorMs:0,tsUltimoPaso:0,sensorOk:false,eliminado:false})}));});
-return Promise.all(ops);
-}).then(function(){cargarSalaAdm();alert("Tiempos del dia borrados ✓");}).catch(function(){alert("Error");});
-}
-function cargarMundialAdm(tog){
-var bx=document.getElementById("listaMundialAdm");if(tog)bx.style.display=(bx.style.display==="block")?"none":"block";
-fbJson(FB_ROOT+"/mundial.json?t="+Date.now()).then(function(m){
-var ks=m?Object.keys(m).filter(function(k){return m[k]&&m[k].mejorMs;}):[];
-document.getElementById("cntMundialAdm").textContent=ks.length;if(bx.style.display==="none")return;
-if(!ks.length){bx.innerHTML="<div style=\"color:#888;font-size:11px\">Ranking vacio.</div>";return;}
-ks.sort(function(a,b){return(m[a].teorico200Ms||m[a].mejorMs||9e9)-(m[b].teorico200Ms||m[b].mejorMs||9e9);});
-bx.innerHTML=ks.map(function(k){var x=m[k];return"<div class=\"fila\"><span><b>"+esc(x.nombre)+"</b> ("+esc(x.circuito||"Global")+") — "+fmt(x.mejorMs)+"</span><button onclick=\"vibrar();borrarUnoMundialAdm('"+escJs(k)+"')\" class=\"br bs\">✕</button></div>";}).join("");
-}).catch(function(){});
-}
-function borrarUnoMundialAdm(k){if(!confirm("¿Borrar registro del Ranking?"))return;fetch(FB_ROOT+"/mundial/"+k+".json",{method:"DELETE"}).then(function(){cargarMundialAdm(false);}).catch(function(){});}
-function vaciarMundialAdm(){if(!confirm("⚠️ ¿VACIAR TODO el Ranking Mundial?"))return;fetch(FB_ROOT+"/mundial.json",{method:"DELETE"}).then(function(){cargarMundialAdm(false);alert("Ranking vaciado ✓");}).catch(function(){});}
-function cargarPaddockAdm(tog){
-var bx=document.getElementById("listaPaddockAdm");if(tog)bx.style.display=(bx.style.display==="block")?"none":"block";
-fbJson(FB_ROOT+"/paddock.json?t="+Date.now()).then(function(pd){
-var ks=pd?Object.keys(pd).filter(function(k){return pd[k]&&pd[k].modelo;}):[];
-document.getElementById("cntPaddockAdm").textContent=ks.length;if(bx.style.display==="none")return;
-if(!ks.length){bx.innerHTML="<div style=\"color:#888;font-size:11px\">Paddock vacio.</div>";return;}
-ks.sort(function(a,b){return Number(pd[b].ts||0)-Number(pd[a].ts||0);});
-bx.innerHTML=ks.map(function(k){var x=pd[k];return"<div class=\"fila\"><span><b>#"+esc(x.dorsal||"1")+" "+esc(x.modelo)+"</b> — "+esc(x.piloto||"")+" (👍 "+(x.likes||0)+")</span><button onclick=\"vibrar();borrarUnoPaddockAdm('"+escJs(k)+"')\" class=\"br bs\">✕</button></div>";}).join("");
-}).catch(function(){});
-}
-function borrarUnoPaddockAdm(k){
-if(!confirm("¿Eliminar esta moto del Paddock?"))return;
-Promise.all([fetch(FB_ROOT+"/paddock/"+k+".json",{method:"DELETE"}),fetch(FB_ROOT+"/paddock_fotos/"+k+".json",{method:"DELETE"})]).then(function(){cargarPaddockAdm(false);}).catch(function(){});
-}
-function vaciarPaddockAdm(){
-if(!confirm("⚠️ ¿VACIAR TODO el Paddock Mundial y sus fotos?"))return;
-Promise.all([fetch(FB_ROOT+"/paddock.json",{method:"DELETE"}),fetch(FB_ROOT+"/paddock_fotos.json",{method:"DELETE"})]).then(function(){cargarPaddockAdm(false);alert("Paddock vaciado ✓");}).catch(function(){});
-}
-function esActAdm(p){return p&&p.enPista!==false&&p.tsActivo&&Math.abs(ahoraSrv()-Number(p.tsActivo))<25000;}
-function cargarSalaAdm(){
-Promise.all([fbJson(FB+"/sala.json?t="+Date.now()).catch(function(){return{};}),fbJson(FB+"/pilotos.json?t="+Date.now()).catch(function(){return{};}),fbJson(FB+"/antenas.json?t="+Date.now()).catch(function(){return{};})]).then(function(res){
-var s=res[0]||{},pAll=res[1]||{},ants=res[2]||{},ah=ahoraSrv();
-document.getElementById("lblEstadoSalaAdm").textContent=(s.estado||"ESPERA")+(s.bandera==="AMARILLA"?" ⚠️":"");
-var dirAct=!!(s.dirSession&&s.dirTs&&Math.abs(ah-Number(s.dirTs))<20000);
-var antAct=Object.keys(ants).filter(function(k){return ants[k]&&Math.abs(ah-Number(ants[k].ts||0))<15000;}).length;
-document.getElementById("lblEstadoDirAdm").innerHTML=(dirAct?"<span class=\"pill-ok\">👑 DIRECTOR ACTIVO</span>":"<span class=\"pill-off\">MANDO LIBRE</span>")+" • 📡 Antenas: <b>"+antAct+"</b> • 👑 Hotlap: <b>"+esc(s.hotlapTxt||"--")+"</b>";
-var ks=Object.keys(pAll).filter(function(k){return pAll[k]&&pAll[k].nombre;});
-document.getElementById("cntSalaAdm").textContent=ks.length;
-var actCnt=ks.filter(function(k){return esActAdm(pAll[k]);}).length;
-document.getElementById("lblPistaStatusAdm").textContent=actCnt>0?("🟢 "+actCnt+" EN PISTA ("+ks.length+" total)"):("⚪ PISTA VACIA ("+ks.length+" en lista)");
-var bx=document.getElementById("listaSalaAdm");
-if(!ks.length){bx.innerHTML="<div style=\"color:#888;font-size:12px\">Sin pilotos en sala.</div>";return;}
-bx.innerHTML=ks.map(function(k){
-var p=pAll[k];
-return"<div class=\"fila\"><span>"+(esActAdm(p)?"🟢":"⚪")+" <b>#"+esc(p.dorsal||"1")+" "+esc(p.nombre)+"</b> ("+(p.vueltas||0)+"v • "+fmt(p.mejorMs)+")</span><div>"+(p.vueltas>0?"<button onclick=\"vibrar();restarVueltaAdm('"+escJs(k)+"',"+Number(p.vueltas)+")\" style=\"background:#553300;color:#ffc107;margin-right:3px\" class=\"bs\">-1v</button>":"")+"<button onclick=\"vibrar();expulsarPilotoAdm('"+escJs(k)+"')\" class=\"br bs\">✕</button></div></div>";
-}).join("");
-}).catch(function(){});
-}
-function restarVueltaAdm(pUid,oldV){var n=Math.max(0,oldV-1),p={vueltas:n,ultimaMs:0};if(n===0){p.mejorMs=0;p.tsUltimoPaso=0;}fetch(FB+"/pilotos/"+pUid+".json",{method:"PATCH",body:JSON.stringify(p)}).then(cargarSalaAdm).catch(function(){});}
-function expulsarPilotoAdm(pUid){if(!confirm("¿Expulsar piloto de "+circNom+"?"))return;fetch(FB+"/pilotos/"+pUid+".json",{method:"DELETE"}).then(cargarSalaAdm).catch(function(){});}
-function limpiarOfflineAdm(){fbJson(FB+"/pilotos.json").then(function(pAll){if(!pAll)return;return Promise.all(Object.keys(pAll).filter(function(k){return pAll[k]&&!esActAdm(pAll[k]);}).map(function(k){return fetch(FB+"/pilotos/"+k+".json",{method:"DELETE"});}));}).then(cargarSalaAdm).catch(function(){});}
-function filaCuentaAdm(k,u){
-var nom=u.nombre||k,ek=escJs(k),en=escJs(nom);
-return"<div class=\"fila\"><span><b>"+esc(nom)+"</b> ("+esc(u.rol||"PILOTO")+") "+(u.bloqueado?"⛔":"✅")+"</span><div><button onclick=\"vibrar();bloqCtaAdm('"+ek+"',"+(!u.bloqueado)+",'"+en+"')\" class=\""+(u.bloqueado?"bg":"by")+" bs\" style=\"margin-right:3px\">"+(u.bloqueado?"Activar":"Bloquear")+"</button><button onclick=\"vibrar();delCtaAdm('"+ek+"','"+en+"')\" class=\"br bs\">Borrar</button></div></div>";
-}
-function cargarCuentasAdm(){
-var lst=document.getElementById("listaCuentasAdm");lst.innerHTML="<div style=\"color:#888\">Cargando...</div>";
-fbJson(FB_ROOT+"/cuentas_idx.json?t="+Date.now()).then(function(ct){
-if(!ct){lst.innerHTML="<div style=\"color:#888\">Sin cuentas indexadas.</div>";return;}
-lst.innerHTML=Object.keys(ct).map(function(k){return ct[k]?filaCuentaAdm(k,ct[k]):"";}).join("");
-}).catch(function(){lst.innerHTML="<div style=\"color:#ff4d5e\">Error cargando cuentas</div>";});
-}
-function buscarCuentaAdm(){
-var nom=document.getElementById("inpBuscarCtaAdm").value.trim(),k=nom.toLowerCase().replace(/[^a-z0-9]/g,""),res=document.getElementById("resBuscarCtaAdm");
-if(!k){res.innerHTML="";return;}res.innerHTML="<div style=\"color:#888\">Buscando...</div>";
-fbJson(FB_ROOT+"/cuentas/"+k+".json").then(function(u){
-if(!u){res.innerHTML="<div style=\"color:#ff4d5e;font-size:11px\">No existe '"+esc(nom)+"'</div>";return;}
-fetch(FB_ROOT+"/cuentas_idx/"+k+".json",{method:"PUT",body:JSON.stringify({nombre:u.nombre||nom,rol:u.rol||"PILOTO",bloqueado:!!u.bloqueado,ultAcceso:u.ultAcceso||0})}).catch(function(){});
-res.innerHTML="<div style=\"color:#0dcaf0;font-size:10px;margin-bottom:3px\">Resultado:</div>"+filaCuentaAdm(k,u);
-}).catch(function(){res.innerHTML="<div style=\"color:#ff4d5e\">Error buscando</div>";});
-}
-function bloqCtaAdm(k,st,nom){
-if(!confirm("¿"+(st?"BLOQUEAR":"REACTIVAR")+" cuenta "+(nom||k)+"?"))return;
-Promise.all([fetch(FB_ROOT+"/cuentas_idx/"+k+".json",{method:"PATCH",body:JSON.stringify({bloqueado:st})}),fetch(FB_ROOT+"/cuentas/"+k+".json",{method:"PATCH",body:JSON.stringify({bloqueado:st})})])
-.then(function(){cargarCuentasAdm();if(document.getElementById("inpBuscarCtaAdm").value)buscarCuentaAdm();}).catch(function(){});
-}
-function delCtaAdm(k,nom){
-if(!confirm("⚠️ ¿BORRAR DEFINITIVAMENTE la cuenta "+(nom||k)+"?"))return;
-Promise.all([fetch(FB_ROOT+"/cuentas_idx/"+k+".json",{method:"DELETE"}),fetch(FB_ROOT+"/cuentas/"+k+".json",{method:"DELETE"}),fetch(FB+"/pilotos/"+k+".json",{method:"DELETE"})])
-.then(function(){document.getElementById("resBuscarCtaAdm").innerHTML="";cargarCuentasAdm();}).catch(function(){});
-}
-function cargarVisitasAdm(tog){
-var bx=document.getElementById("boxClubAdm");if(tog)bx.style.display=(bx.style.display==="block")?"none":"block";if(bx.style.display==="none")return;
-fbJson(FB_ROOT+"/visitas.json?t="+Date.now()).then(function(vs){
-vs=vs||{};var ks=Object.keys(vs).sort().reverse().slice(0,25);
-bx.innerHTML="<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px\"><span style=\"color:#0dcaf0\">Visitas: <b>"+Object.keys(vs).length+"</b></span><button onclick=\"vibrar();vaciarVisitasAdm()\" class=\"br bs\">🧹 VACIAR</button></div>"+
-(ks.map(function(vk){var v=vs[vk];return"<div style=\"font-size:10px;color:#aaa;border-bottom:1px solid #222;padding:4px 0\">"+esc(v.fecha)+" — <b>"+esc(v.nom)+"</b> ("+esc(v.rol)+" • "+esc(v.circ||"")+")</div>";}).join("")||"<div style=\"color:#888\">Sin visitas.</div>");
-}).catch(function(){bx.innerHTML="<div style=\"color:#ff4d5e\">Error</div>";});
-}
-function vaciarVisitasAdm(){if(!confirm("¿Vaciar historial de visitas?"))return;fetch(FB_ROOT+"/visitas.json",{method:"DELETE"}).then(function(){cargarVisitasAdm(false);}).catch(function(){});}
-function verReportesAdm(tog){
-var bx=document.getElementById("boxRepAdm");if(tog)bx.style.display=(bx.style.display==="block")?"none":"block";if(bx.style.display==="none")return;
-fbJson(FB_ROOT+"/reportes.json?t="+Date.now()).then(function(rp){
-if(!rp){bx.innerHTML="<div style=\"color:#888\">Sin reportes ✓</div>";return;}
-bx.innerHTML="<div style=\"text-align:right;margin-bottom:5px\"><button onclick=\"vibrar();vaciarReportesAdm()\" class=\"br bs\">🧹 BORRAR TODOS</button></div>"+
-Object.keys(rp).reverse().map(function(k){var x=rp[k];return"<div class=\"fila\"><div><b style=\"color:#ffc107\">"+esc(x.autor)+"</b> ("+esc(x.fecha)+")<br>"+esc(x.texto)+"</div><button onclick=\"vibrar();delRepAdm('"+escJs(k)+"')\" class=\"br bs\">OK</button></div>";}).join("");
-}).catch(function(){bx.innerHTML="<div style=\"color:#ff4d5e\">Error</div>";});
-}
-function delRepAdm(k){fetch(FB_ROOT+"/reportes/"+k+".json",{method:"DELETE"}).then(function(){verReportesAdm(false);}).catch(function(){});}
-function vaciarReportesAdm(){if(!confirm("¿Borrar todos los reportes?"))return;fetch(FB_ROOT+"/reportes.json",{method:"DELETE"}).then(function(){verReportesAdm(false);}).catch(function(){});}
-function cargarPerfilesCamAdm(tog){
-var bx=document.getElementById("boxPerfilesAdm");if(tog)bx.style.display=(bx.style.display==="block")?"none":"block";if(bx.style.display==="none")return;
-fbJson(FB_ROOT+"/config/perfiles_camara.json?t="+Date.now()).then(function(ps){
-if(!ps){bx.innerHTML="<div style=\"color:#888\">Sin perfiles guardados.</div>";return;}
-bx.innerHTML=Object.keys(ps).map(function(k){var p=ps[k];return"<div class=\"fila\"><span>📷 <b>"+esc((p&&p.nombre)||k)+"</b></span><button onclick=\"vibrar();delPerfilCamAdm('"+escJs(k)+"')\" class=\"br bs\">✕</button></div>";}).join("");
-}).catch(function(){bx.innerHTML="<div style=\"color:#ff4d5e\">Error</div>";});
-}
-function delPerfilCamAdm(k){fetch(FB_ROOT+"/config/perfiles_camara/"+k+".json",{method:"DELETE"}).then(function(){cargarPerfilesCamAdm(false);}).catch(function(){});}
-function cambiarClaveAdm(){
-var nw=document.getElementById("inpNuevaClaveAdm").value.trim();if(nw.length<4){alert("Usa al menos 4 caracteres.");return;}
-hashTxt(nw).then(function(h){return fbJson(FB_ROOT+"/config/dirHash.json",{method:"PUT",body:JSON.stringify(h)});})
-.then(function(){document.getElementById("inpNuevaClaveAdm").value="";alert("🔐 Clave maestra actualizada SHA-256 ✓");}).catch(function(){alert("Error cambiando clave");});
-}
-function recargarTodoAdm(){cargarCircuitosAdm().then(function(){cargarAccesoAdm();cargarSalaAdm();cargarMundialAdm(false);cargarPaddockAdm(false);});}
-function iniciarAdmin(){if(_admIniciado)return;_admIniciado=true;recargarTodoAdm();_tAdm=setInterval(cargarSalaAdm,6000);}
-if(localStorage.getItem("mxp_adm_ok")==="1"){
-document.getElementById("modalAuthAdm").style.display="none";document.getElementById("panelAdminMain").style.display="block";iniciarAdmin();
-}else{setMsgAdm("Listo (v3) — Introduce la clave maestra.","#0dcaf0");}
+</script>
+<script src="mx-core.js?v=202611273"></script>
+<script src="mx-admin.js?v=202611273"></script>
+<script>
+setTimeout(function() {
+  var m = document.getElementById("msgAuthAdm");
+  if (!m || m.textContent) return;
+  if (typeof FB_ROOT === "undefined") { m.style.color = "#ff4d5e"; m.textContent = "⚠️ Falta mx-core.js o tiene un error."; }
+  else if (typeof validarAccesoAdm !== "function") { m.style.color = "#ff4d5e"; m.textContent = "⚠️ Falta mx-admin.js actualizado en el servidor."; }
+}, 350);
 </script>
 </body>
 </html>
