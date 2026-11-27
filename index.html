@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Metropolitano MX Pro</title>
-<link rel="stylesheet" href="mx.css?v=202611272337">
+<link rel="stylesheet" href="mx.css?v=202611272343">
 <style>
   body{
     background-image:
@@ -19,16 +19,17 @@
       linear-gradient(207deg,#1e2128 5px,transparent 5px),
       linear-gradient(90deg,#111317 10px,transparent 10px),
       linear-gradient(#111317 25%,#0b0c0f 25%,#0b0c0f 50%,transparent 50%,transparent 75%,#181a20 75%,#181a20);
-    background-position:center 10%,0 0,0 5px,10px 0,0 10px,10px 5px,0 0,0 0;
-    background-size:min(70vw,340px) auto,100% 100%,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px;
+    background-position:center 54px,0 0,0 5px,10px 0,0 10px,10px 5px,0 0,0 0;
+    background-size:min(calc(100vw - 32px),500px) auto,100% 100%,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px,20px 20px;
     background-repeat:no-repeat,no-repeat,repeat,repeat,repeat,repeat,repeat,repeat;
-    min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:min(44vh,340px) 16px 22px
+    min-height:100vh;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;padding:calc(min(calc(100vw - 32px),500px) + 72px) 16px 22px
   }
   .top-bar{position:fixed;top:8px;left:10px;right:10px;display:flex;justify-content:center;align-items:center;z-index:20}
   .top-access{display:flex;justify-content:space-between;align-items:center;min-height:36px;margin-bottom:1px}
   button{width:100%;padding:13px;font-size:14px;border-radius:12px}
   .btn-mini{background:linear-gradient(180deg,#262a33,#16181e);color:#ccc;border:1px solid #3c4250;padding:7px 11px;border-radius:9px;font-size:11px;width:auto;box-shadow:0 3px 0 #000}
   .box{width:100%;max-width:390px;display:flex;flex-direction:column;gap:9px;animation:fadeUp 0.25s ease}
+  #menu{max-width:500px}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   .b-pil{background:linear-gradient(180deg,#ffe066,#f59f00);color:#000;font-size:17px;padding:16px;box-shadow:0 5px 0 #8a5600,0 0 18px rgba(255,193,7,0.28),inset 0 1px 0 rgba(255,255,255,0.65)}
   .b-afi{background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;padding:14px;box-shadow:0 5px 0 #087f5b,inset 0 1px 0 rgba(255,255,255,0.45)}
@@ -197,7 +198,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
     <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
   </div>
 
-<script src="mx-core.js?v=202611272337"></script>
-<script src="mx-index.js?v=202611272337"></script>
+<script src="mx-core.js?v=202611272343"></script>
+<script src="mx-index.js?v=202611272343"></script>
 </body>
 </html>

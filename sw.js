@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611272337-radar";
+var CACHE_NAME = "mxp-cache-v202611272343-portada";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",
