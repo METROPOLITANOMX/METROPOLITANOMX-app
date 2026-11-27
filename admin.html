@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#090a0c">
+<title>Control administrativo - Metropolitano MX</title>
+<link rel="stylesheet" href="mx.css?v=202611272045">
+<style>
+  .admin-wrap{max-width:940px;margin:0 auto}
+  .admin-wrap .top,.admin-wrap .acc-box,.admin-wrap .card{max-width:940px}
+  .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .status-cell{background:#101218;border:1px solid #2b2f3a;border-radius:8px;padding:8px;font-size:11px}
+  .status-cell b{display:block;color:#0dcaf0;margin-top:3px}
+  .admin-msg{min-height:18px;margin-top:6px;font-size:11px;font-weight:bold}
+  .key-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+  .key-row input{margin:0;flex:1}
+  .key-row button{width:auto;padding:8px;font-size:10px}
+</style>
+</head>
+<body>
+  <div id="modalAdminAuth" class="modal" style="display:flex">
+    <div class="modal-box" style="text-align:center">
+      <h3 style="color:#0dcaf0;margin:0 0 8px">🔐 ACCESO ADMINISTRATIVO</h3>
+      <form onsubmit="event.preventDefault();entrarAdmin()">
+        <input id="inpAdminClave" type="password" autocomplete="current-password" placeholder="Clave de Dirección">
+        <button type="submit" style="width:100%;background:#0dcaf0;color:#000">ENTRAR</button>
+      </form>
+      <div id="msgAdminAuth" class="admin-msg"></div>
+      <button onclick="location.href='index.html'" style="width:100%;background:#2b2b2b;color:#ccc;margin-top:8px">VOLVER</button>
+    </div>
+  </div>
+
+  <main id="adminApp" class="admin-wrap" style="display:none">
+    <div class="top">
+      <div>
+        <b style="color:#0dcaf0;font-size:14px">🛠️ CONTROL ADMINISTRATIVO</b>
+        <div id="txtCircAdmin" style="font-size:10px;color:#ffc107;margin-top:2px">CIRCUITO</div>
+      </div>
+      <button onclick="location.href='index.html'" style="width:auto;background:#2b2b2b;color:#ccc;padding:7px 10px;font-size:10px">VOLVER A LA APP</button>
+    </div>
+
+    <section class="acc-box" style="border-color:#0dcaf0">
+      <div class="acc-head"><b style="color:#0dcaf0">📡 ESTADO DE SERVICIOS</b></div>
+      <div class="acc-body">
+        <div class="status-grid">
+          <div class="status-cell">Conexión de red<b id="estadoRedAdmin">Comprobando...</b></div>
+          <div class="status-cell">Base de datos<b id="estadoDbAdmin">Comprobando...</b></div>
+          <div class="status-cell">Service Worker<b id="estadoSwAdmin">Comprobando...</b></div>
+          <div class="status-cell">Caché local<b id="estadoCacheAdmin">Comprobando...</b></div>
+        </div>
+        <button onclick="actualizarEstadoServiciosAdmin()" style="margin-top:7px;background:#1c2530;color:#0dcaf0">🔄 ACTUALIZAR ESTADO</button>
+        <div id="msgServiciosAdmin" class="admin-msg"></div>
+      </div>
+    </section>
+
+    <section class="acc-box" style="border-color:#7950f2">
+      <div class="acc-head"><b style="color:#d0a8ff">👥 PILOTOS, BLOQUEO CUENTAS Y DESCARGAS</b></div>
+      <div class="acc-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span id="lblPistaStatusDir" style="font-size:11px;color:#20c997;font-weight:bold">Comprobando pista...</span>
+          <div style="display:flex;gap:4px">
+            <button onclick="vibrar();cargarRaizAdmin()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄 ACTUALIZAR</button>
+            <button onclick="vibrar();limpiarOfflineDir()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 LIMPIAR OFFLINE</button>
+          </div>
+        </div>
+        <div id="listaSalaDir" style="margin-bottom:10px">Sin pilotos en sala.</div>
+
+        <div class="box-sub" style="border-color:#ffc107">
+          <b style="color:#ffc107;font-size:11px">📲 CONTROL DE DESCARGAS Y ALTAS NUEVAS</b>
+          <div class="grid2" style="margin-top:6px">
+            <select id="selModoAcceso" onchange="guardarAccesoCfg()" style="margin:0">
+              <option value="ABIERTO">🟢 ABIERTO (Libre)</option>
+              <option value="CODIGO">🔑 CON CODIGO INVITACION</option>
+              <option value="PAUSADO">🔴 PAUSADO (Paralizar)</option>
+            </select>
+            <input id="inpCodAcceso" placeholder="Codigo (ej. PILOTO1)" style="margin:0" onchange="guardarAccesoCfg()">
+          </div>
+          <button onclick="vibrar();guardarAccesoCfg(true)" style="width:100%;margin-top:6px;background:#ffc107;color:#000;font-size:10px">💾 APLICAR CONTROL DE DESCARGAS</button>
+        </div>
+
+        <div class="grid2" style="margin-top:8px">
+          <button onclick="vibrar();cargarCuentasDir(true)" style="background:#1c2530;color:#0dcaf0">🚫 BLOQUEAR / BORRAR CUENTAS</button>
+          <button onclick="vibrar();cargarVisitasDir()" style="background:#262626;color:#ffc107">👁️ VISITAS RECIENTES</button>
+          <button onclick="vibrar();verReportesDir()" style="background:#262626;color:#ff6b6b">🛠️ REPORTES BUGS</button>
+          <button onclick="vibrar();guardarGpsPista()" style="background:#1c2530;color:#20c997">📍 FIJAR GPS PISTA</button>
+        </div>
+
+        <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:280px;overflow-y:auto">
+          <div style="display:flex;gap:5px;margin-bottom:6px">
+            <input id="inpBuscarCta" placeholder="Buscar cuenta antigua por nombre..." style="margin:0;flex:1">
+            <button onclick="vibrar();buscarCuentaDir()" style="background:#0dcaf0;color:#000;padding:6px 10px;font-size:10px">🔎 BUSCAR</button>
+          </div>
+          <div id="resBuscarCta"></div>
+          <div id="listaCuentasIdx"></div>
+        </div>
+        <div id="boxClubDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
+        <div id="boxRepDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
+
+        <div class="box-sub" style="margin-top:8px">
+          <b style="color:#ffc107;font-size:11px">🔐 CAMBIAR CLAVE DE DIRECCION (SHA-256)</b>
+          <div style="display:flex;gap:5px;margin-top:5px"><input id="inpNuevaClaveDir" type="password" placeholder="Nueva clave..." style="margin:0;flex:1"><button onclick="vibrar(25);cambiarClaveDir()" style="background:#ffc107;color:#000">💾</button></div>
+        </div>
+        <div id="msgAdminDatos" class="admin-msg"></div>
+      </div>
+    </section>
+
+    <section class="acc-box" style="border-color:#ffc107">
+      <div class="acc-head"><b style="color:#ffc107">🏁 LIMPIEZA DE MANGAS Y RANKINGS</b></div>
+      <div class="acc-body">
+        <div class="grid2">
+          <button onclick="vibrar();borrarHotlapDir()" style="background:#332611;color:#ffc107;font-size:10px">🧹 BORRAR HOTLAP SEMANAL</button>
+          <button onclick="vibrar();borrarTiemposDiaDir()" style="background:#3a1c1c;color:#ff6b6b;font-size:10px">🗑️ BORRAR TIEMPOS DEL DIA</button>
+          <button onclick="vibrar();borrarMundialDir()" style="grid-column:span 2;background:#4a151b;color:#ff8787;font-size:10px">🌍 BORRAR RANKING MUNDIAL</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="acc-box" style="border-color:#20c997">
+      <div class="acc-head"><b style="color:#20c997">🔑 GENERADOR Y VALIDADOR DE CLAVES</b></div>
+      <div class="acc-body">
+        <div class="grid2">
+          <select id="tipoClaveAdmin" style="margin:0">
+            <option value="PILOTO">PILOTO (oculta Dirección y Antenas)</option>
+            <option value="DIRECCION">DIRECCION (Red Oficial futura)</option>
+          </select>
+          <button onclick="generarClaveAdmin()" style="background:#20c997;color:#000">GENERAR CLAVE</button>
+        </div>
+        <div class="key-row">
+          <input id="claveAdmin" autocomplete="off" placeholder="PILOTO... o DIRECCION...">
+          <button onclick="validarClaveAdmin()" style="background:#0dcaf0;color:#000">VALIDAR</button>
+        </div>
+        <button onclick="usarClaveAdmin()" style="margin-top:6px;background:#ffc107;color:#000">USAR COMO CLAVE DE INVITACION</button>
+        <div id="msgClaveAdmin" class="admin-msg"></div>
+      </div>
+    </section>
+
+    <section class="acc-box" style="border-color:#ff6b6b">
+      <div class="acc-head"><b style="color:#ff6b6b">🧹 CACHÉ DEL DISPOSITIVO</b></div>
+      <div class="acc-body">
+        <div style="font-size:11px;color:#bbb">Borra únicamente las cachés de esta aplicación. No elimina mangas, cuentas ni datos de Firebase.</div>
+        <button onclick="limpiarCacheAdmin()" style="margin-top:7px;background:#3a1c1c;color:#ff6b6b">BORRAR CACHÉ LOCAL</button>
+        <div id="msgCacheAdmin" class="admin-msg"></div>
+      </div>
+    </section>
+  </main>
+
+<script src="mx-core.js?v=202611272045"></script>
+<script src="mx-director-admin.js?v=202611272045"></script>
+<script src="mx-admin.js?v=202611272045"></script>
+</body>
+</html>

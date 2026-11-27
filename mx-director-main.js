@@ -14,6 +14,7 @@ localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", miNom);
 document.getElementById("txtCircDir").textContent = "🏁 " + circNom;
 
 var esDirOk = (localStorage.getItem("mxp_dir_ok") === "1");
+var _directorBloqueadoRol = localStorage.getItem("mxp_inst_role") === "PILOTO";
 var dirPilotoOn = false;
 localStorage.removeItem("mxp_dir_piloto");
 var rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
@@ -162,17 +163,13 @@ function pintarDirUI() {
   var pilSig = pils.map(function(p){ return p.id + ":" + p.vueltas + ":" + p.mejorMs + ":" + p.activo + ":" + p.eliminado; }).join("|");
   if (pilSig !== _lastPilSig) {
     _lastPilSig = pilSig;
-    var actCnt = 0, hDir = "", hPil = "";
+    var hPil = "";
     pils.forEach(function(p, ix) {
-      if (p.activo) actCnt++;
       if (dirPilotoOn && p.id === uid) document.getElementById("vivoPosP").textContent = p.eliminado ? "💀 ELIM" : ((ix + 1) + "º / " + pils.length);
       var dot = p.activo ? "🟢" : "⚪", g = gar[p.id] || {}, pl = '<span class="mx-plate' + (g.disc === "SM" ? " sm" : "") + '">#' + esc(p.dorsal || "--") + '</span>', sw = renderSwatches(g);
-      hDir += '<div class="fila' + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v' + (p.sensorOk ? ' ✓' : '') + ')</span><span><b class="tv-rp">' + fmt(p.mejorMs) + '</b>' + (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaDir(\'' + esc(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') + ' <button onclick="vibrar();expulsarPilotoDir(\'' + esc(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
       hPil += '<div class="fila' + (p.id === uid ? ' yo' : '') + (p.eliminado ? ' elim' : '') + '"><span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + sw + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v)</span><b class="tv-rp">' + fmt(p.mejorMs) + '</b></div>';
     });
-    document.getElementById("listaSalaDir").innerHTML = hDir || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
     document.getElementById("listaSalaPiloto").innerHTML = hPil || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
-    document.getElementById("lblPistaStatusDir").textContent = actCnt > 0 ? ("🟢 " + actCnt + " EN PISTA") : "⚪ PISTA VACIA";
   }
 
   if (dirPilotoOn) {
@@ -253,7 +250,7 @@ function iniciarDirector() {
   var elRDInit = document.getElementById("inpRadarDist"), dLoc = localStorage.getItem("mxp_radar_dist");
   if (elRDInit && dLoc) elRDInit.value = dLoc;
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
-  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
+  aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); conectarSseStreams();
 
   setInterval(function() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
@@ -263,15 +260,20 @@ function iniciarDirector() {
   setInterval(function() {
     var labAbierto = document.getElementById("acc_lab").style.display !== "none";
     if (testOn || labAbierto) {
-      ["ant_1", "ant_2"].forEach(function(aid) { fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){}); });
+      ["ant_1", "ant_2"].forEach(function(aid) {
+        var esImg = aid === "ant_1" ? _esImg1 : _esImg2;
+        if (esImg && esImg.readyState === 1) return;
+        fbJson(FB_IMG + "/" + aid + ".json?t=" + Date.now()).then(function(d){ if (d && d.img) document.getElementById("img_" + aid).src = d.img; }).catch(function(){});
+      });
     }
     var wuAbierto = document.getElementById("acc_wu").style.display !== "none";
-    if (wuAbierto || (rootCache.sala && rootCache.sala.estado === "WARMUP")) {
+    if ((wuAbierto || (rootCache.sala && rootCache.sala.estado === "WARMUP")) && (!_esWu || _esWu.readyState !== 1)) {
       fbJson(FB_WU + ".json?t=" + Date.now()).then(function(d){ warmupCaps = d || {}; pintarBandejasWarmup(); }).catch(function(){});
     }
   }, 2500);
 
   setInterval(function() {
+    if (_esRoot && _esRoot.readyState === 1) return;
     fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
       if (!r) return;
       rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
@@ -307,5 +309,6 @@ function iniciarDirector() {
   }, 120);
 }
 
-if (!esDirOk) document.getElementById("modalAuthDir").style.display = "flex";
+if (_directorBloqueadoRol) location.replace("index.html");
+else if (!esDirOk) document.getElementById("modalAuthDir").style.display = "flex";
 else comprobarBloqueoUnicoYArrancar();

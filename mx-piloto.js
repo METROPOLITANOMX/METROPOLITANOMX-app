@@ -490,6 +490,7 @@ conectarSseUnico();
 
 setInterval(function(){ fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){}); }, 7000);
 setInterval(function() {
+  if (_esRoot && _esRoot.readyState === 1) return;
   fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
     if (!r) return;
     rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };

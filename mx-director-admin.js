@@ -23,14 +23,23 @@ function forzarRelevoDir() {
 }
 
 function cargarAccesoCfgDir() {
-  fbJson(FB_ROOT + "/config/acceso.json?t=" + Date.now()).then(function(a) {
+  return fbJson(FB_ROOT + "/config/acceso.json?t=" + Date.now()).then(function(a) {
     if (!a) return; if (a.modo) document.getElementById("selModoAcceso").value = a.modo; if (a.codigo) document.getElementById("inpCodAcceso").value = a.codigo;
-  }).catch(function(){});
+  }).catch(function(err) {
+    var msg = document.getElementById("msgAdminDatos");
+    if (msg) { msg.style.color = "#ff4d5e"; msg.textContent = "No se pudo cargar el control de descargas: " + (err.message || "error de red"); }
+  });
 }
 function guardarAccesoCfg(avisar) {
   var modo = document.getElementById("selModoAcceso").value, cod = document.getElementById("inpCodAcceso").value.trim();
-  fbJson(FB_ROOT + "/config/acceso.json", { method: "PUT", body: JSON.stringify({ modo: modo, codigo: cod, ts: ahoraSrv() }) })
-    .then(function(){ if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓"); }).catch(function(){ alert("Error"); });
+  return fbJson(FB_ROOT + "/config/acceso.json", { method: "PUT", body: JSON.stringify({ modo: modo, codigo: cod, ts: ahoraSrv() }) })
+    .then(function(){ if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓"); return true; })
+    .catch(function(err) {
+      var msg = document.getElementById("msgAdminDatos");
+      if (msg) { msg.style.color = "#ff4d5e"; msg.textContent = "No se pudo guardar el control de descargas: " + (err.message || "error de red"); }
+      if (avisar) alert("No se pudo guardar el control de descargas.");
+      return false;
+    });
 }
 
 function filaCuentaHtml(k, u) {

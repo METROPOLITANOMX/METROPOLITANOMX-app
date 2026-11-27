@@ -3,16 +3,18 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var FB_WU = FB_ROOT + "/warmup_capturas/" + circId;
+var _antenaBloqueadaRol = localStorage.getItem("mxp_inst_role") === "PILOTO";
+if (_antenaBloqueadaRol) location.replace("index.html");
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 document.getElementById("lblCircAntTop").textContent = "PISTA: " + circId;
 
-var antId = localStorage.getItem("mxp_ant_id") || "";
+var antId = _antenaBloqueadaRol ? "" : (localStorage.getItem("mxp_ant_id") || "");
 var antNom = localStorage.getItem("mxp_ant_nom") || "";
 var vozOn = true, camOk = false, PW = 192, PH = 108, fondoFull = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, ultCmd = 0;
 var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
-var _telBusy = false, _imgBusy = false, _wuBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
+var _telBusy = false, _imgBusy = false, _wuBusy = false, _salaPollBusy = false, _garajePollBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
 var _ultPasoLocalTs = 0, _tSoloCal = null, _esSala = null, _tAvisoAnt = null, _avisoAntId = 0;
 var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
 var _ultTxtTs = 0;
@@ -33,6 +35,7 @@ function umbralDesdeSensibilidad(nivel) {
 
 activarWakeLock();
 window.addEventListener("beforeunload", function() {
+  if (_antenaBloqueadaRol) return;
   if (_esSala) try { _esSala.close(); } catch (e) {}
   if (antId) {
     fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
@@ -621,6 +624,7 @@ function iniciarBucleVision() {
 
 function procesarSala(s) {
   if (!s) return;
+  var estadoPrevio = cfg.estado;
   aplicarBanderaUI(s, "banBanderaAnt");
   var nuevoModo = s.modoDet || "TODO";
   if (nuevoModo !== cfg.modoDet) {
@@ -631,6 +635,7 @@ function procesarSala(s) {
     enviarTelemetria();
   }
   cfg.estado = s.estado || "ESPERA"; cfg.verVivo = !!s.verVivo; cfg.orientacion = s.orientacion || "V";
+  if (estadoPrevio !== cfg.estado) enviarTelemetria();
   cfg.sensPct = umbralDesdeSensibilidad(s.sensPct);
   cfg.colorPct = Math.max(0.06, Math.min(1.0, (Number(s.colorPct || 25)) / 100));
   cfg.pxDiff = Math.max(20, Math.min(90, Number(s.pxDiff || 45)));
@@ -686,26 +691,34 @@ function conectarSseSala() {
     _esSala.onerror = function(){ if (_esSala && _esSala.readyState === 2) setTimeout(conectarSseSala, 2500); };
   } catch (e) {}
 }
-conectarSseSala();
+if (!_antenaBloqueadaRol) conectarSseSala();
 
-setInterval(enviarTelemetria, 350);
+setInterval(enviarTelemetria, 1000);
 setInterval(function() {
+  if (_antenaBloqueadaRol) return;
   if (!antId || _wuBusy) return; var v = document.getElementById("vid");
-  if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST") && camOk && v && v.videoWidth > 0) {
+  if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST" || est === "CAL") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
     _ctxLive.drawImage(v, 0, 0, 384, 216);
     fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) }).catch(function(){}).finally(function(){ _imgBusy = false; });
-  } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST") {
+  } else if (!_imgCleared && calibradaOk && !cfg.verVivo && cfg.estado !== "WARMUP" && cfg.estado !== "TEST" && est !== "CAL") {
     _imgCleared = true; fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){});
   }
 }, 500);
 
 setInterval(function() {
-  fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){});
-  fetch(FB + "/garaje.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(g){ if (g) cfg.garajes = g; }).catch(function(){});
+  if (_antenaBloqueadaRol) return;
+  if ((!_esSala || _esSala.readyState !== 1) && !_salaPollBusy) {
+    _salaPollBusy = true;
+    fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){}).finally(function(){ _salaPollBusy = false; });
+  }
+  if (!_garajePollBusy) {
+    _garajePollBusy = true;
+    fetch(FB + "/garaje.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(g){ if (g) cfg.garajes = g; }).catch(function(){}).finally(function(){ _garajePollBusy = false; });
+  }
 }, 2500);
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
+if (!_antenaBloqueadaRol) navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
   .catch(function(){ return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, frameRate: { ideal: 60, min: 24 } }, audio: false }); })
   .then(function(st) {
     var v = document.getElementById("vid"); v.srcObject = st;

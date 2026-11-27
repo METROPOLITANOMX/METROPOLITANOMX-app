@@ -200,53 +200,6 @@ function ponerBandera(col) {
 }
 function enviarMegafonia(texto, beep) { var t = String(texto || "").trim(); if (!t) return; document.getElementById("inpMega").value = ""; hablarYAntenas(t, beep); }
 
-function borrarHotlapDir() {
-  if (!confirm("¿Seguro que quieres borrar el record de Hotlap semanal de este circuito?")) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ hotlapMs: null, hotlapTxt: null, ultPasoTs: null, ultPasoTxt: null }) }).then(function(){ alert("Hotlap semanal borrada ✓"); }).catch(function(){});
-}
-function borrarTiemposDiaDir() {
-  if (!confirm("¿Seguro que quieres borrar todos los tiempos del dia y mangas de prueba?")) return;
-  Promise.all([fetch(FB + "/campeonato.json", { method: "DELETE" }), fetch(FB + "/pasos_lock.json", { method: "DELETE" }), fetch(FB + "/eventos.json", { method: "DELETE" }), fetch(FB + "/foto_finish/" + circId + ".json", { method: "DELETE" })])
-    .then(function(){ rootCache.campeonato = {}; rootCache.eventos = {}; nuevaMangaDir(); alert("Tiempos del dia borrados ✓"); }).catch(function(){});
-}
-function borrarMundialDir() {
-  if (!confirm("¿Seguro que quieres borrar TODO el Ranking Mundial?")) return;
-  fetch(FB_ROOT + "/mundial.json", { method: "DELETE" }).then(function(r) {
-    if (r.ok) return true;
-    return fetch(FB_ROOT + "/mundial.json?shallow=true").then(function(r2){
-      if (!r2.ok) throw new Error("HTTP " + r.status + " / " + r2.status);
-      return r2.json();
-    }).then(function(d){
-      if (!d || typeof d !== "object") return true;
-      var nul = {}, ks = Object.keys(d);
-      ks.forEach(function(k){ nul[k] = null; });
-      return fetch(FB_ROOT + "/mundial.json", { method: "PATCH", body: JSON.stringify(nul) }).then(function(r3){
-        if (r3.ok) return true;
-        return Promise.all(ks.map(function(k){
-          return fetch(FB_ROOT + "/mundial/" + encodeURIComponent(k) + ".json", { method: "DELETE" }).then(function(rk){
-            if (!rk.ok) throw new Error("HTTP " + rk.status);
-          });
-        }));
-      });
-    });
-  }).then(function() { alert("Ranking mundial borrado ✓"); }).catch(function(e) { alert("Error al borrar ranking mundial: " + (e && e.message ? e.message : "red")); });
-}
-
-function restarVueltaDir(pUid) {
-  var p = (rootCache.pilotos || {})[pUid]; if (!p || !p.vueltas) return;
-  var s = rootCache.sala || {}, heatTag = Number(s.tsInicio || 0) || "free";
-  var oldV = Number(p.vueltas), newV = Math.max(0, oldV - 1), pay = { vueltas: newV, ultimaMs: 0 };
-  if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
-  fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).catch(function(){});
-  fetch(FB + "/pasos_lock/" + pUid + "_" + heatTag + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
-  fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
-}
-function expulsarPilotoDir(pUid) { if (!confirm("¿Expulsar a este piloto de la parrilla?")) return; fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).catch(function(){}); if (rootCache.pilotos) delete rootCache.pilotos[pUid]; pintarDirUI(); }
-function limpiarOfflineDir() {
-  var pAll = rootCache.pilotos || {};
-  Object.keys(pAll).forEach(function(k){ if (pAll[k] && !esPilotoActivo(pAll[k])) { fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" }).catch(function(){}); delete pAll[k]; } });
-  pintarDirUI();
-}
 function sumarVueltaManualDir() { desbloquearAudioD(false); if (!dirPilotoOn) toggleDirPiloto(); registrarVueltaDir(uid, ahoraSrv(), true); }
 
 function registrarVueltaDir(pUid, evTs, esManual) {

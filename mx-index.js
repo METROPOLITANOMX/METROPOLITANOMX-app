@@ -9,12 +9,56 @@ var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null, _ultRepTs = 0;
 var accesoCfg = { modo: "ABIERTO", codigo: "" };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
+function registrarPreparacionRedOficial() {
+  localStorage.setItem("mxp_red_oficial_preparada", "1");
+  var installId = localStorage.getItem("mxp_inst_id");
+  if (installId && localStorage.getItem("mxp_red_oficial_reg") === installId) return;
+  if (!installId) {
+    installId = "inst_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("mxp_inst_id", installId);
+  }
+  if (localStorage.getItem("mxp_red_oficial_pending") === installId) return;
+  localStorage.setItem("mxp_red_oficial_pending", installId);
+  fetch(FB_ROOT + "/instalaciones_preparadas/" + installId + ".json", {
+    method: "PUT",
+    body: JSON.stringify({ preparadaRedOficial: true, rol: "DIRECCION", circuito: circAct, ts: ahoraSrv() })
+  }).then(function(res) {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    localStorage.setItem("mxp_red_oficial_reg", installId);
+    localStorage.removeItem("mxp_red_oficial_pending");
+  }).catch(function(err) {
+    localStorage.removeItem("mxp_red_oficial_pending");
+    console.error("No se pudo registrar la instalación para la Red de Circuitos Oficiales:", err);
+    var msg = document.getElementById("msgCodInst");
+    if (msg) { msg.style.color = "#ffc107"; msg.textContent = "Instalación marcada localmente; no se pudo registrar en línea."; }
+  });
+}
+
+function aplicarClaveInstalacion(clave) {
+  var rol = mxRolClaveInstalacion(clave);
+  if (!rol) return "";
+  localStorage.setItem("mxp_inst_role", rol);
+  if (rol === "DIRECCION") registrarPreparacionRedOficial();
+  return rol;
+}
+
+function aplicarRestriccionesInstalacion() {
+  var soloPiloto = localStorage.getItem("mxp_inst_role") === "PILOTO";
+  ["btnTopDir", "btnTopAnt"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = soloPiloto ? "none" : "";
+  });
+}
+
 function activarPwaSiPermitido() {
   var m = accesoCfg.modo || "ABIERTO";
   var codOk = (localStorage.getItem("mxp_inv_ok") === accesoCfg.codigo && accesoCfg.codigo);
   var permitido = (m === "ABIERTO") || (m === "CODIGO" && codOk);
   var ban = document.getElementById("banAcceso");
   var boxCod = document.getElementById("boxCodInst");
+
+  if (codOk) aplicarClaveInstalacion(accesoCfg.codigo);
+  aplicarRestriccionesInstalacion();
 
   if (m === "PAUSADO") {
     ban.style.display = "block";
@@ -42,7 +86,10 @@ function desbloquearInstalacion() {
   var c = document.getElementById("inpCodInst").value.trim(), msg = document.getElementById("msgCodInst");
   if (!c || c !== accesoCfg.codigo) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo incorrecto"; return; }
   localStorage.setItem("mxp_inv_ok", c);
-  msg.style.color = "#20c997"; msg.textContent = "✅ Instalacion y alta desbloqueada ✓";
+  var rol = aplicarClaveInstalacion(c);
+  aplicarRestriccionesInstalacion();
+  msg.style.color = "#20c997";
+  msg.textContent = rol === "PILOTO" ? "✅ Activación PILOTO completada." : (rol === "DIRECCION" ? "✅ Instalación DIRECCION preparada para la Red de Circuitos Oficiales." : "✅ Instalacion y alta desbloqueada ✓");
   activarPwaSiPermitido();
 }
 
@@ -93,9 +140,13 @@ function abrir(id) {
   });
 }
 
-function irAntenas() { localStorage.setItem("mxp_circ_id", circAct); localStorage.setItem("mxp_circ_nom", circNom); location.href = "antena.html"; }
+function irAntenas() {
+  if (localStorage.getItem("mxp_inst_role") === "PILOTO") return;
+  localStorage.setItem("mxp_circ_id", circAct); localStorage.setItem("mxp_circ_nom", circNom); location.href = "antena.html";
+}
 
 function abrirDirModal() {
+  if (localStorage.getItem("mxp_inst_role") === "PILOTO") return;
   var recD = localStorage.getItem("mxp_rec_dir");
   if (recD) { document.getElementById("dClv").value = b64Dec(recD); document.getElementById("chkRecDir").checked = true; }
   else { document.getElementById("dClv").value = ""; document.getElementById("chkRecDir").checked = false; }
@@ -148,6 +199,7 @@ function procesarAuth() {
     if (accesoCfg.modo === "CODIGO" && localStorage.getItem("mxp_inv_ok") !== accesoCfg.codigo) {
       if (!cod || cod !== accesoCfg.codigo) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo de invitacion incorrecto"; return; }
       localStorage.setItem("mxp_inv_ok", cod); activarPwaSiPermitido();
+      aplicarClaveInstalacion(cod); aplicarRestriccionesInstalacion();
     }
     if (!/^\d{4}$/.test(pin)) { msg.style.color = "#ff4d5e"; msg.textContent = esIngles ? "Enter 4-digit PIN" : "Pon un PIN de 4 numeros"; return; }
   }
@@ -382,6 +434,7 @@ function cargarPaddock() {
 }
 
 aplicarIdioma();
+aplicarRestriccionesInstalacion();
 cargarAccesoConfig();
 cargarListaCircuitos();
 actualizarEstadoSala();

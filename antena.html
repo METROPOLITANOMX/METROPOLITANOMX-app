@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#090a0c">
 <title>Antena Meta Pro - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611264">
+<link rel="stylesheet" href="mx.css?v=202611272045">
+<style>html.mx-pilot-block body{display:none!important}</style>
+<script>
+if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
+  document.documentElement.classList.add("mx-pilot-block");
+  location.replace("index.html");
+}
+</script>
 <style>
   .top{max-width:none;border-bottom-color:#6f42c1}
   .modal{display:flex;background:rgba(0,0,0,0.96);z-index:999;padding:20px}
@@ -75,7 +82,7 @@
     <div style="font-size:10px;color:#888;margin-top:4px">Pulsa 🌙 OLED tras calibrar para evitar calor bajo el sol.</div>
   </div>
 
-<script src="mx-core.js?v=202611264"></script>
-<script src="mx-antena.js?v=202611264"></script>
+<script src="mx-core.js?v=202611272045"></script>
+<script src="mx-antena.js?v=202611272045"></script>
 </body>
 </html>
