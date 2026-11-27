@@ -19,7 +19,7 @@ localStorage.removeItem("mxp_dir_piloto");
 var rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };
 var warmupCaps = {}, perfilesCam = {}, circMeta = { metros: 200, factor: 1.0 };
 var testOn = false, _slidersLocked = true, _tabDir = "control", _dirIniciado = false;
-var _ultEvD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMovida = {};
+var _ultEvD = {}, _ultCruceAntD = {}, _lockVtaD = {}, _ultRondaElim = 0, _ultRondaRuleta = 0, _ultMovida = {};
 var _tCalAmbas = null, _esRoot = null, _esImg1 = null, _esImg2 = null, _esWu = null;
 var _roiInit = false, _recogMicro = null, _escuchandoMicro = false;
 var _ultVtasSinc = -1, _ultLapSinc = 0, _bombaExplotada = false, avisoLipoP = false, avisoFinManga = false;

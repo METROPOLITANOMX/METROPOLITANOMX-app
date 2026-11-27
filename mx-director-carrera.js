@@ -110,7 +110,7 @@ function lanzarRuletaManual() {
 }
 function nuevaMangaDir() {
   Object.keys(rootCache.pilotos || {}).forEach(function(k){ fetch(FB + "/pilotos/" + k + ".json", { method: "PATCH", body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false }) }).catch(function(){}); });
-  _lockVtaD = {}; _ultVtasSinc = 0; _ultLapSinc = 0;
+  _lockVtaD = {}; _ultCruceAntD = {}; _ultVtasSinc = 0; _ultLapSinc = 0;
   fetch(FB + "/pasos_lock.json", { method: "DELETE" }).catch(function(){}); fetch(FB + "/eventos.json", { method: "DELETE" }).catch(function(){}); fetch(FB + "/sala/porra.json", { method: "DELETE" }).catch(function(){});
   cmdSala("ESPERA");
 }
@@ -319,6 +319,51 @@ function registrarVueltaDir(pUid, evTs, esManual) {
     });
   }).catch(function(){});
 }
+function calidadColorEvento(ev) {
+  var sat = Number(ev && ev.colorSaturation) || 0, area = Number(ev && ev.colorArea) || 0;
+  return Number(ev && ev.colorQuality) || (sat * area);
+}
+function fusionarEventoAntena(ev, pUid) {
+  var ts = Number(ev.ts), previo = _ultCruceAntD[pUid];
+  if (!previo || Math.abs(ts - previo.ts) > 1500 || previo.antIds.indexOf(ev.antId) >= 0) {
+    _ultCruceAntD[pUid] = {
+      ts: ts, antIds: [ev.antId], tsByAnt: {},
+      lectura: {
+        colorNom: ev.colorNom || "",
+        colorRatio: Number(ev.colorRatio) || 0,
+        colorSaturation: Number(ev.colorSaturation) || 0,
+        colorArea: Number(ev.colorArea) || 0,
+        colorQuality: calidadColorEvento(ev)
+      }
+    };
+    _ultCruceAntD[pUid].tsByAnt[ev.antId] = ts;
+    return false;
+  }
+
+  previo.antIds.push(ev.antId);
+  previo.tsByAnt[ev.antId] = ts;
+  var lecturaNueva = {
+    colorNom: ev.colorNom || "",
+    colorRatio: Number(ev.colorRatio) || 0,
+    colorSaturation: Number(ev.colorSaturation) || 0,
+    colorArea: Number(ev.colorArea) || 0,
+    colorQuality: calidadColorEvento(ev)
+  };
+  if (lecturaNueva.colorQuality > previo.lectura.colorQuality) previo.lectura = lecturaNueva;
+  previo.lectura.confirmaciones = previo.antIds.length;
+  var fusionColor = {
+    confirmada: true, pilotoUid: pUid, ts: Math.max(ts, previo.ts), antIds: previo.antIds.slice(),
+    colorNom: previo.lectura.colorNom, colorRatio: previo.lectura.colorRatio,
+    colorSaturation: previo.lectura.colorSaturation, colorArea: previo.lectura.colorArea,
+    colorQuality: previo.lectura.colorQuality
+  };
+  previo.antIds.forEach(function(aid) {
+    var actual = (rootCache.eventos || {})[aid];
+    if (actual && Number(actual.ts) === Number(previo.tsByAnt[aid])) actual.fusionColor = fusionColor;
+    fetch(FB + "/eventos/" + aid + ".json", { method: "PATCH", body: JSON.stringify({ fusionColor: fusionColor }) }).catch(function(){});
+  });
+  return true;
+}
 function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvD[ev.antId] === ev.ts) return;
   _ultEvD[ev.antId] = ev.ts;
@@ -328,7 +373,7 @@ function manejarEventoAntena(ev) {
     var md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : "");
-    if (target) registrarVueltaDir(target, Number(ev.ts), false);
+    if (target && !fusionarEventoAntena(ev, target)) registrarVueltaDir(target, Number(ev.ts), false);
   }
 }
 
@@ -344,6 +389,7 @@ function actualizarCronosDir() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
   aplicarBanderaUI(s, "banBanderaAmDir");
   var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), wuBox = document.getElementById("lblWarmupCronoDir");
+  var mostrarSemaforoDir = dirPilotoOn || window.innerWidth <= 768 || (!!window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
   if (est === "EN_CURSO" && t0 > 0 && Number(s.duracionMin || 0) > 0) {
     var remManga = t0 + Number(s.duracionMin) * 60000 - ah;
@@ -405,7 +451,7 @@ function actualizarCronosDir() {
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){});
   }
 
-  if (dirPilotoOn) {
+  if (mostrarSemaforoDir) {
     if (df > 0 && dfCue <= 31000) {
       ov.style.display = "flex";
       var leds = document.getElementById("semLeds"), gBox = document.getElementById("gateBox"), gBar = document.getElementById("gateBar");

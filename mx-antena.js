@@ -25,6 +25,12 @@ var cfg = {
   roi: { posX: 50, x: 30, y: 15, w: 25, h: 65 }, garajes: {}
 };
 
+function umbralDesdeSensibilidad(nivel) {
+  var v = Math.max(6, Math.min(100, Number(nivel) || 7));
+  if (v <= 7) return 0.075 - (v - 6) * 0.005;
+  return 0.07 - ((v - 7) / 93) * 0.05;
+}
+
 activarWakeLock();
 window.addEventListener("beforeunload", function() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
@@ -111,6 +117,29 @@ var _cnvFf = document.getElementById("cnvFf"), _ctxFf = _cnvFf.getContext("2d");
 var _cnvWu = document.getElementById("cnvWu"), _ctxWu = _cnvWu.getContext("2d");
 var _cnvLive = document.createElement("canvas"); _cnvLive.width = 384; _cnvLive.height = 216;
 var _ctxLive = _cnvLive.getContext("2d");
+var _frameRing = [], _frameRingNext = 0, _frameRingCount = 0, _frameRingSize = 4;
+
+function guardarFotograma(dProc) {
+  var frame = _frameRing[_frameRingNext];
+  if (!frame) {
+    var canvas = document.createElement("canvas");
+    canvas.width = 384; canvas.height = 216;
+    frame = { canvas: canvas, ctx: canvas.getContext("2d"), data: new Uint8ClampedArray(dProc.length), ts: 0 };
+    _frameRing[_frameRingNext] = frame;
+  }
+  frame.ctx.drawImage(_cnv, 0, 0, 384, 216);
+  frame.data.set(dProc); frame.ts = ahoraSrv();
+  _frameRingNext = (_frameRingNext + 1) % _frameRingSize;
+  _frameRingCount = Math.min(_frameRingSize, _frameRingCount + 1);
+  return frame;
+}
+
+function fotogramaAnterior(atras) {
+  if (!_frameRingCount) return null;
+  var pasosAtras = Math.max(0, Math.min(_frameRingCount - 1, Number(atras) || 0));
+  var idx = (_frameRingNext - 1 - pasosAtras + _frameRingSize) % _frameRingSize;
+  return _frameRing[idx] || null;
+}
 
 function analizarColorVivo(r, g, b) {
   var rn = r / 255, gn = g / 255, bn = b / 255;
@@ -185,19 +214,48 @@ function actualizarColorVivo(dProc) {
   _ratioColorAnt = col.ratio;
 }
 
-function emitirPaso(pid, sinFf) {
+function detectarColorVivoEnRoi(dProc) {
+  if (!fondoFull) return false;
+  var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 };
+  var x0 = Math.max(0, Math.floor((r.x / 100) * PW)), y0 = Math.max(0, Math.floor((r.y / 100) * PH));
+  var w0 = Math.max(12, Math.min(PW - x0, Math.floor((r.w / 100) * PW))), h0 = Math.max(12, Math.min(PH - y0, Math.floor((r.h / 100) * PH)));
+  var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.70);
+  var bins = {};
+  for (var py = y0; py < y0 + h0; py += 2) {
+    for (var px = x0; px < x0 + w0; px += 2) {
+      var k = (py * PW + px) * 4;
+      if ((Math.abs(dProc[k] - fondoFull[k]) + Math.abs(dProc[k + 1] - fondoFull[k + 1]) + Math.abs(dProc[k + 2] - fondoFull[k + 2])) < diffMin) continue;
+      var col = analizarColorVivo(Math.min(255, dProc[k] * lG), Math.min(255, dProc[k + 1] * lG), Math.min(255, dProc[k + 2] * lG));
+      if (!col) continue;
+      var bin = bins[col.nombre];
+      if (!bin) bin = bins[col.nombre] = { count: 0, rows: 0, lastRow: -1 };
+      bin.count++;
+      if (bin.lastRow !== py) { bin.rows++; bin.lastRow = py; }
+    }
+  }
+  return Object.keys(bins).some(function(name){ return bins[name].count >= 4 && bins[name].rows >= 3; });
+}
+
+function emitirPaso(pid, sinFf, frame, lectura) {
   pasos++; mxBeep(940, 110); vibrar([35, 30, 35]);
-  var tsPaso = ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
+  var tsPaso = frame && frame.ts ? Number(frame.ts) : ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
   _ultTxtAnt = pid ? "PASO: " + pid : "PASO DETECTADO"; _ultTxtTs = tsPaso;
-  fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }) }).catch(function(){});
+  var colorData = lectura ? {
+    colorNom: lectura.colNom || "",
+    colorRatio: Number(lectura.colorRatio) || 0,
+    colorSaturation: Number(lectura.colorSaturation) || 0,
+    colorArea: Number(lectura.colorArea) || 0,
+    colorQuality: Number(lectura.colorQuality) || 0
+  } : {};
+  fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }, colorData)) }).catch(function(){});
   enviarTelemetria();
   if (!sinFf) {
     try {
-      _ctxFf.drawImage(_cnv, 0, 0, 320, 180); _ctxFf.fillStyle = "rgba(255,42,42,0.8)";
+      _ctxFf.drawImage((frame && frame.canvas) || _cnv, 0, 0, 320, 180); _ctxFf.fillStyle = "rgba(255,42,42,0.8)";
       var pLine = (cfg.roi && cfg.roi.posX) || 50;
       if (cfg.orientacion === "H") _ctxFf.fillRect(0, Math.round((pLine / 100) * 180) - 1, 320, 2);
       else _ctxFf.fillRect(Math.round((pLine / 100) * 320) - 1, 0, 2, 180);
-      fetch(FB_FF, { method: "PUT", body: JSON.stringify({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.56) }) }).catch(function(){});
+      fetch(FB_FF, { method: "PUT", body: JSON.stringify(Object.assign({ ts: tsPaso, antNom: antNom, pid: pid || "", modo: cfg.modoDet, img: _cnvFf.toDataURL("image/jpeg", 0.56) }, colorData)) }).catch(function(){});
     } catch (e) {}
   }
 
@@ -236,30 +294,31 @@ function extraerColorUnico(dProc, x0, y0, w0, h0, soloMov, diffMin, lG) {
   return { cnt: cnt, col: elegido };
 }
 
-function capturarYEnviarWarmup(dProc) {
+function capturarYEnviarWarmup(dProc, frame) {
   var ts = ahoraSrv();
   if (_wuBusy || (ts - _ultWuTs) < 1100) return;
   _ultWuTs = ts;
+  var dCaptura = (frame && frame.data) || dProc;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 }, pLine = r.posX || 50;
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(14, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(14, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
   var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, diffMin = Math.max(16, (cfg.pxDiff || 45) * 0.60);
 
   var cropRect = { x: r.x, y: r.y, w: r.w, h: r.h };
-  var res = extraerColorUnico(dProc, rx0, ry0, rw, rh, true, diffMin, lG);
+  var res = extraerColorUnico(dCaptura, rx0, ry0, rw, rh, true, diffMin, lG);
   if (res.cnt < 8 || !res.col) {
     if (cfg.orientacion === "H") {
       var yL = Math.max(0, Math.min(PH - 36, Math.floor((pLine / 100) * PH) - 18));
       cropRect = { x: 15, y: Math.round((yL / PH) * 100), w: 70, h: 34 };
-      res = extraerColorUnico(dProc, Math.floor(PW * 0.15), yL, Math.floor(PW * 0.70), 36, true, diffMin, lG);
+      res = extraerColorUnico(dCaptura, Math.floor(PW * 0.15), yL, Math.floor(PW * 0.70), 36, true, diffMin, lG);
     } else {
       var xL = Math.max(0, Math.min(PW - 48, Math.floor((pLine / 100) * PW) - 24));
       cropRect = { x: Math.round((xL / PW) * 100), y: 12, w: 26, h: 76 };
-      res = extraerColorUnico(dProc, xL, Math.floor(PH * 0.12), 48, Math.floor(PH * 0.76), true, diffMin, lG);
+      res = extraerColorUnico(dCaptura, xL, Math.floor(PH * 0.12), 48, Math.floor(PH * 0.76), true, diffMin, lG);
     }
     if (res.cnt < 8 || !res.col) {
       cropRect = { x: 25, y: 18, w: 50, h: 64 };
-      res = extraerColorUnico(dProc, Math.floor(PW * 0.30), Math.floor(PH * 0.20), Math.floor(PW * 0.40), Math.floor(PH * 0.60), false, diffMin, lG);
+      res = extraerColorUnico(dCaptura, Math.floor(PW * 0.30), Math.floor(PH * 0.20), Math.floor(PW * 0.40), Math.floor(PH * 0.60), false, diffMin, lG);
     }
   }
   if (!res.col) { _ultWuTs = 0; document.getElementById("lblEstado").textContent = "⚠️ SOLO SOMBRA/NEGRO (ACERCALO)"; return; }
@@ -274,7 +333,7 @@ function capturarYEnviarWarmup(dProc) {
     var sy = Math.max(0, Math.min(192, Math.floor((cropRect.y / 100) * 216)));
     var sw = Math.max(24, Math.min(384 - sx, Math.floor((cropRect.w / 100) * 384)));
     var sh = Math.max(24, Math.min(216 - sy, Math.floor((cropRect.h / 100) * 216)));
-    _ctxWu.drawImage(_cnv, sx, sy, sw, sh, 0, 0, 160, 112);
+    _ctxWu.drawImage((frame && frame.canvas) || _cnv, sx, sy, sw, sh, 0, 0, 160, 112);
     var payload = JSON.stringify({ ts: ts, antId: antId, antNom: antNom, colorNom: colNom, img: _cnvWu.toDataURL("image/jpeg", 0.45), colores: [res.col] });
 
     _wuBusy = true;
@@ -333,10 +392,11 @@ function evaluarRoiColor(dProc) {
   var rx0 = Math.max(0, Math.floor((r.x / 100) * PW)), ry0 = Math.max(0, Math.floor((r.y / 100) * PH));
   var rw = Math.max(12, Math.min(PW - rx0, Math.floor((r.w / 100) * PW))), rh = Math.max(12, Math.min(PH - ry0, Math.floor((r.h / 100) * PH)));
   var pL = cfg.perfilLuz || {}, lG = pL.lGain || 1.0, dEMax = pL.deltaE || 22;
-  var diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.70), fg = [];
+  var diffMin = Math.max(18, (cfg.pxDiff || 45) * 0.70), fg = [], sampleArea = 0;
 
   var recogerFg = function(x0, y0, w0, h0) {
     var out = [], mY = y0 + Math.floor(h0 * 0.48);
+    sampleArea = Math.ceil(w0 / 2) * Math.ceil(h0 / 2);
     for (var py = y0; py < y0 + h0; py += 2) {
       for (var px = x0; px < x0 + w0; px += 2) {
         var k = (py * PW + px) * 4;
@@ -344,7 +404,7 @@ function evaluarRoiColor(dProc) {
         var rr = Math.min(255, dProc[k] * lG), gg = Math.min(255, dProc[k + 1] * lG), bb = Math.min(255, dProc[k + 2] * lG);
         var colorVivo = analizarColorVivo(rr, gg, bb); if (!colorVivo) continue;
         var lb = rgbLab(rr, gg, bb);
-        out.push({ r: rr, g: gg, b: bb, lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), hue: Math.atan2(lb.b, lb.a), hsvHue: colorVivo.h, zn: (py < mY) ? "SUP" : "INF" });
+        out.push({ r: rr, g: gg, b: bb, lb: lb, ch: Math.sqrt(lb.a * lb.a + lb.b * lb.b), hue: Math.atan2(lb.b, lb.a), hsvHue: colorVivo.h, colorNom: colorVivo.nombre, saturation: colorVivo.s, zn: (py < mY) ? "SUP" : "INF" });
       }
     }
     return out;
@@ -359,9 +419,18 @@ function evaluarRoiColor(dProc) {
 
   var colVisto = colorDominanteDePixeles(fg);
   if (!colVisto) return { pid: "", colNom: "", info: "Sin color vivo en el tunel" };
+  var colCount = 0, saturationTotal = 0;
+  for (var ci0 = 0; ci0 < fg.length; ci0++) {
+    if (fg[ci0].colorNom === colVisto) { colCount++; saturationTotal += fg[ci0].saturation; }
+  }
+  var colorRatio = fg.length ? Math.round((colCount / fg.length) * 100) : 0;
+  var colorSaturation = colCount ? Math.round((saturationTotal / colCount) * 100) : 0;
+  var colorArea = sampleArea ? Math.round((colCount / sampleArea) * 100) : 0;
+  var colorQuality = colorSaturation * colorArea;
+  var colorMeta = { colNom: colVisto, colorRatio: colorRatio, colorSaturation: colorSaturation, colorArea: colorArea, colorQuality: colorQuality };
 
   var gObj = cfg.garajes || {}, ks = Object.keys(gObj);
-  if (!ks.length) return { pid: "", colNom: colVisto, info: "VEO: " + colVisto + " | Sin garajes en sala" };
+  if (!ks.length) return { pid: "", info: "VEO: " + colVisto + " | Sin garajes en sala", colorRatio: colorRatio, colorSaturation: colorSaturation, colorArea: colorArea, colorQuality: colorQuality, colNom: colVisto };
 
   var reqCols = Number(cfg.nColores || 1), minRatio = Math.max(0.12, (cfg.colorPct || 0.25) * 0.55), minPxPorColor = Math.max(4, Math.round(fg.length * 0.04));
   var usarZonas = (reqCols > 1), bestPid = "", bestScore = 0, bestDiag = "";
@@ -415,7 +484,7 @@ function evaluarRoiColor(dProc) {
       } else if (!bestPid) bestDiag = diag;
     }
   }
-  return { pid: bestPid, colNom: colVisto, info: "VEO: " + colVisto + " | " + (bestDiag || "Sin match") };
+  return { pid: bestPid, info: "VEO: " + colVisto + " | " + (bestDiag || "Sin match"), colorRatio: colorMeta.colorRatio, colorSaturation: colorMeta.colorSaturation, colorArea: colorMeta.colorArea, colorQuality: colorMeta.colorQuality, colNom: colorMeta.colNom };
 }
 
 function comprobarEsquinasMovidas(dFull, pxDiff) {
@@ -440,6 +509,7 @@ function procFrame() {
 
   _ctx.drawImage(v, 0, 0, 384, 216); _ctxProc.drawImage(_cnv, 0, 0, PW, PH);
   var dFull = _ctxProc.getImageData(0, 0, PW, PH).data;
+  var frameActual = guardarFotograma(dFull);
   if (!fondoFull || fondoFull.length !== dFull.length || ah < calHasta) {
     fondoFull = new Uint8ClampedArray(dFull); est = "CAL";
     document.getElementById("lblEstado").textContent = "CALIBRANDO PISTA VACIA..."; document.getElementById("lblEstado").style.color = "#0dcaf0"; return;
@@ -466,6 +536,8 @@ function procFrame() {
     if (_golpeFrames >= 45) { _golpeFrames = 0; _movidaTs = ahoraSrv(); fondoFull = null; framesHit = 0; _trigPendTs = 0; calHasta = Date.now() + 1800; hablarAnt("Atencion, antena movida, recalibrando", true); document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA"; document.getElementById("lblEstado").style.color = "#ff4d5e"; return; }
   } else _golpeFrames = 0;
 
+  var modoColor = cfg.modoDet !== "TODO" && cfg.modoDet !== "RADAR";
+  var colorContact = modoColor && detectarColorVivoEnRoi(dFull);
   var pLine = (cfg.roi && cfg.roi.posX) || 50, mov = 0, nS = 0;
   if (cfg.orientacion === "H") {
     var cy = Math.max(10, Math.min(PH - 10, Math.round((pLine / 100) * PH)));
@@ -480,9 +552,9 @@ function procFrame() {
   document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
   document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + _fpsVal + "fps";
 
-  if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85)) est = "LIBRE";
+  if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85) && !colorContact) est = "LIBRE";
 
-  if (pct < resetPct && !_trigPendTs) {
+  if (pct < resetPct && !_trigPendTs && !colorContact) {
     est = "LIBRE"; framesHit = 0;
     document.getElementById("lblEstado").textContent = (cfg.estado === "WARMUP" ? "🔥 WARM-UP [" + cfg.modoDet + "]" : (cfg.estado === "RADAR" ? "📡 RADAR LISTO" : "VIGILANDO [" + cfg.modoDet + "]"));
     document.getElementById("lblEstado").style.color = "#00e676";
@@ -495,29 +567,33 @@ function procFrame() {
   }
 
   if (pct >= sens) framesHit++; else framesHit = 0;
-  if (est === "LIBRE" && !_trigPendTs && (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6))) _trigPendTs = ah;
+  if (est === "LIBRE" && !_trigPendTs) {
+    if (colorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
+    else if (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6)) _trigPendTs = ah;
+  }
 
   if (_trigPendTs && (ah - _trigPendTs) >= (cfg.retardoMs || 0)) {
     _trigPendTs = 0;
+    var frameFoto = fotogramaAnterior(1) || frameActual;
 
     if (cfg.estado === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
-      capturarYEnviarWarmup(dFull);
-      if (cfg.modoDet === "TODO") emitirPaso("", true);
+      capturarYEnviarWarmup(dFull, frameFoto);
+      if (cfg.modoDet === "TODO") emitirPaso("", true, frameFoto);
       else {
         var rWu = evaluarRoiColor(dFull);
-        if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; emitirPaso(rWu.pid, true); }
+        if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; emitirPaso(rWu.pid, true, frameFoto, rWu); }
       }
       return;
     }
 
     if (cfg.estado === "RADAR") {
-      if ((ah - ultMs) > 900) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "📡 ¡PASO RADAR!"; emitirPaso("", true); }
+      if ((ah - ultMs) > 900) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "📡 ¡PASO RADAR!"; emitirPaso("", true, frameFoto); }
       return;
     }
 
     if (cfg.modoDet === "TODO") {
-      if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso(""); }
+      if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso("", false, frameFoto); }
     } else {
       var res = evaluarRoiColor(dFull);
       mostrarAvisoAnt("🔬 " + res.info);
@@ -526,7 +602,7 @@ function procFrame() {
           est = "CRUCE"; ultMs = ah; ultMsPorPiloto[res.pid] = ah;
           document.getElementById("lblEstado").textContent = "✅ MOTO: " + res.pid + (res.colNom ? (" (" + res.colNom + ")") : "");
           document.getElementById("lblEstado").style.color = "#00e676";
-          emitirPaso(res.pid);
+          emitirPaso(res.pid, false, frameFoto, res);
         }
       } else {
         est = "CRUCE"; ultMs = ah; _ultTxtAnt = res.info; _ultTxtTs = ah; enviarTelemetria();
@@ -555,7 +631,7 @@ function procesarSala(s) {
     enviarTelemetria();
   }
   cfg.estado = s.estado || "ESPERA"; cfg.verVivo = !!s.verVivo; cfg.orientacion = s.orientacion || "V";
-  cfg.sensPct = Math.max(0.06, Math.min(1.0, (Number(s.sensPct || 7)) / 100));
+  cfg.sensPct = umbralDesdeSensibilidad(s.sensPct);
   cfg.colorPct = Math.max(0.06, Math.min(1.0, (Number(s.colorPct || 25)) / 100));
   cfg.pxDiff = Math.max(20, Math.min(90, Number(s.pxDiff || 45)));
   cfg.antiViento = s.antiViento || "OFF";

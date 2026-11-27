@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611271929";
+var CACHE_NAME = "mxp-cache-v202611272006";
 var APP_SHELL = [
   "./",
   "./index.html",
