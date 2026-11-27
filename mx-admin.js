@@ -1,19 +1,29 @@
+var _FB_ROOT = (typeof FB_ROOT !== "undefined") ? FB_ROOT : "https://metropolitano-mx-circuit-default-rtdb.firebaseio.com/mx_pro";
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
 var circNom = localStorage.getItem("mxp_circ_nom") || "METROPOLITANO CIRCUIT";
-var FB = FB_ROOT + "/circuitos/" + circId;
-var _admData = { sala: {}, pilotos: {} };
-var _admTimer = null;
+var FB = _FB_ROOT + "/circuitos/" + circId;
+var circListaCache = {};
 
-function b64E(s) {
-  if (typeof b64Enc === "function") return b64Enc(s);
-  try { return btoa(unescape(encodeURIComponent(String(s || "")))); } catch (e) { return ""; }
+function _admFetchJson(url, opt) {
+  if (typeof fbJson === "function") return fbJson(url, opt);
+  return fetch(url, opt).then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
 }
-function b64D(s) {
-  if (typeof b64Dec === "function") return b64Dec(s);
-  try { return decodeURIComponent(escape(atob(String(s || "")))); } catch (e) { return ""; }
+
+function _admHash(txt) {
+  if (typeof hashTxt === "function") return hashTxt(txt);
+  var s = "MXPRO_2026_SALT_" + String(txt || "");
+  if (window.crypto && crypto.subtle && window.TextEncoder) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("00" + b.toString(16)).slice(-2); }).join("");
+    });
+  }
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return Promise.resolve("fb_" + h.toString(16));
 }
-function safeJs(s) {
-  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+function escAdmJs(s) {
+  return (typeof escJs === "function") ? escJs(s) : String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
 function aplicarRestriccionesAdmin() {
@@ -25,212 +35,126 @@ function aplicarRestriccionesAdmin() {
   }
 }
 
-function verificarClaveAdmin(clv) {
-  return hashTxt(clv).then(function(h) {
-    return fbJson(FB_ROOT + "/config/adminHash.json?t=" + Date.now()).catch(function(){ return null; }).then(function(admHash) {
-      if (admHash) return { ok: (h === admHash), sinPropia: false };
-      return fbJson(FB_ROOT + "/config/dirHash.json?t=" + Date.now()).catch(function(){ return null; }).then(function(dirHash) {
-        var okDef = (clv.split("").map(function(c){ return c.charCodeAt(0) ^ 7; }).join("-") === "53-55-53-49");
-        var ok = dirHash ? (h === dirHash) : okDef;
-        return { ok: ok, sinPropia: true };
-      });
+function verificarClaveAdm(clv) {
+  return _admHash(clv).then(function(h) {
+    return _admFetchJson(_FB_ROOT + "/config/dirHash.json?t=" + Date.now()).catch(function(){ return null; }).then(function(srvHash) {
+      if (srvHash) {
+        if (h === srvHash) return { ok: true };
+        if (String(srvHash).length === 64 && String(h).indexOf("fb_") === 0) return { ok: false, motivo: "HTTP" };
+        return { ok: false, motivo: "CLAVE" };
+      }
+      var legOk = (clv.split("").map(function(c){ return c.charCodeAt(0) ^ 7; }).join("-") === "53-55-53-49");
+      return { ok: legOk, motivo: legOk ? "" : "CLAVE" };
     });
   });
 }
 
-function comprobarBannerClaveAdmin() {
-  fbJson(FB_ROOT + "/config/adminHash.json?t=" + Date.now()).catch(function(){ return null; }).then(function(admHash) {
-    document.getElementById("banSetAdminKey").style.display = admHash ? "none" : "block";
-  });
+function validarAccesoAdm() {
+  var msg = document.getElementById("msgAuthAdm");
+  try {
+    var inp = document.getElementById("inpClvAdm");
+    var clv = inp ? inp.value.trim() : "";
+    if (!clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Introduce la clave"; return; }
+    msg.style.color = "#0dcaf0"; msg.textContent = "Verificando...";
+    verificarClaveAdm(clv).then(function(res) {
+      if (!res || !res.ok) {
+        msg.style.color = "#ff4d5e";
+        msg.textContent = (res && res.motivo === "HTTP")
+          ? "⚠️ Abre la web con HTTPS para validar la clave SHA-256."
+          : "❌ Clave incorrecta (usa la clave actual de Direccion).";
+        return;
+      }
+      localStorage.setItem("mxp_adm_ok", "1");
+      msg.textContent = "";
+      arrancarAdmin();
+    }).catch(function(err){
+      msg.style.color = "#ff4d5e";
+      msg.textContent = "Error de red: " + ((err && err.message) || "sin conexion");
+    });
+  } catch (e) {
+    if (msg) { msg.style.color = "#ff4d5e"; msg.textContent = "Error: " + e.message; }
+  }
 }
 
-function validarAccesoAdmin() {
-  var clv = document.getElementById("inpClvAdminAuth").value.trim();
-  var msg = document.getElementById("msgAuthAdmin");
-  if (!clv) { msg.style.color = "#ff4d5e"; msg.textContent = "Introduce la clave"; return; }
-  msg.style.color = "#0dcaf0"; msg.textContent = "Verificando...";
-  verificarClaveAdmin(clv).then(function(res) {
-    if (!res.ok) { msg.style.color = "#ff4d5e"; msg.textContent = "Clave incorrecta"; return; }
-    if (document.getElementById("chkRecAdmin").checked) localStorage.setItem("mxp_rec_adm", b64E(clv));
-    else localStorage.removeItem("mxp_rec_adm");
-    sessionStorage.setItem("mxp_adm_ok", "1");
-    document.getElementById("modalAuthAdmin").style.display = "none";
-    document.getElementById("wrapAdmin").style.display = "block";
-    iniciarAdmin(res.sinPropia);
-  });
-}
-
-function salirAdmin() {
-  if (_admTimer) { clearInterval(_admTimer); _admTimer = null; }
-  sessionStorage.removeItem("mxp_adm_ok");
+function salirAdm() {
+  localStorage.removeItem("mxp_adm_ok");
   location.href = "index.html";
 }
 
-function cargarCircuitosAdmin() {
-  return fbJson(FB_ROOT + "/circuitos_lista.json?t=" + Date.now()).catch(function(){ return null; }).then(function(ls) {
-    var sel = document.getElementById("selCircAdmin");
-    var h = '<option value="METROPOLITANO">🏁 METROPOLITANO CIRCUIT (MADRID)</option>';
-    if (ls) {
-      Object.keys(ls).forEach(function(k) {
-        if (k !== "METROPOLITANO" && ls[k] && ls[k].nombre) {
-          h += '<option value="' + esc(k) + '">🌍 ' + esc(ls[k].nombre) + ' (' + esc(ls[k].pais || "") + ')</option>';
-        }
-      });
-    }
-    sel.innerHTML = h;
-    sel.value = circId;
-    if (sel.selectedIndex < 0) {
-      circId = "METROPOLITANO";
-      circNom = "METROPOLITANO CIRCUIT";
-      sel.value = circId;
-    } else {
-      circNom = sel.options[sel.selectedIndex].text.replace(/^(🏁|🌍)\s*/, "").trim();
-    }
-    FB = FB_ROOT + "/circuitos/" + circId;
-    document.getElementById("txtCircAdmin").textContent = "🏁 " + circNom;
-  });
+function arrancarAdmin() {
+  document.getElementById("modalAuthAdm").style.display = "none";
+  document.getElementById("admWrap").style.display = "block";
+  aplicarRestriccionesAdmin();
+  cargarTodoAdm();
 }
 
-function cambiarCircAdmin(val) {
-  var sel = document.getElementById("selCircAdmin");
-  circId = val || "METROPOLITANO";
-  circNom = (sel && sel.options[sel.selectedIndex]) ? sel.options[sel.selectedIndex].text.replace(/^(🏁|🌍)\s*/, "").trim() : circId;
-  FB = FB_ROOT + "/circuitos/" + circId;
-  document.getElementById("txtCircAdmin").textContent = "🏁 " + circNom;
-  cargarSalaYPilotosAdmin();
+function cargarTodoAdm() {
+  aplicarRestriccionesAdmin();
+  cargarCircuitosAdm();
+  cargarAccesoCfgAdm();
+  cargarPilotosAdm();
+  cargarCuentasAdm(false);
 }
 
-function eliminarCircuitoAdmin() {
-  if (circId === "METROPOLITANO") { alert("El circuito principal METROPOLITANO no se puede borrar."); return; }
-  if (!confirm("⚠️ ¿Borrar el circuito local '" + circNom + "' y todos sus datos?")) return;
+function actualizarCircHeaderAdm() {
+  FB = _FB_ROOT + "/circuitos/" + circId;
+  document.getElementById("txtCircAdm").textContent = "🏁 " + circNom + " (" + circId + ")";
+}
+
+function cambiarCircAdm(id) {
+  if (!id) return;
+  circId = id;
+  circNom = (circListaCache[id] && circListaCache[id].nombre) ? circListaCache[id].nombre : id;
+  localStorage.setItem("mxp_circ_id", circId);
+  localStorage.setItem("mxp_circ_nom", circNom);
+  actualizarCircHeaderAdm();
+  cargarPilotosAdm();
+}
+
+function cargarCircuitosAdm() {
+  actualizarCircHeaderAdm();
+  _admFetchJson(_FB_ROOT + "/circuitos_lista.json?t=" + Date.now()).then(function(cs) {
+    circListaCache = cs || {};
+    if (!circListaCache.METROPOLITANO) circListaCache.METROPOLITANO = { nombre: "METROPOLITANO CIRCUIT", metros: 200 };
+    var keys = Object.keys(circListaCache);
+    var sel = document.getElementById("selCircAdm");
+    sel.innerHTML = keys.map(function(k) {
+      var nom = (circListaCache[k] && circListaCache[k].nombre) || k;
+      return "<option value='" + esc(k) + "'" + (k === circId ? " selected" : "") + ">" + esc(nom) + " (" + esc(k) + ")</option>";
+    }).join("");
+    if (circListaCache[circId] && circListaCache[circId].nombre) {
+      circNom = circListaCache[circId].nombre;
+      actualizarCircHeaderAdm();
+    }
+    var lst = document.getElementById("listaCircsAdm");
+    lst.innerHTML = keys.map(function(k) {
+      var c = circListaCache[k] || {}, nom = c.nombre || k;
+      var btnDel = (k === "METROPOLITANO")
+        ? "<span style='font-size:10px;color:#20c997'>Principal</span>"
+        : "<button onclick=\"vibrar();borrarCircuitoAdm('" + escAdmJs(k) + "','" + escAdmJs(nom) + "')\" style='background:#dc3545;color:#fff;padding:4px 8px;font-size:10px'>Borrar</button>";
+      return "<div class='fila'><span><b>" + esc(nom) + "</b> <small style='color:#888'>(" + esc(k) + ")</small></span>" + btnDel + "</div>";
+    }).join("") || "<div style='color:#777;font-size:11px'>Sin circuitos registrados.</div>";
+  }).catch(function(){});
+}
+
+function borrarCircuitoAdm(id, nom) {
+  if (id === "METROPOLITANO") { alert("El circuito principal no se puede borrar."); return; }
+  if (!confirm("⚠️ ¿Seguro que quieres BORRAR el circuito '" + (nom || id) + "' y todos sus datos?")) return;
   Promise.all([
-    fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/circuitos/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/antenas_img/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/warmup_capturas/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/foto_finish/" + circId + ".json", { method: "DELETE" })
+    fetch(_FB_ROOT + "/circuitos_lista/" + id + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/circuitos/" + id + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/warmup_capturas/" + id + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/antenas_img/" + id + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/foto_finish/" + id + ".json", { method: "DELETE" })
   ]).then(function() {
-    circId = "METROPOLITANO";
-    localStorage.setItem("mxp_circ_id", "METROPOLITANO");
-    localStorage.setItem("mxp_circ_nom", "METROPOLITANO CIRCUIT");
-    cargarCircuitosAdmin().then(cargarSalaYPilotosAdmin);
+    if (circId === id) { circId = "METROPOLITANO"; circNom = "METROPOLITANO CIRCUIT"; localStorage.setItem("mxp_circ_id", circId); localStorage.setItem("mxp_circ_nom", circNom); }
+    cargarCircuitosAdm(); cargarPilotosAdm();
     alert("Circuito borrado ✓");
   }).catch(function(){ alert("Error borrando circuito"); });
 }
 
-function cargarSalaYPilotosAdmin() {
-  Promise.all([
-    fbJson(FB + "/sala.json?t=" + Date.now()).catch(function(){ return {}; }),
-    fbJson(FB + "/pilotos.json?t=" + Date.now()).catch(function(){ return {}; })
-  ]).then(function(res) {
-    _admData.sala = res[0] || {};
-    _admData.pilotos = res[1] || {};
-    pintarPilotosAdmin();
-  });
-}
-
-function pintarPilotosAdmin() {
-  var pils = ordenarPilotos(_admData.pilotos, _admData.sala);
-  var actCnt = pils.filter(function(p){ return p.activo; }).length;
-  document.getElementById("lblPistaStatusAdm").textContent = actCnt > 0 ? ("🟢 " + actCnt + " EN PISTA (" + pils.length + " en sala)") : ("⚪ PISTA VACIA (" + pils.length + " en sala)");
-  var h = pils.map(function(p, ix) {
-    var dot = p.activo ? "🟢" : "⚪";
-    var pl = '<span class="mx-plate">#' + esc(p.dorsal || "--") + '</span>';
-    return '<div class="fila' + (p.eliminado ? ' elim' : '') + '">' +
-      '<span>' + dot + ' <b>' + (ix + 1) + 'º</b> ' + pl + '<b>' + esc(p.nombre) + '</b> (' + (p.vueltas || 0) + 'v)</span>' +
-      '<span><b class="tv-rp">' + fmt(p.mejorMs) + '</b>' +
-      (p.vueltas > 0 ? ' <button onclick="vibrar();restarVueltaAdmin(\'' + safeJs(p.id) + '\')" style="background:#553300;color:#ffc107;padding:3px 6px;font-size:10px">-1v</button>' : '') +
-      ' <button onclick="vibrar();expulsarPilotoAdmin(\'' + safeJs(p.id) + '\')" style="background:#dc3545;color:#fff;padding:3px 6px;font-size:10px">✕</button></span></div>';
-  }).join("");
-  document.getElementById("listaPilotosAdmin").innerHTML = h || '<div style="color:#777;font-size:12px">Ningun piloto en sala.</div>';
-}
-
-function restarVueltaAdmin(pUid) {
-  var p = (_admData.pilotos || {})[pUid]; if (!p || !p.vueltas) return;
-  var s = _admData.sala || {}, heatTag = Number(s.tsInicio || 0) || "free";
-  var oldV = Number(p.vueltas), newV = Math.max(0, oldV - 1), pay = { vueltas: newV, ultimaMs: 0 };
-  if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
-  fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }).then(cargarSalaYPilotosAdmin).catch(function(){});
-  fetch(FB + "/pasos_lock/" + pUid + "_" + heatTag + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
-  fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" }).catch(function(){});
-}
-
-function expulsarPilotoAdmin(pUid) {
-  if (!confirm("¿Expulsar a este piloto de la sala?")) return;
-  fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).then(cargarSalaYPilotosAdmin).catch(function(){});
-}
-
-function limpiarOfflineAdmin() {
-  var pAll = _admData.pilotos || {};
-  var ops = Object.keys(pAll).filter(function(k){ return pAll[k] && !esPilotoActivo(pAll[k]); }).map(function(k){
-    return fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" });
-  });
-  Promise.all(ops).then(cargarSalaYPilotosAdmin).catch(function(){});
-}
-
-function vaciarSalaAdmin() {
-  if (!confirm("¿Expulsar a TODOS los pilotos de la sala de " + circNom + "?")) return;
-  fetch(FB + "/pilotos.json", { method: "DELETE" }).then(cargarSalaYPilotosAdmin).catch(function(){ alert("Error vaciando sala"); });
-}
-
-function borrarHotlapAdmin() {
-  if (!confirm("¿Seguro que quieres borrar el record de Hotlap semanal de " + circNom + "?")) return;
-  fbJson(FB + "/sala.json", {
-    method: "PATCH",
-    body: JSON.stringify({ hotlapMs: null, hotlapTxt: null, ultPasoTs: null, ultPasoTxt: null })
-  }).then(function(){ alert("Hotlap semanal borrada ✓"); }).catch(function(){ alert("Error borrando Hotlap"); });
-}
-
-function borrarTiemposDiaAdmin() {
-  if (!confirm("¿Seguro que quieres borrar todos los tiempos del dia y mangas de " + circNom + "?")) return;
-  var pAll = _admData.pilotos || {};
-  var ops = [
-    fetch(FB + "/campeonato.json", { method: "DELETE" }),
-    fetch(FB + "/pasos_lock.json", { method: "DELETE" }),
-    fetch(FB + "/eventos.json", { method: "DELETE" }),
-    fetch(FB + "/foto_finish/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/foto_finish/" + circId + ".json", { method: "DELETE" }),
-    fetch(FB + "/sala/porra.json", { method: "DELETE" }),
-    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0, tsCuenta: 0, ruleta: null }) })
-  ];
-  Object.keys(pAll).forEach(function(k) {
-    ops.push(fetch(FB + "/pilotos/" + k + ".json", {
-      method: "PATCH",
-      body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false })
-    }));
-  });
-  Promise.all(ops).then(function(){
-    cargarSalaYPilotosAdmin();
-    alert("Tiempos del dia borrados ✓");
-  }).catch(function(){ alert("Error borrando tiempos del dia"); });
-}
-
-function borrarMundialAdmin() {
-  if (!confirm("⚠️ ¿Seguro que quieres borrar TODOS los registros del Ranking Mundial Global?")) return;
-  if (!confirm("Confirmacion final: se borrara todo el Ranking Mundial de todos los circuitos. ¿Continuar?")) return;
-  var url = FB_ROOT + "/mundial.json";
-  fetch(url, { method: "DELETE" }).then(function(r) {
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return fbJson(url + "?shallow=true&t=" + Date.now()).catch(function(){ return null; });
-  }).then(function(rest) {
-    if (!rest || !Object.keys(rest).length) return true;
-    var nulls = {};
-    Object.keys(rest).forEach(function(k){ nulls[k] = null; });
-    return fetch(url, { method: "PATCH", body: JSON.stringify(nulls) }).then(function(r2) {
-      if (r2.ok) return true;
-      return Promise.all(Object.keys(rest).map(function(k) {
-        return fetch(FB_ROOT + "/mundial/" + encodeURIComponent(k) + ".json", { method: "DELETE" });
-      }));
-    });
-  }).then(function() {
-    alert("🌍 Ranking Mundial borrado ✓");
-  }).catch(function(err) {
-    alert("Error al borrar Ranking Mundial (" + (err && err.message ? err.message : "red") + ")");
-  });
-}
-
-function cargarAccesoCfgAdmin() {
-  fbJson(FB_ROOT + "/config/acceso.json?t=" + Date.now()).then(function(a) {
+function cargarAccesoCfgAdm() {
+  _admFetchJson(_FB_ROOT + "/config/acceso.json?t=" + Date.now()).then(function(a) {
     if (!a) return;
     if (a.modo) document.getElementById("selModoAcceso").value = a.modo;
     if (typeof a.codigo === "string") document.getElementById("inpCodAcceso").value = a.codigo;
@@ -238,160 +162,205 @@ function cargarAccesoCfgAdmin() {
 }
 
 function guardarAccesoCfg(avisar) {
-  var modo = document.getElementById("selModoAcceso").value;
-  var cod = document.getElementById("inpCodAcceso").value.trim();
-  fbJson(FB_ROOT + "/config/acceso.json", {
-    method: "PUT",
-    body: JSON.stringify({ modo: modo, codigo: cod, ts: ahoraSrv() })
-  }).then(function() {
-    if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓");
-  }).catch(function(){ alert("Error guardando control de descargas"); });
+  var modo = document.getElementById("selModoAcceso").value, cod = document.getElementById("inpCodAcceso").value.trim();
+  _admFetchJson(_FB_ROOT + "/config/acceso.json", { method: "PUT", body: JSON.stringify({ modo: modo, codigo: cod, ts: ahoraSrv() }) })
+    .then(function(){ if (avisar) alert("Control de descargas actualizado (" + modo + ") ✓"); })
+    .catch(function(){ alert("Error guardando configuracion"); });
 }
 
-function filaCuentaHtml(k, u) {
+function borrarHotlapAdm() {
+  if (!confirm("¿Seguro que quieres borrar el record de Hotlap semanal de " + circNom + "?")) return;
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ hotlapMs: null, hotlapTxt: null, ultPasoTs: null, ultPasoTxt: null }) })
+    .then(function(){ alert("Hotlap semanal borrada ✓"); }).catch(function(){ alert("Error"); });
+}
+
+function borrarTiemposDiaAdm() {
+  if (!confirm("¿Seguro que quieres borrar todos los tiempos del dia, mangas y eventos de " + circNom + "?")) return;
+  Promise.all([
+    fetch(FB + "/campeonato.json", { method: "DELETE" }),
+    fetch(FB + "/pasos_lock.json", { method: "DELETE" }),
+    fetch(FB + "/eventos.json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/foto_finish/" + circId + ".json", { method: "DELETE" }),
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0, tsCuenta: 0 }) })
+  ]).then(function() {
+    return _admFetchJson(FB + "/pilotos.json").catch(function(){ return null; }).then(function(ps) {
+      if (!ps) return;
+      return Promise.all(Object.keys(ps).map(function(k) {
+        return fetch(FB + "/pilotos/" + k + ".json", { method: "PATCH", body: JSON.stringify({ vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false }) }).catch(function(){});
+      }));
+    });
+  }).then(function(){ cargarPilotosAdm(); alert("Tiempos del dia borrados ✓"); }).catch(function(){ alert("Error"); });
+}
+
+function verRankingAdm(toggle) {
+  var bx = document.getElementById("boxRankingAdm");
+  if (toggle) bx.style.display = (bx.style.display === "block") ? "none" : "block";
+  if (bx.style.display === "none") return;
+  bx.innerHTML = "<div style='color:#888;font-size:11px'>Cargando ranking mundial...</div>";
+  _admFetchJson(_FB_ROOT + "/mundial.json?t=" + Date.now()).then(function(m) {
+    if (!m) { bx.innerHTML = "<div style='color:#888;font-size:11px'>Ranking mundial vacio ✓</div>"; return; }
+    var ks = Object.keys(m).sort(function(a, b) {
+      return ((m[a] && m[a].teorico200Ms) || 9e9) - ((m[b] && m[b].teorico200Ms) || 9e9);
+    });
+    bx.innerHTML = ks.map(function(k, ix) {
+      var r = m[k]; if (!r) return "";
+      return "<div class='fila'><span><b>" + (ix + 1) + "º</b> " + esc(r.nombre || k) + " <small style='color:#888'>(" + esc(r.circuito || "") + " • " + fmt(r.teorico200Ms || r.mejorMs) + ")</small></span>" +
+        "<button onclick=\"vibrar();borrarItemRankingAdm('" + escAdmJs(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 8px;font-size:10px'>Borrar</button></div>";
+    }).join("") || "<div style='color:#888;font-size:11px'>Ranking vacio ✓</div>";
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando ranking</div>"; });
+}
+
+function borrarItemRankingAdm(k) {
+  if (!confirm("¿Borrar este registro del Ranking Mundial?")) return;
+  fetch(_FB_ROOT + "/mundial/" + k + ".json", { method: "DELETE" }).then(function(){ verRankingAdm(false); }).catch(function(){});
+}
+
+function borrarRankingAdm() {
+  if (!confirm("⚠️ ¿Seguro que quieres VACIAR POR COMPLETO el Ranking Mundial de todos los pilotos?")) return;
+  fetch(_FB_ROOT + "/mundial.json", { method: "DELETE" }).then(function() {
+    var bx = document.getElementById("boxRankingAdm");
+    if (bx.style.display === "block") bx.innerHTML = "<div style='color:#888;font-size:11px'>Ranking mundial vacio ✓</div>";
+    alert("Ranking Mundial vaciado ✓");
+  }).catch(function(){ alert("Error"); });
+}
+
+function cargarPilotosAdm() {
+  var lst = document.getElementById("listaPilotosAdm"), st = document.getElementById("lblPistaStatusAdm");
+  Promise.all([
+    _admFetchJson(FB + "/sala.json?t=" + Date.now()).catch(function(){ return {}; }),
+    _admFetchJson(FB + "/pilotos.json?t=" + Date.now()).catch(function(){ return {}; })
+  ]).then(function(res) {
+    var s = res[0] || {}, pAll = res[1] || {}, pils = ordenarPilotos(pAll, s), actCnt = 0;
+    st.textContent = pils.length + " en sala";
+    lst.innerHTML = pils.map(function(p, ix) {
+      if (p.activo) actCnt++;
+      var dot = p.activo ? "🟢" : "⚪";
+      return "<div class='fila'><span>" + dot + " <b>" + (ix + 1) + "º #" + esc(p.dorsal || "--") + " " + esc(p.nombre) + "</b> (" + (p.vueltas || 0) + "v • " + fmt(p.mejorMs) + ")</span>" +
+        "<span>" + (p.vueltas > 0 ? "<button onclick=\"vibrar();restarVueltaAdm('" + escAdmJs(p.id) + "'," + Number(p.vueltas) + "," + Number(s.tsInicio || 0) + ")\" style='background:#553300;color:#ffc107;padding:3px 6px;font-size:10px;margin-right:3px'>-1v</button>" : "") +
+        "<button onclick=\"vibrar();expulsarPilotoAdm('" + escAdmJs(p.id) + "')\" style='background:#dc3545;color:#fff;padding:3px 6px;font-size:10px'>✕</button></span></div>";
+    }).join("") || "<div style='color:#777;font-size:11px'>Ningun piloto en sala.</div>";
+    st.textContent = actCnt > 0 ? ("🟢 " + actCnt + " activos / " + pils.length) : ("⚪ " + pils.length + " en lista");
+  }).catch(function(){ lst.innerHTML = "<div style='color:#ff4d5e'>Error cargando pilotos</div>"; });
+}
+
+function restarVueltaAdm(pUid, oldV, tsIni) {
+  var newV = Math.max(0, Number(oldV || 0) - 1), pay = { vueltas: newV, ultimaMs: 0 };
+  if (newV === 0) { pay.mejorMs = 0; pay.tsUltimoPaso = 0; }
+  var heatTag = Number(tsIni || 0) || "free";
+  Promise.all([
+    fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify(pay) }),
+    fetch(FB + "/pasos_lock/" + pUid + "_" + heatTag + "_v" + oldV + ".json", { method: "DELETE" }),
+    fetch(FB + "/pasos_lock/" + pUid + "_v" + oldV + ".json", { method: "DELETE" })
+  ]).then(cargarPilotosAdm).catch(function(){});
+}
+
+function expulsarPilotoAdm(pUid) {
+  if (!confirm("¿Expulsar a este piloto de la parrilla?")) return;
+  fetch(FB + "/pilotos/" + pUid + ".json", { method: "DELETE" }).then(cargarPilotosAdm).catch(function(){});
+}
+
+function limpiarOfflineAdm() {
+  _admFetchJson(FB + "/pilotos.json?t=" + Date.now()).then(function(pAll) {
+    if (!pAll) return;
+    return Promise.all(Object.keys(pAll).map(function(k) {
+      if (pAll[k] && !esPilotoActivo(pAll[k])) return fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" }).catch(function(){});
+    }));
+  }).then(cargarPilotosAdm).catch(function(){});
+}
+
+function filaCuentaAdmHtml(k, u) {
   var nom = u.nombre || k;
   return "<div class='fila'><span><b>" + esc(nom) + "</b> (" + esc(u.rol || "PILOTO") + ") " + (u.bloqueado ? "⛔" : "✅") + "</span>" +
-    "<div><button onclick=\"vibrar();bloqCta('" + safeJs(k) + "'," + (!u.bloqueado) + ",'" + safeJs(nom) + "')\" style='background:" + (u.bloqueado ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button>" +
-    "<button onclick=\"vibrar();delCta('" + safeJs(k) + "','" + safeJs(nom) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button></div></div>";
+    "<div><button onclick=\"vibrar();bloqCtaAdm('" + escAdmJs(k) + "'," + (!u.bloqueado) + ",'" + escAdmJs(nom) + "')\" style='background:" + (u.bloqueado ? "#20c997" : "#ffc107") + ";color:#000;padding:4px 7px;font-size:10px;margin-right:3px'>" + (u.bloqueado ? "Activar" : "Bloquear") + "</button>" +
+    "<button onclick=\"vibrar();delCtaAdm('" + escAdmJs(k) + "','" + escAdmJs(nom) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>Borrar</button></div></div>";
 }
 
-function cargarCuentasAdmin() {
+function cargarCuentasAdm(forceMsg) {
   var lst = document.getElementById("listaCuentasIdx");
-  lst.innerHTML = "<div style='color:#888'>Cargando...</div>";
-  fbJson(FB_ROOT + "/cuentas_idx.json?t=" + Date.now()).then(function(ct) {
-    if (!ct) { lst.innerHTML = "<div style='color:#888;font-size:11px'>Sin cuentas indexadas. Usa el buscador arriba para cuentas antiguas.</div>"; return; }
-    lst.innerHTML = Object.keys(ct).map(function(k){ return ct[k] ? filaCuentaHtml(k, ct[k]) : ""; }).join("") || "<div style='color:#888;font-size:11px'>Sin cuentas.</div>";
+  if (forceMsg) lst.innerHTML = "<div style='color:#888;font-size:11px'>Cargando cuentas...</div>";
+  _admFetchJson(_FB_ROOT + "/cuentas_idx.json?t=" + Date.now()).then(function(ct) {
+    if (!ct) { lst.innerHTML = "<div style='color:#888;font-size:11px'>Sin cuentas indexadas. Usa el buscador arriba.</div>"; return; }
+    lst.innerHTML = Object.keys(ct).map(function(k){ return ct[k] ? filaCuentaAdmHtml(k, ct[k]) : ""; }).join("");
   }).catch(function(){ lst.innerHTML = "<div style='color:#ff4d5e'>Error cargando cuentas</div>"; });
 }
 
-function buscarCuentaAdmin() {
+function buscarCuentaAdm() {
   var nom = document.getElementById("inpBuscarCta").value.trim(), k = nom.toLowerCase().replace(/[^a-z0-9]/g, ""), res = document.getElementById("resBuscarCta");
   if (!k) { res.innerHTML = ""; return; }
-  res.innerHTML = "<div style='color:#888'>Buscando...</div>";
-  fbJson(FB_ROOT + "/cuentas/" + k + ".json").then(function(u) {
-    if (!u) { res.innerHTML = "<div style='color:#ff4d5e;font-size:11px;margin-bottom:6px'>No existe la cuenta '" + esc(nom) + "'</div>"; return; }
-    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", {
-      method: "PUT",
-      body: JSON.stringify({ nombre: u.nombre || nom, rol: u.rol || "PILOTO", bloqueado: !!u.bloqueado, ultAcceso: u.ultAcceso || 0 })
-    }).catch(function(){});
-    res.innerHTML = "<div style='color:#0dcaf0;font-size:10px;margin-bottom:3px'>Resultado directo:</div>" + filaCuentaHtml(k, u);
+  res.innerHTML = "<div style='color:#888;font-size:11px'>Buscando...</div>";
+  _admFetchJson(_FB_ROOT + "/cuentas/" + k + ".json").then(function(u) {
+    if (!u) { res.innerHTML = "<div style='color:#ff4d5e;font-size:11px'>No existe la cuenta '" + esc(nom) + "'</div>"; return; }
+    fetch(_FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PUT", body: JSON.stringify({ nombre: u.nombre || nom, rol: u.rol || "PILOTO", bloqueado: !!u.bloqueado, ultAcceso: u.ultAcceso || 0 }) }).catch(function(){});
+    res.innerHTML = "<div style='color:#0dcaf0;font-size:10px;margin-bottom:3px'>Resultado directo:</div>" + filaCuentaAdmHtml(k, u);
   }).catch(function(){ res.innerHTML = "<div style='color:#ff4d5e'>Error buscando</div>"; });
 }
 
-function bloqCta(k, st, nom) {
+function bloqCtaAdm(k, st, nom) {
   if (!confirm("¿Seguro que quieres " + (st ? "BLOQUEAR" : "REACTIVAR") + " la cuenta de " + (nom || k) + "?")) return;
   Promise.all([
-    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }),
-    fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) })
-  ]).then(function(){
-    cargarCuentasAdmin();
-    if (document.getElementById("inpBuscarCta").value.trim()) buscarCuentaAdmin();
-  }).catch(function(){});
+    fetch(_FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) }),
+    fetch(_FB_ROOT + "/cuentas/" + k + ".json", { method: "PATCH", body: JSON.stringify({ bloqueado: st }) })
+  ]).then(function(){ cargarCuentasAdm(false); if (document.getElementById("inpBuscarCta").value) buscarCuentaAdm(); }).catch(function(){});
 }
 
-function delCta(k, nom) {
-  if (!confirm("⚠️ ¿Seguro que quieres BORRAR DEFINITIVAMENTE la cuenta de " + (nom || k) + "? No podra recuperarla.")) return;
+function delCtaAdm(k, nom) {
+  if (!confirm("⚠️ ¿Seguro que quieres BORRAR DEFINITIVAMENTE la cuenta de " + (nom || k) + "?")) return;
   Promise.all([
-    fetch(FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "DELETE" }),
-    fetch(FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/cuentas_idx/" + k + ".json", { method: "DELETE" }),
+    fetch(_FB_ROOT + "/cuentas/" + k + ".json", { method: "DELETE" }),
     fetch(FB + "/pilotos/" + k + ".json", { method: "DELETE" })
-  ]).then(function(){
-    document.getElementById("resBuscarCta").innerHTML = "";
-    cargarCuentasAdmin();
-    cargarSalaYPilotosAdmin();
-  }).catch(function(){});
+  ]).then(function(){ document.getElementById("resBuscarCta").innerHTML = ""; cargarCuentasAdm(false); }).catch(function(){});
 }
 
-function guardarGpsPistaAdmin() {
-  if (!("geolocation" in navigator)) { alert("Geolocalizacion no disponible en este dispositivo."); return; }
-  navigator.geolocation.getCurrentPosition(function(p) {
-    fbJson(FB + "/sala/gps.json", {
-      method: "PUT",
-      body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude })
-    }).then(function(){ alert("📍 GPS guardado para " + circNom + " ✓"); }).catch(function(){ alert("Error guardando GPS"); });
-  }, function(){ alert("No se pudo obtener el GPS. Revisa los permisos."); }, { timeout: 6000 });
-}
-
-function cargarVisitasAdmin(toggle) {
-  var bx = document.getElementById("boxClubAdmin");
-  if (toggle) bx.style.display = (bx.style.display === "block") ? "none" : "block";
+function cargarVisitasAdm() {
+  var bx = document.getElementById("boxClubAdm"); bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
-  bx.innerHTML = "<div style='color:#888'>Cargando visitas...</div>";
-  fbJson(FB_ROOT + "/visitas.json?t=" + Date.now()).then(function(vs) {
-    vs = vs || {};
-    var ks = Object.keys(vs).sort().reverse().slice(0, 20);
-    bx.innerHTML = "<div style='color:#0dcaf0;margin-bottom:6px'>Visitas totales: <b>" + Object.keys(vs).length + "</b></div>" +
-      (ks.map(function(vk){ var v = vs[vk]; return "<div style='font-size:10px;color:#aaa;border-bottom:1px solid #222;padding:4px 0'>" + esc(v.fecha) + " — <b>" + esc(v.nom) + "</b> (" + esc(v.rol) + " • " + esc(v.circ || "") + ")</div>"; }).join("") || "<div style='color:#888'>Sin visitas.</div>");
-  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando visitas</div>"; });
+  _admFetchJson(_FB_ROOT + "/visitas.json").then(function(vs) {
+    vs = vs || {}; var ks = Object.keys(vs).sort().reverse().slice(0, 20);
+    bx.innerHTML = "<div style='color:#0dcaf0;margin-bottom:6px;font-size:11px'>Visitas totales: <b>" + Object.keys(vs).length + "</b></div>" +
+      ks.map(function(vk){ var v = vs[vk]; return "<div style='font-size:10px;color:#aaa;border-bottom:1px solid #222;padding:4px 0'>" + esc(v.fecha) + " — <b>" + esc(v.nom) + "</b> (" + esc(v.rol) + ")</div>"; }).join("");
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error</div>"; });
 }
 
-function verReportesAdmin(toggle) {
-  var bx = document.getElementById("boxRepAdmin");
-  if (toggle) bx.style.display = (bx.style.display === "block") ? "none" : "block";
+function verReportesAdm() {
+  var bx = document.getElementById("boxRepAdm"); bx.style.display = (bx.style.display === "block") ? "none" : "block";
   if (bx.style.display === "none") return;
-  bx.innerHTML = "<div style='color:#888'>Cargando reportes...</div>";
-  fbJson(FB_ROOT + "/reportes.json?t=" + Date.now()).then(function(rp) {
-    if (!rp) { bx.innerHTML = "<div style='color:#888'>Sin reportes ✓</div>"; return; }
+  _admFetchJson(_FB_ROOT + "/reportes.json").then(function(rp) {
+    if (!rp) { bx.innerHTML = "<div style='color:#888;font-size:11px'>Sin reportes ✓</div>"; return; }
     bx.innerHTML = Object.keys(rp).reverse().map(function(k) {
       var x = rp[k];
-      return "<div class='fila'><div><b style='color:#ffc107'>" + esc(x.autor) + "</b> (" + esc(x.fecha) + ")<br>" + esc(x.texto) + "</div><button onclick=\"vibrar();delRepAdmin('" + safeJs(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>OK</button></div>";
+      return "<div class='fila'><div><b style='color:#ffc107'>" + esc(x.autor) + "</b> (" + esc(x.fecha) + ")<br>" + esc(x.texto) + "</div>" +
+        "<button onclick=\"vibrar();delRepAdm('" + escAdmJs(k) + "')\" style='background:#dc3545;color:#fff;padding:4px 7px;font-size:10px'>OK</button></div>";
     }).join("");
-  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error cargando reportes</div>"; });
+  }).catch(function(){ bx.innerHTML = "<div style='color:#ff4d5e'>Error</div>"; });
 }
 
-function delRepAdmin(k) {
-  fetch(FB_ROOT + "/reportes/" + k + ".json", { method: "DELETE" }).then(function(){ verReportesAdmin(false); }).catch(function(){});
+function delRepAdm(k) {
+  fetch(_FB_ROOT + "/reportes/" + k + ".json", { method: "DELETE" }).then(function() {
+    document.getElementById("boxRepAdm").style.display = "none";
+    verReportesAdm();
+  }).catch(function(){});
 }
 
-function cambiarClaveAdmin() {
-  var nw = document.getElementById("inpNuevaClaveAdmin").value.trim();
-  if (nw.length < 4) { alert("Usa al menos 4 caracteres."); return; }
-  hashTxt(nw).then(function(h) {
-    return fbJson(FB_ROOT + "/config/adminHash.json", { method: "PUT", body: JSON.stringify(h) });
-  }).then(function() {
-    document.getElementById("inpNuevaClaveAdmin").value = "";
-    if (document.getElementById("chkRecAdmin").checked) localStorage.setItem("mxp_rec_adm", b64E(nw));
-    document.getElementById("banSetAdminKey").style.display = "none";
-    alert("🛡️ Clave Admin actualizada SHA-256 ✓");
-  }).catch(function(){ alert("Error guardando clave Admin"); });
+function guardarGpsPistaAdm() {
+  if (!navigator.geolocation) { alert("Geolocalizacion no soportada."); return; }
+  navigator.geolocation.getCurrentPosition(function(p) {
+    _admFetchJson(FB + "/sala/gps.json", { method: "PUT", body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) })
+      .then(function(){ alert("GPS de " + circNom + " guardado ✓"); }).catch(function(){ alert("Error"); });
+  }, function(){ alert("No se pudo obtener GPS."); });
 }
 
-function cambiarClaveDir() {
+function cambiarClaveDirAdm() {
   var nw = document.getElementById("inpNuevaClaveDir").value.trim();
   if (nw.length < 4) { alert("Usa al menos 4 caracteres."); return; }
-  hashTxt(nw).then(function(h) {
-    return fbJson(FB_ROOT + "/config/dirHash.json", { method: "PUT", body: JSON.stringify(h) });
-  }).then(function() {
-    document.getElementById("inpNuevaClaveDir").value = "";
-    alert("👑 Clave de Direccion actualizada SHA-256 ✓");
-  }).catch(function(){ alert("Error guardando clave de Direccion"); });
+  _admHash(nw).then(function(h){ return _admFetchJson(_FB_ROOT + "/config/dirHash.json", { method: "PUT", body: JSON.stringify(h) }); })
+    .then(function(){ document.getElementById("inpNuevaClaveDir").value = ""; alert("🔐 Clave actualizada SHA-256 ✓"); })
+    .catch(function(){ alert("Error"); });
 }
 
-function recargarTodoAdmin() {
-  cargarCircuitosAdmin().then(cargarSalaYPilotosAdmin);
-  cargarAccesoCfgAdmin();
-  cargarCuentasAdmin();
-  comprobarBannerClaveAdmin();
-}
+window.validarAccesoAdmin = validarAccesoAdm;
+window.salirAdmin = salirAdm;
+window.cargarTodoAdmin = cargarTodoAdm;
 
-function iniciarAdmin(sinPropia) {
-  aplicarRestriccionesAdmin();
-  if (sinPropia) document.getElementById("banSetAdminKey").style.display = "block";
-  else comprobarBannerClaveAdmin();
-  recargarTodoAdmin();
-  if (_admTimer) clearInterval(_admTimer);
-  _admTimer = setInterval(cargarSalaYPilotosAdmin, 4000);
-}
-
-activarWakeLock();
-if (sessionStorage.getItem("mxp_adm_ok") === "1") {
-  document.getElementById("wrapAdmin").style.display = "block";
-  iniciarAdmin(false);
-} else {
-  var recA = localStorage.getItem("mxp_rec_adm");
-  if (recA) {
-    document.getElementById("inpClvAdminAuth").value = b64D(recA);
-    document.getElementById("chkRecAdmin").checked = true;
-  }
-  document.getElementById("modalAuthAdmin").style.display = "flex";
-}
+aplicarRestriccionesAdmin();
+if (localStorage.getItem("mxp_adm_ok") === "1") arrancarAdmin();
