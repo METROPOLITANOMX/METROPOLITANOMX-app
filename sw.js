@@ -1,4 +1,4 @@
-﻿var CACHE_NAME = "mxp-cache-v202611271000";
+﻿var CACHE_NAME = "mxp-cache-v202611262030";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -20,6 +20,7 @@ var APP_SHELL = [
   "./mx-director-carrera.js",
   "./mx-director-main.js",
   "./manifest.json",
+  "./manifest_director.json",
   "./logo.png"
 ];
 
@@ -29,8 +30,8 @@ self.addEventListener("install", function(e) {
     caches.open(CACHE_NAME).then(function(cache) {
       return Promise.all(
         APP_SHELL.map(function(url) {
-          return fetch(new Request(url, { cache: "no-store" })).then(function(res) {
-            if (res && res.status === 200) return cache.put(url, res);
+          return fetch(url, { cache: "no-store" }).then(function(res) {
+            if (res && res.ok) return cache.put(url, res);
           }).catch(function() {});
         })
       );

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#090a0c">
 <title>Dirección Pro - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611271">
+<link rel="stylesheet" href="mx.css?v=202611264">
 <style>
   .wrap{max-width:940px;margin:0 auto}
   .top{max-width:940px;border-bottom-color:#0dcaf0}
@@ -210,6 +210,18 @@
             <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 BANDERA VERDE</button>
           </div>
 
+          <div class="box-sub" style="border-color:#0dcaf0;margin-top:8px">
+            <b style="color:#0dcaf0;font-size:11px">📡 MODO RADAR (VELOCIDAD ENTRE 2 CAMARAS)</b>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+              <div style="width:115px">
+                <div style="font-size:9px;color:#aaa;margin-bottom:2px">DISTANCIA (m):</div>
+                <input id="inpRadarDist" type="number" min="1" max="500" step="0.5" value="10" onchange="guardarDistRadar()" style="margin:0;padding:7px;font-size:12px">
+              </div>
+              <button id="btnRadarDir" onclick="vibrar(25);toggleRadarDir()" style="flex:1;background:#262626;color:#0dcaf0;padding:11px 8px;font-size:11px;margin-top:12px">📡 RADAR: OFF</button>
+            </div>
+            <div id="lblRadarResDir" style="font-size:14px;font-weight:bold;color:#0dcaf0;background:#090b0f;border:1px solid #2b384a;border-radius:8px;padding:8px;margin-top:7px;text-align:center">📡 Radar en espera (Cam 1 ↔ Cam 2)</div>
+          </div>
+
           <div class="box-sub">
             <b style="color:#20c997;font-size:11px">📢 MEGAFONIA ESTEREO (MICROFONO O TEXTO)</b>
             <div style="display:flex;gap:5px;margin-top:6px">
@@ -225,21 +237,17 @@
             </div>
           </div>
 
-          <div class="box-sub" style="border-color:#0dcaf0">
-            <b style="color:#0dcaf0;font-size:11px">📡 MODO RADAR DE VELOCIDAD (CAM 1 ➔ CAM 2)</b>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
-              <span style="font-size:10px;color:#aaa;white-space:nowrap">DISTANCIA (m):</span>
-              <input id="inpRadarDist" type="number" min="1" max="500" step="0.5" value="20" onchange="guardarDistRadar()" style="margin:0;width:82px;text-align:center">
-              <button id="btnRadarDir" onclick="vibrar(25);toggleRadarDir()" style="flex:1;background:#262626;color:#0dcaf0;font-size:10px">📡 RADAR: OFF</button>
-            </div>
-            <div id="lblRadarResDir" style="font-size:12px;font-weight:bold;color:#ffc107;margin-top:6px;text-align:center">Velocidad medida: -- km/h</div>
+          <div class="grid2" style="margin-top:6px">
+            <button onclick="vibrar();borrarHotlapDir()" style="background:#332611;color:#ffc107;font-size:10px">🧹 BORRAR HOTLAP SEMANAL</button>
+            <button onclick="vibrar();borrarTiemposDiaDir()" style="background:#3a1c1c;color:#ff6b6b;font-size:10px">🗑️ BORRAR TIEMPOS DEL DIA</button>
+            <button onclick="vibrar();borrarMundialDir()" style="grid-column:span 2;background:#4a151b;color:#ff8787;font-size:10px">🌍 BORRAR RANKING MUNDIAL</button>
           </div>
         </div>
       </div>
 
       <div class="acc-box" style="border-color:#7950f2">
         <button class="acc-head" onclick="vibrar();toggleAcc('acc_clu')">
-          <b style="color:#d0a8ff">👥 PARRILLA EN PISTA (MANGA)</b>
+          <b style="color:#d0a8ff">👥 PILOTOS, BLOQUEO CUENTAS Y DESCARGAS</b>
           <span id="arw_acc_clu">▶</span>
         </button>
         <div id="acc_clu" class="acc-body" style="display:none">
@@ -247,7 +255,44 @@
             <span id="lblPistaStatusDir" style="font-size:11px;color:#20c997;font-weight:bold">Comprobando pista...</span>
             <button onclick="vibrar();limpiarOfflineDir()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 LIMPIAR OFFLINE</button>
           </div>
-          <div id="listaSalaDir">Sin pilotos en sala.</div>
+          <div id="listaSalaDir" style="margin-bottom:10px">Sin pilotos en sala.</div>
+
+          <div class="box-sub" style="border-color:#ffc107">
+            <b style="color:#ffc107;font-size:11px">📲 CONTROL DE DESCARGAS Y ALTAS NUEVAS</b>
+            <div class="grid2" style="margin-top:6px">
+              <select id="selModoAcceso" onchange="guardarAccesoCfg()" style="margin:0">
+                <option value="ABIERTO">🟢 ABIERTO (Libre)</option>
+                <option value="CODIGO">🔑 CON CODIGO INVITACION</option>
+                <option value="PAUSADO">🔴 PAUSADO (Paralizar)</option>
+              </select>
+              <input id="inpCodAcceso" placeholder="Codigo (ej. MX2026)" style="margin:0" onchange="guardarAccesoCfg()">
+            </div>
+            <button onclick="vibrar();guardarAccesoCfg(true)" style="width:100%;margin-top:6px;background:#ffc107;color:#000;font-size:10px">💾 APLICAR CONTROL DE DESCARGAS</button>
+          </div>
+
+          <div class="grid2" style="margin-top:8px">
+            <button onclick="vibrar();cargarCuentasDir(true)" style="background:#1c2530;color:#0dcaf0">🚫 BLOQUEAR / BORRAR CUENTAS</button>
+            <button onclick="vibrar();cargarVisitasDir()" style="background:#262626;color:#ffc107">👁️ VISITAS RECIENTES</button>
+            <button onclick="vibrar();verReportesDir()" style="background:#262626;color:#ff6b6b">🛠️ REPORTES BUGS</button>
+            <button onclick="vibrar();guardarGpsPista()" style="background:#1c2530;color:#20c997">📍 FIJAR GPS PISTA</button>
+          </div>
+
+          <div id="boxCuentasDir" style="display:none;margin-top:8px;max-height:280px;overflow-y:auto">
+            <div style="display:flex;gap:5px;margin-bottom:6px">
+              <input id="inpBuscarCta" placeholder="Buscar cuenta antigua por nombre..." style="margin:0;flex:1">
+              <button onclick="vibrar();buscarCuentaDir()" style="background:#0dcaf0;color:#000;padding:6px 10px;font-size:10px">🔎 BUSCAR</button>
+            </div>
+            <div id="resBuscarCta"></div>
+            <div id="listaCuentasIdx"></div>
+          </div>
+
+          <div id="boxClubDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
+          <div id="boxRepDir" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
+
+          <div class="box-sub" style="margin-top:8px">
+            <b style="color:#ffc107;font-size:11px">🔐 CAMBIAR CLAVE DE DIRECCION (SHA-256)</b>
+            <div style="display:flex;gap:5px;margin-top:5px"><input id="inpNuevaClaveDir" type="password" placeholder="Nueva clave..." style="margin:0;flex:1"><button onclick="vibrar(25);cambiarClaveDir()" style="background:#ffc107;color:#000">💾</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -281,13 +326,13 @@
     <div id="secDir_tiempos" style="display:none"><div id="slotTiempos"></div></div>
   </div>
 
-<script src="mx-core.js?v=202611271"></script>
-<script src="mx-garaje.js?v=202611271"></script>
-<script src="mx-garaje-color.js?v=202611271"></script>
-<script src="mx-tiempos.js?v=202611271"></script>
-<script src="mx-director-cam.js?v=202611271"></script>
-<script src="mx-director-carrera.js?v=202611271"></script>
-<script src="mx-director-admin.js?v=202611271"></script>
-<script src="mx-director-main.js?v=202611271"></script>
+<script src="mx-core.js?v=202611264"></script>
+<script src="mx-garaje.js?v=202611264"></script>
+<script src="mx-garaje-color.js?v=202611264"></script>
+<script src="mx-tiempos.js?v=202611264"></script>
+<script src="mx-director-cam.js?v=202611264"></script>
+<script src="mx-director-carrera.js?v=202611264"></script>
+<script src="mx-director-admin.js?v=202611264"></script>
+<script src="mx-director-main.js?v=202611264"></script>
 </body>
 </html>
