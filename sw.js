@@ -1,4 +1,4 @@
-﻿var CACHE_NAME = "mxp-cache-v20261127-1";
+﻿var CACHE_NAME = "mxp-cache-v202611271200";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ var APP_SHELL = [
   "./mx-piloto.js",
   "./mx-vivo.js",
   "./mx-garaje.js",
+  "./mx-garaje-color.js",
   "./mx-tiempos.js",
   "./mx-director-cam.js",
   "./mx-director-admin.js",
@@ -28,8 +29,8 @@ self.addEventListener("install", function(e) {
     caches.open(CACHE_NAME).then(function(cache) {
       return Promise.all(
         APP_SHELL.map(function(url) {
-          return fetch(url, { cache: "no-store" }).then(function(r) {
-            if (r && r.status === 200) return cache.put(url, r);
+          return fetch(url, { cache: "no-store" }).then(function(res) {
+            if (res && res.ok) return cache.put(url, res);
           }).catch(function() {});
         })
       );
@@ -54,12 +55,14 @@ self.addEventListener("activate", function(e) {
 self.addEventListener("fetch", function(e) {
   var req = e.request;
   if (req.method !== "GET") return;
+  if (req.cache === "only-if-cached" && req.mode !== "same-origin") return;
   var url = req.url || "";
   if (url.indexOf("firebaseio.com") >= 0 || url.indexOf("firebasedatabase.app") >= 0 || url.indexOf("http") !== 0) return;
   if (url.indexOf(self.location.origin) !== 0) return;
+  if (url.indexOf("admin.html") >= 0 || url.indexOf("mx-admin.js") >= 0) return;
 
   e.respondWith(
-    fetch(req, { cache: "no-cache" }).then(function(res) {
+    fetch(req.url, { cache: "no-store" }).then(function(res) {
       if (res && res.status === 200) {
         var copy = res.clone();
         caches.open(CACHE_NAME).then(function(cache) {
