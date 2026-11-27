@@ -113,7 +113,6 @@ function aplicarIdioma() {
   document.getElementById("btnAfi").textContent = "🎟️ FAN CLUB (LIVE)";
   document.getElementById("btnGlobal").textContent = "🌍 WORLD RANKING & PADDOCK";
   document.getElementById("btnReportar").textContent = "📬 INBOX";
-  document.getElementById("tLog").textContent = "SIGN IN";
   document.getElementById("tReg").textContent = "SIGN UP";
   document.getElementById("aNom").placeholder = "Rider name";
   document.getElementById("aClv").placeholder = "Password";
@@ -166,7 +165,6 @@ function abrirAuth(rol) {
 
 function modoAuth(m) {
   modA = m;
-  document.getElementById("tLog").className = "tab" + (m === "LOGIN" ? " act" : "");
   document.getElementById("tReg").className = "tab" + (m === "REG" ? " act" : "");
   document.getElementById("aPin").style.display = (m === "REG") ? "block" : "none";
   var needCod = (m === "REG" && accesoCfg.modo === "CODIGO" && localStorage.getItem("mxp_inv_ok") !== accesoCfg.codigo);

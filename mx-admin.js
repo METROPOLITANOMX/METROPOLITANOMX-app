@@ -254,13 +254,12 @@ function validarClaveAdmin() {
     msg.textContent = "Código no válido: usa solo letras, números, guiones o guiones bajos.";
     return;
   }
-  if (clave !== document.getElementById("inpCodAcceso").value.trim()) {
-    msg.style.color = "#ffc107";
-    msg.textContent = "Formato válido, pero no coincide con el código activo.";
-    return;
-  }
+  var codigoActivo = document.getElementById("inpCodAcceso").value.trim();
+  var estaActiva = document.getElementById("selModoAcceso").value === "CODIGO" && clave === codigoActivo;
   msg.style.color = "#20c997";
-  msg.textContent = rol === "DIRECCION" ? "Código activo válido: habilita Dirección y Antenas." : "Código activo válido: Dirección y Antenas permanecerán ocultas.";
+  msg.textContent = (estaActiva ? "Clave activa válida. " : "Formato válido; todavía no está activada. ") +
+    (rol === "DIRECCION" ? "Habilita Dirección y Antenas." : "Dirección y Antenas permanecerán ocultas.") +
+    (estaActiva ? "" : " Pulsa ACTIVAR COMO CLAVE DE INVITACIÓN para usarla.");
 }
 
 function usarClaveAdmin() {
@@ -278,6 +277,13 @@ function usarClaveAdmin() {
     msg.style.color = ok ? "#20c997" : "#ff6b6b";
     msg.textContent = ok ? (rol === "DIRECCION" ? "Código aplicado. Habilita Dirección y Antenas." : "Código aplicado. Dirección y Antenas permanecerán ocultas.") : "No se pudo activar la clave.";
   });
+}
+
+function habilitarAccesoAdminLocal() {
+  localStorage.setItem("mxp_inst_role", "DIRECCION");
+  var msg = document.getElementById("msgAccesoAdminLocal");
+  msg.style.color = "#20c997";
+  msg.textContent = "Acceso habilitado en este dispositivo. Vuelve a la portada: aparecerán Dirección y Antenas.";
 }
 
 function limpiarCacheAdmin() {

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Control administrativo - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611272208">
+<link rel="stylesheet" href="mx.css?v=202611280018">
 <style>
   .admin-wrap{max-width:940px;margin:0 auto}
   .admin-wrap .top,.admin-wrap .acc-box,.admin-wrap .card{max-width:940px}
@@ -122,15 +122,24 @@
       <div class="acc-head"><b style="color:#20c997">🔑 GENERADOR Y VALIDADOR DE CLAVES</b></div>
       <div class="acc-body">
         <div class="grid2">
-          <div style="font-size:11px;color:#bbb;padding:7px">Solo una clave que incluya <b style="color:#20c997">DIRECCION</b> habilita Dirección y Antenas.</div>
+          <div style="font-size:11px;color:#bbb;padding:7px">Puedes escribir tu propia clave. Si incluye <b style="color:#20c997">DIRECCION</b>, habilita Dirección y Antenas.</div>
           <button onclick="generarClaveAdmin()" style="background:#20c997;color:#000">GENERAR CLAVE</button>
         </div>
         <div class="key-row">
-          <input id="claveAdmin" autocomplete="off" placeholder="Código libre o DIRECCION...">
+          <input id="claveAdmin" autocomplete="off" spellcheck="false" placeholder="Escribe tu clave manual o genera una">
           <button onclick="validarClaveAdmin()" style="background:#0dcaf0;color:#000">VALIDAR</button>
         </div>
-        <button onclick="usarClaveAdmin()" style="margin-top:6px;background:#ffc107;color:#000">USAR COMO CLAVE DE INVITACION</button>
+        <button onclick="usarClaveAdmin()" style="margin-top:6px;background:#ffc107;color:#000">ACTIVAR COMO CLAVE DE INVITACION</button>
         <div id="msgClaveAdmin" class="admin-msg"></div>
+      </div>
+    </section>
+
+    <section class="acc-box" style="border-color:#ff922b">
+      <div class="acc-head"><b style="color:#ff922b">🛡️ ACCESO DE ADMIN EN ESTE DISPOSITIVO</b></div>
+      <div class="acc-body">
+        <div style="font-size:11px;color:#bbb">Habilita Dirección y Antenas aquí sin usar un código de descarga. Después vuelve a la portada; Dirección seguirá pidiendo tu clave habitual. No cambia el acceso de otros dispositivos.</div>
+        <button onclick="habilitarAccesoAdminLocal()" style="margin-top:7px;background:#ff922b;color:#161616">HABILITAR DIRECCIÓN Y ANTENAS AQUÍ</button>
+        <div id="msgAccesoAdminLocal" class="admin-msg"></div>
       </div>
     </section>
 
@@ -144,8 +153,8 @@
     </section>
   </main>
 
-<script src="mx-core.js?v=202611272208"></script>
-<script src="mx-director-admin.js?v=202611272208"></script>
-<script src="mx-admin.js?v=202611272208"></script>
+<script src="mx-core.js?v=202611280018"></script>
+<script src="mx-director-admin.js?v=202611280018"></script>
+<script src="mx-admin.js?v=202611280018"></script>
 </body>
 </html>

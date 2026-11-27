@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Metropolitano MX Pro</title>
-<link rel="stylesheet" href="mx.css?v=202611272343">
+<link rel="stylesheet" href="mx.css?v=202611280018">
 <style>
   body{
     background-image:
@@ -26,6 +26,8 @@
   }
   .top-bar{position:fixed;top:8px;left:10px;right:10px;display:flex;justify-content:center;align-items:center;z-index:20}
   .top-access{display:flex;justify-content:space-between;align-items:center;min-height:36px;margin-bottom:1px}
+  .auth-tabs{justify-content:center}
+  .auth-tabs #tReg{flex:0 1 50%}
   button{width:100%;padding:13px;font-size:14px;border-radius:12px}
   .btn-mini{background:linear-gradient(180deg,#262a33,#16181e);color:#ccc;border:1px solid #3c4250;padding:7px 11px;border-radius:9px;font-size:11px;width:auto;box-shadow:0 3px 0 #000}
   .box{width:100%;max-width:390px;display:flex;flex-direction:column;gap:9px;animation:fadeUp 0.25s ease}
@@ -86,8 +88,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
       </select>
     </div>
     <div id="banGps" class="banner" style="display:none;border-color:#20c997;color:#20c997;margin:8px 0"></div>
-    <div class="tabs">
-      <button id="tLog" class="tab act" onclick="vibrar();modoAuth('LOGIN')">ENTRAR</button>
+    <div class="tabs auth-tabs">
       <button id="tReg" class="tab" onclick="vibrar();modoAuth('REG')">CREAR CUENTA</button>
     </div>
     <form onsubmit="event.preventDefault();vibrar(25);procesarAuth()">
@@ -198,7 +199,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") document.documentElem
     <button id="btnGuiaCer" style="background:#2b2b2b;color:#fff;margin-top:8px;padding:11px;font-size:13px" onclick="vibrar();abrir('menu')">CERRAR</button>
   </div>
 
-<script src="mx-core.js?v=202611272343"></script>
-<script src="mx-index.js?v=202611272343"></script>
+<script src="mx-core.js?v=202611280018"></script>
+<script src="mx-index.js?v=202611280018"></script>
 </body>
 </html>
