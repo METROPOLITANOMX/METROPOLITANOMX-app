@@ -9,7 +9,7 @@ var FB = _esAmistosaAnt ? FB_ROOT + "/amistosas/" + circId + "/" + _amistosaIdAn
 var FB_IMG = _esAmistosaAnt ? FB + "/antenas_img" : FB_ROOT + "/antenas_img/" + circId;
 var FB_FF = _esAmistosaAnt ? FB + "/foto_finish.json" : FB_ROOT + "/foto_finish/" + circId + ".json";
 var FB_WU = _esAmistosaAnt ? FB + "/warmup_capturas" : FB_ROOT + "/warmup_capturas/" + circId;
-var _antenaBloqueadaRol = localStorage.getItem("mxp_inst_role") === "PILOTO" && !_esAmistosaAnt;
+var _antenaBloqueadaRol = localStorage.getItem("mxp_inst_role") !== "DIRECCION" && !_esAmistosaAnt;
 var _amistosaAntAutorizada = false;
 if (_antenaBloqueadaRol) location.replace("index.html");
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;

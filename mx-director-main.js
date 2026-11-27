@@ -14,7 +14,7 @@ localStorage.setItem("mxp_uid", uid); localStorage.setItem("mxp_nom", miNom);
 document.getElementById("txtCircDir").textContent = "🏁 " + circNom;
 
 var esDirOk = (localStorage.getItem("mxp_dir_ok") === "1");
-var _directorBloqueadoRol = localStorage.getItem("mxp_inst_role") === "PILOTO";
+var _directorBloqueadoRol = localStorage.getItem("mxp_inst_role") !== "DIRECCION";
 var dirPilotoOn = false;
 localStorage.removeItem("mxp_dir_piloto");
 var rootCache = { sala: {}, antenas: {}, pilotos: {}, garaje: {}, campeonato: {}, eventos: {} };

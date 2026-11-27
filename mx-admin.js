@@ -239,7 +239,7 @@ function generarClaveAdmin() {
   var bytes = new Uint8Array(8);
   window.crypto.getRandomValues(bytes);
   var suffix = Array.prototype.map.call(bytes, function(b){ return b.toString(16).padStart(2, "0"); }).join("").toUpperCase();
-  var clave = document.getElementById("tipoClaveAdmin").value + suffix;
+  var clave = "DIRECCION" + suffix;
   document.getElementById("claveAdmin").value = clave;
   document.getElementById("msgClaveAdmin").style.color = "#20c997";
   document.getElementById("msgClaveAdmin").textContent = "Clave generada. Actívala como código de invitación para usarla.";
@@ -249,34 +249,34 @@ function validarClaveAdmin() {
   var clave = document.getElementById("claveAdmin").value.trim();
   var msg = document.getElementById("msgClaveAdmin");
   var rol = mxRolClaveInstalacion(clave);
-  if (!rol || !/^(PILOTO|DIRECCION)[A-Z0-9_-]+$/i.test(clave)) {
+  if (!/^[A-Z0-9_-]+$/i.test(clave)) {
     msg.style.color = "#ff6b6b";
-    msg.textContent = "Formato no válido: usa PILOTO... o DIRECCION... (solo una categoría).";
+    msg.textContent = "Código no válido: usa solo letras, números, guiones o guiones bajos.";
     return;
   }
   if (clave !== document.getElementById("inpCodAcceso").value.trim()) {
     msg.style.color = "#ffc107";
-    msg.textContent = "Formato válido para " + rol + ", pero no coincide con la clave activa.";
+    msg.textContent = "Formato válido, pero no coincide con el código activo.";
     return;
   }
   msg.style.color = "#20c997";
-  msg.textContent = "Clave activa válida. Rol: " + rol + ".";
+  msg.textContent = rol === "DIRECCION" ? "Código activo válido: habilita Dirección y Antenas." : "Código activo válido: Dirección y Antenas permanecerán ocultas.";
 }
 
 function usarClaveAdmin() {
   var clave = document.getElementById("claveAdmin").value.trim();
   var rol = mxRolClaveInstalacion(clave);
   var msg = document.getElementById("msgClaveAdmin");
-  if (!rol || !/^(PILOTO|DIRECCION)[A-Z0-9_-]+$/i.test(clave)) {
+  if (!/^[A-Z0-9_-]+$/i.test(clave)) {
     msg.style.color = "#ff6b6b";
-    msg.textContent = "Genera o introduce primero una clave válida.";
+    msg.textContent = "Introduce un código válido (letras, números, guiones o guiones bajos).";
     return;
   }
   document.getElementById("selModoAcceso").value = "CODIGO";
   document.getElementById("inpCodAcceso").value = clave;
   guardarAccesoCfg(true).then(function(ok) {
     msg.style.color = ok ? "#20c997" : "#ff6b6b";
-    msg.textContent = ok ? ("Clave " + rol + " aplicada. Comparte la clave con sus destinatarios.") : "No se pudo activar la clave.";
+    msg.textContent = ok ? (rol === "DIRECCION" ? "Código aplicado. Habilita Dirección y Antenas." : "Código aplicado. Dirección y Antenas permanecerán ocultas.") : "No se pudo activar la clave.";
   });
 }
 

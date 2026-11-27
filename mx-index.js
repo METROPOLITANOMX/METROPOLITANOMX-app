@@ -36,17 +36,18 @@ function registrarPreparacionRedOficial() {
 
 function aplicarClaveInstalacion(clave) {
   var rol = mxRolClaveInstalacion(clave);
-  if (!rol) return "";
-  localStorage.setItem("mxp_inst_role", rol);
+  if (rol) localStorage.setItem("mxp_inst_role", rol);
+  else localStorage.removeItem("mxp_inst_role");
   if (rol === "DIRECCION") registrarPreparacionRedOficial();
   return rol;
 }
 
 function aplicarRestriccionesInstalacion() {
-  var soloPiloto = localStorage.getItem("mxp_inst_role") === "PILOTO";
+  var habilitada = localStorage.getItem("mxp_inst_role") === "DIRECCION";
+  document.documentElement.classList.toggle("mx-restricted-install", !habilitada);
   ["btnTopDir", "btnTopAnt"].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.style.display = soloPiloto ? "none" : "";
+    if (el) el.style.display = habilitada ? "" : "none";
   });
 }
 
@@ -90,7 +91,7 @@ function desbloquearInstalacion() {
   var rol = aplicarClaveInstalacion(c);
   aplicarRestriccionesInstalacion();
   msg.style.color = "#20c997";
-  msg.textContent = rol === "PILOTO" ? "✅ Activación PILOTO completada." : (rol === "DIRECCION" ? "✅ Instalación DIRECCION preparada para la Red de Circuitos Oficiales." : "✅ Instalacion y alta desbloqueada ✓");
+  msg.textContent = rol === "DIRECCION" ? "✅ Código aceptado. Dirección y Antenas habilitadas; instalación preparada para la Red de Circuitos Oficiales." : "✅ Código aceptado. Dirección y Antenas permanecen ocultas.";
   activarPwaSiPermitido();
 }
 
@@ -142,12 +143,12 @@ function abrir(id) {
 }
 
 function irAntenas() {
-  if (localStorage.getItem("mxp_inst_role") === "PILOTO") return;
+  if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") return;
   localStorage.setItem("mxp_circ_id", circAct); localStorage.setItem("mxp_circ_nom", circNom); location.href = "antena.html";
 }
 
 function abrirDirModal() {
-  if (localStorage.getItem("mxp_inst_role") === "PILOTO") return;
+  if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") return;
   var recD = localStorage.getItem("mxp_rec_dir");
   if (recD) { document.getElementById("dClv").value = b64Dec(recD); document.getElementById("chkRecDir").checked = true; }
   else { document.getElementById("dClv").value = ""; document.getElementById("chkRecDir").checked = false; }

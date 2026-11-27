@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Dirección Pro - Metropolitano MX</title>
 <link rel="stylesheet" href="mx.css?v=202611272208">
-<style>html.mx-pilot-block body{display:none!important}</style>
+<style>html.mx-install-block body{display:none!important}</style>
 <script>
-if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
-  document.documentElement.classList.add("mx-pilot-block");
+if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
+  document.documentElement.classList.add("mx-install-block");
   location.replace("index.html");
 }
 </script>

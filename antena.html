@@ -8,10 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Antena Meta Pro - Metropolitano MX</title>
 <link rel="stylesheet" href="mx.css?v=202611272208">
-<style>html.mx-pilot-block body{display:none!important}</style>
+<style>html.mx-install-block body{display:none!important}</style>
 <script>
-if (localStorage.getItem("mxp_inst_role") === "PILOTO") {
-  document.documentElement.classList.add("mx-pilot-block");
+var paramsInst = new URLSearchParams(location.search);
+var salaAmistosaInst = /^\d{4}$/.test(paramsInst.get("amistosa") || "") && (paramsInst.get("puesto") === "ant_1" || paramsInst.get("puesto") === "ant_2");
+if (localStorage.getItem("mxp_inst_role") !== "DIRECCION" && !salaAmistosaInst) {
+  document.documentElement.classList.add("mx-install-block");
   location.replace("index.html");
 }
 </script>

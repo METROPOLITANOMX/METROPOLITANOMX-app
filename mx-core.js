@@ -4,10 +4,7 @@ var _offSrv = 0;
 
 function mxRolClaveInstalacion(clave) {
   var s = String(clave || "").toUpperCase();
-  var piloto = /PILOTO[A-Z0-9_-]*/.test(s);
-  var direccion = /DIRECCION[A-Z0-9_-]*/.test(s);
-  if (piloto === direccion) return "";
-  return piloto ? "PILOTO" : "DIRECCION";
+  return s.indexOf("DIRECCION") >= 0 ? "DIRECCION" : "";
 }
 
 fetch(FB_BASE + ".info/serverTimeOffset.json")

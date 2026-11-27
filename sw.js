@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611272208-amistosas";
+var CACHE_NAME = "mxp-cache-v202611272304-clave-direccion";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

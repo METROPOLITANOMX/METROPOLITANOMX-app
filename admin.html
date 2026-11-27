@@ -76,7 +76,7 @@
               <option value="CODIGO">🔑 CON CODIGO INVITACION</option>
               <option value="PAUSADO">🔴 PAUSADO (Paralizar)</option>
             </select>
-            <input id="inpCodAcceso" placeholder="Codigo (ej. PILOTO1)" style="margin:0" onchange="guardarAccesoCfg()">
+            <input id="inpCodAcceso" placeholder="Código libre o con DIRECCION para habilitar Dirección y Antenas" style="margin:0" onchange="guardarAccesoCfg()">
           </div>
           <button onclick="vibrar();guardarAccesoCfg(true)" style="width:100%;margin-top:6px;background:#ffc107;color:#000;font-size:10px">💾 APLICAR CONTROL DE DESCARGAS</button>
         </div>
@@ -122,14 +122,11 @@
       <div class="acc-head"><b style="color:#20c997">🔑 GENERADOR Y VALIDADOR DE CLAVES</b></div>
       <div class="acc-body">
         <div class="grid2">
-          <select id="tipoClaveAdmin" style="margin:0">
-            <option value="PILOTO">PILOTO (oculta Dirección y Antenas)</option>
-            <option value="DIRECCION">DIRECCION (Red Oficial futura)</option>
-          </select>
+          <div style="font-size:11px;color:#bbb;padding:7px">Solo una clave que incluya <b style="color:#20c997">DIRECCION</b> habilita Dirección y Antenas.</div>
           <button onclick="generarClaveAdmin()" style="background:#20c997;color:#000">GENERAR CLAVE</button>
         </div>
         <div class="key-row">
-          <input id="claveAdmin" autocomplete="off" placeholder="PILOTO... o DIRECCION...">
+          <input id="claveAdmin" autocomplete="off" placeholder="Código libre o DIRECCION...">
           <button onclick="validarClaveAdmin()" style="background:#0dcaf0;color:#000">VALIDAR</button>
         </div>
         <button onclick="usarClaveAdmin()" style="margin-top:6px;background:#ffc107;color:#000">USAR COMO CLAVE DE INVITACION</button>
