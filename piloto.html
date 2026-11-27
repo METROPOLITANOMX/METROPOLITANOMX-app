@@ -83,12 +83,59 @@
 
     <div id="boxAmistosa" class="card" style="display:none;border-color:#fd7e14">
       <b style="color:#fd7e14;font-size:11px">MODO AMISTOSO (SIN DIRECCION EN SALA)</b>
+      <div id="amRoomEntry" style="margin-top:8px">
+        <div style="font-size:11px;color:#ddd;margin-bottom:6px">Organiza una manga aislada de la Dirección oficial. Si hay GPS, solo se permite entrar desde un radio de 3 km; sin GPS se usa el código de sala.</div>
+        <div class="grid2">
+          <button onclick="vibrar();crearSalaAmistosa()" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000;padding:11px">➕ CREAR SALA</button>
+          <button onclick="vibrar();refrescarSalasAmistosas()" style="background:#25303b;color:#0dcaf0;padding:11px">🔄 BUSCAR SALAS</button>
+        </div>
+        <div class="grid2" style="margin-top:6px">
+          <input id="inpCodigoAmistosa" type="text" inputmode="numeric" maxlength="4" placeholder="Código de 4 cifras" aria-label="Código de sala amistosa">
+          <button onclick="vibrar();unirseSalaAmistosa()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;padding:10px">UNIRSE CON CÓDIGO</button>
+        </div>
+        <div id="listaSalasAmistosas" style="margin-top:7px"></div>
+      </div>
+      <div id="amRoomPanel" style="display:none;margin-top:8px">
+        <div style="background:#201910;border:1px solid #fd7e14;border-radius:8px;padding:8px">
+          <div id="lblSalaAmistosa" style="font-size:12px;color:#ffc107;font-weight:bold"></div>
+          <div id="lblEstadoAmistosa" style="font-size:11px;color:#0dcaf0;margin-top:4px"></div>
+          <div id="listaPilotosAmistosa" style="font-size:11px;margin-top:7px"></div>
+        </div>
+        <div id="amOrganizerControls" style="display:none;margin-top:7px">
+          <div class="grid2">
+            <select id="selModoAmistosa" aria-label="Modo de manga amistosa">
+              <option value="NORMAL">Carrera Normal</option><option value="BOMBA">Bomba Reloj</option><option value="ELIM">Eliminación</option>
+              <option value="REY">Rey de la Pista</option><option value="SUPERPOLE">Superpole</option><option value="RULETA">Ruleta Loca MX</option>
+            </select>
+            <select id="selDuracionAmistosa" aria-label="Duración de manga amistosa">
+              <option value="5">5 minutos</option><option value="10" selected>10 minutos</option><option value="15">15 minutos</option><option value="0">Libre</option>
+            </select>
+          </div>
+          <button onclick="vibrar();guardarConfigSalaAmistosa()" style="width:100%;margin-top:5px;background:#25303b;color:#0dcaf0;padding:9px">💾 GUARDAR MODO Y DURACIÓN</button>
+          <div class="grid2" style="margin-top:6px">
+            <button onclick="vibrar();iniciarWarmupAmistosa()" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000;padding:11px">🔥 WARM-UP 3 MIN</button>
+            <button onclick="vibrar();salidaVallaAmistosa()" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;padding:11px">🚧 VALLA MX</button>
+            <button onclick="vibrar();detenerMangaAmistosa()" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff;padding:11px">🛑 PARAR Y GUARDAR</button>
+            <button onclick="vibrar();cerrarSalaAmistosa()" style="background:#272727;color:#ddd;padding:11px">CERRAR SALA</button>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#0dcaf0;font-weight:bold;margin:8px 0 4px">📡 ANTENAS COMPARTIDAS</div>
+        <div class="grid2">
+          <button onclick="vibrar();ofrecerAntenaAmistosa('META')" style="background:#202b35;color:#0dcaf0;padding:9px">📱 USAR COMO META</button>
+          <button onclick="vibrar();ofrecerAntenaAmistosa('REFUERZO')" style="background:#202b35;color:#20c997;padding:9px">📱 USAR COMO REFUERZO</button>
+        </div>
+        <div id="amUltimoResultado" style="font-size:11px;color:#ddd;margin-top:8px"></div>
+        <button onclick="vibrar();salirSalaAmistosa()" style="width:100%;margin-top:7px;background:#333;color:#fff;padding:9px">SALIR DE ESTA SALA</button>
+      </div>
+      <div id="amLegacyControls" class="box-sub" style="margin-top:8px">
+        <b style="font-size:10px;color:#aaa">MODO LIBRE SIN SALA</b>
       <div class="grid2" style="margin-top:7px">
         <button id="btnCalAmistosa" onclick="vibrar();calibrarConCuenta10()" style="grid-column:span 2;background:linear-gradient(180deg,#3bc9db,#0dcaf0);color:#000;padding:12px">📍 CALIBRAR ANTENA (CUENTA ATRAS 10s)</button>
         <button onclick="vibrar();cmdSalaAmistosa('WARMUP')" style="background:linear-gradient(180deg,#ffa94d,#fd7e14);color:#000;padding:12px">🔥 WARM-UP (3m)</button>
         <button onclick="vibrar();cmdSalaAmistosa('SALIDA_30')" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000;padding:12px">🚦 SALIDA 30s</button>
         <button onclick="vibrar();cmdSalaAmistosa('VALLA_MX')" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff;padding:12px">🚧 VALLA MX</button>
         <button onclick="vibrar();cmdSalaAmistosa('ESPERA')" style="background:linear-gradient(180deg,#ff6b6b,#e03131);color:#fff;padding:12px">🛑 PARAR</button>
+      </div>
       </div>
     </div>
 

@@ -13,6 +13,7 @@ var circMeta = { metros: 200, factor: 1.0 }, _ultEvP = {}, _lockVtaLocal = {}, u
 var avisoLipoP = false, avisoFinManga = false, _ultVtasSinc = -1, _ultLapSinc = 0, _tCal10 = null;
 var _tUnlockBol = null, _pctUnlockBol = 0, _unlockBolStart = 0, _unlockBolPointerId = null, _unlockBolKey = "", _bombaExplotada = false, _ultRondaElim = 0, _ultRondaRuleta = 0;
 var _ultMegaIdP = "", _ultReacTsP = 0, _esRoot = null, _lastSalaSig = "";
+var amistosaId = "", amistosaCache = {}, _esAmistosa = null, _amEventosVistos = {}, _amLockVta = {}, _amUltFin = "";
 
 fbJson(FB_ROOT + "/cuentas_idx/" + uid + ".json").then(function(ix){
   if (ix && ix.bloqueado) { alert("⛔ Tu cuenta ha sido bloqueada por Direccion."); salirPiloto(); return; }
@@ -30,6 +31,10 @@ fetch(FB_ROOT + "/circuitos_lista/" + circId + ".json").then(function(r){ return
 activarWakeLock();
 window.addEventListener("beforeunload", function() {
   if (_esRoot) try { _esRoot.close(); } catch (e) {}
+  if (_esAmistosa) try { _esAmistosa.close(); } catch (e) {}
+  if (amistosaId && amistosaCache.pilotos && amistosaCache.pilotos[uid]) {
+    fetch(rutaSalaAmistosa() + "/pilotos/" + uid + ".json", { method: "PATCH", keepalive: true, body: JSON.stringify({ enPista: false, tsActivo: 0 }) }).catch(function(){});
+  }
   var yo = (rootCache.pilotos || {})[uid];
   if (yo && !(yo.vueltas > 0)) fetch(FB + "/pilotos/" + uid + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
   else fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", keepalive: true, body: JSON.stringify({ enPista: false, tsActivo: 0 }) }).catch(function(){});
@@ -74,7 +79,7 @@ function salirPiloto() {
 
 function ayudaTab() {
   var g = {
-    sala: "SALA PISTA:\n1. Activa el audio para escuchar vueltas, diferencias y avisos; la bateria se recuerda a los 12 minutos.\n2. Consulta posicion, vuelta en curso, clasificacion, colores asignados y estado de antenas.\n3. Usa BOLSILLO para oscurecer la pantalla: manten pulsado 2 segundos para volver.\n4. FOTO-FINISH muestra la ultima captura de meta; + VUELTA permite anotar una pasada manual.\n5. Sin Direccion puedes usar el modo amistoso para calibrar, iniciar WARM-UP, usar una cuenta atras o VALLA MX y parar.",
+    sala: "SALA PISTA:\n1. Activa el audio para escuchar vueltas, diferencias y avisos; la bateria se recuerda a los 12 minutos.\n2. Consulta posicion, vuelta en curso, clasificacion, colores asignados y estado de antenas.\n3. Usa BOLSILLO para oscurecer la pantalla: manten pulsado 2 segundos para volver.\n4. FOTO-FINISH muestra la ultima captura de meta; + VUELTA permite anotar una pasada manual.\n5. Sin Direccion, crea una Manga Amistosa o unete a una activa. Con GPS se limita a 3 km; sin ubicación, se pide el código de cuatro cifras.\n6. El organizador mantiene abierta esta pantalla para elegir modo y duración, iniciar Warm-Up y dar la salida con Valla MX; otros pilotos pueden ceder sus teléfonos como Meta o Refuerzo.\n7. Los resultados amistosos se guardan aparte y no suman puntos oficiales ni afectan al Ranking Mundial.",
     garaje: "GARAJE PRO:\n1. Elige MX Tierra o Supermoto y completa modelo, dorsal y reglaje.\n2. Guarda cuatro fotos, captura los colores visibles de casco y moto, limpia el fondo y guarda la firma.\n3. Comparte el reglaje por WhatsApp o publica moto, foto y configuracion en el Paddock Mundial.",
     tiempos: "TIEMPOS:\nConsulta tu mejor vuelta, regularidad, vueltas acumuladas, rango, campeonato del dia, comparacion con otros pilotos e historial diario."
   };
@@ -92,8 +97,8 @@ function verTab(t) {
 
 function verFotoFinish() {
   document.getElementById("modalFf").style.display = "flex"; document.getElementById("txtFfInfo").textContent = "Cargando ultimo Foto-Finish..."; document.getElementById("imgFf").src = "";
-  var pils = rootCache.pilotos || {};
-  fbJson(FB_FF).then(function(ff) {
+  var usaAmistosa = usarSalaAmistosa(), pils = usaAmistosa ? (amistosaCache.pilotos || {}) : (rootCache.pilotos || {});
+  fbJson(usaAmistosa ? (rutaSalaAmistosa() + "/foto_finish.json") : FB_FF).then(function(ff) {
     if (!ff || !ff.img) { document.getElementById("txtFfInfo").textContent = "Aun no hay Foto-Finish."; return; }
     document.getElementById("imgFf").src = ff.img;
     var nomP = (ff.pid && pils[ff.pid]) ? pils[ff.pid].nombre : (ff.modo === "TODO" ? "Cualquier moto" : "Paso en meta");
@@ -125,8 +130,443 @@ function inscribirPilotoAuto() {
   }).catch(function(){});
 }
 
+function rutaSalaAmistosa() { return FB_ROOT + "/amistosas/" + circId + "/" + amistosaId; }
+function direccionOficialActiva() {
+  var s = rootCache.sala || {};
+  return !!(s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
+}
+function usarSalaAmistosa() {
+  return !!(amistosaId && amistosaCache && amistosaCache.status === "ACTIVE" && !direccionOficialActiva());
+}
+function pedirPosicionAmistosa() {
+  return new Promise(function(resolve) {
+    if (!navigator.geolocation || location.protocol === "file:") { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      resolve({ lat: Math.round(pos.coords.latitude * 1000) / 1000, lon: Math.round(pos.coords.longitude * 1000) / 1000 });
+    }, function(){ resolve(null); }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 });
+  });
+}
+function distanciaAmistosaMetros(a, b) {
+  var rad = Math.PI / 180, lat1 = Number(a.lat) * rad, lat2 = Number(b.lat) * rad;
+  var dLat = (Number(b.lat) - Number(a.lat)) * rad, dLon = (Number(b.lon) - Number(a.lon)) * rad;
+  var h = Math.min(1, Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2));
+  return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+function escribirSalaAmistosa(url, method, data) {
+  return fetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status + " al guardar la sala amistosa");
+    return r;
+  });
+}
+function claveDiaAmistosa(ts) {
+  var d = new Date(Number(ts) || Date.now());
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function perfilColorAmistoso(g) {
+  g = g || {};
+  return {
+    disc: g.disc || "MX", dorsal: g.dorsal || "1", modelo: g.modelo || "",
+    colores: Array.isArray(g.colores) ? g.colores.map(function(c) { c = c || {}; return { hex: c.hex || "", nom: c.nom || "", tipo: c.tipo || "" }; }) : [],
+    firmasWarmup: g.firmasWarmup || {}
+  };
+}
+function obtenerPerfilColorAmistoso() {
+  return fbJson(FB + "/garaje/" + uid + ".json").then(function(g) {
+    if (g) {
+      if (!rootCache.garaje) rootCache.garaje = {};
+      rootCache.garaje[uid] = g;
+    }
+    return perfilColorAmistoso(g || (rootCache.garaje || {})[uid]);
+  });
+}
+function perfilPilotoAmistoso(p) {
+  p = p || {};
+  return {
+    nombre: p.nombre || miNom, dorsal: p.dorsal || mxGar.getDorsal(),
+    vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false,
+    enPista: true, tsActivo: ahoraSrv()
+  };
+}
+function mostrarErrorSalaAmistosa(err) {
+  console.error("Sala amistosa:", err);
+  alert("No se pudo completar la acción de la sala amistosa. " + (err && err.message ? err.message : "Comprueba la conexión e inténtalo de nuevo."));
+}
+
+function refrescarSalasAmistosas() {
+  var lista = document.getElementById("listaSalasAmistosas");
+  if (lista) lista.textContent = "Buscando salas activas...";
+  fbJson(FB_ROOT + "/amistosas/" + circId + ".json?t=" + Date.now()).then(function(rooms) {
+    var activas = Object.keys(rooms || {}).map(function(id) { return { id: id, room: rooms[id] || {} }; })
+      .filter(function(x) { return x.room.status === "ACTIVE" && /^\d{4}$/.test(x.id); })
+      .sort(function(a, b) { return Number(b.room.createdAt || 0) - Number(a.room.createdAt || 0); });
+    if (!lista) return;
+    lista.innerHTML = activas.length ? activas.map(function(x) {
+      var r = x.room, n = Object.keys(r.pilotos || {}).length;
+      return '<div class="box-sub" style="margin-top:5px"><b style="color:#ffc107">' + esc(r.hostName || "Organizador") + '</b> · ' + n + ' piloto(s) · ' +
+        esc((r.sala && r.sala.modoJuego) || "NORMAL") + '<button onclick="vibrar();unirseSalaAmistosa(\'' + esc(x.id) + '\',false)" style="width:100%;margin-top:5px;background:#25303b;color:#20c997;padding:8px">UNIRSE A ESTA SALA</button></div>';
+    }).join("") : '<div style="font-size:11px;color:#999;margin-top:6px">No hay salas activas en este circuito. Puedes crear una o unirte con el código de cuatro cifras.</div>';
+  }).catch(mostrarErrorSalaAmistosa);
+}
+
+function crearSalaAmistosa() {
+  if (amistosaId) { alert("Ya estás dentro de una sala amistosa."); return; }
+  var crear = function(pos) {
+    var codigo = String(Math.floor(1000 + Math.random() * 9000));
+    fbJson(FB_ROOT + "/amistosas/" + circId + "/" + codigo + ".json").then(function(existing) {
+      if (existing) { crear(pos); return; }
+      return obtenerPerfilColorAmistoso().then(function(gar) {
+        var ah = ahoraSrv(), yo = perfilPilotoAmistoso((rootCache.pilotos || {})[uid]);
+        var room = {
+          status: "ACTIVE", code: codigo, circuitId: circId, circuitName: circNom,
+          hostUid: uid, hostName: miNom, createdAt: ah, updatedAt: ah, location: pos,
+          sala: { estado: "ESPERA", modoJuego: "NORMAL", modoDet: "GAR", duracionMin: 10, minLapSec: 5, tsInicio: 0, tsCuenta: 0 },
+          pilotos: {}, garaje: {}, antenas: {}, rolesAntena: {}, eventos: {}, resultados: {}
+        };
+        room.pilotos[uid] = yo; room.garaje[uid] = gar;
+        return escribirSalaAmistosa(FB_ROOT + "/amistosas/" + circId + "/" + codigo + ".json", "PUT", room).then(function() {
+          entrarSalaAmistosaLocal(codigo, room);
+          document.getElementById("inpCodigoAmistosa").value = "";
+          if (!gar.colores.length) alert("Sala creada. Añade y guarda tu firma de color en el Garaje para que las cámaras puedan reconocerte. Código: " + codigo);
+          else if (!pos) alert("Sala creada. Comparte en voz alta el código " + codigo + " para que puedan unirse sin GPS.");
+          else alert("Sala creada. Los pilotos a menos de 3 km podrán encontrarla; comparte también el código " + codigo + " como alternativa.");
+        });
+      });
+    }).catch(mostrarErrorSalaAmistosa);
+  };
+  pedirPosicionAmistosa().then(crear);
+}
+
+function unirseSalaAmistosa(codigo, codigoManual) {
+  var input = document.getElementById("inpCodigoAmistosa");
+  if (typeof codigoManual === "undefined") codigoManual = !codigo && !!(input && input.value.trim());
+  var code = String(codigo || (input && input.value) || "").replace(/\D/g, "").slice(0, 4);
+  var entrar = function(pos, room) {
+    var local = room.location;
+    if (local && pos && distanciaAmistosaMetros(local, pos) > 3000) {
+      alert("Esta sala está a más de 3 km. Solo puedes unirte desde el circuito.");
+      return;
+    }
+    if ((!local || !pos) && !codigoManual) {
+      var confirmado = prompt("No se pudo comprobar la ubicación. Introduce el código de 4 cifras que se comparte en el paddock:");
+      if (String(confirmado || "").replace(/\D/g, "") !== code) { alert("Código de sala incorrecto."); return; }
+    }
+    if (room.circuitId !== circId || room.status !== "ACTIVE") { alert("La sala ya no está activa en este circuito."); return; }
+    obtenerPerfilColorAmistoso().then(function(garage) {
+      var existing = (room.pilotos || {})[uid], source = existing || (rootCache.pilotos || {})[uid] || {};
+      var member = existing ? Object.assign({}, existing, { enPista: true, tsActivo: ahoraSrv() }) : perfilPilotoAmistoso(source);
+      var path = FB_ROOT + "/amistosas/" + circId + "/" + code;
+      return Promise.all([
+        escribirSalaAmistosa(path + "/pilotos/" + uid + ".json", "PUT", member),
+        escribirSalaAmistosa(path + "/garaje/" + uid + ".json", "PUT", garage)
+      ]).then(function() {
+        room.pilotos = room.pilotos || {}; room.pilotos[uid] = member;
+        room.garaje = room.garaje || {}; room.garaje[uid] = garage;
+        entrarSalaAmistosaLocal(code, room);
+        if (input) input.value = "";
+        if (!garage.colores.length) alert("Te has unido, pero las cámaras no podrán reconocerte hasta que guardes una firma de color en el Garaje.");
+      });
+    }).catch(mostrarErrorSalaAmistosa);
+  };
+  if (!/^\d{4}$/.test(code)) { alert("Introduce un código válido de cuatro cifras."); return; }
+  fbJson(FB_ROOT + "/amistosas/" + circId + "/" + code + ".json").then(function(room) {
+    if (!room || room.status !== "ACTIVE" || room.circuitId !== circId) { alert("No existe una sala activa con ese código en este circuito."); return; }
+    pedirPosicionAmistosa().then(function(pos) { entrar(pos, room); });
+  }).catch(mostrarErrorSalaAmistosa);
+}
+
+function entrarSalaAmistosaLocal(code, room) {
+  amistosaId = code; amistosaCache = room || {};
+  localStorage.setItem("mxp_sala_amistosa_" + circId, code);
+  conectarSseAmistosa(); renderSalaAmistosa(); pintarSalaUI();
+}
+function recuperarSalaAmistosa() {
+  var code = localStorage.getItem("mxp_sala_amistosa_" + circId) || "";
+  if (!/^\d{4}$/.test(code)) { refrescarSalasAmistosas(); return; }
+  fbJson(FB_ROOT + "/amistosas/" + circId + "/" + code + ".json").then(function(room) {
+    if (!room || room.status === "CLOSED" || room.status === "DELETED") {
+      localStorage.removeItem("mxp_sala_amistosa_" + circId);
+      refrescarSalasAmistosas(); return;
+    }
+    amistosaId = code; amistosaCache = room;
+    if (room.status === "ACTIVE") conectarSseAmistosa();
+    renderSalaAmistosa(); pintarSalaUI();
+  }).catch(mostrarErrorSalaAmistosa);
+}
+function conectarSseAmistosa() {
+  if (_esAmistosa) try { _esAmistosa.close(); } catch (e) {}
+  if (!amistosaId) return;
+  _esAmistosa = null;
+  try {
+    _esAmistosa = new EventSource(rutaSalaAmistosa() + ".json");
+    var onSse = function(e) {
+      try {
+        var m = JSON.parse(e.data); if (!m || !m.path) return;
+        if (m.path === "/") amistosaCache = m.data || {};
+        else applySsePatch(amistosaCache, m.path, m.data, e.type === "put");
+        if (uid === amistosaCache.hostUid) {
+          Object.keys(amistosaCache.eventos || {}).forEach(function(aid) { manejarEventoSalaAmistosa(amistosaCache.eventos[aid]); });
+        }
+        renderSalaAmistosa(); pintarSalaUI();
+      } catch (e2) { console.error("Actualización de sala amistosa inválida:", e2); }
+    };
+    _esAmistosa.addEventListener("put", onSse); _esAmistosa.addEventListener("patch", onSse);
+    _esAmistosa.onerror = function() { if (_esAmistosa && _esAmistosa.readyState === 2) setTimeout(conectarSseAmistosa, 2500); };
+  } catch (err) { mostrarErrorSalaAmistosa(err); }
+}
+
+function manejarEventoSalaAmistosa(ev) {
+  if (!usarSalaAmistosa() || uid !== amistosaCache.hostUid || !ev || !ev.ts || !ev.antId) return;
+  var key = ev.antId + ":" + ev.ts;
+  if (_amEventosVistos[key]) return;
+  _amEventosVistos[key] = true;
+  if (Math.abs(ahoraSrv() - Number(ev.ts)) > 8000) return;
+  if (ev.pilotoUid && amistosaCache.pilotos && amistosaCache.pilotos[ev.pilotoUid]) registrarVueltaAmistosa(ev.pilotoUid, Number(ev.ts), false);
+}
+
+function renderSalaAmistosa() {
+  var entry = document.getElementById("amRoomEntry"), panel = document.getElementById("amRoomPanel");
+  var sub = document.getElementById("amLegacyControls");
+  if (!entry || !panel) return;
+  var joined = !!amistosaId;
+  entry.style.display = joined ? "none" : "block";
+  panel.style.display = joined ? "block" : "none";
+  if (sub) sub.style.display = joined ? "none" : "block";
+  if (!joined) return;
+  var room = amistosaCache || {}, sala = room.sala || {}, host = uid === room.hostUid;
+  document.getElementById("lblSalaAmistosa").textContent = "🏁 SALA " + amistosaId + " · " + (host ? "ERES EL ORGANIZADOR" : ("ORGANIZA " + (room.hostName || "PILOTO")));
+  var status = sala.estado || "ESPERA";
+  document.getElementById("lblEstadoAmistosa").textContent = "Estado: " + status + " · " + (sala.modoJuego || "NORMAL") +
+    (Number(sala.duracionMin) ? " · " + sala.duracionMin + " min" : " · libre");
+  var pilots = room.pilotos || {}, gar = room.garaje || {};
+  var roster = Object.keys(pilots).map(function(id) {
+    var p = pilots[id], g = gar[id] || {}, active = p.enPista !== false && Math.abs(ahoraSrv() - Number(p.tsActivo || 0)) < 25000;
+    return (active ? "🟢 " : "⚪ ") + (Number(p.vueltas || 0) ? (p.vueltas + "v ") : "") + "#" + esc(p.dorsal || g.dorsal || "--") + " " + esc(p.nombre || "Piloto") + renderSwatches(g);
+  });
+  document.getElementById("listaPilotosAmistosa").innerHTML = roster.length ? roster.join("<br>") : "Esperando pilotos...";
+  var controls = document.getElementById("amOrganizerControls");
+  controls.style.display = host && room.status === "ACTIVE" ? "block" : "none";
+  if (host) {
+    var mode = document.getElementById("selModoAmistosa"), duration = document.getElementById("selDuracionAmistosa");
+    if (document.activeElement !== mode) mode.value = sala.modoJuego || "NORMAL";
+    if (document.activeElement !== duration) duration.value = String(Number(sala.duracionMin) || 0);
+  }
+  var roles = room.rolesAntena || {};
+  document.getElementById("amUltimoResultado").innerHTML =
+    "Meta: " + (roles.ant_1 && Math.abs(ahoraSrv() - Number(roles.ant_1.ts || 0)) < 15000 ? "🟢 conectada" : "⚪ libre") +
+    " · Refuerzo: " + (roles.ant_2 && Math.abs(ahoraSrv() - Number(roles.ant_2.ts || 0)) < 15000 ? "🟢 conectada" : "⚪ libre");
+  if (sala.estado === "FINISHED" && sala.resultadoId && room.resultados && room.resultados[sala.resultadoId]) {
+    var result = room.resultados[sala.resultadoId];
+    document.getElementById("amUltimoResultado").innerHTML += "<br><b style='color:#ffc107'>🏁 RESULTADO AMISTOSO GUARDADO</b><br>" +
+      (result.res || []).map(function(r, i) { return (i + 1) + "º " + esc(r.nombre) + " · " + (r.vueltas || 0) + "v · " + fmt(r.mejorMs); }).join("<br>");
+  }
+}
+
+function asegurarOrganizadorAmistoso() {
+  if (!usarSalaAmistosa()) { alert("La sala amistosa no está activa o Dirección ha tomado el control del circuito."); return false; }
+  if (uid !== amistosaCache.hostUid) { alert("Solo el organizador puede cambiar la manga."); return false; }
+  return true;
+}
+function guardarConfigSalaAmistosa() {
+  if (!asegurarOrganizadorAmistoso()) return;
+  var sala = amistosaCache.sala || {}, mode = document.getElementById("selModoAmistosa").value;
+  if (sala.estado === "EN_CURSO" || sala.estado === "WARMUP" || sala.estado === "VALLA_MX") { alert("Espera a que termine la salida o la manga antes de cambiar el modo."); return; }
+  var duration = Number(document.getElementById("selDuracionAmistosa").value);
+  escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", { modoJuego: mode, duracionMin: duration, modoDet: "GAR", minLapSec: 5 })
+    .then(function() { amistosaCache.sala = Object.assign({}, sala, { modoJuego: mode, duracionMin: duration, modoDet: "GAR", minLapSec: 5 }); renderSalaAmistosa(); pintarSalaUI(); })
+    .catch(mostrarErrorSalaAmistosa);
+}
+function reiniciarDatosMangaAmistosa() {
+  var pilots = Object.assign({}, amistosaCache.pilotos || {}), ah = ahoraSrv();
+  Object.keys(pilots).forEach(function(id) {
+    pilots[id] = Object.assign({}, pilots[id], { vueltas: 0, ultimaMs: 0, mejorMs: 0, tsUltimoPaso: 0, sensorOk: false, eliminado: false, enPista: true, tsActivo: ah });
+  });
+  return escribirSalaAmistosa(rutaSalaAmistosa() + "/pilotos.json", "PUT", pilots).then(function() {
+    amistosaCache.pilotos = pilots;
+  });
+}
+function iniciarWarmupAmistosa() {
+  if (!asegurarOrganizadorAmistoso()) return;
+  var ants = amistosaCache.antenas || {}, now = ahoraSrv();
+  var online = Object.keys(ants).filter(function(k) { return Math.abs(now - Number(ants[k].ts || 0)) < 15000; });
+  if (!online.length || online.some(function(k) { return !ants[k].calibrada; })) {
+    alert("Conecta y calibra al menos una antena compartida antes del Warm-Up.");
+    return;
+  }
+  reiniciarDatosMangaAmistosa().then(function() {
+    var ah = ahoraSrv(), sala = Object.assign({}, amistosaCache.sala || {});
+    sala.estado = "WARMUP"; sala.tsInicio = ah + 180000; sala.tsCuenta = 0;
+    sala.heatId = String(ah); sala.diaKey = claveDiaAmistosa(ah); sala.resultadoId = "";
+    sala.ultPasoTs = 0; sala.ultPasoTxt = ""; sala.ruleta = null;
+    avisoFinManga = false; _wuFinAvisoP = false; _ultSecWuP = -1; _amUltFin = "";
+    _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false;
+    return escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PUT", sala).then(function() {
+      amistosaCache.sala = sala;
+    });
+  }).then(function() {
+    mxHablar("Atencion pilotos, comienza el Warm-Up amistoso de tres minutos", vozP);
+    renderSalaAmistosa(); pintarSalaUI();
+  }).catch(mostrarErrorSalaAmistosa);
+}
+function salidaVallaAmistosa() {
+  if (!asegurarOrganizadorAmistoso()) return;
+  var sala = amistosaCache.sala || {};
+  if (sala.estado === "WARMUP") { alert("Espera a que termine el Warm-Up y llame a los pilotos a parrilla."); return; }
+  var ah = ahoraSrv(), tsCuenta = ah + 30000, tsInicio = tsCuenta - 4000 + Math.floor(Math.random() * 5000);
+  var patch = { estado: "VALLA_MX", tsCuenta: tsCuenta, tsInicio: tsInicio, heatId: sala.heatId || String(ah), diaKey: sala.diaKey || claveDiaAmistosa(ah), resultadoId: "", ruleta: null };
+  if ((sala.modoJuego || "NORMAL") === "RULETA" && typeof RULETA_RETOS !== "undefined" && RULETA_RETOS.length) {
+    var reto = RULETA_RETOS[Math.floor(Math.random() * RULETA_RETOS.length)];
+    patch.ruleta = { ronda: ah, texto: reto.tit, voz: reto.voz };
+  }
+  var pilots = {};
+  Object.keys(amistosaCache.pilotos || {}).forEach(function(id) {
+    pilots[id] = Object.assign({}, amistosaCache.pilotos[id], { tsUltimoPaso: 0 });
+  });
+  Promise.all([
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", patch),
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/pilotos.json", "PUT", pilots)
+  ]).then(function() {
+    Object.assign(sala, patch); amistosaCache.sala = sala; amistosaCache.pilotos = pilots;
+    ultSegSemP = -99; mxHablar("Atencion pilotos, treinta segundos para la Valla MX amistosa", vozP); renderSalaAmistosa(); pintarSalaUI();
+  })
+    .catch(mostrarErrorSalaAmistosa);
+}
+function construirResultadoAmistoso(motivo) {
+  var sala = amistosaCache.sala || {}, pilots = ordenarPilotos(amistosaCache.pilotos || {}, sala);
+  return {
+    id: amistosaId + "_" + String(sala.heatId || sala.tsInicio || ahoraSrv()),
+    etiqueta: "Amistosa", circuitoId: circId, circuito: circNom, sala: amistosaId,
+    modo: sala.modoJuego || "NORMAL", duracionMin: Number(sala.duracionMin) || 0,
+    inicio: Number(sala.tsInicio) || 0, final: ahoraSrv(), motivo: motivo || "Finalizada",
+    res: pilots.map(function(p, i) {
+      return { id: p.id, nombre: p.nombre || "Piloto", dorsal: p.dorsal || "1", posicion: i + 1, vueltas: Number(p.vueltas) || 0, ultimaMs: Number(p.ultimaMs) || 0, mejorMs: Number(p.mejorMs) || 0, eliminado: !!p.eliminado };
+    })
+  };
+}
+function finalizarMangaAmistosa(motivo) {
+  if (!asegurarOrganizadorAmistoso()) return Promise.resolve(false);
+  var sala = amistosaCache.sala || {}, heatId = String(sala.heatId || sala.tsInicio || "");
+  if (!heatId || sala.resultadoId === heatId || _amUltFin === heatId) return Promise.resolve(false);
+  _amUltFin = heatId;
+  var result = construirResultadoAmistoso(motivo), day = sala.diaKey || claveDiaAmistosa(result.final);
+  var resultKey = amistosaId + "_" + heatId;
+  var resultPath = FB_ROOT + "/resultados_dia_amistosas/" + circId + "/" + day + "/" + resultKey + ".json";
+  return Promise.all([
+    escribirSalaAmistosa(resultPath, "PUT", result),
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/resultados/" + heatId + ".json", "PUT", result),
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", { estado: "FINISHED", finTs: result.final, resultadoId: heatId, resultadoGuardado: heatId, motivoFin: motivo || "Finalizada" })
+  ]).then(function() {
+    amistosaCache.resultados = amistosaCache.resultados || {}; amistosaCache.resultados[heatId] = result;
+    Object.assign(sala, { estado: "FINISHED", finTs: result.final, resultadoId: heatId, resultadoGuardado: heatId, motivoFin: motivo || "Finalizada" });
+    avisoFinManga = true; _lastSalaSig = ""; renderSalaAmistosa(); pintarSalaUI();
+    return true;
+  }).catch(function(err) { _amUltFin = ""; mostrarErrorSalaAmistosa(err); return false; });
+}
+function detenerMangaAmistosa() {
+  if (!asegurarOrganizadorAmistoso()) return;
+  if ((amistosaCache.sala || {}).estado === "EN_CURSO") { finalizarMangaAmistosa("Parada por el organizador"); return; }
+  var sala = amistosaCache.sala || {};
+  escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", { estado: "ESPERA", tsInicio: 0, tsCuenta: 0 })
+    .then(function() { Object.assign(sala, { estado: "ESPERA", tsInicio: 0, tsCuenta: 0 }); renderSalaAmistosa(); pintarSalaUI(); })
+    .catch(mostrarErrorSalaAmistosa);
+}
+function cerrarSalaAmistosa() {
+  if (!asegurarOrganizadorAmistoso()) return;
+  if (!confirm("¿Cerrar esta sala amistosa? La clasificación de la manga actual se guardará sin puntos oficiales.")) return;
+  var sala = amistosaCache.sala || {}, finalizar = sala.estado === "EN_CURSO" ? finalizarMangaAmistosa("Sala cerrada") : Promise.resolve(true);
+  finalizar.then(function(ok) {
+    if (ok === false) return;
+    return escribirSalaAmistosa(rutaSalaAmistosa() + ".json", "PATCH", { status: "FINISHED", closedAt: ahoraSrv() });
+  }).then(function() {
+    amistosaCache.status = "FINISHED"; renderSalaAmistosa(); pintarSalaUI();
+  }).catch(mostrarErrorSalaAmistosa);
+}
+function salirSalaAmistosa() {
+  if (!amistosaId) return;
+  if (uid === amistosaCache.hostUid && amistosaCache.status === "ACTIVE") {
+    alert("Como organizador, cierra la sala antes de salir para guardar el resultado.");
+    return;
+  }
+  var path = rutaSalaAmistosa();
+  escribirSalaAmistosa(path + "/pilotos/" + uid + ".json", "PATCH", { enPista: false, tsActivo: 0, salidaTs: ahoraSrv() })
+    .then(function() {
+      if (_esAmistosa) try { _esAmistosa.close(); } catch (e) {}
+      localStorage.removeItem("mxp_sala_amistosa_" + circId);
+      amistosaId = ""; amistosaCache = {}; _esAmistosa = null; renderSalaAmistosa(); pintarSalaUI(); refrescarSalasAmistosas();
+    }).catch(mostrarErrorSalaAmistosa);
+}
+function ofrecerAntenaAmistosa(tipo) {
+  if (!usarSalaAmistosa()) { alert("Únete a una sala activa antes de ofrecer el teléfono como antena."); return; }
+  if (uid === amistosaCache.hostUid) { alert("Mantén abierto el móvil del organizador para controlar la salida y registrar la manga. Pide a otro piloto que ceda su teléfono como antena."); return; }
+  var aid = tipo === "META" ? "ant_1" : "ant_2", path = rutaSalaAmistosa() + "/rolesAntena/" + aid;
+  fbJson(path + ".json").then(function(claim) {
+    if (claim && claim.uid !== uid && Math.abs(ahoraSrv() - Number(claim.ts || 0)) < 15000) { alert("Ese puesto ya está ocupado por otro teléfono."); return; }
+    var data = { uid: uid, nombre: miNom, tipo: tipo, ts: ahoraSrv() };
+    return escribirSalaAmistosa(path + ".json", "PUT", data).then(function() {
+      var url = "antena.html?amistosa=" + encodeURIComponent(amistosaId) + "&puesto=" + encodeURIComponent(aid);
+      location.href = url;
+    });
+  }).catch(mostrarErrorSalaAmistosa);
+}
+
+function registrarVueltaAmistosa(pUid, evTs, esManual) {
+  if (!usarSalaAmistosa()) return;
+  var roomPilots = amistosaCache.pilotos || {}, p = roomPilots[pUid], sala = amistosaCache.sala || {}, ah = Number(evTs || ahoraSrv());
+  if (!p || (p.eliminado && esManual)) return;
+  if (uid !== amistosaCache.hostUid && !esManual) return;
+  var state = sala.estado || "ESPERA", minMs = esManual ? 900 : Math.max(900, (Number(sala.minLapSec) || 5) * 1000);
+  if (state === "WARMUP" || state === "ESPERA" || state === "TEST" || state === "VALLA_MX" && ah < Number(sala.tsInicio || 0)) {
+    if (!esManual) {
+      p.sensorOk = true;
+      escribirSalaAmistosa(rutaSalaAmistosa() + "/pilotos/" + pUid + ".json", "PATCH", { sensorOk: true, tsActivo: ahoraSrv() }).catch(mostrarErrorSalaAmistosa);
+      Object.assign(sala, { ultPasoTs: ah, ultPasoTxt: (p.nombre || "Piloto") + " (Prueba amistosa OK)" });
+      escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", { ultPasoTs: ah, ultPasoTxt: sala.ultPasoTxt }).catch(mostrarErrorSalaAmistosa);
+    } else {
+      document.getElementById("lblDeltaVivo").textContent = "⏳ Espera a que comience la manga amistosa.";
+    }
+    return;
+  }
+  if (state !== "EN_CURSO" && !(state === "VALLA_MX" && ah >= Number(sala.tsInicio || 0))) {
+    if (esManual) alert("La manga amistosa todavía no está en curso.");
+    return;
+  }
+  if (state === "VALLA_MX") {
+    sala.estado = "EN_CURSO";
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", { estado: "EN_CURSO" }).catch(mostrarErrorSalaAmistosa);
+  }
+  if (uid !== amistosaCache.hostUid && !esManual) return;
+  var ult = Number(p.tsUltimoPaso || 0), heat = String(sala.heatId || sala.tsInicio || "libre");
+  if (ult && ah - ult < minMs) return;
+  var lap = ah - (ult || Number(sala.tsInicio || 0) || ah);
+  if (lap < (esManual ? 900 : 1500)) return;
+  var vueltas = Number(p.vueltas || 0) + 1, mejor = (!p.mejorMs || lap < Number(p.mejorMs)) ? lap : Number(p.mejorMs);
+  var lockKey = pUid + "_" + heat + "_v" + vueltas;
+  if (_amLockVta[lockKey]) return;
+  _amLockVta[lockKey] = true;
+  var pAnterior = Object.assign({}, p), salaAnterior = Object.assign({}, sala);
+  Object.assign(p, { vueltas: vueltas, ultimaMs: lap, mejorMs: mejor, tsUltimoPaso: ah, enPista: true, tsActivo: ahoraSrv(), sensorOk: true });
+  var patchS = { ultPasoTs: ah, ultPasoTxt: (p.nombre || "Piloto") + " #" + (p.dorsal || "1") + " (" + fmt(mejor) + ")" };
+  if (!sala.hotlapMs || lap < Number(sala.hotlapMs)) { patchS.hotlapMs = lap; patchS.hotlapTxt = (p.nombre || "Piloto") + " — " + fmt(lap); }
+  Object.assign(sala, patchS); _lastSalaSig = "";
+  Promise.all([
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/pilotos/" + pUid + ".json", "PATCH", p),
+    escribirSalaAmistosa(rutaSalaAmistosa() + "/sala.json", "PATCH", patchS)
+  ]).then(function() {
+    if (esManual) document.getElementById("lblDeltaVivo").textContent = "✅ Vuelta amistosa " + vueltas + " · " + fmt(lap);
+    pintarSalaUI(); renderSalaAmistosa();
+  }).catch(function(err) {
+    Object.assign(p, pAnterior);
+    Object.keys(patchS).forEach(function(k) { if (typeof salaAnterior[k] === "undefined") delete sala[k]; });
+    Object.assign(sala, salaAnterior);
+    delete _amLockVta[lockKey]; mostrarErrorSalaAmistosa(err);
+  });
+}
+
 function cmdSalaAmistosa(est) {
   desbloquearAudioP(false);
+  if (usarSalaAmistosa()) {
+    alert("Esta sala tiene controles propios. Usa Warm-Up, Valla MX y Parar dentro del panel de la sala amistosa.");
+    return;
+  }
   var ants = rootCache.antenas || {}, aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
   if (est === "WARMUP" && (!aks.length || aks.some(function(k){ return !ants[k].calibrada; }))) {
     mxHablar("Calibra primero la pista vacia antes de iniciar el warm up", vozP);
@@ -158,14 +598,15 @@ function cmdSalaAmistosa(est) {
 }
 function calibrarConCuenta10() {
   desbloquearAudioP(false); if (_tCal10) return;
-  var s = 10, b = document.getElementById("btnCalAmistosa"), ants = rootCache.antenas || {};
+  var s = 10, b = document.getElementById("btnCalAmistosa"), ants = usarSalaAmistosa() ? (amistosaCache.antenas || {}) : (rootCache.antenas || {});
+  var fbActiva = usarSalaAmistosa() ? rutaSalaAmistosa() : FB;
   mxHablar("Coloca el movil en meta y retirate, calibrando en 10 segundos", vozP);
   _tCal10 = setInterval(function() {
     if (b) b.textContent = "⏳ CALIBRANDO EN " + s + "s..."; if (s <= 5 && s >= 1) mxHablar(String(s), vozP);
     if (s <= 0) {
       clearInterval(_tCal10); _tCal10 = null;
       var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; }); if (!aks.length) aks = ["ant_1"];
-      aks.forEach(function(aid, ix){ setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true }) }).catch(function(){}); }, ix * 800); });
+      aks.forEach(function(aid, ix){ setTimeout(function(){ fetch(fbActiva + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true }) }).catch(function(){}); }, ix * 800); });
       if (b) { b.textContent = "✅ PISTA CALIBRADA OK"; b.style.background = "#20c997"; }
       mxHablar("Pista vacia calibrada", vozP);
     }
@@ -174,6 +615,7 @@ function calibrarConCuenta10() {
 }
 
 function registrarVuelta(pUid, evTs, esManual) {
+  if (usarSalaAmistosa()) { registrarVueltaAmistosa(pUid, evTs, esManual); return; }
   var ah = Number(evTs || ahoraSrv());
   var p = (pUid === uid) ? asegurarPilotoLocal(ah) : (rootCache.pilotos || {})[pUid];
   if (!p) return;
@@ -261,6 +703,7 @@ function registrarVuelta(pUid, evTs, esManual) {
 function sumarVueltaManual() { desbloquearAudioP(false); registrarVuelta(uid, ahoraSrv(), true); }
 
 function manejarEventoAntena(ev) {
+  if (usarSalaAmistosa()) return;
   if (!ev || !ev.ts || !ev.antId || _ultEvP[ev.antId] === ev.ts) return;
   _ultEvP[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
@@ -275,7 +718,7 @@ function manejarEventoAntena(ev) {
 }
 
 function pintarAntStatusP() {
-  var ants = rootCache.antenas || {}, ah = ahoraSrv();
+  var ants = usarSalaAmistosa() ? (amistosaCache.antenas || {}) : (rootCache.antenas || {}), ah = ahoraSrv();
   var aks = Object.keys(ants).filter(function(k){ return Math.abs(ah - Number(ants[k].ts || 0)) < 15000; });
   var lA = document.getElementById("lblAntVivo");
   lA.textContent = aks.length ? ("📡 ANTENAS: " + aks.length + " CONECTADA(S) ✓") : "📡 ANTENAS: DESCONECTADAS";
@@ -288,9 +731,10 @@ function renderSwatches(g) {
 }
 
 function actualizarSemaforoP() {
-  var s = rootCache.sala || {}, est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
+  var usaAmistosa = usarSalaAmistosa(), base = usaAmistosa ? rutaSalaAmistosa() : FB;
+  var s = usaAmistosa ? (amistosaCache.sala || {}) : (rootCache.sala || {}), est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), ah = ahoraSrv();
   aplicarBanderaUI(s, "banBanderaAmP");
-  var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+  var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), dirOn = usaAmistosa ? false : (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
 
   if (est === "WARMUP" && t0 > 0) {
     var dfW = t0 - ah, sgW = Math.max(0, Math.ceil(dfW / 1000));
@@ -311,7 +755,7 @@ function actualizarSemaforoP() {
         mxBeep(980, 220);
         mxHablar("Fin de warm-up. Atencion pilotos, llamada a parrilla de salida", vozP);
         s.estado = "ESPERA"; s.tsInicio = 0;
-        fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
+        fetch(base + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "ESPERA", tsInicio: 0 }) }).catch(function(){});
       }
     }
   } else {
@@ -353,7 +797,7 @@ function actualizarSemaforoP() {
       if (ultSegSemP !== -999) {
         ultSegSemP = -999; _salidaShowHasta = (df > -4000) ? (nowLoc + 1800) : 0;
         if (_salidaShowHasta) { mxBeep(1100, 260); if (!dirOn) mxHablar("¡SALIDA!", vozP); }
-        if (!dirOn) { s.estado = "EN_CURSO"; fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){}); }
+        if (!dirOn) { s.estado = "EN_CURSO"; fetch(base + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO" }) }).catch(function(){}); }
       }
       if (nowLoc < _salidaShowHasta) {
         ov.style.display = "flex"; ov.style.background = "#00c853";
@@ -376,22 +820,31 @@ function actualizarSemaforoP() {
 }
 
 function actualizarCuentaMangaP() {
-  var s = rootCache.sala || {}, inicio = Number(s.tsInicio || 0), duracion = Number(s.duracionMin || 0);
+  var usaAmistosa = usarSalaAmistosa(), s = usaAmistosa ? (amistosaCache.sala || {}) : (rootCache.sala || {});
+  var inicio = Number(s.tsInicio || 0), duracion = Number(s.duracionMin || 0);
   if (s.estado !== "EN_CURSO" || inicio <= 0 || duracion <= 0) return;
   var restante = inicio + duracion * 60000 - ahoraSrv(), texto = restante > 0 ? ("MANGA " + fmtCuentaRegresivaManga(restante)) : "FIN MANGA";
   var lbl = document.getElementById("lblEstadoSala");
   if (lbl.textContent !== texto) lbl.textContent = texto;
-  if (restante <= 0 && !avisoFinManga) {
-    avisoFinManga = true;
-    var dirOn = s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000;
-    if (!dirOn) mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP);
+  if (restante <= 0) {
+    if (!avisoFinManga) {
+      avisoFinManga = true;
+      var dirOn = s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000;
+      if (!dirOn) mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP);
+    }
+    if (usaAmistosa && uid === amistosaCache.hostUid && s.resultadoGuardado !== String(s.heatId || s.tsInicio || "")) {
+      finalizarMangaAmistosa("Tiempo cumplido");
+    }
   }
 }
 
 function pintarSalaUI() {
-  var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gar = rootCache.garaje || {}, ah = ahoraSrv();
+  var usaAmistosa = usarSalaAmistosa();
+  var s = usaAmistosa ? (amistosaCache.sala || {}) : (rootCache.sala || {});
+  var pObj = usaAmistosa ? (amistosaCache.pilotos || {}) : (rootCache.pilotos || {});
+  var gar = usaAmistosa ? (amistosaCache.garaje || {}) : (rootCache.garaje || {}), ah = ahoraSrv();
   pintarAntStatusP();
-  if (pObj[uid]) {
+  if (!usaAmistosa && pObj[uid]) {
     var vAct = Number(pObj[uid].vueltas || 0), lAct = Number(pObj[uid].ultimaMs || 0), tsP = Number(pObj[uid].tsUltimoPaso || 0);
     if (_ultVtasSinc >= 0 && vAct > _ultVtasSinc && lAct > 0 && tsP !== _ultLapSinc) {
       _ultLapSinc = tsP; _bombaExplotada = false;
@@ -400,8 +853,9 @@ function pintarSalaUI() {
     _ultVtasSinc = vAct;
   }
 
-  var dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+  var dirOn = usaAmistosa ? false : (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
   document.getElementById("boxAmistosa").style.display = (!dirOn) ? "block" : "none";
+  renderSalaAmistosa();
   aplicarBanderaUI(s, "banBanderaAmP");
 
   var modTxt = { NORMAL: "CARRERA NORMAL", BOMBA: "💣 BOMBA RELOJ (45s)", ELIM: "💀 ELIMINACION (60s)", REY: "👑 REY DE LA PISTA", SUPERPOLE: "⏱️ SUPERPOLE (1 VUELTA)", RULETA: "🎲 RULETA LOCA MX" };
@@ -447,9 +901,16 @@ function pintarSalaUI() {
   var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
-    if (s.modoJuego === "ELIM" && !dirOn) {
+    if (s.modoJuego === "ELIM" && !dirOn && (!usaAmistosa || uid === amistosaCache.hostUid)) {
       var rE = Math.floor(elapsed / 60000);
-      if (rE > _ultRondaElim && rE >= 1) { _ultRondaElim = rE; var act = pils.filter(function(x){ return !x.eliminado; }); if (act.length > 1) { var uP = act[act.length - 1]; fetch(FB + "/pilotos/" + uP.id + ".json", { method: "PATCH", body: JSON.stringify({ eliminado: true }) }).catch(function(){}); mxHablar("Eliminado: " + uP.nombre, vozP); } }
+      if (rE > _ultRondaElim && rE >= 1) {
+        _ultRondaElim = rE; var act = pils.filter(function(x){ return !x.eliminado; });
+        if (act.length > 1) {
+          var uP = act[act.length - 1], base = usaAmistosa ? rutaSalaAmistosa() : FB;
+          fetch(base + "/pilotos/" + uP.id + ".json", { method: "PATCH", body: JSON.stringify({ eliminado: true }) }).catch(function(){});
+          uP.eliminado = true; mxHablar("Eliminado: " + uP.nombre, vozP);
+        }
+      }
     }
     if (Number(s.duracionMin || 0) > 0) {
       var rem = t0 + Number(s.duracionMin) * 60000 - ah;
@@ -487,22 +948,34 @@ mxGar.init({
 });
 inscribirPilotoAuto();
 conectarSseUnico();
+recuperarSalaAmistosa();
 
-setInterval(function(){ fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){}); }, 7000);
+setInterval(function(){
+  fetch(FB + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
+  if (usarSalaAmistosa()) fetch(rutaSalaAmistosa() + "/pilotos/" + uid + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
+}, 7000);
 setInterval(function() {
-  if (_esRoot && _esRoot.readyState === 1) return;
-  fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
-    if (!r) return;
-    rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
-    Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
-    pintarSalaUI(); if (_tabAct === "tiempos") mxGar.pintarTiempos();
-  }).catch(function(){});
+  if (!_esRoot || _esRoot.readyState !== 1) {
+    fbJson(FB + ".json?t=" + Date.now()).then(function(r) {
+      if (!r) return;
+      rootCache = { sala: r.sala || {}, antenas: r.antenas || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {}, eventos: r.eventos || {} };
+      Object.keys(rootCache.eventos).forEach(function(aid){ manejarEventoAntena(rootCache.eventos[aid]); });
+      pintarSalaUI(); if (_tabAct === "tiempos") mxGar.pintarTiempos();
+    }).catch(function(){});
+  }
+  if (amistosaId && (!_esAmistosa || _esAmistosa.readyState !== 1)) {
+    fbJson(rutaSalaAmistosa() + ".json?t=" + Date.now()).then(function(room) {
+      if (room) { amistosaCache = room; renderSalaAmistosa(); pintarSalaUI(); }
+    }).catch(mostrarErrorSalaAmistosa);
+  }
 }, 4500);
 
 setInterval(function() {
   actualizarSemaforoP();
   actualizarCuentaMangaP();
-  var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {};
+  var usaAmistosa = usarSalaAmistosa();
+  var s = usaAmistosa ? (amistosaCache.sala || {}) : (rootCache.sala || {});
+  var yo = usaAmistosa ? ((amistosaCache.pilotos || {})[uid] || {}) : ((rootCache.pilotos || {})[uid] || {});
   var tIni = Number(s.tsInicio || 0), tPaso = Number(yo.tsUltimoPaso || 0);
   var b = (tPaso && (!tIni || tPaso >= tIni)) ? tPaso : tIni;
   var el = document.getElementById("vivoReloj"), rb = document.getElementById("relBol"), barL = document.getElementById("barLipoP"), lblL = document.getElementById("lblLipoP");

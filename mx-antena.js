@@ -1,15 +1,22 @@
 var circId = localStorage.getItem("mxp_circ_id") || "METROPOLITANO";
-var FB = FB_ROOT + "/circuitos/" + circId;
-var FB_IMG = FB_ROOT + "/antenas_img/" + circId;
-var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
-var FB_WU = FB_ROOT + "/warmup_capturas/" + circId;
-var _antenaBloqueadaRol = localStorage.getItem("mxp_inst_role") === "PILOTO";
+var _antenaParams = new URLSearchParams(location.search);
+var _amistosaIdAnt = _antenaParams.get("amistosa") || "";
+var _amistosaAntId = _antenaParams.get("puesto") || "";
+var _esAmistosaAnt = /^\d{4}$/.test(_amistosaIdAnt) && (_amistosaAntId === "ant_1" || _amistosaAntId === "ant_2");
+var _amistosaUidAnt = localStorage.getItem("mxp_uid") || "";
+var FB_CIRC = FB_ROOT + "/circuitos/" + circId;
+var FB = _esAmistosaAnt ? FB_ROOT + "/amistosas/" + circId + "/" + _amistosaIdAnt : FB_CIRC;
+var FB_IMG = _esAmistosaAnt ? FB + "/antenas_img" : FB_ROOT + "/antenas_img/" + circId;
+var FB_FF = _esAmistosaAnt ? FB + "/foto_finish.json" : FB_ROOT + "/foto_finish/" + circId + ".json";
+var FB_WU = _esAmistosaAnt ? FB + "/warmup_capturas" : FB_ROOT + "/warmup_capturas/" + circId;
+var _antenaBloqueadaRol = localStorage.getItem("mxp_inst_role") === "PILOTO" && !_esAmistosaAnt;
+var _amistosaAntAutorizada = false;
 if (_antenaBloqueadaRol) location.replace("index.html");
 document.getElementById("txtCircModal").textContent = "Circuito activo: " + circId;
 document.getElementById("lblCircAntTop").textContent = "PISTA: " + circId;
 
-var antId = _antenaBloqueadaRol ? "" : (localStorage.getItem("mxp_ant_id") || "");
-var antNom = localStorage.getItem("mxp_ant_nom") || "";
+var antId = _antenaBloqueadaRol ? "" : (_esAmistosaAnt ? _amistosaAntId : (localStorage.getItem("mxp_ant_id") || ""));
+var antNom = _esAmistosaAnt ? (_amistosaAntId === "ant_1" ? "META AMISTOSA" : "REFUERZO AMISTOSA") : (localStorage.getItem("mxp_ant_nom") || "");
 var vozOn = true, camOk = false, PW = 192, PH = 108, fondoFull = null, calHasta = 0;
 var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos = 0, ultCmd = 0;
 var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
@@ -20,6 +27,31 @@ var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
 var _ultTxtTs = 0;
 
 var salaCache = {};
+function antenaPuedeOperar() { return !_antenaBloqueadaRol && (!_esAmistosaAnt || _amistosaAntAutorizada); }
+function validarAccesoAntenaAmistosa() {
+  if (!_esAmistosaAnt) return Promise.resolve(true);
+  if (!_amistosaUidAnt) return Promise.reject(new Error("No hay una cuenta de piloto activa."));
+  return fbJson(FB + ".json").then(function(room) {
+    var claim = room && room.rolesAntena && room.rolesAntena[_amistosaAntId];
+    if (!room || room.status !== "ACTIVE" || room.circuitId !== circId || !room.pilotos || !room.pilotos[_amistosaUidAnt]) {
+      throw new Error("Debes unirte primero a esta sala amistosa.");
+    }
+    if (!claim || claim.uid !== _amistosaUidAnt || Math.abs(ahoraSrv() - Number(claim.ts || 0)) > 30000) {
+      throw new Error("El puesto de antena ya no está reservado para tu teléfono.");
+    }
+    _amistosaAntAutorizada = true;
+    salaCache = room.sala || {};
+    return escribirAntenaAmistosa("/pilotos/" + _amistosaUidAnt + ".json", "PATCH", { enPista: true, tsActivo: ahoraSrv() }).then(function() {
+      return escribirAntenaAmistosa("/rolesAntena/" + _amistosaAntId + ".json", "PATCH", { ts: ahoraSrv() });
+    }).then(function() { return true; });
+  });
+}
+function escribirAntenaAmistosa(path, method, data) {
+  return fetch(FB + path, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status + " en la sala amistosa");
+    return r;
+  });
+}
 var cfg = {
   estado: "ESPERA", modoDet: "TODO", verVivo: false, orientacion: "V",
   sensPct: 0.07, colorPct: 0.25, pxDiff: 45, antiViento: "OFF", nColores: 1, retardoMs: 25,
@@ -35,12 +67,13 @@ function umbralDesdeSensibilidad(nivel) {
 
 activarWakeLock();
 window.addEventListener("beforeunload", function() {
-  if (_antenaBloqueadaRol) return;
+  if (!antenaPuedeOperar()) return;
   if (_esSala) try { _esSala.close(); } catch (e) {}
   if (antId) {
     fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
     fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
   }
+  if (_esAmistosaAnt) fetch(FB + "/rolesAntena/" + antId + ".json", { method: "DELETE", keepalive: true }).catch(function(){});
 });
 
 function hablarAnt(texto, urgente) {
@@ -110,7 +143,11 @@ function calibrarFondo() {
 }
 function salirAntena() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
-  if (antId) Promise.all([fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }).catch(function(){}), fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" }).catch(function(){})]).finally(function(){ location.href = "index.html"; });
+  if (antId) {
+    var borrar = [fetch(FB + "/antenas/" + antId + ".json", { method: "DELETE" }), fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" })];
+    if (_esAmistosaAnt) borrar.push(fetch(FB + "/rolesAntena/" + antId + ".json", { method: "DELETE" }));
+    Promise.all(borrar.map(function(p) { return p.catch(function(){}); })).finally(function(){ location.href = _esAmistosaAnt ? "piloto.html" : "index.html"; });
+  }
   else location.href = "index.html";
 }
 
@@ -674,6 +711,7 @@ function procesarSala(s) {
 }
 
 function enviarTelemetria() {
+  if (!antenaPuedeOperar()) return;
   aplicarBanderaUI(salaCache, "banBanderaAnt");
   if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
@@ -686,16 +724,16 @@ function conectarSseSala() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
   try {
     _esSala = new EventSource(FB + "/sala.json");
-    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
+    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { if (msg.path === "/") salaCache = msg.data || {}; else applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
     _esSala.addEventListener("put", onSse); _esSala.addEventListener("patch", onSse);
     _esSala.onerror = function(){ if (_esSala && _esSala.readyState === 2) setTimeout(conectarSseSala, 2500); };
   } catch (e) {}
 }
-if (!_antenaBloqueadaRol) conectarSseSala();
+if (!_antenaBloqueadaRol && !_esAmistosaAnt) conectarSseSala();
 
 setInterval(enviarTelemetria, 1000);
 setInterval(function() {
-  if (_antenaBloqueadaRol) return;
+  if (!antenaPuedeOperar()) return;
   if (!antId || _wuBusy) return; var v = document.getElementById("vid");
   if ((cfg.verVivo || !calibradaOk || cfg.estado === "WARMUP" || cfg.estado === "TEST" || est === "CAL") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
@@ -707,7 +745,7 @@ setInterval(function() {
 }, 500);
 
 setInterval(function() {
-  if (_antenaBloqueadaRol) return;
+  if (!antenaPuedeOperar()) return;
   if ((!_esSala || _esSala.readyState !== 1) && !_salaPollBusy) {
     _salaPollBusy = true;
     fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){}).finally(function(){ _salaPollBusy = false; });
@@ -718,18 +756,43 @@ setInterval(function() {
   }
 }, 2500);
 
-if (!_antenaBloqueadaRol) navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
-  .catch(function(){ return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, frameRate: { ideal: 60, min: 24 } }, audio: false }); })
-  .then(function(st) {
-    var v = document.getElementById("vid"); v.srcObject = st;
-    try {
-      var tr = st.getVideoTracks()[0];
-      if (tr && tr.applyConstraints) {
-        var caps = tr.getCapabilities ? tr.getCapabilities() : {};
-        if (caps && caps.frameRate && caps.frameRate.max >= 55) tr.applyConstraints({ frameRate: { ideal: 60, min: 50 }, advanced: [{ focusMode: "continuous" }] }).catch(function(){});
-        else tr.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function(){});
-      }
-    } catch (e) {}
-    return v.play();
-  }).then(function(){ camOk = true; pintarOverlaysVisor(); iniciarBucleVision(); })
-  .catch(function(e){ document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
+function iniciarCamaraAntena() {
+  if (!antenaPuedeOperar()) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    document.getElementById("lblEstado").textContent = "CAMARA NO DISPONIBLE EN ESTE NAVEGADOR";
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60, min: 30 } }, audio: false })
+    .catch(function(){ return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, frameRate: { ideal: 60, min: 24 } }, audio: false }); })
+    .then(function(st) {
+      var v = document.getElementById("vid"); v.srcObject = st;
+      try {
+        var tr = st.getVideoTracks()[0];
+        if (tr && tr.applyConstraints) {
+          var caps = tr.getCapabilities ? tr.getCapabilities() : {};
+          if (caps && caps.frameRate && caps.frameRate.max >= 55) tr.applyConstraints({ frameRate: { ideal: 60, min: 50 }, advanced: [{ focusMode: "continuous" }] }).catch(function(){});
+          else tr.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function(){});
+        }
+      } catch (e) {}
+      return v.play();
+    }).then(function(){ camOk = true; pintarOverlaysVisor(); iniciarBucleVision(); })
+    .catch(function(e){ document.getElementById("lblEstado").textContent = "ERROR CAMARA: " + e.message; });
+}
+if (_esAmistosaAnt) {
+  validarAccesoAntenaAmistosa().then(function() {
+    conectarSseSala();
+    setInterval(function() {
+      if (!antenaPuedeOperar()) return;
+      fetch(FB + "/rolesAntena/" + antId + ".json", { method: "PATCH", body: JSON.stringify({ ts: ahoraSrv() }) }).catch(function(){});
+      fetch(FB + "/pilotos/" + _amistosaUidAnt + ".json", { method: "PATCH", body: JSON.stringify({ enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
+    }, 5000);
+    iniciarCamaraAntena();
+  }).catch(function(err) {
+    console.error("Acceso a antena amistosa denegado:", err);
+    document.getElementById("lblEstado").textContent = err.message;
+    setTimeout(function() { location.replace("piloto.html"); }, 1800);
+  });
+} else if (!_antenaBloqueadaRol) {
+  conectarSseSala();
+  iniciarCamaraAntena();
+}

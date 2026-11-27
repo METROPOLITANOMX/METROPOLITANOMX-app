@@ -6,12 +6,64 @@ var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, votoMvpHecho = false, ultReacMs = 0, toquesOva = 0;
 var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "", _lastEstTxtV = "";
+var _esResultadosAm = null, _resultadosAmHoy = {}, _diaResultadosAm = "";
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
 document.title = (esIngles ? "LIVE — " : "EN VIVO — ") + nomCorto;
 document.getElementById("titTopV").textContent = (esIngles ? "🔴 LIVE — " : "🔴 EN VIVO — ") + nomCorto.toUpperCase();
 document.getElementById("lblCircV").textContent = "🏁 " + circNom;
+
+function diaLocalResultadosAm() {
+  var d = new Date();
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function pintarResultadosAmistosos() {
+  var box = document.getElementById("boxResultadosAmVivo"), list = document.getElementById("listaResultadosAmVivo");
+  if (!box || !list) return;
+  var keys = Object.keys(_resultadosAmHoy || {}).sort(function(a, b) {
+    return Number((_resultadosAmHoy[b] || {}).final || 0) - Number((_resultadosAmHoy[a] || {}).final || 0);
+  });
+  box.style.display = keys.length ? "block" : "none";
+  list.innerHTML = keys.slice(0, 10).map(function(k) {
+    var m = _resultadosAmHoy[k] || {}, rows = (m.res || []).slice(0, 5);
+    return '<div class="fila" style="display:block"><div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<b style="color:#fff">' + esc(m.circuito || circNom) + ' · Sala ' + esc(m.sala || "") + '</b>' +
+      '<span style="font-size:9px;color:#0dcaf0;border:1px solid #0dcaf0;border-radius:8px;padding:2px 6px">' + (esIngles ? "FRIENDLY" : "AMISTOSA") + '</span></div>' +
+      '<div style="font-size:10px;color:#aaa;margin:3px 0">' + esc(m.modo || "NORMAL") + ' · ' + (Number(m.duracionMin) ? esc(m.duracionMin) + " min" : "libre") +
+      ' · ' + (m.final ? new Date(Number(m.final)).toLocaleTimeString(esIngles ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit" }) : "") + '</div>' +
+      rows.map(function(r, i) { return '<div style="font-size:11px;color:#ddd">' + (i + 1) + 'º #' + esc(r.dorsal || "--") + ' ' + esc(r.nombre || "Piloto") +
+        ' · ' + (Number(r.vueltas) || 0) + 'v · VR ' + fmt(Number(r.mejorMs) || 0) + '</div>'; }).join("") +
+      '</div>';
+  }).join("");
+}
+function conectarResultadosAmistosos() {
+  var day = diaLocalResultadosAm();
+  if (_diaResultadosAm === day && _esResultadosAm && _esResultadosAm.readyState === 1) return;
+  if (_esResultadosAm) try { _esResultadosAm.close(); } catch (e) {}
+  _diaResultadosAm = day; _resultadosAmHoy = {};
+  var path = FB_ROOT + "/resultados_dia_amistosas/" + circId + "/" + day;
+  fbJson(path + ".json").then(function(data) {
+    _resultadosAmHoy = data || {}; pintarResultadosAmistosos();
+  }).catch(function(err) {
+    console.warn("No se pudieron cargar los resultados amistosos del día:", err);
+  });
+  try {
+    _esResultadosAm = new EventSource(path + ".json");
+    var onSse = function(ev) {
+      try {
+        var m = JSON.parse(ev.data); if (!m || !m.path) return;
+        if (m.path === "/") _resultadosAmHoy = m.data || {};
+        else applySsePatch(_resultadosAmHoy, m.path, m.data, ev.type === "put");
+        pintarResultadosAmistosos();
+      } catch (err) { console.error("Resultado amistoso inválido:", err); }
+    };
+    _esResultadosAm.addEventListener("put", onSse); _esResultadosAm.addEventListener("patch", onSse);
+    _esResultadosAm.onerror = function() {
+      if (_esResultadosAm && _esResultadosAm.readyState === 2) setTimeout(conectarResultadosAmistosos, 2500);
+    };
+  } catch (err) { console.error("No se pudo abrir la conexión de resultados amistosos:", err); }
+}
 
 if (esIngles) {
   document.documentElement.lang = "en";
@@ -29,6 +81,7 @@ if (esIngles) {
   document.getElementById("titClasV").textContent = "LIVE STANDINGS & TRACK SETUPS";
   document.getElementById("subClasV").textContent = "Tap a rider to inspect setup";
   document.getElementById("titCampV").textContent = "🏆 TODAY'S CHAMPIONSHIP (HEATS)";
+  document.getElementById("titResultadosAmVivo").textContent = "🏁 TODAY'S RESULTS · FRIENDLY HEATS";
   document.getElementById("titMvpV").textContent = "🏅 VOTE RIDER MVP OF THE DAY";
   document.getElementById("titReacV").textContent = "👏 LIVE FAN STANDS (PA & EARPIECE)";
   document.getElementById("btnCerrarSet").textContent = "CLOSE";
@@ -51,7 +104,7 @@ function toggleVozMec() {
 function ayudaVivo() {
   alert(esIngles
     ? "LIVE FAN & MECHANIC SCREEN:\n• Green dot 🟢 marks riders currently on track; tap a rider to view bike and setup.\n• 🔧 MECHANIC mode follows one rider from the pits with lap times, voice and battery reminder.\n• 📸 View the latest finish photo, see the start poll and vote for Rider of the Day.\n• 👏 Every 10 grandstand taps sends an ovation. Cheer messages can go to everyone or one rider."
-    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos en pista; toca un nombre para ver su moto y reglaje.\n• 🔧 MECANICO sigue a un piloto desde boxes con vueltas, tiempos, voz y aviso de bateria.\n• 📸 Consulta la ultima foto de meta, participa en la porra previa y vota al piloto del dia.\n• 👏 Cada 10 toques envia una ovacion. Los mensajes de animo pueden dirigirse a todos o a un piloto.");
+    : "PANTALLA EN VIVO Y MECANICO:\n• El punto verde 🟢 indica pilotos en pista; toca un nombre para ver su moto y reglaje.\n• 🔧 MECANICO sigue a un piloto desde boxes con vueltas, tiempos, voz y aviso de bateria.\n• 📸 Consulta la ultima foto de meta, participa en la porra previa y vota al piloto del dia.\n• Los resultados de mangas amistosas aparecen separados y no alteran el campeonato oficial.\n• 👏 Cada 10 toques envia una ovacion. Los mensajes de animo pueden dirigirse a todos o a un piloto.");
 }
 
 function verFotoFinishV() {
@@ -206,6 +259,7 @@ function pintarVivo() {
   var mr = document.getElementById("muroReac");
   if (mr && s.reaccion && s.reaccion.texto) mr.innerHTML = "Ultimo animo: <b style='color:#ffc107'>" + esc(s.reaccion.autor) + "</b>" + (s.reaccion.destinoNom ? (' <span style="color:#0dcaf0">➔ ' + esc(s.reaccion.destinoNom) + '</span>') : '') + ": " + esc(s.reaccion.texto);
   pintarModoMecanico();
+  pintarResultadosAmistosos();
 }
 
 function conectarSseVivo() {
@@ -225,11 +279,12 @@ function conectarSseVivo() {
   } catch (e) {}
 }
 function refrescarVivo() {
+  if (_diaResultadosAm !== diaLocalResultadosAm()) conectarResultadosAmistosos();
   fbJson(FB + ".json?t=" + Date.now()).then(function(r){
     if (r) { rootCache = { sala: r.sala || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {} }; pintarVivo(); }
   }).catch(function(){});
 }
-conectarSseVivo(); refrescarVivo(); setInterval(refrescarVivo, 4500);
+conectarSseVivo(); conectarResultadosAmistosos(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 
 setInterval(function() {
   var s = rootCache.sala || {}, est = s.estado || "ESPERA";

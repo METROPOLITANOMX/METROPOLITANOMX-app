@@ -172,10 +172,12 @@ function borrarHotlapDir() {
 }
 
 function borrarTiemposDiaDir() {
-  if (!confirm("¿Seguro que quieres borrar los tiempos del día y poner el circuito en espera?")) return;
+  if (!confirm("¿Seguro que quieres borrar los tiempos oficiales y amistosos del día y poner el circuito en espera?")) return;
   cargarRaizAdmin().then(function(data) {
+    var hoy = new Date(), dia = hoy.getFullYear() + "-" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "-" + ("0" + hoy.getDate()).slice(-2);
     var ops = [
       fetch(FB + "/campeonato.json", { method: "DELETE" }),
+      fetch(FB_ROOT + "/resultados_dia_amistosas/" + encodeURIComponent(circId) + "/" + dia + ".json", { method: "DELETE" }),
       fetch(FB + "/pasos_lock.json", { method: "DELETE" }),
       fetch(FB + "/eventos.json", { method: "DELETE" }),
       fetch(FB_ROOT + "/foto_finish/" + encodeURIComponent(circId) + ".json", { method: "DELETE" }),
