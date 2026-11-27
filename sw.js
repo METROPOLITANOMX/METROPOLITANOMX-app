@@ -1,4 +1,4 @@
-﻿var CACHE_NAME = "mxp-cache-v202611261910";
+﻿var CACHE_NAME = "mxp-cache-v202611261930";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -29,7 +29,9 @@ self.addEventListener("install", function(e) {
     caches.open(CACHE_NAME).then(function(cache) {
       return Promise.all(
         APP_SHELL.map(function(url) {
-          return fetch(url, { cache: "no-store" }).then(function(r){ if (r && r.ok) return cache.put(url, r); }).catch(function(){});
+          return fetch(url, { cache: "no-store" }).then(function(res) {
+            if (res && res.status === 200) return cache.put(url, res);
+          }).catch(function() {});
         })
       );
     })
@@ -58,7 +60,7 @@ self.addEventListener("fetch", function(e) {
   if (url.indexOf(self.location.origin) !== 0) return;
 
   e.respondWith(
-    fetch(req.url, { cache: "no-store", credentials: "same-origin" }).then(function(res) {
+    fetch(req, { cache: "no-store" }).then(function(res) {
       if (res && res.status === 200) {
         var copy = res.clone();
         caches.open(CACHE_NAME).then(function(cache) {

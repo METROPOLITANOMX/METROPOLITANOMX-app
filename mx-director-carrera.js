@@ -37,6 +37,84 @@ function verFotoFinish() {
   }).catch(function(){ document.getElementById("txtFfInfo").textContent = "Sin foto."; });
 }
 
+var _radarArm = null, _radarMaxKmh = 0, _radarPrevModo = "";
+function guardarDistRadar() {
+  var inp = document.getElementById("inpRadarDist"), d = Number((inp && inp.value) || 10);
+  if (!(d >= 0.5)) d = 10;
+  if (inp) inp.value = d;
+  localStorage.setItem("mxp_radar_dist", String(d));
+  if (!rootCache.sala) rootCache.sala = {};
+  rootCache.sala.radarDist = d;
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ radarDist: d, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+}
+function toggleRadarDir() {
+  desbloquearAudioD(false);
+  var s = rootCache.sala || {}, est = s.estado || "ESPERA", ahCmd = ahoraSrv();
+  if (est === "RADAR") {
+    _radarArm = null;
+    var modoRest = _radarPrevModo || "TODO";
+    var payOff = { estado: "ESPERA", modoDet: modoRest, tsInicio: 0, tsCuenta: 0, dirTs: ahCmd, dirSession: dirSessionId };
+    Object.assign(rootCache.sala, payOff);
+    var lblOff = document.getElementById("lblRadarResDir");
+    if (lblOff) lblOff.textContent = "Paso solo 1 piloto entre Cam 1 y Cam 2.";
+    hablarYAntenas("Modo radar desactivado", false);
+    pintarDirUI();
+    fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(payOff) }).catch(function(){});
+    return;
+  }
+  var ants = rootCache.antenas || {}, aks = Object.keys(ants).filter(function(k){ return Math.abs(ahCmd - Number(ants[k].ts || 0)) < 15000; });
+  if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero ambas camaras con pista vacia."); return; }
+  if (aks.length < 2) alert("⚠️ Conecta las 2 camaras (Antena 1 y Antena 2) para medir velocidad en Modo Radar.");
+  _radarPrevModo = s.modoDet || "TODO";
+  _radarArm = null; _radarMaxKmh = 0;
+  var inp = document.getElementById("inpRadarDist"), dist = Number((inp && inp.value) || s.radarDist || 10);
+  if (!(dist >= 0.5)) dist = 10;
+  if (inp) inp.value = dist;
+  localStorage.setItem("mxp_radar_dist", String(dist));
+  var payOn = { estado: "RADAR", modoDet: "TODO", radarDist: dist, tsInicio: 0, tsCuenta: 0, verVivo: false, dirTs: ahCmd, dirSession: dirSessionId };
+  testOn = false;
+  var bt = document.getElementById("btnToggleTest");
+  if (bt) { bt.textContent = "🎥 TEST VIVO"; bt.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+  if (!rootCache.sala) rootCache.sala = {};
+  Object.assign(rootCache.sala, payOn);
+  var lblR = document.getElementById("lblRadarResDir");
+  if (lblR) lblR.textContent = "📡 RADAR LISTO (" + dist + " m) — Esperando paso por Cam 1 o Cam 2...";
+  hablarYAntenas("Modo radar activado, distancia " + String(dist).replace(".", " punto ") + " metros", true);
+  pintarDirUI();
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(payOn) }).catch(function(){});
+}
+function procesarPasoRadar(ev) {
+  var ts = Number(ev.ts || 0); if (!ts) return;
+  var nomA = ev.antNom || (ev.antId === "ant_1" ? "Camara 1" : (ev.antId === "ant_2" ? "Camara 2" : ev.antId));
+  var lblR = document.getElementById("lblRadarResDir");
+  if (!_radarArm) {
+    _radarArm = { antId: ev.antId, nom: nomA, ts: ts };
+    if (lblR) lblR.innerHTML = "🟡 Paso en <b>" + esc(nomA) + "</b> — Esperando segunda camara...";
+    return;
+  }
+  if (_radarArm.antId === ev.antId) {
+    _radarArm.ts = ts;
+    if (lblR) lblR.innerHTML = "🟡 Paso en <b>" + esc(nomA) + "</b> — Esperando segunda camara...";
+    return;
+  }
+  var dtMs = Math.abs(ts - _radarArm.ts);
+  if (dtMs > 30000) {
+    _radarArm = { antId: ev.antId, nom: nomA, ts: ts };
+    if (lblR) lblR.innerHTML = "🟡 Paso en <b>" + esc(nomA) + "</b> — Esperando segunda camara...";
+    return;
+  }
+  if (dtMs < 50) return;
+  var s = rootCache.sala || {}, inp = document.getElementById("inpRadarDist");
+  var dist = Number(s.radarDist || (inp && inp.value) || 10);
+  if (!(dist >= 0.5)) dist = 10;
+  var seg = dtMs / 1000, kmh = (dist / seg) * 3.6;
+  if (kmh > _radarMaxKmh) _radarMaxKmh = kmh;
+  var kmhTxt = kmh.toFixed(1), maxTxt = _radarMaxKmh.toFixed(1);
+  if (lblR) lblR.innerHTML = "🚀 ÚLTIMA: <b style='color:#20c997'>" + kmhTxt + " km/h</b> (" + seg.toFixed(3) + "s en " + dist + "m) &nbsp;|&nbsp; 🏆 MÁX: <b style='color:#ffc107'>" + maxTxt + " km/h</b>";
+  hablarYAntenas("Radar: " + kmhTxt.replace(".", " punto ") + " kilometros por hora", true);
+  _radarArm = null;
+}
+
 function cmdSala(est) {
   desbloquearAudioD(false);
   var ants = rootCache.antenas || {};
@@ -44,7 +122,7 @@ function cmdSala(est) {
     var aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
     if (aks.length && aks.some(function(k){ return !ants[k].calibrada; })) { alert("⚠️ Calibra primero la pista vacia."); return; }
   }
-  _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _ultSecWu = -1; _wuFinAviso = false; _salidaShowHasta = 0;
+  _radarArm = null; _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _ultSecWu = -1; _wuFinAviso = false; _salidaShowHasta = 0;
   var ahCmd = ahoraSrv();
   var pay = { estado: est, tsInicio: 0, tsCuenta: 0, ruleta: null, dirTs: ahCmd, dirSession: dirSessionId, verVivo: false };
   testOn = false; document.getElementById("btnToggleTest").textContent = "🎥 TEST VIVO"; document.getElementById("btnToggleTest").style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)";
@@ -129,6 +207,7 @@ function registrarVueltaDir(pUid, evTs, esManual) {
   var p = (rootCache.pilotos || {})[pUid]; if (!p || p.eliminado) return;
   var s = rootCache.sala || {}, ah = Number(evTs || ahoraSrv()), st = s.estado || "ESPERA", minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaD[pUid] && (ah - _lockVtaD[pUid]) < minMs) return;
+  if (st === "RADAR") return;
   if (st === "WARMUP" || st === "TEST" || st === "ESPERA" || st === "SALIDA_30" || st === "VALLA_MX") {
     _lockVtaD[pUid] = ah; p.sensorOk = true;
     fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ sensorOk: true }) }).catch(function(){});
@@ -146,11 +225,65 @@ function registrarVueltaDir(pUid, evTs, esManual) {
   fbJson(FB + "/pasos_lock/" + lk + ".json").then(function(ex) {
     if (ex && ex.ok) return;
     return fbJson(FB + "/pasos_lock/" + lk + ".json", { method: "PUT", body: JSON.stringify({ ok: true, ts: ah }) }).then(function() {
+      var prevMejPiloto = Number(p.mejorMs || 0);
+      var prevUltPaso = Number(p.tsUltimoPaso || 0);
+      if (prevUltPaso && s.tsInicio && prevUltPaso < Number(s.tsInicio)) prevUltPaso = 0;
+      var pAllPre = rootCache.pilotos || {}, prevBestManga = 0;
+      Object.keys(pAllPre).forEach(function(k){ var pm = Number((pAllPre[k] && pAllPre[k].mejorMs) || 0); if (pm > 0 && (!prevBestManga || pm < prevBestManga)) prevBestManga = pm; });
       p.tsUltimoPaso = ah; p.vueltas = v; p.ultimaMs = lap; p.mejorMs = mej;
+      var pilsOrd = ordenarPilotos(rootCache.pilotos, s);
       if (dirPilotoOn && pUid === uid && _ultLapSinc !== ah) {
         _ultLapSinc = ah; _ultVtasSinc = v; _bombaExplotada = false;
-        mxGar.procesarMiVuelta(lap, mej, ordenarPilotos(rootCache.pilotos, s), "lblDeltaVivoP", "deltaBol");
+        mxGar.procesarMiVuelta(lap, mej, pilsOrd, "lblDeltaVivoP", "deltaBol");
       }
+      var fmtDifVoz = function(ms) {
+        var dTot = Math.max(1, Math.round(ms / 100));
+        if (dTot < 10) return dTot + (dTot === 1 ? " decima" : " decimas");
+        var sg = Math.floor(dTot / 10), dc = dTot % 10;
+        if (sg < 60) return sg + (sg === 1 ? " segundo" : " segundos") + (dc > 0 ? (" y " + dc + (dc === 1 ? " decima" : " decimas")) : "");
+        return fmtVoz(ms);
+      };
+      var ixP = -1;
+      for (var pi = 0; pi < pilsOrd.length; pi++) { if (pilsOrd[pi].id === pUid) { ixP = pi; break; } }
+      var difTxt = "", mj = s.modoJuego || "NORMAL";
+      if (ixP === 0 && pilsOrd.length > 1) {
+        var p2 = pilsOrd[1];
+        if (mj === "REY" || mj === "SUPERPOLE") {
+          if (p2.mejorMs && p.mejorMs && Number(p2.mejorMs) > Number(p.mejorMs)) difTxt = ", primero con " + fmtDifVoz(Number(p2.mejorMs) - Number(p.mejorMs)) + " sobre " + p2.nombre;
+        } else {
+          var dv12 = (p.vueltas || 0) - (p2.vueltas || 0);
+          if (dv12 === 1 && Number(p2.vueltas || 0) > 0 && prevUltPaso > 0 && Number(p2.tsUltimoPaso || 0) >= prevUltPaso) {
+            difTxt = ", primero con " + fmtDifVoz(Number(p2.tsUltimoPaso) - prevUltPaso) + " sobre " + p2.nombre;
+          } else if (dv12 === 1 && Number(p2.vueltas || 0) > 0) {
+            difTxt = ", nuevo lider delante de " + p2.nombre;
+          } else if (dv12 >= 2 && Number(p2.vueltas || 0) > 0) {
+            var vVent = dv12 - 1;
+            difTxt = ", primero con " + vVent + (vVent === 1 ? " vuelta" : " vueltas") + " sobre " + p2.nombre;
+          } else if (dv12 === 0 && p2.mejorMs && p.mejorMs && Number(p2.mejorMs) > Number(p.mejorMs)) {
+            difTxt = ", primero con " + fmtDifVoz(Number(p2.mejorMs) - Number(p.mejorMs)) + " sobre " + p2.nombre;
+          }
+        }
+      } else if (ixP > 0) {
+        var pAnt = pilsOrd[ixP - 1];
+        if (mj === "REY" || mj === "SUPERPOLE") {
+          if (pAnt.mejorMs && p.mejorMs && Number(p.mejorMs) > Number(pAnt.mejorMs)) difTxt = ", a " + fmtDifVoz(Number(p.mejorMs) - Number(pAnt.mejorMs)) + " de " + pAnt.nombre;
+        } else {
+          var dvAnt = (pAnt.vueltas || 0) - (p.vueltas || 0);
+          if (dvAnt === 0 && Number(pAnt.tsUltimoPaso || 0) > 0 && ah >= Number(pAnt.tsUltimoPaso)) {
+            var gAnt = ah - Number(pAnt.tsUltimoPaso);
+            difTxt = (gAnt >= 100) ? (", a " + fmtDifVoz(gAnt) + " de " + pAnt.nombre) : (", pegado a " + pAnt.nombre);
+          } else if (dvAnt >= 1) {
+            difTxt = ", a " + dvAnt + (dvAnt === 1 ? " vuelta" : " vueltas") + " de " + pAnt.nombre;
+          }
+        }
+      }
+      var esVrManga = (!prevBestManga || lap < prevBestManga);
+      var esVrPersonal = (prevMejPiloto > 0 && lap < prevMejPiloto);
+      var recTxt = "";
+      if (esVrManga && esVrPersonal) recTxt = ", vuelta rapida de la manga y vuelta rapida personal";
+      else if (esVrManga) recTxt = ", vuelta rapida de la manga";
+      else if (esVrPersonal) recTxt = ", vuelta rapida personal";
+      hablarYAntenas(p.nombre + ", " + fmtVoz(lap) + difTxt + recTxt, false);
       fetch(FB + "/pilotos/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ vueltas: v, ultimaMs: lap, mejorMs: mej, tsUltimoPaso: ah, enPista: true, tsActivo: ahoraSrv() }) }).catch(function(){});
       var patchS = { ultPasoTs: ah, ultPasoTxt: p.nombre + " #" + (p.dorsal || "1") + " (" + fmt(mej) + ")" };
       if (!s.hotlapMs || lap < Number(s.hotlapMs)) { patchS.hotlapMs = lap; patchS.hotlapTxt = p.nombre + " — " + fmt(lap); }
@@ -163,7 +296,9 @@ function manejarEventoAntena(ev) {
   if (!ev || !ev.ts || !ev.antId || _ultEvD[ev.antId] === ev.ts) return;
   _ultEvD[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
-    var s = rootCache.sala || {}, md = s.modoDet || "TODO";
+    var s = rootCache.sala || {};
+    if (s.estado === "RADAR") { procesarPasoRadar(ev); return; }
+    var md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : "");
     if (target) registrarVueltaDir(target, Number(ev.ts), false);
@@ -204,7 +339,7 @@ function actualizarCronosDir() {
     if (wuBox.style.display !== "none") wuBox.style.display = "none";
   }
 
-  if (est === "ESPERA" || est === "WARMUP" || est === "TEST") _salidaShowHasta = 0;
+  if (est === "ESPERA" || est === "WARMUP" || est === "TEST" || est === "RADAR") _salidaShowHasta = 0;
   if ((est !== "SALIDA_30" && est !== "VALLA_MX") || t0 <= 0) {
     if (nowLoc >= _salidaShowHasta && ov.style.display !== "none") ov.style.display = "none";
     return;

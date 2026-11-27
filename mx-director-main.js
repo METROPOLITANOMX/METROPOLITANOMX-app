@@ -119,7 +119,7 @@ function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
   var antsAct = pintarAntenasTel();
   document.getElementById("banBanderaAmDir").style.display = (s.bandera === "AMARILLA") ? "block" : "none";
-  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado || "ESPERA") + " • " + (s.modoDet || "TODO");
+  if ((s.estado || "ESPERA") !== "WARMUP") document.getElementById("lblEstadoGlobDir").textContent = (s.estado === "RADAR") ? ("RADAR • " + (s.radarDist || 10) + "m") : ((s.estado || "ESPERA") + " • " + (s.modoDet || "TODO"));
 
   var md = s.modoDet || "TODO";
   [["bModTodo", "TODO"], ["bModGar", "GAR"], ["bModWarm", "WARMUP"], ["bModHib", "HIBRIDO"]].forEach(function(par){
@@ -139,6 +139,10 @@ function pintarDirUI() {
   if (s.antiViento && document.activeElement !== document.getElementById("selAntiViento")) document.getElementById("selAntiViento").value = s.antiViento;
   if (typeof s.retardoMs === "number") syncRng("rngRetardo", "lblRetardoDir", s.retardoMs, "ms");
   if (s.perfilLuz && s.perfilLuz.deltaE) syncRng("rngDeltaE", "lblDeltaEDir", s.perfilLuz.deltaE, "");
+  var bRad = document.getElementById("btnRadarDir");
+  if (bRad) { var radOn = (s.estado === "RADAR"); bRad.textContent = radOn ? "📡 RADAR: ACTIVO ✓" : "📡 RADAR: OFF"; bRad.style.background = radOn ? "#20c997" : "#262626"; bRad.style.color = radOn ? "#000" : "#0dcaf0"; }
+  var inpRad = document.getElementById("inpRadarDist");
+  if (inpRad && s.radarDist && document.activeElement !== inpRad) inpRad.value = s.radarDist;
 
   if (!_roiInit && s.roi) {
     _roiInit = true;
@@ -178,7 +182,7 @@ function pintarDirUI() {
     } else br.style.display = "none";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM") {
@@ -236,9 +240,10 @@ function iniciarDirector() {
     uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: true,
     getNom: function(){ return miNom; }, setNom: function(n){ miNom = n; localStorage.setItem("mxp_nom", n); },
     getRoot: function(){ return rootCache; }, getCircMeta: function(){ return circMeta; },
-    isSoloDir: function(){ return !dirPilotoOn; }, onSpeak: function(t){ mxHablar(t); }
+    isSoloDir: function(){ return !dirPilotoOn; }, isDirSilent: function(){ return true; }, onSpeak: function(t){ mxHablar(t); }
   });
   fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ dirSession: dirSessionId, dirTs: ahoraSrv() }) }).catch(function(){});
+  var rdSaved = localStorage.getItem("mxp_radar_dist"); if (rdSaved && document.getElementById("inpRadarDist")) document.getElementById("inpRadarDist").value = rdSaved;
   aplicarLockSlidersUI(); aplicarModoDirPilotoUI(false); cargarListaPerfiles(); cargarAccesoCfgDir(); conectarSseStreams();
 
   setInterval(function() {

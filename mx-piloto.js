@@ -162,6 +162,7 @@ function registrarVuelta(pUid, evTs, esManual) {
     return;
   }
   var s = rootCache.sala || {}, st = s.estado || "ESPERA", dirOn = (s.dirTs && Math.abs(ah - Number(s.dirTs)) < 30000);
+  if (st === "RADAR") { if (esManual) document.getElementById("lblDeltaVivo").innerHTML = "<span style='color:#0dcaf0'>📡 Modo Radar activo en Direccion</span>"; return; }
   var minMs = esManual ? 900 : (Number(s.minLapSec || 5)) * 1000;
   if (_lockVtaLocal[pUid] && (ah - _lockVtaLocal[pUid]) < minMs) return;
 
@@ -244,6 +245,7 @@ function manejarEventoAntena(ev) {
   _ultEvP[ev.antId] = ev.ts;
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
     var s = rootCache.sala || {}, md = s.modoDet || "TODO";
+    if ((s.estado || "ESPERA") === "RADAR") return;
     if (md !== "TODO" && !ev.pilotoUid) return;
     var dirOn = (s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000);
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : uid);
@@ -407,7 +409,7 @@ function pintarSalaUI() {
     document.getElementById("listaSala").innerHTML = h || "No hay pilotos rodando ahora mismo.";
   }
 
-  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = est;
+  var est = s.estado || "ESPERA", t0 = Number(s.tsInicio || 0), estTxt = (est === "RADAR") ? ("📡 RADAR (" + (s.radarDist || 10) + "m)") : est;
   if (est === "EN_CURSO" && t0 > 0) {
     var elapsed = ah - t0;
     if (s.modoJuego === "ELIM" && !dirOn) {
@@ -445,7 +447,7 @@ function conectarSseUnico() {
 mxGar.init({
   uid: uid, circId: circId, circNom: circNom, fbCirc: FB, allowEditNom: false,
   getNom: function(){ return miNom; }, getRoot: function(){ return rootCache; },
-  getCircMeta: function(){ return circMeta; }, onSpeak: function(t){ mxHablar(t, vozP); }
+  getCircMeta: function(){ return circMeta; }, isDirSilent: function(){ var s = rootCache.sala || {}; return !!(s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000); }, onSpeak: function(t){ mxHablar(t, vozP); }
 });
 inscribirPilotoAuto();
 conectarSseUnico();

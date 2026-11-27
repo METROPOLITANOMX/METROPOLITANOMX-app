@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Dirección Pro - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css">
+<link rel="stylesheet" href="mx.css?v=202611263">
 <style>
   .wrap{max-width:940px;margin:0 auto}
   .top{max-width:940px;border-bottom-color:#0dcaf0}
@@ -209,6 +209,15 @@
             <button onclick="vibrar();ponerBandera('VERDE')" style="background:#20c997;color:#000;font-size:10px">🟩 BANDERA VERDE</button>
           </div>
 
+          <div class="box-sub" style="border-color:#0dcaf0;margin-top:8px">
+            <b style="color:#0dcaf0;font-size:11px">🏎️ MODO RADAR (VELOCIDAD ENTRE 2 CAMARAS)</b>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+              <div style="flex:1"><div style="font-size:10px;color:#aaa;margin-bottom:2px">Distancia entre camaras (m):</div><input id="inpRadarDist" type="number" step="0.1" min="0.5" value="10" onchange="guardarDistRadar()" style="margin:0"></div>
+              <button id="btnRadarDir" onclick="vibrar(25);toggleRadarDir()" style="flex:1;background:#262626;color:#0dcaf0;border:1px solid #0dcaf0;padding:10px 6px;font-size:10px">📡 RADAR: OFF</button>
+            </div>
+            <div id="lblRadarResDir" style="font-size:11px;color:#ffc107;margin-top:6px;font-weight:bold">Paso solo 1 piloto entre Cam 1 y Cam 2.</div>
+          </div>
+
           <div class="box-sub">
             <b style="color:#20c997;font-size:11px">📢 MEGAFONIA ESTEREO (MICROFONO O TEXTO)</b>
             <div style="display:flex;gap:5px;margin-top:6px">
@@ -227,6 +236,7 @@
           <div class="grid2" style="margin-top:6px">
             <button onclick="vibrar();borrarHotlapDir()" style="background:#332611;color:#ffc107;font-size:10px">🧹 BORRAR HOTLAP SEMANAL</button>
             <button onclick="vibrar();borrarTiemposDiaDir()" style="background:#3a1c1c;color:#ff6b6b;font-size:10px">🗑️ BORRAR TIEMPOS DEL DIA</button>
+            <button onclick="vibrar();borrarMundialDir()" style="grid-column:span 2;background:#3a1c1c;color:#ff4d5e;font-size:10px">🌍 BORRAR RANKING MUNDIAL</button>
           </div>
         </div>
       </div>
@@ -312,13 +322,13 @@
     <div id="secDir_tiempos" style="display:none"><div id="slotTiempos"></div></div>
   </div>
 
-<script src="mx-core.js"></script>
-<script src="mx-garaje.js"></script>
-<script src="mx-garaje-color.js"></script>
-<script src="mx-tiempos.js"></script>
-<script src="mx-director-cam.js"></script>
-<script src="mx-director-carrera.js"></script>
-<script src="mx-director-admin.js"></script>
-<script src="mx-director-main.js"></script>
+<script src="mx-core.js?v=202611263"></script>
+<script src="mx-garaje.js?v=202611263"></script>
+<script src="mx-garaje-color.js?v=202611263"></script>
+<script src="mx-tiempos.js?v=202611263"></script>
+<script src="mx-director-cam.js?v=202611263"></script>
+<script src="mx-director-carrera.js?v=202611263"></script>
+<script src="mx-director-admin.js?v=202611263"></script>
+<script src="mx-director-main.js?v=202611263"></script>
 </body>
 </html>

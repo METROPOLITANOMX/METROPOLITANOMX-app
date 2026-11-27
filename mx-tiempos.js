@@ -47,7 +47,7 @@
       var elD = document.getElementById(lblDeltaId), elB = document.getElementById(deltaBolId);
       if (elD) elD.innerHTML = difH;
       if (elB) elB.textContent = difB;
-      if (_s.cfg.onSpeak) _s.cfg.onSpeak(voz);
+      if (_s.cfg.onSpeak && (!_s.cfg.isDirSilent || !_s.cfg.isDirSilent())) _s.cfg.onSpeak(voz);
 
       var hoy = new Date().toLocaleDateString("es-ES");
       if (!_s.hist.length || _s.hist[_s.hist.length - 1].fecha !== hoy) _s.hist.push({ fecha: hoy, vtas: [] });
