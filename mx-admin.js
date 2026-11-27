@@ -16,6 +16,15 @@ function safeJs(s) {
   return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+function aplicarRestriccionesAdmin() {
+  if (typeof mxPerfilCodigo === "function" && mxPerfilCodigo() === "DIRECCION_LIMITADA") {
+    ["cardAdmBorrados", "cardAdmPilotos", "cardAdmDescargas", "cardAdmCuentas"].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+  }
+}
+
 function verificarClaveAdmin(clv) {
   return hashTxt(clv).then(function(h) {
     return fbJson(FB_ROOT + "/config/adminHash.json?t=" + Date.now()).catch(function(){ return null; }).then(function(admHash) {
@@ -366,6 +375,7 @@ function recargarTodoAdmin() {
 }
 
 function iniciarAdmin(sinPropia) {
+  aplicarRestriccionesAdmin();
   if (sinPropia) document.getElementById("banSetAdminKey").style.display = "block";
   else comprobarBannerClaveAdmin();
   recargarTodoAdmin();

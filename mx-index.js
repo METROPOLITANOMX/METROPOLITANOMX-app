@@ -9,27 +9,43 @@ var rolSel = "PILOTO", modA = "LOGIN", gpsCirc = null, _ultRepTs = 0;
 var accesoCfg = { modo: "ABIERTO", codigo: "" };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
 
+function aplicarRestriccionesCodigo() {
+  var pf = (typeof mxPerfilCodigo === "function") ? mxPerfilCodigo() : "";
+  var soloPil = (pf === "SOLO_PILOTO");
+  var bDir = document.getElementById("btnTopDir");
+  var bAnt = document.getElementById("btnTopAnt");
+  var pDir = document.getElementById("pDir");
+  if (bDir) bDir.style.display = soloPil ? "none" : "";
+  if (bAnt) bAnt.style.display = soloPil ? "none" : "";
+  if (soloPil && pDir && pDir.style.display !== "none") abrir("menu");
+}
+
 function activarPwaSiPermitido() {
   var m = accesoCfg.modo || "ABIERTO";
-  var codOk = (localStorage.getItem("mxp_inv_ok") === accesoCfg.codigo && accesoCfg.codigo);
+  var codOk = mxCodigoValido(localStorage.getItem("mxp_inv_ok"), accesoCfg.codigo);
   var permitido = (m === "ABIERTO") || (m === "CODIGO" && codOk);
   var ban = document.getElementById("banAcceso");
   var boxCod = document.getElementById("boxCodInst");
 
   if (m === "PAUSADO") {
     ban.style.display = "block";
+    ban.onclick = null;
     ban.textContent = esIngles ? "🔒 New downloads & sign-ups paused by Race Direction" : "🔒 Altas e instalaciones nuevas pausadas por Direccion";
     boxCod.style.display = "none";
     if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
   } else if (m === "CODIGO" && !codOk) {
     ban.style.display = "block";
-    ban.textContent = esIngles ? "🔑 Invite code required from Race Direction for new accounts/install" : "🔑 Nuevas cuentas e instalacion requieren codigo de Direccion";
+    ban.textContent = esIngles ? "🔑 Invite code required for new accounts/install (tap here)" : "🔑 Codigo requerido para instalar/crear cuenta (toca aqui)";
+    ban.style.cursor = "pointer";
+    ban.onclick = function(){ vibrar(); abrir("pGuia"); };
     boxCod.style.display = "block";
   } else {
     ban.style.display = "none";
+    ban.onclick = null;
     boxCod.style.display = "none";
   }
 
+  aplicarRestriccionesCodigo();
   if (permitido) {
     if (!document.querySelector('link[rel="manifest"]')) {
       var lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "manifest.json"; document.head.appendChild(lk);
@@ -40,8 +56,9 @@ function activarPwaSiPermitido() {
 
 function desbloquearInstalacion() {
   var c = document.getElementById("inpCodInst").value.trim(), msg = document.getElementById("msgCodInst");
-  if (!c || c !== accesoCfg.codigo) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo incorrecto"; return; }
-  localStorage.setItem("mxp_inv_ok", c);
+  if (!mxCodigoValido(c, accesoCfg.codigo)) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo incorrecto"; return; }
+  localStorage.setItem("mxp_inv_ok", mxNormCod(c));
+  localStorage.setItem("mxp_cod_perfil", mxPerfilCodigo(c));
   msg.style.color = "#20c997"; msg.textContent = "✅ Instalacion y alta desbloqueada ✓";
   activarPwaSiPermitido();
 }
@@ -93,9 +110,10 @@ function abrir(id) {
   });
 }
 
-function irAntenas() { localStorage.setItem("mxp_circ_id", circAct); localStorage.setItem("mxp_circ_nom", circNom); location.href = "antena.html"; }
+function irAntenas() { if (mxPerfilCodigo() === "SOLO_PILOTO") return; localStorage.setItem("mxp_circ_id", circAct); localStorage.setItem("mxp_circ_nom", circNom); location.href = "antena.html"; }
 
 function abrirDirModal() {
+  if (mxPerfilCodigo() === "SOLO_PILOTO") return;
   var recD = localStorage.getItem("mxp_rec_dir");
   if (recD) { document.getElementById("dClv").value = b64Dec(recD); document.getElementById("chkRecDir").checked = true; }
   else { document.getElementById("dClv").value = ""; document.getElementById("chkRecDir").checked = false; }
@@ -118,7 +136,7 @@ function modoAuth(m) {
   document.getElementById("tLog").className = "tab" + (m === "LOGIN" ? " act" : "");
   document.getElementById("tReg").className = "tab" + (m === "REG" ? " act" : "");
   document.getElementById("aPin").style.display = (m === "REG") ? "block" : "none";
-  var needCod = (m === "REG" && accesoCfg.modo === "CODIGO" && localStorage.getItem("mxp_inv_ok") !== accesoCfg.codigo);
+  var needCod = (m === "REG" && accesoCfg.modo === "CODIGO" && !mxCodigoValido(localStorage.getItem("mxp_inv_ok"), accesoCfg.codigo));
   document.getElementById("aCodInv").style.display = needCod ? "block" : "none";
   document.getElementById("bEntrar").textContent = esIngles ? (m === "LOGIN" ? "SIGN IN" : "CREATE MY ACCOUNT") : (m === "LOGIN" ? "ENTRAR" : "CREAR MI CUENTA");
   document.getElementById("mAuth").textContent = "";
@@ -145,9 +163,11 @@ function procesarAuth() {
   if (!uid || !clv) { msg.style.color = "#ff4d5e"; msg.textContent = esIngles ? "Enter name & password" : "Rellena nombre y clave"; return; }
   if (modA === "REG") {
     if (accesoCfg.modo === "PAUSADO") { msg.style.color = "#ff4d5e"; msg.textContent = "Altas nuevas pausadas por Direccion"; return; }
-    if (accesoCfg.modo === "CODIGO" && localStorage.getItem("mxp_inv_ok") !== accesoCfg.codigo) {
-      if (!cod || cod !== accesoCfg.codigo) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo de invitacion incorrecto"; return; }
-      localStorage.setItem("mxp_inv_ok", cod); activarPwaSiPermitido();
+    if (accesoCfg.modo === "CODIGO" && !mxCodigoValido(localStorage.getItem("mxp_inv_ok"), accesoCfg.codigo)) {
+      if (!mxCodigoValido(cod, accesoCfg.codigo)) { msg.style.color = "#ff4d5e"; msg.textContent = "Codigo de invitacion incorrecto"; return; }
+      localStorage.setItem("mxp_inv_ok", mxNormCod(cod));
+      localStorage.setItem("mxp_cod_perfil", mxPerfilCodigo(cod));
+      activarPwaSiPermitido();
     }
     if (!/^\d{4}$/.test(pin)) { msg.style.color = "#ff4d5e"; msg.textContent = esIngles ? "Enter 4-digit PIN" : "Pon un PIN de 4 numeros"; return; }
   }
@@ -382,6 +402,7 @@ function cargarPaddock() {
 }
 
 aplicarIdioma();
+aplicarRestriccionesCodigo();
 cargarAccesoConfig();
 cargarListaCircuitos();
 actualizarEstadoSala();
