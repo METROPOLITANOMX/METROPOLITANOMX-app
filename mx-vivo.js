@@ -5,7 +5,7 @@ var FB = FB_ROOT + "/circuitos/" + circId;
 var FB_FF = FB_ROOT + "/foto_finish/" + circId + ".json";
 var miNomV = localStorage.getItem("mxp_nom") || "Aficionado";
 var votoHecho = false, votoMvpHecho = false, ultReacMs = 0, toquesOva = 0;
-var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "", _lastEstTxtV = "";
+var modoMec = false, vozMec = false, _ultVtasMec = {}, _esRoot = null, _lastVivoSig = "", _lastEstTxtV = "", _lastRootSseTs = 0, _vivoPollBusy = false;
 var _esResultadosAm = null, _resultadosAmHoy = {}, _diaResultadosAm = "";
 var rootCache = { sala: {}, pilotos: {}, garaje: {}, campeonato: {} };
 var esIngles = !(navigator.language || "es").toLowerCase().startsWith("es");
@@ -269,6 +269,7 @@ function conectarSseVivo() {
     var onSse = function(e) {
       try {
         var m = JSON.parse(e.data); if (!m || !m.path) return;
+        _lastRootSseTs = Date.now();
         if (m.path.indexOf("/antenas") === 0 || m.path.indexOf("/eventos") === 0) return;
         applySsePatch(rootCache, m.path, m.data, e.type === "put");
         pintarVivo();
@@ -280,9 +281,12 @@ function conectarSseVivo() {
 }
 function refrescarVivo() {
   if (_diaResultadosAm !== diaLocalResultadosAm()) conectarResultadosAmistosos();
+  if (_esRoot && _esRoot.readyState === 1 && Date.now() - _lastRootSseTs < 9000) return;
+  if (_vivoPollBusy) return;
+  _vivoPollBusy = true;
   fbJson(FB + ".json?t=" + Date.now()).then(function(r){
     if (r) { rootCache = { sala: r.sala || {}, pilotos: r.pilotos || {}, garaje: r.garaje || {}, campeonato: r.campeonato || {} }; pintarVivo(); }
-  }).catch(function(){});
+  }).catch(function(){}).finally(function(){ _vivoPollBusy = false; });
 }
 conectarSseVivo(); conectarResultadosAmistosos(); refrescarVivo(); setInterval(refrescarVivo, 4500);
 

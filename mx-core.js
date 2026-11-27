@@ -103,6 +103,42 @@ document.addEventListener("visibilitychange", function(){
 
 var _mxAudioCtx = null;
 var _mxSpeechQueue = [], _mxSpeechActive = false;
+var _mxPocketTimer = null, _mxPocketStart = 0, _mxPocketPointerId = null, _mxPocketKey = "";
+function mxAbrirBolsillo(onOpen) {
+  if (typeof onOpen === "function") onOpen();
+  var modal = document.getElementById("bolsillo");
+  if (modal) modal.style.display = "flex";
+  try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); } catch (e) {}
+}
+function mxIniciarUnlockBolsillo(ev) {
+  if (_mxPocketTimer) return;
+  if (ev && ev.pointerId !== undefined) {
+    _mxPocketPointerId = ev.pointerId;
+    try { if (ev.currentTarget.setPointerCapture) ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+  } else _mxPocketKey = ev && ev.key ? ev.key : "";
+  if (ev && ev.preventDefault) ev.preventDefault();
+  _mxPocketStart = Date.now();
+  _mxPocketTimer = setInterval(function() {
+    var pct = Math.min(100, Math.round(((Date.now() - _mxPocketStart) / 2000) * 100));
+    var bar = document.getElementById("barUnlockBol");
+    if (bar) bar.style.width = pct + "%";
+    if (pct >= 100) {
+      clearInterval(_mxPocketTimer); _mxPocketTimer = null; _mxPocketPointerId = null; _mxPocketKey = "";
+      var modal = document.getElementById("bolsillo");
+      if (modal) modal.style.display = "none";
+      try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch (e) {}
+    }
+  }, 40);
+}
+function mxCancelarUnlockBolsillo(ev) {
+  if (ev && ev.pointerId !== undefined && _mxPocketPointerId !== null && ev.pointerId !== _mxPocketPointerId) return;
+  if (ev && ev.type === "keyup" && _mxPocketKey && ev.key !== _mxPocketKey) return;
+  if (ev && ev.type === "keyup" && _mxPocketPointerId !== null) return;
+  if (_mxPocketTimer) { clearInterval(_mxPocketTimer); _mxPocketTimer = null; }
+  _mxPocketPointerId = null; _mxPocketKey = "";
+  var bar = document.getElementById("barUnlockBol");
+  if (bar) bar.style.width = "0%";
+}
 function desbloquearAudioCore() {
   try {
     if (!_mxAudioCtx) _mxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
