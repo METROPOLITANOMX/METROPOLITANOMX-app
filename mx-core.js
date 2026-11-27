@@ -45,6 +45,10 @@ function fmtCrono(seg) {
   var m = Math.floor(dsTot / 600), rem = dsTot % 600, s2 = Math.floor(rem / 10), d2 = rem % 10;
   return (m < 10 ? "0" : "") + m + ":" + (s2 < 10 ? "0" : "") + s2 + "." + d2;
 }
+function fmtCuentaRegresivaManga(ms) {
+  var seg = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+  return Math.floor(seg / 60) + ":" + ((seg % 60) < 10 ? "0" : "") + (seg % 60);
+}
 function fmtVoz(ms) {
   if (!ms || ms <= 0) return "";
   var csTot = Math.round(ms / 10);
@@ -93,6 +97,7 @@ document.addEventListener("visibilitychange", function(){
 });
 
 var _mxAudioCtx = null;
+var _mxSpeechQueue = [], _mxSpeechActive = false;
 function desbloquearAudioCore() {
   try {
     if (!_mxAudioCtx) _mxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -110,12 +115,27 @@ function mxBeep(freq, ms) {
 }
 function mxHablar(t, activo, lang) {
   if (activo === false || !t || !("speechSynthesis" in window)) return;
+  _mxSpeechQueue.push({ texto: String(t), lang: lang || "es-ES" });
+  reproducirSiguienteMx();
+}
+function reproducirSiguienteMx() {
+  if (_mxSpeechActive || !_mxSpeechQueue.length || !("speechSynthesis" in window)) return;
+  var item = _mxSpeechQueue.shift(), terminado = false;
+  _mxSpeechActive = true;
+  var finalizar = function() {
+    if (terminado) return;
+    terminado = true; _mxSpeechActive = false;
+    reproducirSiguienteMx();
+  };
   try {
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(t);
-    u.lang = lang || "es-ES"; u.rate = 1.06;
+    var u = new SpeechSynthesisUtterance(item.texto);
+    u.lang = item.lang; u.rate = 1.06; u.onend = finalizar; u.onerror = finalizar;
     speechSynthesis.speak(u);
-  } catch (e) {}
+  }
+  catch (e) {
+    console.error("No se pudo reproducir el aviso de voz:", e);
+    finalizar();
+  }
 }
 
 function flashRecord(tipo) {

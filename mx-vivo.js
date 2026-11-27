@@ -142,7 +142,7 @@ function actualizarRelojEstadoV() {
     if (df > 0) { var sg = Math.ceil(df / 1000); estTxt += " • " + Math.floor(sg / 60) + ":" + ((sg % 60) < 10 ? "0" : "") + (sg % 60); }
   } else if (est === "EN_CURSO" && Number(s.tsInicio || 0) > 0 && Number(s.duracionMin || 0) > 0) {
     var rem = Number(s.tsInicio) + Number(s.duracionMin) * 60000 - ah;
-    if (rem > 0) { var sr = Math.ceil(rem / 1000); estTxt += " • " + Math.floor(sr / 60) + ":" + ((sr % 60) < 10 ? "0" : "") + (sr % 60); }
+    if (rem > 0) estTxt += " • " + fmtCuentaRegresivaManga(rem);
   }
   if (estTxt !== _lastEstTxtV) { _lastEstTxtV = estTxt; document.getElementById("lblEstV").textContent = estTxt; }
 }

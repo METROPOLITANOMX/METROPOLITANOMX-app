@@ -1,3 +1,4 @@
+var _antUltTxtTimers = {}, _antUltTxtTs = {};
 document.getElementById("dualCamsSlot").innerHTML = ["ant_1", "ant_2"].map(function(aid, ix) {
   var tit = ix === 0 ? "📡 ANTENA 1 (META)" : "📡 ANTENA 2 (REFUERZO)", col = ix === 0 ? "#38d9a9" : "#3bc9db";
   var fields = [["rx", "TUNEL X", 30, 0, 85], ["ry", "TUNEL Y", 15, 0, 85], ["rw", "ANCHO W", 25, 10, 80], ["rh", "ALTO H", 65, 10, 85]];
@@ -182,6 +183,18 @@ function pintarAntenasTel() {
   var s = rootCache.sala || {}, ants = rootCache.antenas || {}, ah = ahoraSrv(), md = s.modoDet || "TODO", antsAct = [];
   ["ant_1", "ant_2"].forEach(function(aid) {
     var a = ants[aid], tel = document.getElementById("tel_" + aid);
+    var msgTs = a ? Number(a.ultTxtTs || 0) : 0, msgAge = ah - msgTs;
+    var msg = a && a.ultTxt && msgTs > 0 && msgAge >= 0 && msgAge < 5000 ? a.ultTxt : "";
+    if (_antUltTxtTs[aid] !== msgTs) {
+      if (_antUltTxtTimers[aid]) clearTimeout(_antUltTxtTimers[aid]);
+      _antUltTxtTs[aid] = msgTs;
+      var msgWait = 5000 - Math.max(0, msgAge);
+      if (msg && msgWait > 0) _antUltTxtTimers[aid] = setTimeout(function() {
+        _antUltTxtTimers[aid] = null;
+        var current = (rootCache.antenas || {})[aid];
+        if (current && Number(current.ultTxtTs || 0) === msgTs) pintarAntenasTel();
+      }, msgWait);
+    }
     var colorTxt = document.getElementById("colorTxt_" + aid), colorDot = document.getElementById("colorDot_" + aid), colorPct = document.getElementById("colorPct_" + aid);
     if (colorTxt && colorDot && colorPct) {
       var cn = a && a.colorNom, colorHex = { ROJO: "#ff3b30", AZUL: "#1687ff", AMARILLO: "#ffd400", NARANJA: "#ff7900", VERDE: "#00d26a", MORADO: "#a855f7" };
@@ -197,7 +210,7 @@ function pintarAntenasTel() {
       } else {
         var mAct = a.modoActivo || md, mOk = (mAct === md);
         tel.style.color = !mOk ? "#ff6b6b" : (a.calibrada ? "#00e676" : "#ffc107");
-        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " [" + mAct + (mOk ? " ✓" : " ⏳") + "] | MOV:" + (a.mov || 0) + "% | P:" + (a.pasos || 0) + (a.ultTxt ? (" | " + a.ultTxt) : "");
+        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " [" + mAct + (mOk ? " ✓" : " ⏳") + "] | MOV:" + (a.mov || 0) + "% | P:" + (a.pasos || 0) + (msg ? (" | " + msg) : "");
       }
     } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
   });

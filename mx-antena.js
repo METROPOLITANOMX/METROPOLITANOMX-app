@@ -13,9 +13,9 @@ var est = "SIN_CAL", calibradaOk = false, ultMs = 0, ultMsPorPiloto = {}, pasos 
 var framesHit = 0, _trigPendTs = 0, _ultWuTs = 0, _golpeFrames = 0, _movidaTs = 0;
 var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt = "", _ultTxtAnt = "";
 var _telBusy = false, _imgBusy = false, _wuBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
-var _ultPasoLocalTs = 0, _tSoloVoz = null, _tSoloCal = null, _esSala = null;
+var _ultPasoLocalTs = 0, _tSoloCal = null, _esSala = null, _tAvisoAnt = null, _avisoAntId = 0;
 var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
-var _vozQueue = [], _vozHablando = false;
+var _ultTxtTs = 0;
 
 var salaCache = {};
 var cfg = {
@@ -35,17 +35,16 @@ window.addEventListener("beforeunload", function() {
 });
 
 function hablarAnt(texto, urgente) {
-  if (!vozOn || !texto || !("speechSynthesis" in window)) return;
-  try {
-    if (urgente) { _vozQueue = []; _vozHablando = false; speechSynthesis.cancel(); }
-    else if (_vozHablando || speechSynthesis.speaking) { if (_vozQueue.length >= 3) _vozQueue.shift(); _vozQueue.push(texto); return; }
-    var decir = function(t) {
-      _vozHablando = true; var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.08;
-      var fin = function(){ _vozHablando = false; if (_vozQueue.length) decir(_vozQueue.shift()); };
-      u.onend = fin; u.onerror = fin; speechSynthesis.speak(u);
-    };
-    decir(texto);
-  } catch (e) {}
+  if (vozOn && texto) mxHablar(texto, true);
+}
+function mostrarAvisoAnt(texto) {
+  var el = document.getElementById("lblMegaAnt"), id = ++_avisoAntId;
+  if (_tAvisoAnt) clearTimeout(_tAvisoAnt);
+  el.textContent = texto || "";
+  _tAvisoAnt = texto ? setTimeout(function() {
+    if (_avisoAntId !== id) return;
+    el.textContent = ""; _tAvisoAnt = null;
+  }, 5000) : null;
 }
 
 function desbloquearAudio(avisar) {
@@ -189,6 +188,7 @@ function actualizarColorVivo(dProc) {
 function emitirPaso(pid, sinFf) {
   pasos++; mxBeep(940, 110); vibrar([35, 30, 35]);
   var tsPaso = ahoraSrv(), lapLocal = _ultPasoLocalTs ? (tsPaso - _ultPasoLocalTs) : 0; _ultPasoLocalTs = tsPaso;
+  _ultTxtAnt = pid ? "PASO: " + pid : "PASO DETECTADO"; _ultTxtTs = tsPaso;
   fetch(FB + "/eventos/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: tsPaso, antId: antId, antNom: antNom, modo: cfg.modoDet, pilotoUid: pid || "", pasos: pasos }) }).catch(function(){});
   enviarTelemetria();
   if (!sinFf) {
@@ -201,15 +201,12 @@ function emitirPaso(pid, sinFf) {
     } catch (e) {}
   }
 
-  if (_tSoloVoz) clearTimeout(_tSoloVoz);
-  var pNum = pasos;
-  _tSoloVoz = setTimeout(function() {
-    _tSoloVoz = null;
-    if (lapLocal >= 1500 && !pid && antNom.indexOf("SOLO") >= 0) {
-      hablarAnt("Vuelta " + Math.max(1, pNum - 1) + ", " + fmtVoz(lapLocal), false);
-      document.getElementById("lblMegaAnt").textContent = "🔊 Vuelta: " + fmt(lapLocal);
-    } else if (!pid && antNom.indexOf("SOLO") >= 0) hablarAnt("Paso " + pNum + ", crono iniciado", false);
-  }, 750);
+  if (!pid && antNom.indexOf("SOLO") >= 0) {
+    if (lapLocal >= 1500) {
+      hablarAnt("Vuelta " + Math.max(1, pasos - 1) + ", " + fmtVoz(lapLocal), false);
+      mostrarAvisoAnt("🔊 Vuelta: " + fmt(lapLocal));
+    } else hablarAnt("Paso " + pasos + ", crono iniciado", false);
+  }
   document.getElementById("txtOledEst").textContent = "PASOS: " + pasos + " (DOBLE TOQUE)";
 }
 
@@ -281,7 +278,7 @@ function capturarYEnviarWarmup(dProc) {
     var payload = JSON.stringify({ ts: ts, antId: antId, antNom: antNom, colorNom: colNom, img: _cnvWu.toDataURL("image/jpeg", 0.45), colores: [res.col] });
 
     _wuBusy = true;
-    document.getElementById("lblMegaAnt").textContent = "⏳ Enviando " + colNom + " a Direccion...";
+    mostrarAvisoAnt("⏳ Enviando " + colNom + " a Direccion...");
     var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
     var tOut = setTimeout(function() { if (ctrl) ctrl.abort(); }, 7000);
 
@@ -294,25 +291,29 @@ function capturarYEnviarWarmup(dProc) {
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       _wuBusy = false;
       _ultTxtAnt = "WU:" + colNom;
+      _ultTxtTs = ahoraSrv();
+      enviarTelemetria();
       mxBeep(720, 90);
       document.getElementById("lblEstado").textContent = "✅ ENVIADO: " + colNom;
       document.getElementById("lblEstado").style.color = "#00e676";
-      document.getElementById("lblMegaAnt").textContent = "✅ Enviado a Direccion: " + colNom;
+      mostrarAvisoAnt("✅ Enviado a Direccion: " + colNom);
     }).catch(function(err) {
       clearTimeout(tOut);
       _wuBusy = false;
       _ultWuTs = 0;
       _ultTxtAnt = "Err:" + ((err && err.message) || "WU");
+      _ultTxtTs = ahoraSrv();
+      enviarTelemetria();
       var msgErr = (err && err.name === "AbortError") ? "Tiempo agotado (7s)" : ((err && err.message) || "Red");
       document.getElementById("lblEstado").textContent = "❌ ERROR ENVIO: " + msgErr;
       document.getElementById("lblEstado").style.color = "#ff4d5e";
-      document.getElementById("lblMegaAnt").textContent = "❌ Error Firebase Warm-Up: " + msgErr;
+      mostrarAvisoAnt("❌ Error Firebase Warm-Up: " + msgErr);
       hablarAnt("Error al enviar captura", false);
     });
   } catch (e) {
     _wuBusy = false;
     _ultWuTs = 0;
-    document.getElementById("lblMegaAnt").textContent = "❌ Error preparando captura: " + (e.message || e);
+    mostrarAvisoAnt("❌ Error preparando captura: " + (e.message || e));
   }
 }
 
@@ -519,7 +520,7 @@ function procFrame() {
       if ((ah - ultMs) > 1200) { est = "CRUCE"; ultMs = ah; document.getElementById("lblEstado").textContent = "¡PASO DETECTADO!"; emitirPaso(""); }
     } else {
       var res = evaluarRoiColor(dFull);
-      document.getElementById("lblMegaAnt").textContent = "🔬 " + res.info;
+      mostrarAvisoAnt("🔬 " + res.info);
       if (res.pid) {
         if ((ah - (ultMsPorPiloto[res.pid] || 0)) > 1500) {
           est = "CRUCE"; ultMs = ah; ultMsPorPiloto[res.pid] = ah;
@@ -528,7 +529,7 @@ function procFrame() {
           emitirPaso(res.pid);
         }
       } else {
-        est = "CRUCE"; ultMs = ah; _ultTxtAnt = res.info;
+        est = "CRUCE"; ultMs = ah; _ultTxtAnt = res.info; _ultTxtTs = ah; enviarTelemetria();
         document.getElementById("lblEstado").textContent = "❌ NO COINCIDE" + (res.colNom ? (" (VEO: " + res.colNom + ")") : "");
         document.getElementById("lblEstado").style.color = "#ffa94d";
       }
@@ -548,7 +549,7 @@ function procesarSala(s) {
   var nuevoModo = s.modoDet || "TODO";
   if (nuevoModo !== cfg.modoDet) {
     cfg.modoDet = nuevoModo;
-    _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _ultTxtAnt = "MODO:" + nuevoModo;
+    _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _ultTxtAnt = "MODO:" + nuevoModo; _ultTxtTs = ahoraSrv();
     var nomM = { TODO: "Modo cualquier paso", GAR: "Modo color garaje", CAR: "Modo color garaje", WARMUP: "Modo firmas Warm-Up", HIBRIDO: "Modo hibrido" };
     if (s.estado !== "RADAR") hablarAnt(nomM[nuevoModo] || "Modo actualizado", true);
     enviarTelemetria();
@@ -573,8 +574,7 @@ function procesarSala(s) {
   if (s.megafonia && s.megafonia.id && s.megafonia.id !== _ultMegaId) {
     _ultMegaId = s.megafonia.id;
     if (Math.abs(ahoraSrv() - Number(s.megafonia.ts || 0)) < 12000 && s.megafonia.texto) {
-      if (_tSoloVoz) { clearTimeout(_tSoloVoz); _tSoloVoz = null; }
-      document.getElementById("lblMegaAnt").textContent = "📢 " + s.megafonia.texto;
+      mostrarAvisoAnt("📢 " + s.megafonia.texto);
       if (s.megafonia.beep) mxBeep(940, 110);
       hablarAnt(s.megafonia.texto, !!(s.megafonia.urgente || s.megafonia.texto.indexOf("SALIDA") >= 0 || s.megafonia.texto.indexOf("Velocidad") >= 0));
     }
@@ -583,12 +583,12 @@ function procesarSala(s) {
     _ultReacTs = s.reaccion.ts;
     if (Math.abs(ahoraSrv() - Number(s.reaccion.ts)) < 8000 && s.reaccion.texto) {
       var txtR = s.reaccion.autor + (s.reaccion.destinoNom ? (" para " + s.reaccion.destinoNom) : "") + " dice: " + s.reaccion.texto;
-      document.getElementById("lblMegaAnt").textContent = "📣 " + txtR; hablarAnt(txtR, false);
+      mostrarAvisoAnt("📣 " + txtR); hablarAnt(txtR, false);
     }
   }
   if (s.ovacion && s.ovacion.ts && s.ovacion.ts !== _ultOvaTs) {
     _ultOvaTs = s.ovacion.ts;
-    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { document.getElementById("lblMegaAnt").textContent = "👏 ¡OVACION DE LA GRADA!"; mxBeep(940, 120); hablarAnt("Ovacion de la grada para los pilotos", false); }
+    if (Math.abs(ahoraSrv() - Number(s.ovacion.ts)) < 8000) { mostrarAvisoAnt("👏 ¡OVACION DE LA GRADA!"); mxBeep(940, 120); hablarAnt("Ovacion de la grada para los pilotos", false); }
   }
 }
 
@@ -597,7 +597,7 @@ function enviarTelemetria() {
   if (!antId || _telBusy || _wuBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, ultTxtTs: _ultTxtTs, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
   }).catch(function(){}).finally(function(){ _telBusy = false; });
 }
 

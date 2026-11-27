@@ -345,6 +345,16 @@ function actualizarCronosDir() {
   aplicarBanderaUI(s, "banBanderaAmDir");
   var ov = document.getElementById("overlaySem"), nowLoc = Date.now(), wuBox = document.getElementById("lblWarmupCronoDir");
 
+  if (est === "EN_CURSO" && t0 > 0 && Number(s.duracionMin || 0) > 0) {
+    var remManga = t0 + Number(s.duracionMin) * 60000 - ah;
+    var lblManga = document.getElementById("lblEstadoSalaP");
+    var txtManga = remManga > 0 ? ("MANGA " + fmtCuentaRegresivaManga(remManga)) : "FIN MANGA";
+    if (lblManga.textContent !== txtManga) lblManga.textContent = txtManga;
+    if (remManga <= 0 && !avisoFinManga) {
+      avisoFinManga = true; hablarYAntenas("Tiempo de manga cumplido, bandera a cuadros", true);
+    }
+  }
+
   if (est === "WARMUP" && t0 > 0) {
     var dfW = t0 - ah, sgW = Math.max(0, Math.ceil(dfW / 1000));
     if (dfW > 0 && sgW !== _ultSecWu) {

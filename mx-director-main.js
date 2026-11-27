@@ -200,7 +200,7 @@ function pintarDirUI() {
     if (s.modoJuego === "RULETA") { var rRul = Math.floor(elapsed / 75000); if (rRul > _ultRondaRuleta && rRul >= 1) { _ultRondaRuleta = rRul; lanzarRuletaManual(); } }
     if (Number(s.duracionMin || 0) > 0) {
       var rem = t0 + Number(s.duracionMin) * 60000 - ah;
-      if (rem > 0) estTxt = "MANGA " + Math.floor(rem / 60000) + ":" + ((Math.floor((rem % 60000) / 1000) < 10) ? "0" : "") + Math.floor((rem % 60000) / 1000);
+      if (rem > 0) estTxt = "MANGA " + fmtCuentaRegresivaManga(rem);
       else { estTxt = "FIN MANGA"; if (!avisoFinManga) { avisoFinManga = true; hablarYAntenas("Tiempo de manga cumplido, bandera a cuadros", true); } }
     }
   }

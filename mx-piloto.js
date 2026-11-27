@@ -375,6 +375,19 @@ function actualizarSemaforoP() {
   }
 }
 
+function actualizarCuentaMangaP() {
+  var s = rootCache.sala || {}, inicio = Number(s.tsInicio || 0), duracion = Number(s.duracionMin || 0);
+  if (s.estado !== "EN_CURSO" || inicio <= 0 || duracion <= 0) return;
+  var restante = inicio + duracion * 60000 - ahoraSrv(), texto = restante > 0 ? ("MANGA " + fmtCuentaRegresivaManga(restante)) : "FIN MANGA";
+  var lbl = document.getElementById("lblEstadoSala");
+  if (lbl.textContent !== texto) lbl.textContent = texto;
+  if (restante <= 0 && !avisoFinManga) {
+    avisoFinManga = true;
+    var dirOn = s.dirTs && Math.abs(ahoraSrv() - Number(s.dirTs)) < 30000;
+    if (!dirOn) mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP);
+  }
+}
+
 function pintarSalaUI() {
   var s = rootCache.sala || {}, pObj = rootCache.pilotos || {}, gar = rootCache.garaje || {}, ah = ahoraSrv();
   pintarAntStatusP();
@@ -440,8 +453,8 @@ function pintarSalaUI() {
     }
     if (Number(s.duracionMin || 0) > 0) {
       var rem = t0 + Number(s.duracionMin) * 60000 - ah;
-      if (rem > 0) estTxt = "MANGA " + Math.floor(rem / 60000) + ":" + ((Math.floor((rem % 60000) / 1000) < 10) ? "0" : "") + Math.floor((rem % 60000) / 1000);
-      else { estTxt = "FIN MANGA"; if (!avisoFinManga) { avisoFinManga = true; mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP); } }
+      if (rem > 0) estTxt = "MANGA " + fmtCuentaRegresivaManga(rem);
+      else { estTxt = "FIN MANGA"; if (!avisoFinManga) { avisoFinManga = true; if (!dirOn) mxHablar("Tiempo de manga cumplido, bandera a cuadros", vozP); } }
     }
   }
   if (est !== "WARMUP") document.getElementById("lblEstadoSala").textContent = estTxt;
@@ -487,6 +500,7 @@ setInterval(function() {
 
 setInterval(function() {
   actualizarSemaforoP();
+  actualizarCuentaMangaP();
   var s = rootCache.sala || {}, yo = (rootCache.pilotos || {})[uid] || {};
   var tIni = Number(s.tsInicio || 0), tPaso = Number(yo.tsUltimoPaso || 0);
   var b = (tPaso && (!tIni || tPaso >= tIni)) ? tPaso : tIni;
