@@ -204,10 +204,10 @@ function analizarColorVivo(r, g, b) {
     if (h < 0) h += 360;
   }
   var s = mx ? d / mx : 0, v = mx, l = (mx + mn) / 2;
-  if (s < 0.50 || v < 0.30 || l < 0.27) return null;
-  if (h < 18 || h >= 345) return l >= 0.32 ? { nombre: "ROJO", h: h, s: s, v: v } : null;
+  if (s < 0.58 || v < 0.38 || l < 0.34) return null;
+  if (h < 15 || h >= 345) return s >= 0.68 && v >= 0.52 && l >= 0.42 ? { nombre: "ROJO", h: h, s: s, v: v } : null;
   if (h < 42) return s >= 0.75 && v >= 0.62 && l >= 0.45 ? { nombre: "NARANJA", h: h, s: s, v: v } : null;
-  if (h < 75) return v >= 0.55 && l >= 0.45 ? { nombre: "AMARILLO", h: h, s: s, v: v } : null;
+  if (h < 75) return v >= 0.55 && l >= 0.40 ? { nombre: "AMARILLO", h: h, s: s, v: v } : null;
   if (h < 165) return { nombre: "VERDE", h: h, s: s, v: v };
   if (h >= 195 && h < 255) return { nombre: "AZUL", h: h, s: s, v: v };
   if (h >= 255 && h < 345) return { nombre: "MORADO", h: h, s: s, v: v };
@@ -232,6 +232,7 @@ function colorDominantePorZona(dProc, x0, y0, w0, h0, diffMin, lG, stride) {
   var nombres = Object.keys(bins).sort(function(a, b){ return bins[b].cnt - bins[a].cnt; });
   if (!nombres.length) return { nombre: "", vividCount: 0, ratio: 0, sampleCount: sampleCount };
   var elegido = bins[nombres[0]];
+  if (elegido.cnt < Math.max(4, Math.ceil(sampleCount * 0.004))) return { nombre: "", vividCount: vividCount, ratio: 0, sampleCount: sampleCount };
   return {
     nombre: nombres[0],
     vividCount: vividCount,
@@ -345,6 +346,7 @@ function extraerColorUnico(dProc, x0, y0, w0, h0, soloMov, diffMin, lG) {
   }).sort(function(a, b) { return b.cnt - a.cnt; });
   if (!lista.length) return { cnt: 0, col: null };
   var elegido = lista[0];
+  if (elegido.cnt < Math.max(12, Math.ceil(w0 * h0 * 0.004))) return { cnt: cnt, col: null };
   return { cnt: cnt, col: elegido };
 }
 
