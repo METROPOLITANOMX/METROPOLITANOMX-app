@@ -227,6 +227,7 @@ function pintarBandejasWarmup() {
 }
 function asignarCapturaPiloto(cid) {
   var c = warmupCaps[cid], sel = document.getElementById("selCap_" + cid), pUid = sel ? sel.value : ""; if (!c || !pUid) { alert("Selecciona piloto."); return; }
+  if (!Array.isArray(c.colores) || !c.colores.length) { alert("Esta captura no contiene un color vivo válido; no se puede asignar como firma."); return; }
   var aid = (c.antId === "ant_2") ? "ant_2" : "ant_1", gar = rootCache.garaje || {}, fw = (gar[pUid] && gar[pUid].firmasWarmup) || {}, arr = Array.isArray(fw[aid]) ? fw[aid].slice() : [];
   arr.push({ ts: c.ts || ahoraSrv(), colores: c.colores || [] }); if (arr.length > 6) arr = arr.slice(-6);
   fbJson(FB + "/garaje/" + pUid + "/firmasWarmup/" + aid + ".json", { method: "PUT", body: JSON.stringify(arr) }).then(function(){
@@ -269,7 +270,8 @@ function pintarAntenasTel() {
       } else {
         var mAct = a.modoActivo || md, mOk = (mAct === md);
         tel.style.color = !mOk ? "#ff6b6b" : (a.calibrada ? "#00e676" : "#ffc107");
-        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " [" + mAct + (mOk ? " ✓" : " ⏳") + "] | MOV:" + (a.mov || 0) + "% | P:" + (a.pasos || 0) + (msg ? (" | " + msg) : "");
+        var videoEstado = typeof a.camOk === "boolean" ? (a.camOk ? " | VIDEO: OK" : " | VIDEO: SIN SEÑAL") : "";
+        tel.textContent = (a.calibrada ? "✅ CAL" : "⚠️ SIN CAL") + " [" + mAct + (mOk ? " ✓" : " ⏳") + "] | MOV:" + (a.mov || 0) + "% | P:" + (a.pasos || 0) + videoEstado + (msg ? (" | " + msg) : "");
       }
     } else { tel.style.color = "#888"; tel.textContent = "Desconectada"; }
   });

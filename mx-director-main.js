@@ -118,6 +118,15 @@ function pintarChecklist(antsAct, pils, s) {
 
 function pintarDirUI() {
   var s = rootCache.sala || {}, pils = ordenarPilotos(rootCache.pilotos, s), gar = rootCache.garaje || {}, ah = ahoraSrv();
+  var testActual = s.estado === "TEST";
+  if (testOn !== testActual) {
+    testOn = testActual;
+    var btnTest = document.getElementById("btnToggleTest");
+    if (btnTest) {
+      btnTest.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO";
+      btnTest.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
+    }
+  }
   var antsAct = pintarAntenasTel();
   aplicarBanderaUI(s, "banBanderaAmDir");
   if ((s.estado || "ESPERA") === "RADAR") {

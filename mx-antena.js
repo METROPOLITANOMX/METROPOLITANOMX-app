@@ -375,12 +375,10 @@ function capturarYEnviarWarmup(dProc, frame) {
       res = extraerColorUnico(dCaptura, Math.floor(PW * 0.30), Math.floor(PH * 0.20), Math.floor(PW * 0.40), Math.floor(PH * 0.60), false, diffMin, lG);
     }
   }
-  if (!res.col) { _ultWuTs = 0; document.getElementById("lblEstado").textContent = "⚠️ SOLO SOMBRA/NEGRO (ACERCALO)"; return; }
-
-  var colNom = res.col.nom;
-  document.getElementById("lblEstado").textContent = "🎨 DETECTADO: " + colNom;
-  document.getElementById("lblEstado").style.color = "#0dcaf0";
-  hablarAnt("Color " + colNom.toLowerCase(), false);
+  var colNom = res.col ? res.col.nom : "SIN COLOR";
+  document.getElementById("lblEstado").textContent = res.col ? ("🎨 DETECTADO: " + colNom) : "⚠️ CAPTURA SIN COLOR VIVO";
+  document.getElementById("lblEstado").style.color = res.col ? "#0dcaf0" : "#ffa94d";
+  if (res.col) hablarAnt("Color " + colNom.toLowerCase(), false);
 
   try {
     var sx = Math.max(0, Math.min(360, Math.floor((cropRect.x / 100) * 384)));
@@ -388,7 +386,7 @@ function capturarYEnviarWarmup(dProc, frame) {
     var sw = Math.max(24, Math.min(384 - sx, Math.floor((cropRect.w / 100) * 384)));
     var sh = Math.max(24, Math.min(216 - sy, Math.floor((cropRect.h / 100) * 216)));
     _ctxWu.drawImage((frame && frame.canvas) || _cnv, sx, sy, sw, sh, 0, 0, 160, 112);
-    var payload = JSON.stringify({ ts: ts, antId: antId, antNom: antNom, colorNom: colNom, img: _cnvWu.toDataURL("image/jpeg", 0.45), colores: [res.col] });
+    var payload = JSON.stringify({ ts: ts, antId: antId, antNom: antNom, colorNom: colNom, img: _cnvWu.toDataURL("image/jpeg", 0.45), colores: res.col ? [res.col] : [] });
 
     _wuBusy = true;
     mostrarAvisoAnt("⏳ Enviando " + colNom + " a Direccion...");
@@ -397,6 +395,7 @@ function capturarYEnviarWarmup(dProc, frame) {
 
     fetch(FB_WU + "/" + antId + "_" + ts + ".json", {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: payload,
       signal: ctrl ? ctrl.signal : undefined
     }).then(function(resp) {
@@ -624,6 +623,7 @@ function procFrame() {
   if (pct >= sens) framesHit++; else framesHit = 0;
   if (est === "LIBRE" && !_trigPendTs) {
     if (colorContact && !_prevColorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
+    else if ((cfg.estado === "WARMUP" || cfg.estado === "TEST") && pct >= resetPct) _trigPendTs = ah;
     else if (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6)) _trigPendTs = ah;
   }
   _prevColorContact = colorContact;
@@ -635,10 +635,17 @@ function procFrame() {
     if (cfg.estado === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
       capturarYEnviarWarmup(dFull, frameFoto);
-      if (cfg.modoDet === "TODO") emitirPaso("", true, frameFoto);
-      else {
-        var rWu = evaluarRoiColor(dFull);
-        if (rWu.pid) { _ultTxtAnt = "OK:" + rWu.pid; emitirPaso(rWu.pid, true, frameFoto, rWu); }
+      _ultTxtAnt = "WARM-UP: PASO DETECTADO"; _ultTxtTs = ahoraSrv(); enviarTelemetria();
+      return;
+    }
+
+    if (cfg.estado === "TEST") {
+      if ((ah - ultMs) >= 900) {
+        est = "CRUCE"; ultMs = ah;
+        _ultTxtAnt = "TEST: PASO DETECTADO"; _ultTxtTs = ahoraSrv();
+        document.getElementById("lblEstado").textContent = "🧪 TEST: PASO DETECTADO";
+        mostrarAvisoAnt("🧪 Test: paso detectado");
+        mxBeep(940, 90); enviarTelemetria();
       }
       return;
     }
@@ -734,7 +741,7 @@ function enviarTelemetria() {
   if (!antId || _telBusy) return; _telBusy = true;
   fetch(FB + "/antenas/" + antId + ".json", {
     method: "PUT",
-    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, ultTxtTs: _ultTxtTs, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
+    body: JSON.stringify({ ts: ahoraSrv(), nom: antNom, posX: (cfg.roi && cfg.roi.posX) || 50, orientacion: cfg.orientacion, mov: window._movVivo || 0, pasos: pasos, estado: est, calibrada: calibradaOk, camOk: camOk, videoWidth: camOk ? document.getElementById("vid").videoWidth : 0, videoHeight: camOk ? document.getElementById("vid").videoHeight : 0, verVivo: cfg.verVivo, movidaTs: _movidaTs, modoActivo: cfg.modoDet, ultTxt: _ultTxtAnt, ultTxtTs: _ultTxtTs, colorNom: _colorVivoAnt, colorRatio: _ratioColorAnt })
   }).then(function(resp){ return comprobarRespuestaAnt(resp, "Telemetría"); }).catch(function(err){ reportarErrorRedAnt("No se pudo enviar el estado", err); }).finally(function(){ _telBusy = false; });
 }
 
@@ -753,13 +760,27 @@ setInterval(enviarTelemetria, 1000);
 setInterval(function() {
   if (!antenaPuedeOperar()) return;
   if (!antId) return; var v = document.getElementById("vid");
-  if ((cfg.verVivo || !calibradaOk || cfg.estado === "TEST" || est === "CAL") && camOk && v && v.videoWidth > 0) {
+  if ((cfg.verVivo || !calibradaOk || cfg.estado === "TEST" || cfg.estado === "WARMUP" || est === "CAL") && camOk && v && v.videoWidth > 0) {
     if (_imgBusy) return; _imgBusy = true; _imgCleared = false;
-    _ctxLive.drawImage(v, 0, 0, 384, 216);
-    fetch(FB_IMG + "/" + antId + ".json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), img: _cnvLive.toDataURL("image/jpeg", 0.50) }) })
-      .then(function(resp){ return comprobarRespuestaAnt(resp, "Vídeo"); })
+    var controlador = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var tiempoLimite = controlador ? setTimeout(function(){ controlador.abort(); }, 3000) : null;
+    try {
+      _ctxLive.drawImage(v, 0, 0, 384, 216);
+      var imagenViva = _cnvLive.toDataURL("image/jpeg", 0.40);
+      fetch(FB_IMG + "/" + antId + ".json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ts: ahoraSrv(), img: imagenViva }),
+        signal: controlador ? controlador.signal : undefined
+      }).then(function(resp){ return comprobarRespuestaAnt(resp, "Vídeo"); })
+      .then(function(){ _imgCleared = false; })
       .catch(function(err){ reportarErrorRedAnt("No se pudo compartir el vídeo", err); })
-      .finally(function(){ _imgBusy = false; });
+      .finally(function(){ if (tiempoLimite) clearTimeout(tiempoLimite); _imgBusy = false; });
+    } catch (err) {
+      if (tiempoLimite) clearTimeout(tiempoLimite);
+      _imgBusy = false;
+      reportarErrorRedAnt("No se pudo preparar el vídeo", err);
+    }
   } else if (!_imgCleared && calibradaOk && !cfg.verVivo && est !== "CAL") {
     _imgCleared = true;
     fetch(FB_IMG + "/" + antId + ".json", { method: "DELETE" })

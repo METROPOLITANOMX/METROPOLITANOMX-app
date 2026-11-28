@@ -44,6 +44,10 @@ function cmdSala(est) {
     alert(!aks.length ? "⚠️ Conecta y calibra primero una antena antes de iniciar el Warm-Up." : "⚠️ Calibra primero la pista vacia antes de iniciar el Warm-Up.");
     return;
   }
+  if (est === "WARMUP" && aks.some(function(k){ return ants[k].camOk === false; })) {
+    alert("⚠️ La cámara de una antena conectada no está enviando vídeo. Comprueba el permiso y la señal antes del Warm-Up.");
+    return;
+  }
   if ((est === "SALIDA_30" || est === "VALLA_MX") && aks.length && aks.some(function(k){ return !ants[k].calibrada; })) {
     alert("⚠️ Calibra primero la pista vacia."); return;
   }
@@ -319,6 +323,7 @@ function manejarEventoAntena(ev) {
   if (Math.abs(ahoraSrv() - Number(ev.ts)) < 6000) {
     var s = rootCache.sala || {};
     if (s.estado === "RADAR") { procesarPasoRadar(ev); return; }
+    if (s.estado === "WARMUP" || s.estado === "TEST") return;
     var md = s.modoDet || "TODO";
     if (md !== "TODO" && !ev.pilotoUid) return;
     var pils = ordenarPilotos(rootCache.pilotos, s), target = ev.pilotoUid || (pils.length ? pils[0].id : "");
