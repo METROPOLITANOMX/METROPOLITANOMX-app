@@ -749,7 +749,7 @@ function conectarSseSala() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
   try {
     _esSala = new EventSource(FB + "/sala.json");
-    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { _salaLastSseTs = Date.now(); if (msg.path === "/") salaCache = msg.data || {}; else applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
+    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { _salaLastSseTs = Date.now(); if (msg.path === "/" && ev.type === "put") salaCache = msg.data || {}; else applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
     _esSala.addEventListener("put", onSse); _esSala.addEventListener("patch", onSse);
     _esSala.onerror = function(){ if (_esSala && _esSala.readyState === 2) setTimeout(conectarSseSala, 2500); };
   } catch (e) {}

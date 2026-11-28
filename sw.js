@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280140-capture-reliability";
+var CACHE_NAME = "mxp-cache-v202611280141-sse-patch-merge";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",
