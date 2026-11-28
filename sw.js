@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280142-color-thresholds";
+var CACHE_NAME = "mxp-cache-v202611280143-warmup-color-trigger";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

@@ -377,6 +377,11 @@ function capturarYEnviarWarmup(dProc, frame) {
       res = extraerColorUnico(dCaptura, Math.floor(PW * 0.30), Math.floor(PH * 0.20), Math.floor(PW * 0.40), Math.floor(PH * 0.60), false, diffMin, lG);
     }
   }
+  if (!res.col) {
+    document.getElementById("lblEstado").textContent = "⚠️ SIN COLOR VIVO — NO GUARDADO";
+    document.getElementById("lblEstado").style.color = "#ffa94d";
+    return;
+  }
   var colNom = res.col ? res.col.nom : "SIN COLOR";
   document.getElementById("lblEstado").textContent = res.col ? ("🎨 DETECTADO: " + colNom) : "⚠️ CAPTURA SIN COLOR VIVO";
   document.getElementById("lblEstado").style.color = res.col ? "#0dcaf0" : "#ffa94d";
@@ -592,7 +597,7 @@ function procFrame() {
     if (_golpeFrames >= 45) { _golpeFrames = 0; _movidaTs = ahoraSrv(); fondoFull = null; framesHit = 0; _trigPendTs = 0; calHasta = Date.now() + 1800; hablarAnt("Atencion, antena movida, recalibrando", true); document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA"; document.getElementById("lblEstado").style.color = "#ff4d5e"; return; }
   } else _golpeFrames = 0;
 
-  var modoColor = cfg.modoDet !== "TODO" && cfg.modoDet !== "RADAR";
+  var modoColor = cfg.estado === "WARMUP" || (cfg.modoDet !== "TODO" && cfg.modoDet !== "RADAR");
   var colorContact = modoColor && detectarColorVivoEnRoi(dFull);
   var pLine = (cfg.roi && cfg.roi.posX) || 50, mov = 0, nS = 0;
   if (cfg.orientacion === "H") {
@@ -625,8 +630,8 @@ function procFrame() {
   if (pct >= sens) framesHit++; else framesHit = 0;
   if (est === "LIBRE" && !_trigPendTs) {
     if (colorContact && !_prevColorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
-    else if ((cfg.estado === "WARMUP" || cfg.estado === "TEST") && pct >= resetPct) _trigPendTs = ah;
-    else if (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6)) _trigPendTs = ah;
+    else if (cfg.estado === "TEST" && pct >= resetPct) _trigPendTs = ah;
+    else if (cfg.estado !== "WARMUP" && (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6))) _trigPendTs = ah;
   }
   _prevColorContact = colorContact;
 
@@ -636,8 +641,7 @@ function procFrame() {
 
     if (cfg.estado === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
-      capturarYEnviarWarmup(dFull, frameFoto);
-      _ultTxtAnt = "WARM-UP: PASO DETECTADO"; _ultTxtTs = ahoraSrv(); enviarTelemetria();
+      capturarYEnviarWarmup(dFull, frameActual);
       return;
     }
 
