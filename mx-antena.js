@@ -24,6 +24,7 @@ var _imgCleared = false, _fpsCnt = 0, _fpsTs = Date.now(), _fpsVal = 0, _resTxt 
 var _telBusy = false, _imgBusy = false, _wuBusy = false, _salaPollBusy = false, _garajePollBusy = false, _ultMegaId = "", _ultReacTs = 0, _ultOvaTs = 0;
 var _ultimoErrorRed = "", _ultimoErrorRedTs = 0;
 var _ultPasoLocalTs = 0, _tSoloCal = null, _esSala = null, _tAvisoAnt = null, _avisoAntId = 0;
+var _salaLastSseTs = 0, _salaLastPollTs = 0;
 var _colorVivoAnt = "", _ratioColorAnt = 0, _colorSampleTs = 0;
 var _ultTxtTs = 0;
 
@@ -678,7 +679,9 @@ function procesarSala(s) {
   if (!s) return;
   var estadoPrevio = cfg.estado;
   aplicarBanderaUI(s, "banBanderaAnt");
-  var nuevoModo = s.modoDet || "TODO";
+  var modoDetRecibido = s.modoDet;
+  var modosValidos = ["TODO", "GAR", "CAR", "WARMUP", "HIBRIDO", "RADAR"];
+  var nuevoModo = typeof modoDetRecibido === "string" && modosValidos.indexOf(modoDetRecibido) >= 0 ? modoDetRecibido : cfg.modoDet;
   if (nuevoModo !== cfg.modoDet) {
     cfg.modoDet = nuevoModo;
     _trigPendTs = 0; framesHit = 0; ultMsPorPiloto = {}; _prevColorContact = false; _ultTxtAnt = "MODO:" + nuevoModo; _ultTxtTs = ahoraSrv();
@@ -739,7 +742,7 @@ function conectarSseSala() {
   if (_esSala) try { _esSala.close(); } catch (e) {}
   try {
     _esSala = new EventSource(FB + "/sala.json");
-    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { if (msg.path === "/") salaCache = msg.data || {}; else applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
+    var onSse = function(ev) { try { var msg = JSON.parse(ev.data); if (msg && msg.path) { _salaLastSseTs = Date.now(); if (msg.path === "/") salaCache = msg.data || {}; else applySsePatch(salaCache, msg.path, msg.data, ev.type === "put"); procesarSala(salaCache); } } catch (e) {} };
     _esSala.addEventListener("put", onSse); _esSala.addEventListener("patch", onSse);
     _esSala.onerror = function(){ if (_esSala && _esSala.readyState === 2) setTimeout(conectarSseSala, 2500); };
   } catch (e) {}
@@ -767,9 +770,12 @@ setInterval(function() {
 
 setInterval(function() {
   if (!antenaPuedeOperar()) return;
-  if ((!_esSala || _esSala.readyState !== 1) && !_salaPollBusy) {
+  var salaSseDesactualizado = !_salaLastSseTs || Date.now() - _salaLastSseTs > 5000;
+  var debeConsultarSala = (!_esSala || _esSala.readyState !== 1 || salaSseDesactualizado) && Date.now() - _salaLastPollTs >= 2500;
+  if (debeConsultarSala && !_salaPollBusy) {
     _salaPollBusy = true;
-    fetch(FB + "/sala.json?t=" + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(){}).finally(function(){ _salaPollBusy = false; });
+    _salaLastPollTs = Date.now();
+    fetch(FB + "/sala.json?t=" + Date.now(), { cache: "no-store" }).then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(function(s){ if (s) { salaCache = s; procesarSala(salaCache); } }).catch(function(err){ reportarErrorRedAnt("No se pudo sincronizar el modo de captura", err); }).finally(function(){ _salaPollBusy = false; });
   }
   if (!_garajePollBusy) {
     _garajePollBusy = true;

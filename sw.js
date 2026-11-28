@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280110-capture-reliability";
+var CACHE_NAME = "mxp-cache-v202611280120-antenna-sync";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",
