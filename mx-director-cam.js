@@ -78,11 +78,8 @@ function fetchCmdCamDir(url, opciones, accion) {
 function asegurarVideoCalibracion() {
   if (testOn) return Promise.resolve();
   _calibracionFeed = true;
-  var b = document.getElementById("btnToggleTest");
-  if (b) { b.textContent = "🛑 DETENER VÍDEO"; b.style.background = "#dc3545"; }
   return fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: true, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, "Activar vídeo de calibración").catch(function(err) {
     _calibracionFeed = false;
-    if (b) { b.textContent = "🎥 TEST VIVO"; b.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
     throw err;
   });
 }
@@ -119,19 +116,11 @@ function calibrarAmbas10s() {
   }).catch(function(){ _tCalAmbas = null; });
 }
 function toggleTestAntenas() {
-  if (_calibracionFeed) {
-    fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, "Detener vídeo")
-      .then(function() {
-        _calibracionFeed = false;
-        var btn = document.getElementById("btnToggleTest");
-        if (btn) { btn.textContent = "🎥 TEST VIVO"; btn.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
-      }).catch(function(){});
-    return;
-  }
   var activar = !testOn;
   fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: activar ? "TEST" : "ESPERA", verVivo: activar, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, activar ? "Iniciar test de vídeo" : "Detener test de vídeo")
     .then(function() {
       testOn = activar;
+      _calibracionFeed = false;
       var b = document.getElementById("btnToggleTest");
       b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO"; b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
     }).catch(function(){});

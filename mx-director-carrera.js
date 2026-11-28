@@ -76,7 +76,7 @@ function cmdSala(est) {
       Object.assign(rootCache.sala, pay);
       testOn = false; _calibracionFeed = keepVideo;
       var b = document.getElementById("btnToggleTest");
-      if (b) { b.textContent = keepVideo ? "🛑 DETENER VÍDEO" : "🎥 TEST VIVO"; b.style.background = keepVideo ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
+      if (b) { b.textContent = "🎥 TEST VIVO"; b.style.background = "linear-gradient(180deg,#845ef7,#5f3dc4)"; }
       if (modoRestaurado) _radarPrevModo = "";
       if (est === "WARMUP") {
         document.getElementById("acc_wu").style.display = "block";
