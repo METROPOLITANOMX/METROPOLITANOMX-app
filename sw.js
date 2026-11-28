@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280145-test-color-dryrun";
+var CACHE_NAME = "mxp-cache-v202611280246-sens-rearm";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

@@ -62,9 +62,8 @@ var cfg = {
 };
 
 function umbralDesdeSensibilidad(nivel) {
-  var v = Math.max(6, Math.min(100, Number(nivel) || 7));
-  if (v <= 7) return 0.075 - (v - 6) * 0.005;
-  return 0.07 - ((v - 7) / 93) * 0.05;
+  var v = Math.max(2, Math.min(100, Number(nivel) || 7));
+  return v / 100;
 }
 
 activarWakeLock();
@@ -587,6 +586,7 @@ function procFrame() {
   var activa = (cfg.estado === "EN_CURSO" || cfg.estado === "WARMUP" || cfg.estado === "TEST" || cfg.estado === "RADAR");
   if (!activa) {
     est = "LIBRE"; _golpeFrames = 0; _trigPendTs = 0; _prevColorContact = false;
+    window._movVivo = 0;
     document.getElementById("lblEstado").textContent = "CALIBRADA ✓ — REPOSO [" + cfg.modoDet + "]"; document.getElementById("lblEstado").style.color = "#20c997";
     document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " | " + (_resTxt || "--") + " | " + _fpsVal + "fps";
     document.getElementById("bar").style.width = "0%";
@@ -615,15 +615,16 @@ function procFrame() {
     for (var y2 = 12; y2 < PH - 12; y2 += 2) for (var x2 = cx - 9; x2 <= cx + 9; x2 += 2) { var k2 = (y2 * PW + x2) * 4; nS++; if ((Math.abs(dFull[k2] - fondoFull[k2]) + Math.abs(dFull[k2 + 1] - fondoFull[k2 + 1]) + Math.abs(dFull[k2 + 2] - fondoFull[k2 + 2])) >= pxDiff) mov++; }
   }
 
-  var pct = mov / (nS || 1), pctInt = Math.round(pct * 100), sens = cfg.sensPct || 0.07, resetPct = Math.min(0.035, sens * 0.50);
-  window._movVivo = pctInt;
-  document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
-  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + _fpsVal + "fps";
+  var pct = mov / (nS || 1), pctInt = Math.round(pct * 100), sens = cfg.sensPct || 0.07;
+  var resetPct = sens * 0.75;
 
   if (est === "CRUCE" && (ah - ultMs) > 1400 && pct < Math.max(resetPct, sens * 0.85)) est = "LIBRE";
 
-  if (pct < resetPct && !_trigPendTs && !colorContact) {
+  if (pct < resetPct && !_trigPendTs && !colorContact && est !== "CRUCE") {
     est = "LIBRE"; framesHit = 0; _prevColorContact = false;
+    window._movVivo = 0;
+    document.getElementById("bar").style.width = "0%";
+    document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: 0%/" + Math.round(sens * 100) + "% | " + _fpsVal + "fps";
     document.getElementById("lblEstado").textContent = (cfg.estado === "WARMUP" ? "🔥 WARM-UP [" + cfg.modoDet + "]" : (cfg.estado === "RADAR" ? "📡 RADAR LISTO" : "VIGILANDO [" + cfg.modoDet + "]"));
     document.getElementById("lblEstado").style.color = "#00e676";
     for (var u = 0; u < dFull.length; u += 4) {
@@ -633,6 +634,10 @@ function procFrame() {
     }
     return;
   }
+
+  window._movVivo = pctInt;
+  document.getElementById("bar").style.width = Math.min(100, Math.round((pct / sens) * 100)) + "%";
+  document.getElementById("lblDatos").textContent = "MODO: " + cfg.modoDet + " (" + cfg.orientacion + ") | MOV: " + pctInt + "%/" + Math.round(sens * 100) + "% | " + _fpsVal + "fps";
 
   if (pct >= sens) framesHit++; else framesHit = 0;
   if (est === "LIBRE" && !_trigPendTs) {
@@ -688,8 +693,19 @@ function procFrame() {
 
 function iniciarBucleVision() {
   var v = document.getElementById("vid");
-  if (v && "requestVideoFrameCallback" in v) { var cb = function(){ procFrame(); v.requestVideoFrameCallback(cb); }; v.requestVideoFrameCallback(cb); }
-  else { var raf = function(){ procFrame(); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
+  if (v && "requestVideoFrameCallback" in v) {
+    var cb = function() {
+      try { procFrame(); } catch (e) { reportarErrorRedAnt("Error procesando fotograma", e); }
+      v.requestVideoFrameCallback(cb);
+    };
+    v.requestVideoFrameCallback(cb);
+  } else {
+    var raf = function() {
+      try { procFrame(); } catch (e) { reportarErrorRedAnt("Error procesando fotograma", e); }
+      requestAnimationFrame(raf);
+    };
+    requestAnimationFrame(raf);
+  }
 }
 
 function procesarSala(s) {
