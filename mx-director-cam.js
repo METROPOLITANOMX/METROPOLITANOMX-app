@@ -136,7 +136,14 @@ function toggleTestAntenas() {
       b.textContent = testOn ? "🛑 DETENER TEST" : "🎥 TEST VIVO"; b.style.background = testOn ? "#dc3545" : "linear-gradient(180deg,#845ef7,#5f3dc4)";
     }).catch(function(){});
 }
-function setModoAnt(m) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); }
+function setModoAnt(m) {
+  fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ modoDet: m, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, "Cambiar método de captura")
+    .then(function() {
+      if (!rootCache.sala) rootCache.sala = {};
+      rootCache.sala.modoDet = m;
+      pintarDirUI();
+    }).catch(function(){});
+}
 function setOrientacion(o) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: o, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); previewRoi("ant_1"); previewRoi("ant_2"); }
 function setNColores(n) { fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ nColores: n, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){}); }
 

@@ -129,7 +129,7 @@ function iniciarModoSolo() {
     if (s <= 0) {
       clearInterval(_tSoloCal); _tSoloCal = null; _ultPasoLocalTs = 0; pasos = 0;
       calibrarFondo(); cfg.estado = "EN_CURSO";
-      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", modoDet: "TODO", tsInicio: ahoraSrv() }) }).catch(function(){});
+      fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: "EN_CURSO", tsInicio: ahoraSrv() }) }).catch(function(){});
       setTimeout(function(){ hablarAnt("Pista calibrada, crono en marcha, dale gas", true); }, 1500);
     }
     s--;

@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280057-unified-assets";
+var CACHE_NAME = "mxp-cache-v202611280101-capture-mode";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",
