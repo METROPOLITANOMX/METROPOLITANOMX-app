@@ -56,7 +56,7 @@ function escribirAntenaAmistosa(path, method, data) {
 }
 var cfg = {
   estado: "ESPERA", modoDet: "TODO", verVivo: false, orientacion: "V",
-  sensPct: 0.07, colorPct: 0.25, pxDiff: 45, antiViento: "OFF", nColores: 1, retardoMs: 25,
+  sensPct: 0.07, colorPct: 0.25, pxDiff: 45, antiViento: "OFF", nColores: 1, retardoMs: 25, prioridadColor: "WARMUP", calibracionVivo: false,
   perfilLuz: { nombre: "Normal", deltaE: 20, minChroma: 16, lGain: 1.0 },
   roi: { posX: 50, x: 30, y: 15, w: 25, h: 65 }, garajes: {}
 };
@@ -389,6 +389,28 @@ function procesarCapturaColor(dProc, frame, soloPrueba) {
     _ultTxtAnt = "TEST: " + colNom; _ultTxtTs = ts;
     mostrarAvisoAnt("🧪 Test color: " + colNom);
     enviarTelemetria();
+    if (cfg.calibracionVivo && !_wuBusy) {
+      try {
+        var sxV = Math.max(0, Math.min(360, Math.floor((cropRect.x / 100) * 384)));
+        var syV = Math.max(0, Math.min(192, Math.floor((cropRect.y / 100) * 216)));
+        var swV = Math.max(24, Math.min(384 - sxV, Math.floor((cropRect.w / 100) * 384)));
+        var shV = Math.max(24, Math.min(216 - syV, Math.floor((cropRect.h / 100) * 216)));
+        _ctxWu.drawImage((frame && frame.canvas) || _cnv, sxV, syV, swV, shV, 0, 0, 160, 112);
+        var muestraViva = { ts: ts, antId: antId, antNom: antNom, fuente: "VIVO", colorNom: colNom, img: _cnvWu.toDataURL("image/jpeg", 0.45), colores: [res.col] };
+        _wuBusy = true;
+        fetch(FB_WU + "/vivo_" + antId + "_" + ts + ".json", {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(muestraViva)
+        }).then(function(resp) {
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          mostrarAvisoAnt("✅ Muestra de TEST guardada para calibración");
+        }).catch(function(err) {
+          reportarErrorRedAnt("No se pudo guardar la muestra de TEST", err);
+        }).finally(function() { _wuBusy = false; });
+      } catch (eV) {
+        _wuBusy = false;
+        reportarErrorRedAnt("No se pudo preparar la muestra de TEST", eV);
+      }
+    }
     return;
   }
   hablarAnt("Color " + colNom.toLowerCase(), false);
@@ -443,14 +465,22 @@ function procesarCapturaColor(dProc, frame, soloPrueba) {
 }
 
 function obtenerFirmasPiloto(gObj, pid) {
-  var g = gObj[pid]; if (!g) return []; var res = [], md = cfg.modoDet;
-  if ((md === "GAR" || md === "CAR" || md === "HIBRIDO") && Array.isArray(g.colores) && g.colores.length) res.push(g.colores);
-  if (md === "WARMUP" || md === "HIBRIDO") {
-    var fw = g.firmasWarmup || {}, prop = Array.isArray(fw[antId]) ? fw[antId] : [], otr = [];
-    if (!prop.length) Object.keys(fw).forEach(function(k){ if (Array.isArray(fw[k])) otr = otr.concat(fw[k]); });
-    (prop.length ? prop : otr).forEach(function(it){ if (it && Array.isArray(it.colores) && it.colores.length) res.push(it.colores); });
-  }
-  return res;
+  var g = gObj[pid]; if (!g) return [];
+  var md = cfg.modoDet;
+  var recopilar = function(firmas) {
+    var propias = Array.isArray(firmas[antId]) ? firmas[antId] : [], otras = [], origen = propias.length ? propias : null;
+    if (!origen) Object.keys(firmas).forEach(function(k){ if (Array.isArray(firmas[k])) otras = otras.concat(firmas[k]); });
+    var lista = origen || otras, salida = [];
+    lista.forEach(function(it){ if (it && Array.isArray(it.colores) && it.colores.length) salida.push(it.colores); });
+    return salida;
+  };
+  var warmup = recopilar(g.firmasWarmup || {}), vivo = recopilar(g.firmasVivo || {});
+  var garaje = Array.isArray(g.colores) && g.colores.length ? [g.colores] : [];
+  if (md === "WARMUP") return warmup;
+  var orden = cfg.prioridadColor === "GARAJE" ? [garaje, warmup, vivo]
+    : (cfg.prioridadColor === "VIVO" ? [vivo, warmup, garaje] : [warmup, vivo, garaje]);
+  for (var i = 0; i < orden.length; i++) if (orden[i].length) return orden[i];
+  return [];
 }
 
 function evaluarRoiColor(dProc) {
@@ -728,6 +758,8 @@ function procesarSala(s) {
   cfg.colorPct = Math.max(0.06, Math.min(1.0, (Number(s.colorPct || 25)) / 100));
   cfg.pxDiff = Math.max(20, Math.min(90, Number(s.pxDiff || 45)));
   cfg.antiViento = s.antiViento || "OFF";
+  cfg.prioridadColor = ["VIVO", "GARAJE"].indexOf(s.prioridadColor) >= 0 ? s.prioridadColor : "WARMUP";
+  cfg.calibracionVivo = !!s.calibracionVivo;
   cfg.nColores = Number(s.nColores || 1); cfg.retardoMs = Math.max(0, Math.min(150, Number(s.retardoMs || 25)));
   if (s.perfilLuz) cfg.perfilLuz = s.perfilLuz;
   if (s.roi && s.roi[antId]) cfg.roi = s.roi[antId];

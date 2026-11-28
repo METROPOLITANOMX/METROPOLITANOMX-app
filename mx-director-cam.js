@@ -92,6 +92,14 @@ function calibrarUna(aid) {
 }
 function calibrarAmbas10s() {
   desbloquearAudioD(false); if (_tCalAmbas) return;
+  var camarasActivas = Object.keys(rootCache.antenas || {}).filter(function(aid) {
+    var a = rootCache.antenas[aid];
+    return (aid === "ant_1" || aid === "ant_2") && a && Math.abs(ahoraSrv() - Number(a.ts || 0)) < 15000 && a.camOk !== false;
+  });
+  if (!camarasActivas.length) {
+    alert("Conecta al menos una cámara antes de calibrar. Las cámaras adicionales son opcionales.");
+    return;
+  }
   _tCalAmbas = true;
   asegurarVideoCalibracion().then(function() {
     var s = 10;
@@ -100,7 +108,7 @@ function calibrarAmbas10s() {
       if (s <= 5 && s >= 1) hablarYAntenas(String(s), false);
       if (s <= 0) {
         clearInterval(_tCalAmbas); _tCalAmbas = null;
-        Promise.all(["ant_1", "ant_2"].map(function(aid, ix) {
+        Promise.all(camarasActivas.map(function(aid, ix) {
           return new Promise(function(resolve, reject) {
             setTimeout(function() {
               fetchCmdCamDir(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: aid, calibrar: true, roi: leerRoiObj(aid) }) }, "Calibrar antena")
@@ -108,7 +116,7 @@ function calibrarAmbas10s() {
             }, ix * 600);
           });
         })).then(function() {
-          hablarYAntenas("Pista vacia calibrada en ambas camaras", true);
+          hablarYAntenas("Pista vacia calibrada en las camaras conectadas", true);
         }).catch(function(){});
       }
       s--;
@@ -149,6 +157,8 @@ function cfgDir() {
       modoJuego: document.getElementById("selJuego").value, duracionMin: Number(document.getElementById("selDur").value) || 0,
       minLapSec: Number(document.getElementById("selMinLap").value) || 5, sensPct: Number(document.getElementById("rngSens").value) || 7,
       colorPct: Number(document.getElementById("rngColorPct").value) || 25, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      prioridadColor: document.getElementById("selPrioridadColor").value || "WARMUP",
+      calibracionVivo: document.getElementById("chkCalibracionVivo").checked,
       antiViento: document.getElementById("selAntiViento").value || "OFF", retardoMs: Number(document.getElementById("rngRetardo").value) || 0,
       dirTs: ahoraSrv(), dirSession: dirSessionId
     })
@@ -183,6 +193,7 @@ function guardarPerfilActual() {
     body: JSON.stringify({
       nombre: nom.trim(), orientacion: s.orientacion || "V", sensPct: Number(document.getElementById("rngSens").value) || 7,
       colorPct: Number(document.getElementById("rngColorPct").value) || 25, pxDiff: Number(document.getElementById("rngPxDiff").value) || 45,
+      prioridadColor: document.getElementById("selPrioridadColor").value || "WARMUP",
       antiViento: document.getElementById("selAntiViento").value || "OFF", nColores: Number(s.nColores || 1),
       retardoMs: Number(document.getElementById("rngRetardo").value) || 25, deltaE: Number(document.getElementById("rngDeltaE").value) || 22,
       minChroma: pL.minChroma || 20, lGain: pL.lGain || 1.0, roi: { ant_1: leerRoiObj("ant_1"), ant_2: leerRoiObj("ant_2") }
@@ -191,7 +202,7 @@ function guardarPerfilActual() {
 }
 function cargarPerfilGuardado(pid) {
   var p = perfilesCam[pid]; if (!p) return;
-  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 25, pxDiff: p.pxDiff || 45, antiViento: p.antiViento || "OFF", nColores: p.nColores || 1, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 22, minChroma: p.minChroma || 20, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
+  fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ orientacion: p.orientacion || "V", sensPct: p.sensPct || 7, colorPct: p.colorPct || 25, pxDiff: p.pxDiff || 45, prioridadColor: p.prioridadColor || "WARMUP", antiViento: p.antiViento || "OFF", nColores: p.nColores || 1, retardoMs: p.retardoMs || 25, perfilLuz: { nombre: p.nombre, deltaE: p.deltaE || 22, minChroma: p.minChroma || 20, lGain: p.lGain || 1.0 }, roi: p.roi || {}, dirTs: ahoraSrv(), dirSession: dirSessionId }) }).catch(function(){});
   if (p.roi && p.roi.ant_1) fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_1", posX: p.roi.ant_1.posX, roi: p.roi.ant_1 }) }).catch(function(){});
   if (p.roi && p.roi.ant_2) setTimeout(function(){ fetch(FB + "/sala/cmd.json", { method: "PUT", body: JSON.stringify({ ts: ahoraSrv(), antId: "ant_2", posX: p.roi.ant_2.posX, roi: p.roi.ant_2 }) }).catch(function(){}); }, 400);
   hablarYAntenas("Perfil " + p.nombre + " cargado", false);
@@ -204,12 +215,12 @@ function refrescarWarmupManual() {
 function pintarBandejasWarmup() {
   var actEl = document.activeElement; if (actEl && actEl.id && actEl.id.indexOf("selCap_") === 0) return;
   var pils = rootCache.pilotos || {}, gar = rootCache.garaje || {};
-  var sig = Object.keys(warmupCaps).join(",") + "|" + Object.keys(pils).join(",") + "|" + Object.keys(gar).map(function(k){ return k + ":" + (gar[k] && gar[k].firmasWarmup ? JSON.stringify(gar[k].firmasWarmup).length : 0); }).join(",");
+  var sig = Object.keys(warmupCaps).join(",") + "|" + Object.keys(pils).join(",") + "|" + Object.keys(gar).map(function(k){ return k + ":" + (gar[k] && gar[k].firmasWarmup ? JSON.stringify(gar[k].firmasWarmup).length : 0) + ":" + (gar[k] && gar[k].firmasVivo ? JSON.stringify(gar[k].firmasVivo).length : 0); }).join(",");
   if (sig === _lastWuSig) return;
   _lastWuSig = sig;
 
   var totalCaps = Object.keys(warmupCaps).length;
-  document.getElementById("lblAccWu").textContent = "🔥 CAPTURAS WARM-UP MULTI-ANGULO (" + totalCaps + ")";
+  document.getElementById("lblAccWu").textContent = "🎨 CAPTURAS DE COLOR WARM-UP / TEST VIVO (" + totalCaps + ")";
   var optsP = Object.keys(pils).filter(function(k){ return pils[k] && pils[k].nombre; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(pils[k].dorsal || "1") + ' ' + esc(pils[k].nombre) + '</option>'; }).join("") +
     Object.keys(gar).filter(function(k){ return !pils[k] && gar[k] && gar[k].modelo; }).map(function(k){ return '<option value="' + esc(k) + '">#' + esc(gar[k].dorsal || "1") + ' ' + esc(k) + '</option>'; }).join("");
   if (!optsP) optsP = '<option value="">Sin pilotos</option>';
@@ -222,28 +233,37 @@ function pintarBandejasWarmup() {
     document.getElementById("bandeja_" + aid).innerHTML = items.length ? items.map(function(cid) {
       var c = warmupCaps[cid], cols = (c.colores || []).map(function(cl){ return '<span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #fff;background:' + esc(cl.hex || "#fff") + ';margin-right:4px;vertical-align:middle"></span>'; }).join("");
       var colTxt = c.colorNom ? (' <b style="color:#ffc107">' + esc(c.colorNom) + '</b>') : '';
-      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + colTxt + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
+      return '<div class="cap-card"><div class="cap-row">' + (c.img ? '<img src="' + c.img + '">' : '') + '<div style="flex:1;min-width:0"><div style="font-size:10px;color:#0dcaf0;margin-bottom:3px">' + (c.fuente === "VIVO" ? "🧪 TEST VIVO • " : "🔥 WARM-UP • ") + esc(c.antNom || c.antId) + ' • ' + new Date(c.ts || Date.now()).toLocaleTimeString("es-ES") + '</div><div style="margin-bottom:4px">' + cols + colTxt + '</div><select id="selCap_' + esc(cid) + '" style="margin-bottom:4px;padding:5px;font-size:11px">' + optsP + '</select><div style="display:flex;gap:4px"><button onclick="vibrar(25);asignarCapturaPiloto(\'' + esc(cid) + '\')" style="flex:1;background:#20c997;color:#000;padding:5px;font-size:10px">+ ASIGNAR</button><button onclick="vibrar();descartarCaptura(\'' + esc(cid) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">✕</button></div></div></div></div>';
     }).join("") : '<div style="color:#777;font-size:11px">Sin capturas.</div>';
   });
-  var res = Object.keys(gar).filter(function(k){ return gar[k] && gar[k].firmasWarmup; }).map(function(k){
-    var fw = gar[k].firmasWarmup || {}, c1 = Array.isArray(fw.ant_1) ? fw.ant_1.length : 0, c2 = Array.isArray(fw.ant_2) ? fw.ant_2.length : 0; if (!c1 && !c2) return "";
-    return '<div class="fila"><span><b>#' + esc((pils[k] && pils[k].dorsal) || gar[k].dorsal || "1") + ' ' + esc((pils[k] && pils[k].nombre) || k) + '</b> — Cam1: <b>' + c1 + '</b> • Cam2: <b>' + c2 + '</b></span><button onclick="vibrar();borrarFirmasWuPiloto(\'' + esc(k) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:3px 7px;font-size:10px">Limpiar</button></div>';
+  var res = Object.keys(gar).filter(function(k){ return gar[k] && (gar[k].firmasWarmup || gar[k].firmasVivo); }).map(function(k){
+    var fw = gar[k].firmasWarmup || {}, fv = gar[k].firmasVivo || {};
+    var c1 = Array.isArray(fw.ant_1) ? fw.ant_1.length : 0, c2 = Array.isArray(fw.ant_2) ? fw.ant_2.length : 0;
+    var v1 = Array.isArray(fv.ant_1) ? fv.ant_1.length : 0, v2 = Array.isArray(fv.ant_2) ? fv.ant_2.length : 0;
+    if (!c1 && !c2 && !v1 && !v2) return "";
+    return '<div class="fila"><span><b>#' + esc((pils[k] && pils[k].dorsal) || gar[k].dorsal || "1") + ' ' + esc((pils[k] && pils[k].nombre) || k) + '</b> — WU ' + c1 + '/' + c2 + ' • TEST ' + v1 + '/' + v2 + '</span><button onclick="vibrar();borrarFirmasWuPiloto(\'' + esc(k) + '\')" style="background:#3a1c1c;color:#ff4d5e;padding:3px 7px;font-size:10px">Limpiar</button></div>';
   }).filter(Boolean).join("");
   document.getElementById("resumenFirmasWarmup").innerHTML = res || "Ninguna asignada.";
 }
 function asignarCapturaPiloto(cid) {
   var c = warmupCaps[cid], sel = document.getElementById("selCap_" + cid), pUid = sel ? sel.value : ""; if (!c || !pUid) { alert("Selecciona piloto."); return; }
   if (!Array.isArray(c.colores) || !c.colores.length) { alert("Esta captura no contiene un color vivo válido; no se puede asignar como firma."); return; }
-  var aid = (c.antId === "ant_2") ? "ant_2" : "ant_1", gar = rootCache.garaje || {}, fw = (gar[pUid] && gar[pUid].firmasWarmup) || {}, arr = Array.isArray(fw[aid]) ? fw[aid].slice() : [];
+  var aid = (c.antId === "ant_2") ? "ant_2" : "ant_1", gar = rootCache.garaje || {};
+  var campo = c.fuente === "VIVO" ? "firmasVivo" : "firmasWarmup";
+  var fw = (gar[pUid] && gar[pUid][campo]) || {}, arr = Array.isArray(fw[aid]) ? fw[aid].slice() : [];
   arr.push({ ts: c.ts || ahoraSrv(), colores: c.colores || [] }); if (arr.length > 6) arr = arr.slice(-6);
-  fbJson(FB + "/garaje/" + pUid + "/firmasWarmup/" + aid + ".json", { method: "PUT", body: JSON.stringify(arr) }).then(function(){
-    if (!rootCache.garaje[pUid]) rootCache.garaje[pUid] = {}; if (!rootCache.garaje[pUid].firmasWarmup) rootCache.garaje[pUid].firmasWarmup = {};
-    rootCache.garaje[pUid].firmasWarmup[aid] = arr; _lastWuSig = ""; descartarCaptura(cid); hablarYAntenas("Captura asignada", false);
+  fbJson(FB + "/garaje/" + pUid + "/" + campo + "/" + aid + ".json", { method: "PUT", body: JSON.stringify(arr) }).then(function(){
+    if (!rootCache.garaje[pUid]) rootCache.garaje[pUid] = {}; if (!rootCache.garaje[pUid][campo]) rootCache.garaje[pUid][campo] = {};
+    rootCache.garaje[pUid][campo][aid] = arr; _lastWuSig = ""; descartarCaptura(cid); hablarYAntenas(c.fuente === "VIVO" ? "Muestra de test asignada" : "Captura Warm-Up asignada", false);
   }).catch(function(){ alert("Error asignando"); });
 }
 function descartarCaptura(cid) { delete warmupCaps[cid]; _lastWuSig = ""; fetch(FB_WU + "/" + cid + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
 function limpiarBandejaWarmup() { warmupCaps = {}; _lastWuSig = ""; fetch(FB_WU + ".json", { method: "DELETE" }).catch(function(){}); pintarBandejasWarmup(); }
-function borrarFirmasWuPiloto(pUid) { if (rootCache.garaje[pUid]) delete rootCache.garaje[pUid].firmasWarmup; _lastWuSig = ""; fetch(FB + "/garaje/" + pUid + "/firmasWarmup.json", { method: "DELETE" }).then(pintarBandejasWarmup).catch(function(){}); }
+function borrarFirmasWuPiloto(pUid) {
+  if (rootCache.garaje[pUid]) { delete rootCache.garaje[pUid].firmasWarmup; delete rootCache.garaje[pUid].firmasVivo; }
+  _lastWuSig = "";
+  fetch(FB + "/garaje/" + pUid + ".json", { method: "PATCH", body: JSON.stringify({ firmasWarmup: null, firmasVivo: null }) }).then(pintarBandejasWarmup).catch(function(){});
+}
 
 function pintarAntenasTel() {
   var s = rootCache.sala || {}, ants = rootCache.antenas || {}, ah = ahoraSrv(), md = s.modoDet || "TODO", antsAct = [];

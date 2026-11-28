@@ -39,17 +39,14 @@ function verFotoFinish() {
 function cmdSala(est) {
   desbloquearAudioD(false);
   var ants = rootCache.antenas || {}, aks = Object.keys(ants).filter(function(k){ return Math.abs(ahoraSrv() - Number(ants[k].ts || 0)) < 15000; });
-  if (est === "WARMUP" && (!aks.length || aks.some(function(k){ return !ants[k].calibrada; }))) {
+  var readyAks = aks.filter(function(k){ return !!ants[k].calibrada && ants[k].camOk !== false; });
+  if (est === "WARMUP" && !readyAks.length) {
     mxHablar("Calibra primero la pista vacia antes de iniciar el warm up");
-    alert(!aks.length ? "⚠️ Conecta y calibra primero una antena antes de iniciar el Warm-Up." : "⚠️ Calibra primero la pista vacia antes de iniciar el Warm-Up.");
+    alert(!aks.length ? "⚠️ Conecta y calibra al menos una cámara antes de iniciar el Warm-Up." : "⚠️ Ninguna cámara conectada está lista. Calibra una y comprueba su señal; las demás pueden quedar como refuerzo.");
     return;
   }
-  if (est === "WARMUP" && aks.some(function(k){ return ants[k].camOk === false; })) {
-    alert("⚠️ La cámara de una antena conectada no está enviando vídeo. Comprueba el permiso y la señal antes del Warm-Up.");
-    return;
-  }
-  if ((est === "SALIDA_30" || est === "VALLA_MX") && aks.length && aks.some(function(k){ return !ants[k].calibrada; })) {
-    alert("⚠️ Calibra primero la pista vacia."); return;
+  if ((est === "SALIDA_30" || est === "VALLA_MX") && aks.length && !readyAks.length) {
+    alert("⚠️ No hay ninguna cámara conectada y calibrada. Comprueba al menos una antes de iniciar la salida."); return;
   }
   _radarArm = null;
   _ultRondaElim = 0; _ultRondaRuleta = 0; _bombaExplotada = false; avisoLipoP = false; avisoFinManga = false; _ultSecLoc = -999; _ultSecWu = -1; _wuFinAviso = false; _salidaShowHasta = 0;

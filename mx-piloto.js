@@ -143,7 +143,7 @@ function perfilColorAmistoso(g) {
   return {
     disc: g.disc || "MX", dorsal: g.dorsal || "1", modelo: g.modelo || "",
     colores: Array.isArray(g.colores) ? g.colores.map(function(c) { c = c || {}; return { hex: c.hex || "", nom: c.nom || "", tipo: c.tipo || "" }; }) : [],
-    firmasWarmup: g.firmasWarmup || {}
+    firmasWarmup: g.firmasWarmup || {}, firmasVivo: g.firmasVivo || {}
   };
 }
 function obtenerPerfilColorAmistoso() {

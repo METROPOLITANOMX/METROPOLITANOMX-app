@@ -1,4 +1,4 @@
-var CACHE_NAME = "mxp-cache-v202611280246-sens-rearm";
+var CACHE_NAME = "mxp-cache-v202611281207-camera-priority";
 var CACHE_PREFIX = "mxp-cache-";
 var ESSENTIAL_SHELL = [
   "./",

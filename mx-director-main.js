@@ -58,7 +58,7 @@ function salirDirector() {
   Promise.all(ops).finally(function(){ localStorage.removeItem("mxp_dir_ok"); location.href = "index.html"; });
 }
 function ayudaDir() {
-  alert("DIRECCION PRO:\n1. Revisa la lista de estado antes de empezar: antenas, luz, calibracion, parrilla y firmas.\n2. En el laboratorio puedes ver las dos camaras, ajustar sus areas de paso y calibrarlas; la señal permanece activa durante la calibracion. Pulsa TEST VIVO para activar o detener la imagen cuando quieras.\n3. Sensibilidad, color, contraste, luz y orientacion se ajustan por separado; en interior deja el control de viento en OFF.\n4. WARM-UP dura 3 minutos y al terminar llama a los pilotos a parrilla. VALLA MX es la unica salida de Direccion y baja en un momento aleatorio.\n5. Agrupa banderas y avisos de pista en un solo bloque. La megafonia acepta voz o texto; RADAR mide entre las dos camaras.");
+  alert("DIRECCION PRO:\n1. Revisa la lista de estado antes de empezar: basta una camara conectada, calibrada y con señal; las adicionales son refuerzo.\n2. En el laboratorio ajusta el tunel ROI y calibra. TEST VIVO permite probar el color; activa «Guardar muestras» si quieres asignarlas luego a un piloto.\n3. Elige prioridad de color: Warm-Up en movimiento, muestras de TEST o Garaje. Se usan otras firmas solo si falta la preferida.\n4. Sensibilidad, color, contraste, luz y orientacion se ajustan por separado; en interior deja el control de viento en OFF.\n5. WARM-UP dura 3 minutos y al terminar llama a los pilotos a parrilla. VALLA MX es la unica salida de Direccion y baja en un momento aleatorio. RADAR requiere dos camaras.");
 }
 
 function aplicarModoDirPilotoUI(limpiarUid) {
@@ -102,11 +102,12 @@ function inscribirDirPiloto() {
 }
 
 function pintarChecklist(antsAct, pils, s) {
-  var calOk = antsAct.length > 0 && antsAct.every(function(k){ return rootCache.antenas[k] && rootCache.antenas[k].calibrada; });
+  var readyAnts = antsAct.filter(function(k){ var a = rootCache.antenas[k]; return a && a.calibrada && a.camOk !== false; });
+  var calOk = readyAnts.length > 0;
   var gar = rootCache.garaje || {}, md = s.modoDet || "TODO";
-  var colOk = (md === "TODO") || pils.some(function(p){ var g = gar[p.id]; return g && ((g.colores && g.colores.length) || g.firmasWarmup); });
+  var colOk = (md === "TODO") || pils.some(function(p){ var g = gar[p.id]; return g && ((g.colores && g.colores.length) || g.firmasWarmup || g.firmasVivo); });
   var pasos = [
-    { ok: antsAct.length > 0, txt: "1. Antenas (Cam1: " + (antsAct.indexOf("ant_1") >= 0 ? "✓" : "No") + " • Cam2: " + (antsAct.indexOf("ant_2") >= 0 ? "✓" : "No") + ")" },
+    { ok: calOk, txt: "1. Cámaras: " + readyAnts.length + " lista(s) de " + antsAct.length + " conectada(s); las demás son refuerzo" },
     { ok: !!(s.perfilLuz && s.perfilLuz.nombre), txt: "2. Perfil Luz (" + esc((s.perfilLuz && s.perfilLuz.nombre) || "Normal") + ")" },
     { ok: calOk, txt: "3. Pista vacia calibrada" },
     { ok: pils.some(function(p){ return p.activo; }), txt: "4. Parrilla (" + pils.filter(function(p){ return p.activo; }).length + " activos)" },
@@ -163,6 +164,10 @@ function pintarDirUI() {
   syncRng("rngSens", "lblSensDir", s.sensPct, "%");
   syncRng("rngColorPct", "lblColorPctDir", s.colorPct, "%");
   syncRng("rngPxDiff", "lblPxDiffDir", s.pxDiff, "");
+  var prioridadColor = document.getElementById("selPrioridadColor");
+  if (prioridadColor && document.activeElement !== prioridadColor) prioridadColor.value = ["VIVO", "GARAJE"].indexOf(s.prioridadColor) >= 0 ? s.prioridadColor : "WARMUP";
+  var chkCalibracionVivo = document.getElementById("chkCalibracionVivo");
+  if (chkCalibracionVivo && document.activeElement !== chkCalibracionVivo) chkCalibracionVivo.checked = !!s.calibracionVivo;
   if (s.antiViento && document.activeElement !== document.getElementById("selAntiViento")) document.getElementById("selAntiViento").value = s.antiViento;
   if (typeof s.retardoMs === "number") syncRng("rngRetardo", "lblRetardoDir", s.retardoMs, "ms");
   if (s.perfilLuz && s.perfilLuz.deltaE) syncRng("rngDeltaE", "lblDeltaEDir", s.perfilLuz.deltaE, "");

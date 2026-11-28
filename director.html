@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Dirección Pro - Metropolitano MX</title>
-<link rel="stylesheet" href="mx.css?v=202611280246">
+<link rel="stylesheet" href="mx.css?v=202611281207">
 <style>html.mx-install-block body{display:none!important}</style>
 <script>
 if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
@@ -127,7 +127,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
           <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
             <button id="btnLockSliders" onclick="vibrar(25);toggleLockSliders()" style="flex:1;background:linear-gradient(180deg,#ffe066,#f59f00);color:#000">🔒 CONTROLES BLOQUEADOS</button>
             <button id="btnToggleTest" onclick="vibrar(25);toggleTestAntenas()" style="background:linear-gradient(180deg,#845ef7,#5f3dc4);color:#fff">🎥 TEST VIVO</button>
-            <button onclick="vibrar(25);calibrarAmbas10s()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">📍 CALIBRAR 10s</button>
+            <button onclick="vibrar(25);calibrarAmbas10s()" style="background:linear-gradient(180deg,#4be5b6,#12b886);color:#000">📍 CALIBRAR CÁMARAS 10s</button>
           </div>
 
           <div class="box-sub">
@@ -151,6 +151,18 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
               <button id="bModGar" onclick="vibrar();setModoAnt('GAR')" style="background:#262626;color:#fff;font-size:10px">🎨 COLOR GARAJE</button>
               <button id="bModWarm" onclick="vibrar();setModoAnt('WARMUP')" style="background:#262626;color:#fff;font-size:10px">🔥 FIRMAS WARM-UP</button>
               <button id="bModHib" onclick="vibrar();setModoAnt('HIBRIDO')" style="background:#262626;color:#fff;font-size:10px">🔀 HIBRIDO</button>
+            </div>
+            <div style="margin-bottom:6px">
+              <div style="font-size:10px;color:#20c997;margin-bottom:3px">PRIORIDAD DE COLOR (LA OTRA FUENTE SE USA SI NO HAY FIRMA):</div>
+              <select id="selPrioridadColor" onchange="cfgDir()" style="margin:0;padding:6px;font-size:11px">
+                <option value="WARMUP">🔥 Warm-up en movimiento primero</option>
+                <option value="VIVO">🧪 Muestras de TEST VIVO primero</option>
+                <option value="GARAJE">🎨 Garaje / calibración manual primero</option>
+              </select>
+              <label style="display:flex;align-items:center;gap:6px;margin-top:5px;font-size:10px;color:#ddd">
+                <input id="chkCalibracionVivo" type="checkbox" onchange="cfgDir()" style="width:auto;margin:0">
+                Guardar muestras detectadas durante TEST VIVO para asignarlas después
+              </label>
             </div>
             <div class="grid2" style="margin-bottom:6px">
               <div><div style="font-size:10px;color:#aaa;margin-bottom:2px">ORIENTACION META:</div><div class="grid2"><button id="bOriV" onclick="vibrar();setOrientacion('V')" style="background:#0dcaf0;color:#000;font-size:10px;padding:7px">↕️ VERT</button><button id="bOriH" onclick="vibrar();setOrientacion('H')" style="background:#262626;color:#fff;font-size:10px;padding:7px">↔️ HORIZ</button></div></div>
@@ -179,12 +191,12 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
 
       <div class="acc-box" style="border-color:#fd7e14">
         <button class="acc-head" onclick="vibrar();toggleAcc('acc_wu')">
-          <b id="lblAccWu" style="color:#fd7e14">🔥 CAPTURAS WARM-UP MULTI-ANGULO (0)</b>
+          <b id="lblAccWu" style="color:#fd7e14">🎨 CAPTURAS DE COLOR WARM-UP / TEST VIVO (0)</b>
           <span id="arw_acc_wu">▶</span>
         </button>
         <div id="acc_wu" class="acc-body" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:11px;color:#aaa">Asigna las pasadas capturadas al piloto correspondiente.</span>
+            <span style="font-size:11px;color:#aaa">Asigna las muestras capturadas al piloto correspondiente.</span>
             <div style="display:flex;gap:4px">
               <button onclick="vibrar();refrescarWarmupManual()" style="background:#1c2530;color:#0dcaf0;padding:5px 8px;font-size:10px">🔄</button>
               <button onclick="vibrar();limpiarBandejaWarmup()" style="background:#3a1c1c;color:#ff4d5e;padding:5px 8px;font-size:10px">🧹 VACIAR</button>
@@ -194,7 +206,7 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
             <div class="box-sub"><b style="color:#38d9a9;font-size:11px">📷 ANTENA 1 / TEMP</b><div id="bandeja_ant_1" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
             <div class="box-sub"><b style="color:#3bc9db;font-size:11px">📷 ANTENA 2</b><div id="bandeja_ant_2" style="margin-top:6px;max-height:240px;overflow-y:auto">Sin capturas.</div></div>
           </div>
-          <div class="box-sub"><b style="color:#ffc107;font-size:11px">🎨 FIRMAS WARM-UP POR PILOTO:</b><div id="resumenFirmasWarmup" style="margin-top:4px;font-size:11px;color:#ccc">Ninguna asignada.</div></div>
+          <div class="box-sub">          <b style="color:#ffc107;font-size:11px">🎨 FIRMAS ASIGNADAS (WARM-UP / TEST VIVO):</b><div id="resumenFirmasWarmup" style="margin-top:4px;font-size:11px;color:#ccc">Ninguna asignada.</div></div>
         </div>
       </div>
 
@@ -286,13 +298,13 @@ if (localStorage.getItem("mxp_inst_role") !== "DIRECCION") {
     <div id="secDir_tiempos" style="display:none"><div id="slotTiempos"></div></div>
   </div>
 
-<script src="mx-core.js?v=202611280246"></script>
-<script src="mx-garaje.js?v=202611280246"></script>
-<script src="mx-garaje-color.js?v=202611280246"></script>
-<script src="mx-tiempos.js?v=202611280246"></script>
-<script src="mx-director-cam.js?v=202611280246"></script>
-<script src="mx-director-carrera.js?v=202611280246"></script>
-<script src="mx-director-admin.js?v=202611280246"></script>
-<script src="mx-director-main.js?v=202611280246"></script>
+<script src="mx-core.js?v=202611281207"></script>
+<script src="mx-garaje.js?v=202611281207"></script>
+<script src="mx-garaje-color.js?v=202611281207"></script>
+<script src="mx-tiempos.js?v=202611281207"></script>
+<script src="mx-director-cam.js?v=202611281207"></script>
+<script src="mx-director-carrera.js?v=202611281207"></script>
+<script src="mx-director-admin.js?v=202611281207"></script>
+<script src="mx-director-main.js?v=202611281207"></script>
 </body>
 </html>
