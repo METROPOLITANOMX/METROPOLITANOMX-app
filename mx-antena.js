@@ -350,9 +350,9 @@ function extraerColorUnico(dProc, x0, y0, w0, h0, soloMov, diffMin, lG) {
   return { cnt: cnt, col: elegido };
 }
 
-function capturarYEnviarWarmup(dProc, frame) {
+function procesarCapturaColor(dProc, frame, soloPrueba) {
   var ts = ahoraSrv();
-  if (_wuBusy || (ts - _ultWuTs) < 1100) return;
+  if ((!soloPrueba && _wuBusy) || (ts - _ultWuTs) < 1100) return;
   _ultWuTs = ts;
   var dCaptura = (frame && frame.data) || dProc;
   var r = cfg.roi || { x: 30, y: 15, w: 25, h: 65 }, pLine = r.posX || 50;
@@ -378,14 +378,21 @@ function capturarYEnviarWarmup(dProc, frame) {
     }
   }
   if (!res.col) {
-    document.getElementById("lblEstado").textContent = "⚠️ SIN COLOR VIVO — NO GUARDADO";
+    document.getElementById("lblEstado").textContent = soloPrueba ? "🧪 TEST: SIN COLOR VIVO" : "⚠️ SIN COLOR VIVO — NO GUARDADO";
     document.getElementById("lblEstado").style.color = "#ffa94d";
+    if (soloPrueba) { _ultTxtAnt = "TEST: SIN COLOR"; _ultTxtTs = ts; enviarTelemetria(); }
     return;
   }
-  var colNom = res.col ? res.col.nom : "SIN COLOR";
-  document.getElementById("lblEstado").textContent = res.col ? ("🎨 DETECTADO: " + colNom) : "⚠️ CAPTURA SIN COLOR VIVO";
-  document.getElementById("lblEstado").style.color = res.col ? "#0dcaf0" : "#ffa94d";
-  if (res.col) hablarAnt("Color " + colNom.toLowerCase(), false);
+  var colNom = res.col.nom;
+  document.getElementById("lblEstado").textContent = soloPrueba ? ("🧪 TEST: " + colNom) : ("🎨 DETECTADO: " + colNom);
+  document.getElementById("lblEstado").style.color = soloPrueba ? "#b197fc" : "#0dcaf0";
+  if (soloPrueba) {
+    _ultTxtAnt = "TEST: " + colNom; _ultTxtTs = ts;
+    mostrarAvisoAnt("🧪 Test color: " + colNom);
+    enviarTelemetria();
+    return;
+  }
+  hablarAnt("Color " + colNom.toLowerCase(), false);
 
   try {
     var sx = Math.max(0, Math.min(360, Math.floor((cropRect.x / 100) * 384)));
@@ -597,7 +604,7 @@ function procFrame() {
     if (_golpeFrames >= 45) { _golpeFrames = 0; _movidaTs = ahoraSrv(); fondoFull = null; framesHit = 0; _trigPendTs = 0; calHasta = Date.now() + 1800; hablarAnt("Atencion, antena movida, recalibrando", true); document.getElementById("lblEstado").textContent = "⚠️ ANTENA MOVIDA"; document.getElementById("lblEstado").style.color = "#ff4d5e"; return; }
   } else _golpeFrames = 0;
 
-  var modoColor = cfg.estado === "WARMUP" || (cfg.modoDet !== "TODO" && cfg.modoDet !== "RADAR");
+  var modoColor = cfg.estado === "WARMUP" || cfg.estado === "TEST" || (cfg.modoDet !== "TODO" && cfg.modoDet !== "RADAR");
   var colorContact = modoColor && detectarColorVivoEnRoi(dFull);
   var pLine = (cfg.roi && cfg.roi.posX) || 50, mov = 0, nS = 0;
   if (cfg.orientacion === "H") {
@@ -630,8 +637,7 @@ function procFrame() {
   if (pct >= sens) framesHit++; else framesHit = 0;
   if (est === "LIBRE" && !_trigPendTs) {
     if (colorContact && !_prevColorContact) _trigPendTs = ah - (Number(cfg.retardoMs) || 0);
-    else if (cfg.estado === "TEST" && pct >= resetPct) _trigPendTs = ah;
-    else if (cfg.estado !== "WARMUP" && (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6))) _trigPendTs = ah;
+    else if (cfg.estado !== "WARMUP" && cfg.estado !== "TEST" && (framesHit >= 2 || pct >= Math.max(0.10, sens * 1.6))) _trigPendTs = ah;
   }
   _prevColorContact = colorContact;
 
@@ -641,17 +647,15 @@ function procFrame() {
 
     if (cfg.estado === "WARMUP") {
       est = "CRUCE"; ultMs = ah;
-      capturarYEnviarWarmup(dFull, frameActual);
+      procesarCapturaColor(dFull, frameActual, false);
       return;
     }
 
     if (cfg.estado === "TEST") {
       if ((ah - ultMs) >= 900) {
         est = "CRUCE"; ultMs = ah;
-        _ultTxtAnt = "TEST: PASO DETECTADO"; _ultTxtTs = ahoraSrv();
-        document.getElementById("lblEstado").textContent = "🧪 TEST: PASO DETECTADO";
-        mostrarAvisoAnt("🧪 Test: paso detectado");
-        mxBeep(940, 90); enviarTelemetria();
+        procesarCapturaColor(dFull, frameActual, true);
+        mxBeep(940, 90);
       }
       return;
     }

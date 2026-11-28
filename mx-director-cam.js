@@ -117,6 +117,12 @@ function calibrarAmbas10s() {
 }
 function toggleTestAntenas() {
   var activar = !testOn;
+  var estadoSala = (rootCache.sala && rootCache.sala.estado) || "ESPERA";
+  if (activar && estadoSala !== "ESPERA") {
+    var status = document.getElementById("lblEstadoGlobDir");
+    if (status) status.textContent = "⚠️ Test Vivo solo puede iniciarse con la sala en ESPERA.";
+    return;
+  }
   fetchCmdCamDir(FB + "/sala.json", { method: "PATCH", body: JSON.stringify({ estado: activar ? "TEST" : "ESPERA", verVivo: activar, dirTs: ahoraSrv(), dirSession: dirSessionId }) }, activar ? "Iniciar test de vídeo" : "Detener test de vídeo")
     .then(function() {
       testOn = activar;

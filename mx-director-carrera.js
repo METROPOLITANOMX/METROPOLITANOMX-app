@@ -137,7 +137,7 @@ function toggleRadarDir() {
   if (s.estado === "RADAR") {
     _radarArm = null; _radarMaxKmh = 0;
     var restModo = _radarPrevModo || "TODO"; _radarPrevModo = "";
-    var payOff = { estado: "ESPERA", modoDet: restModo, radarLastTxt: "", dirTs: ahoraSrv(), dirSession: dirSessionId };
+    var payOff = { estado: "ESPERA", modoDet: restModo, radarLastTxt: "", verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId };
     Object.assign(s, payOff);
     if (lbl) lbl.textContent = "Velocidad medida: -- km/h";
     fetch(FB + "/sala.json", { method: "PATCH", body: JSON.stringify(payOff) }).catch(function(){});
@@ -153,7 +153,7 @@ function toggleRadarDir() {
   _radarArm = null; _radarMaxKmh = 0;
   _ultRondaElim = 0; _ultRondaRuleta = 0; _salidaShowHasta = 0;
   var txtW = "📡 Radar activo (" + d + " m) — Esperando paso por ambas camaras...";
-  var payOn = { estado: "RADAR", modoDet: "TODO", tsInicio: 0, tsCuenta: 0, ruleta: null, radarDist: d, radarMaxKmh: 0, radarLastKmh: 0, radarLastTxt: txtW, verVivo: false, dirTs: ahoraSrv(), dirSession: dirSessionId };
+  var payOn = { estado: "RADAR", modoDet: "TODO", tsInicio: 0, tsCuenta: 0, ruleta: null, radarDist: d, radarMaxKmh: 0, radarLastKmh: 0, radarLastTxt: txtW, verVivo: true, dirTs: ahoraSrv(), dirSession: dirSessionId };
   if (!rootCache.sala) rootCache.sala = {};
   Object.assign(rootCache.sala, payOn);
   if (lbl) lbl.textContent = txtW;
